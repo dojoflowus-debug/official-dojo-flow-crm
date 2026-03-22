@@ -13,6 +13,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 import ImageLightbox from "@/components/ImageLightbox";
+import { BrandDnaPanel } from "@/components/BrandDnaPanel";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
   Wand2,
@@ -268,6 +269,7 @@ export default function KaiCreative() {
   const deleteAssetMutation = trpc.kaiCreative.deleteAsset.useMutation({
     onSuccess: () => assetsQuery.refetch(),
   });
+  const recordMemoryMutation = trpc.brandDna.recordMemory.useMutation();
 
   // ── tRPC queries ────────────────────────────────────────────────────────────
 
@@ -336,7 +338,14 @@ export default function KaiCreative() {
     a.download = `kai-creative-${result.size}-${Date.now()}.${result.mimeType.includes("jpeg") ? "jpg" : "png"}`;
     a.target = "_blank";
     a.click();
-  }, [result]);
+    // Record to Creative Memory
+    recordMemoryMutation.mutate({
+      feedbackType: "downloaded",
+      preferredSize: result.size,
+      preferredStyle: stylePreset !== "auto" ? stylePreset : undefined,
+      successfulPromptKeywords: result.prompt.slice(0, 200),
+    });
+  }, [result, stylePreset, recordMemoryMutation]);
 
   // ── Theme helpers ───────────────────────────────────────────────────────────
 
@@ -391,6 +400,9 @@ export default function KaiCreative() {
       {/* ── Studio Tab ─────────────────────────────────────────────────────── */}
       {activeTab === "studio" && (
         <div className="px-4 py-4 space-y-4 max-w-2xl mx-auto">
+
+          {/* Brand DNA Panel */}
+          <BrandDnaPanel />
 
           {/* Mode selector */}
           <div className={`flex rounded-xl p-1 ${isDark ? "bg-white/5" : "bg-slate-100"}`}>

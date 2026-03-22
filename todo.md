@@ -8683,3 +8683,16 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Public routes fix — homepage and marketing pages no longer force redirect to login
 - [x] Demo accounts seeded (demo@dojoflow.com / demo123)
 - [x] DB schema migrations applied (94 tables)
+
+## Kai Creative — Brand DNA System (2026-03-22)
+- [ ] Add Brand DNA fields to school_profiles schema (brandFont, brandTone, brandAudience, brandStyleNotes, brandKeywords)
+- [ ] Run DB migration for new Brand DNA fields
+- [ ] Create Brand DNA UI panel in Kai Creative (colors, fonts, tone, audience, logo preview)
+- [ ] Auto-load Brand DNA before every generation (block generation if DNA not loaded)
+- [ ] Implement Template Intelligence — structured layout templates per format (Flyer, Social Post, Poster)
+- [ ] Implement Creative Direction Engine — intent interpretation and visual elevation
+- [ ] Implement Strict Control Layer — validate age/phone/program before generation
+- [ ] Implement Auto Quality Check — validate output before showing (logo, text values, layout)
+- [ ] Implement Creative Memory — track user preferences, selected designs, style choices
+- [ ] Create kaiCreativeMemoryRouter for storing/retrieving creative preferences
+- [ ] Add Creative Memory UI — show learned preferences in Brand DNA panel

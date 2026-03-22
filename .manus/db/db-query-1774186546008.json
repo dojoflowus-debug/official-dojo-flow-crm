@@ -1,0 +1,9 @@
+{
+  "query": "\nCREATE TABLE IF NOT EXISTS `creative_memory` (\n  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,\n  `org_id` int NOT NULL,\n  `user_id` int,\n  `selected_asset_id` int,\n  `preferred_style` varchar(100),\n  `preferred_size` varchar(50),\n  `preferred_colors` varchar(255),\n  `preferred_layout` varchar(100),\n  `successful_prompt_keywords` text,\n  `feedback_type` varchar(50),\n  `feedback_note` text,\n  `program_context` varchar(100),\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  INDEX `idx_creative_memory_org` (`org_id`),\n  INDEX `idx_creative_memory_user` (`user_id`),\n  INDEX `idx_creative_memory_style` (`org_id`, `preferred_style`)\n);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute \nCREATE TABLE IF NOT EXISTS `creative_memory` (\n  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,\n  `org_id` int NOT NULL,\n  `user_id` int,\n  `selected_asset_id` int,\n  `preferred_style` varchar(100),\n  `preferred_size` varchar(50),\n  `preferred_colors` varchar(255),\n  `preferred_layout` varchar(100),\n  `successful_prompt_keywords` text,\n  `feedback_type` varchar(50),\n  `feedback_note` text,\n  `program_context` varchar(100),\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  INDEX `idx_creative_memory_org` (`org_id`),\n  INDEX `idx_creative_memory_user` (`user_id`),\n  INDEX `idx_creative_memory_style` (`org_id`, `preferred_style`)\n);\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 145
+}

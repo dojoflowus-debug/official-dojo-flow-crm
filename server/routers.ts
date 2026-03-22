@@ -55,6 +55,7 @@ import { publicLeadRouter } from './publicLeadRouter';
 import { waiverRouter } from './waiverRouter';
 import { tutorialRouter } from './tutorialRouter';
 import { kaiCreativeRouter } from './kaiCreativeRouter';
+import { brandDnaRouter } from './brandDnaRouter';
 import { publicProcedure, protectedProcedure, orgScopedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -593,6 +594,7 @@ export const appRouter = router({
   kaiOnboardingSM: kaiOnboardingStateMachineRouter,
   tutorial: tutorialRouter,
   kaiCreative: kaiCreativeRouter,
+  brandDna: brandDnaRouter,
   setupMode: setupModeRouter,
   subscription: subscriptionRouter,
   credits: creditRouter,

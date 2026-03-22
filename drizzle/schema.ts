@@ -1933,3 +1933,53 @@ export const creativeAssets = mysqlTable("creative_assets", {
   index("idx_creative_assets_type").on(table.orgId, table.assetType),
   index("idx_creative_assets_created").on(table.orgId, table.createdAt),
 ]);
+
+// ─── Kai Creative — Brand DNA ──────────────────────────────────────────────────
+export const brandDna = mysqlTable("brand_dna", {
+  id: int().autoincrement().notNull().primaryKey(),
+  orgId: int("org_id").notNull().unique(),
+  primaryColor: varchar("primary_color", { length: 7 }),
+  secondaryColor: varchar("secondary_color", { length: 7 }),
+  accentColor: varchar("accent_color", { length: 7 }),
+  headlineFont: varchar("headline_font", { length: 100 }),
+  bodyFont: varchar("body_font", { length: 100 }),
+  brandTone: varchar("brand_tone", { length: 100 }),
+  brandVoice: varchar("brand_voice", { length: 255 }),
+  primaryAudience: varchar("primary_audience", { length: 255 }),
+  ageRangeMin: int("age_range_min"),
+  ageRangeMax: int("age_range_max"),
+  visualStyle: varchar("visual_style", { length: 100 }),
+  designEnergy: varchar("design_energy", { length: 50 }),
+  brandKeywords: text("brand_keywords"),
+  programs: json("programs"),
+  logoUrl: mediumtext("logo_url"),
+  isSetupComplete: boolean("is_setup_complete").default(false).notNull(),
+  setupCompletedAt: timestamp("setup_completed_at", { mode: 'string' }),
+  createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+  index("idx_brand_dna_org").on(table.orgId),
+]);
+
+// ─── Kai Creative — Creative Memory ───────────────────────────────────────────
+export const creativeMemory = mysqlTable("creative_memory", {
+  id: int().autoincrement().notNull().primaryKey(),
+  orgId: int("org_id").notNull(),
+  userId: int("user_id"),
+  selectedAssetId: int("selected_asset_id"),
+  preferredStyle: varchar("preferred_style", { length: 100 }),
+  preferredSize: varchar("preferred_size", { length: 50 }),
+  preferredColors: varchar("preferred_colors", { length: 255 }),
+  preferredLayout: varchar("preferred_layout", { length: 100 }),
+  successfulPromptKeywords: text("successful_prompt_keywords"),
+  feedbackType: varchar("feedback_type", { length: 50 }),
+  feedbackNote: text("feedback_note"),
+  programContext: varchar("program_context", { length: 100 }),
+  createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+},
+(table) => [
+  index("idx_creative_memory_org").on(table.orgId),
+  index("idx_creative_memory_user").on(table.userId),
+  index("idx_creative_memory_style").on(table.orgId, table.preferredStyle),
+]);

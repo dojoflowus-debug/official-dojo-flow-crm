@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE `classes`\n  ADD COLUMN IF NOT EXISTS `end_date` date NULL,\n  ADD COLUMN IF NOT EXISTS `duration_minutes` int NOT NULL DEFAULT 60,\n  ADD COLUMN IF NOT EXISTS `recurring_pattern` enum('weekly','biweekly','monthly','one_time') DEFAULT 'weekly',\n  ADD COLUMN IF NOT EXISTS `class_notes` text NULL;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute \nALTER TABLE `classes`\n  ADD COLUMN IF NOT EXISTS `end_date` date NULL,\n  ADD COLUMN IF NOT EXISTS `duration_minutes` int NOT NULL DEFAULT 60,\n  ADD COLUMN IF NOT EXISTS `recurring_pattern` enum('weekly','biweekly','monthly','one_time') DEFAULT 'weekly',\n  ADD COLUMN IF NOT EXISTS `class_notes` text NULL;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 60
+}

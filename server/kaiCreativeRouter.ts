@@ -58,6 +58,16 @@ async function getBrandDataForOrg(orgId: number): Promise<
 > {
   try {
     const profile = await getSchoolProfile(orgId);
+    // Also pull Brand DNA for richer context
+    let dna: Record<string, unknown> | null = null;
+    try {
+      const { brandDna } = await import("../drizzle/schema");
+      const db = await getDb();
+      if (db) {
+        const rows = await db.select().from(brandDna).where(eq(brandDna.orgId, orgId)).limit(1);
+        if (rows.length > 0) dna = rows[0] as Record<string, unknown>;
+      }
+    } catch { /* Brand DNA table may not exist yet */ }
     // Build address string from components
     const addressParts = [
       profile?.addressStreet,
@@ -66,19 +76,34 @@ async function getBrandDataForOrg(orgId: number): Promise<
       profile?.addressPostal,
     ].filter(Boolean);
     const address = addressParts.length > 0 ? addressParts.join(", ") : null;
+    // Brand DNA overrides school profile colors when set
+    const primaryColor = (dna?.primaryColor as string | null) ?? profile?.brandColorPrimary ?? null;
+    const secondaryColor = (dna?.secondaryColor as string | null) ?? profile?.brandColorSecondary ?? null;
+    const accentColor = (dna?.accentColor as string | null) ?? profile?.brandColorTertiary ?? null;
+    const logoUrl = (dna?.logoUrl as string | null) ?? profile?.logoLightUrl ?? profile?.logoDarkUrl ?? null;
     return {
       schoolName: profile?.schoolName ?? null,
       tagline: profile?.tagline ?? null,
       phone: profile?.phone ?? null,
       website: profile?.website ?? null,
-      primaryColor: profile?.brandColorPrimary ?? null,
-      secondaryColor: profile?.brandColorSecondary ?? null,
-      accentColor: profile?.brandColorTertiary ?? null,
+      primaryColor,
+      secondaryColor,
+      accentColor,
       address,
-      logoUrl: profile?.logoLightUrl ?? profile?.logoDarkUrl ?? null,
+      logoUrl,
       logoLightUrl: profile?.logoLightUrl ?? null,
       logoDarkUrl: profile?.logoDarkUrl ?? null,
-    };
+      // Extended Brand DNA fields injected into BrandContext
+      brandTone: (dna?.brandTone as string | null) ?? null,
+      brandVoice: (dna?.brandVoice as string | null) ?? null,
+      designEnergy: (dna?.designEnergy as string | null) ?? null,
+      headlineFont: (dna?.headlineFont as string | null) ?? null,
+      visualStyle: (dna?.visualStyle as string | null) ?? null,
+      primaryAudience: (dna?.primaryAudience as string | null) ?? null,
+      ageRangeMin: (dna?.ageRangeMin as number | null) ?? null,
+      ageRangeMax: (dna?.ageRangeMax as number | null) ?? null,
+      programs: dna?.programs ? (() => { try { return JSON.parse(dna.programs as string); } catch { return null; } })() : null,
+    } as BrandContext & { logoLightUrl: string | null; logoDarkUrl: string | null };
   } catch {
     return {
       schoolName: null,
