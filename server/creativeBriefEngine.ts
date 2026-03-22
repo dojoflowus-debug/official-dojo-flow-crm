@@ -35,8 +35,15 @@ export interface BriefQuestion {
 
 export interface BriefAnalysis {
   score: number;              // 0–100
-  isComplete: boolean;        // score >= 60
-  programConfirmed: boolean;  // hard gate: program must be confirmed
+  /**
+   * HARD EXECUTION GATE — all three must be true before generation is allowed.
+   * programConfirmed + audienceConfirmed + keyContentConfirmed = canGenerate
+   */
+  isComplete: boolean;        // ALL three required fields confirmed
+  canGenerate: boolean;       // alias for isComplete — explicit gate flag
+  programConfirmed: boolean;  // hard gate field 1: program/purpose
+  audienceConfirmed: boolean; // hard gate field 2: target audience or age group
+  keyContentConfirmed: boolean; // hard gate field 3: phone, offer, or key content
   missingFields: string[];
   questions: BriefQuestion[];
   enrichedBrief: string;      // the full brief to use for generation
@@ -275,20 +282,43 @@ export function analyzeBrief(
   ].filter(Boolean).join(" ");
 
   const scoring = scorePrompt(mergedPrompt, context);
-  // Hard gate: program is ALWAYS required — cannot be bypassed by score or answer count alone.
-  // Fast Mode only skips optional questions (audience, tone), not the required program question.
+  // ── HARD EXECUTION GATE ────────────────────────────────────────────────────
+  // ALL THREE fields are REQUIRED before any generation is allowed.
+  // No score threshold, no fast mode bypass, no skip — all three must be confirmed.
+  //
+  //   Field 1: program/purpose   — what are we promoting?
+  //   Field 2: audience/age      — who is this for?
+  //   Field 3: key content       — phone, offer, or explicit "use profile data"
+  //
+  // OpenAI intent detection may assist detection but CANNOT override this gate.
+  // fastMode is IGNORED for required fields — it only affects optional tone question.
+
   const programConfirmed = scoring.hasProgram || !!answers.program;
-  // isComplete requires:
-  //   1. Program MUST be confirmed (hard gate — cannot be bypassed)
-  //   2. Fast Mode: skip optional questions once program is known
-  //   3. Guided Mode: score >= 60 OR all required questions answered
-  // Object.keys(answers).length >= 1 is NOT sufficient alone — program must be one of those answers.
-  const isComplete = programConfirmed && (fastMode || scoring.score >= 60);
+
+  // Audience is confirmed if: keyword detected in prompt, OR explicit answer given,
+  // OR a program with a built-in age range was detected (e.g. "Little Ninjas (Ages 3–5)")
+  const programHasAgeRange = !!scoring.detectedProgram &&
+    context.programs.some((p) =>
+      p.name.toLowerCase() === scoring.detectedProgram?.toLowerCase() && !!p.ageRange
+    );
+  const audienceConfirmed = scoring.hasAudience || !!answers.audience || programHasAgeRange;
+
+  // Key content is confirmed if: phone/CTA keyword in prompt, OR explicit answer given,
+  // OR context has a phone number (auto-injected from profile), OR user chose "use profile data"
+  const keyContentConfirmed =
+    scoring.hasContent ||
+    !!answers.content ||
+    !!context.phone ||
+    answers.content === "Skip — use my profile data";
+
+  // isComplete = ALL THREE confirmed. No exceptions. No bypasses.
+  const isComplete = programConfirmed && audienceConfirmed && keyContentConfirmed;
+  const canGenerate = isComplete; // explicit alias for clarity
 
   const missingFields: string[] = [];
   if (!programConfirmed) missingFields.push("program");
-  if (!scoring.hasAudience && !answers.audience) missingFields.push("audience");
-  if (!scoring.hasContent && !context.phone && !answers.content) missingFields.push("key content");
+  if (!audienceConfirmed) missingFields.push("audience");
+  if (!keyContentConfirmed) missingFields.push("key content");
 
   const questions = isComplete ? [] : buildQuestions(scoring, context, mergedPrompt);
   const enrichedBrief = buildEnrichedBrief(mergedPrompt, context, answers);
@@ -303,7 +333,10 @@ export function analyzeBrief(
   return {
     score: scoring.score,
     isComplete,
+    canGenerate,
     programConfirmed,
+    audienceConfirmed,
+    keyContentConfirmed,
     missingFields,
     questions,
     enrichedBrief,

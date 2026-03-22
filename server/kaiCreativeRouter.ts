@@ -14,6 +14,7 @@
  */
 
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { orgScopedProcedure, router } from "./_core/trpc";
 import { storagePut } from "./storage";
 import { getSchoolProfile } from "./schoolProfileDb";
@@ -230,10 +231,31 @@ export const kaiCreativeRouter = router({
         useBrandColors: z.boolean().default(true),
         assetName: z.string().optional(),
         style: stylePresetSchema,
+        // Hard gate: client must pass confirmed brief fields
+        briefAnswers: z.record(z.string(), z.string()).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.currentOrganizationId as number;
+
+      // ── SERVER-SIDE HARD EXECUTION GATE ────────────────────────────────────
+      // Validate the brief against the 3-field gate before ANY generation.
+      // This is the final enforcement layer — the client gate is UX-only.
+      const briefContext = await loadBusinessContext(orgId);
+      const briefCheck = analyzeBrief(
+        input.prompt,
+        briefContext,
+        input.briefAnswers ?? {},
+        false // fastMode is always false — gate cannot be bypassed
+      );
+      if (!briefCheck.canGenerate) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Cannot generate: missing required fields — ${briefCheck.missingFields.join(", ")}. Please answer the clarifying questions first.`,
+        });
+      }
+      // ── END GATE ────────────────────────────────────────────────────────────
+
       // ALWAYS load brand — context injection enriches the prompt with real business data
       const brand = await getBrandDataForOrg(orgId);
       // Run context injection to enrich prompt with school name, phone, logo, programs
@@ -673,10 +695,29 @@ export const kaiCreativeRouter = router({
         sourceMimeType: z.string().optional(),
         // Style preset — auto-detected from prompt if not provided
         style: stylePresetSchema,
+        // Hard gate: client must pass confirmed brief fields
+        briefAnswers: z.record(z.string(), z.string()).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.currentOrganizationId as number;
+
+      // ── SERVER-SIDE HARD EXECUTION GATE ────────────────────────────────────
+      const chatBriefContext = await loadBusinessContext(orgId);
+      const chatBriefCheck = analyzeBrief(
+        input.prompt,
+        chatBriefContext,
+        input.briefAnswers ?? {},
+        false // fastMode always false — gate cannot be bypassed
+      );
+      if (!chatBriefCheck.canGenerate) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Cannot generate: missing required fields — ${chatBriefCheck.missingFields.join(", ")}. Please answer the clarifying questions first.`,
+        });
+      }
+      // ── END GATE ────────────────────────────────────────────────────────────
+
       const brand = await getBrandDataForOrg(orgId);
       const { enrichedPrompt: contextChatPrompt } = await runContextInjection(input.prompt, orgId, true);
       // OpenAI creative direction enhancement (non-blocking, runs after system rules)

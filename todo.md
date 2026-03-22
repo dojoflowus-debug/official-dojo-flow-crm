@@ -8726,3 +8726,19 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix kaiConversationsRouter schema mismatch - use kaiConversations + kaiMessages tables
 - [x] Add programConfirmed + availablePrograms to BriefAnalysis interface
 - [x] Fix TypeScript errors in kaiCreativeRouter
+
+## Hard Execution Gate for Kai Creative (2026-03-22)
+- [ ] Audit all generation entry points in kaiCreativeRouter (generate, generateFromChat, generateCopy)
+- [ ] Harden creativeBriefEngine: require program + audience + keyContent (3-field hard gate)
+- [ ] Server-side gate in kaiCreativeRouter.generate: throw TRPCError if gate not passed
+- [ ] Server-side gate in kaiCreativeRouter.generateFromChat: throw TRPCError if gate not passed
+- [ ] Client-side gate in KaiCreative UI: block generate call, show clarifying questions instead
+- [ ] Write vitest tests for hard gate logic
+
+## Hard Execution Gate (Kai Creative)
+
+- [x] Hard Execution Gate: block generation until program + audience + keyContent confirmed
+- [x] Remove fastMode bypass in creativeBriefEngine
+- [x] Remove onSkip bypass in CreativeBriefPanel
+- [x] Add server-side hard gate in kaiCreativeRouter.generate (throws BAD_REQUEST if gate not passed)
+- [x] Add vitest tests for hard gate logic (15 tests, all passing)

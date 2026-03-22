@@ -182,7 +182,6 @@ export default function KaiCreative() {
   const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
   const [dismissedWarnings, setDismissedWarnings] = useState<string[]>([]);
   // Creative Brief Engine state
-  const [fastMode, setFastMode] = useState(false);
   const [briefActive, setBriefActive] = useState(false);
   const [briefAnswers, setBriefAnswers] = useState<Record<string, string>>({});
   const [enrichedBriefPrompt, setEnrichedBriefPrompt] = useState<string | null>(null);
@@ -337,7 +336,8 @@ export default function KaiCreative() {
     setResult(null);
     setError(null);
     if (mode === "create") {
-      generateMutation.mutate({ prompt: enriched, size, useBrandColors, style: stylePreset });
+      // Pass briefAnswers so the server-side hard gate can verify all 3 fields are confirmed
+      generateMutation.mutate({ prompt: enriched, size, useBrandColors, style: stylePreset, briefAnswers: answers });
     } else if (mode === "logo") {
       if (!logoBase64) { setError("Please upload a logo first."); return; }
       generateWithLogoMutation.mutate({ prompt: enriched, logoBase64, logoMimeType, size, useBrandColors, style: stylePreset });
@@ -612,18 +612,7 @@ export default function KaiCreative() {
               <div className="mt-2">
                 <CreativeBriefPanel
                   prompt={prompt}
-                  fastMode={fastMode}
-                  onFastModeToggle={(v) => {
-                    setFastMode(v);
-                    if (v) setBriefActive(false);
-                  }}
                   onBriefComplete={handleBriefComplete}
-                  onSkip={() => {
-                    setBriefActive(false);
-                    setResult(null);
-                    setError(null);
-                    generateMutation.mutate({ prompt: prompt.trim(), size, useBrandColors, style: stylePreset });
-                  }}
                   isDark={isDark}
                 />
               </div>
