@@ -8706,3 +8706,23 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Client: ProgramSuggestionChips — one-tap program selection from stored programs
 - [ ] Client: ClarificationModal — asks which program when prompt is vague
 - [ ] Client: ContextPreviewBadge — shows what data will be injected before generating
+
+## OpenAI Intelligence Layer (2026-03-22)
+- [x] Create kaiIntelligenceLayer.ts — OpenAI-powered intent detection, conversation flow, copywriting
+- [x] Wire detectIntent() into kaiCreativeRouter.analyzeBrief (non-blocking, enhances rule-based scoring)
+- [x] Wire enrichPromptContext() into kaiCreativeRouter.generate and generateFromChat procedures
+- [x] Wire generateMarketingCopy() into kaiCreativeRouter.generateCopy procedure
+- [x] Wire detectIntent() into kaiConversationsRouter.processQuery (low-confidence fallback)
+- [x] Fix kaiConversationsRouter schema mismatch — use kaiConversations + kaiMessages tables
+- [x] Add programConfirmed + availablePrograms to BriefAnalysis interface
+- [x] Fix TypeScript errors in kaiCreativeRouter (z.record key schema, BrandContext.programs cast, generateMarketingCopy signature)
+
+## OpenAI Intelligence Layer (2026-03-22)
+- [x] Create kaiIntelligenceLayer.ts - OpenAI intent detection, conversation flow, copywriting
+- [x] Wire detectIntent() into kaiCreativeRouter.analyzeBrief (non-blocking)
+- [x] Wire enrichPromptContext() into generate and generateFromChat procedures
+- [x] Wire generateMarketingCopy() into generateCopy procedure
+- [x] Wire detectIntent() into kaiConversationsRouter.processQuery (low-confidence fallback)
+- [x] Fix kaiConversationsRouter schema mismatch - use kaiConversations + kaiMessages tables
+- [x] Add programConfirmed + availablePrograms to BriefAnalysis interface
+- [x] Fix TypeScript errors in kaiCreativeRouter

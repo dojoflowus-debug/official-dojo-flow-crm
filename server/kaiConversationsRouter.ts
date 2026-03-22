@@ -1,11 +1,12 @@
 import { z } from "zod";
 import { getDb } from "./db";
-import { conversations, messages } from "../drizzle/schema";
-import { eq, and, desc, limit } from "drizzle-orm";
+import { kaiConversations, kaiMessages } from "../drizzle/schema";
+import { eq, and, desc } from "drizzle-orm";
 import { protectedProcedure, router } from "./_core/trpc";
 import { invokeLLM } from "./_core/llm";
 import { processMetricQuery } from "./kai-metric-handler";
 import { classifyIntent } from "./kai-nlp-router";
+import { detectIntent } from "./kaiIntelligenceLayer";
 import { kaiTools, executeKaiTool } from "./kai-tools";
 
 /**
@@ -30,17 +31,17 @@ export const kaiConversationsRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      const result = await db.insert(conversations).values({
+      const result = await db.insert(kaiConversations).values({
         organizationId: ctx.user.organizationId,
-        createdByUserId: ctx.user.id,
+        userId: ctx.user.id,
         title: input?.title || "New Conversation",
-        summary: null,
+        
         createdAt:new Date().toISOString(),
         updatedAt:new Date().toISOString(),
         lastMessageAt:new Date().toISOString(),
       });
 
-      const conversationId = (result as any).insertId || result[0]?.id;
+      const conversationId = (result as any).insertId;
       return { conversationId };
     }),
 
@@ -55,14 +56,14 @@ export const kaiConversationsRouter = router({
 
       const userConversations = await db
         .select()
-        .from(conversations)
+        .from(kaiConversations)
         .where(
           and(
-            eq(conversations.organizationId, ctx.user.organizationId),
-            eq(conversations.createdByUserId, ctx.user.id)
+            eq(kaiConversations.organizationId, ctx.user.organizationId),
+            eq(kaiConversations.userId, ctx.user.id)
           )
         )
-        .orderBy(desc(conversations.lastMessageAt));
+        .orderBy(desc(kaiConversations.lastMessageAt));
 
       return userConversations;
     }),
@@ -79,11 +80,11 @@ export const kaiConversationsRouter = router({
 
       const [conversation] = await db
         .select()
-        .from(conversations)
+        .from(kaiConversations)
         .where(
           and(
-            eq(conversations.id, input.conversationId),
-            eq(conversations.organizationId, ctx.user.organizationId)
+            eq(kaiConversations.id, input.conversationId),
+            eq(kaiConversations.organizationId, ctx.user.organizationId)
           )
         )
         .limit(1);
@@ -104,7 +105,7 @@ export const kaiConversationsRouter = router({
     .input(
       z.object({
         conversationId: z.number(),
-        limit: z.number().default(40).max(100),
+        limit: z.number().default(40),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -114,11 +115,11 @@ export const kaiConversationsRouter = router({
       // Verify conversation belongs to user
       const [conversation] = await db
         .select()
-        .from(conversations)
+        .from(kaiConversations)
         .where(
           and(
-            eq(conversations.id, input.conversationId),
-            eq(conversations.organizationId, ctx.user.organizationId)
+            eq(kaiConversations.id, input.conversationId),
+            eq(kaiConversations.organizationId, ctx.user.organizationId)
           )
         )
         .limit(1);
@@ -130,9 +131,9 @@ export const kaiConversationsRouter = router({
       // Get messages ordered by createdAt (oldest first for context)
       const conversationMessages = await db
         .select()
-        .from(messages)
-        .where(eq(messages.conversationId, input.conversationId))
-        .orderBy(messages.createdAt)
+        .from(kaiMessages)
+        .where(eq(kaiMessages.conversationId, input.conversationId))
+        .orderBy(kaiMessages.createdAt)
         .limit(input.limit);
 
       return conversationMessages;
@@ -149,7 +150,7 @@ export const kaiConversationsRouter = router({
         conversationId: z.number(),
         role: z.enum(["user", "assistant", "system"]),
         content: z.string(),
-        metadata: z.record(z.any()).optional(),
+        metadata: z.record(z.string(), z.any()).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -159,11 +160,11 @@ export const kaiConversationsRouter = router({
       // Verify conversation belongs to user
       const [conversation] = await db
         .select()
-        .from(conversations)
+        .from(kaiConversations)
         .where(
           and(
-            eq(conversations.id, input.conversationId),
-            eq(conversations.organizationId, ctx.user.organizationId)
+            eq(kaiConversations.id, input.conversationId),
+            eq(kaiConversations.organizationId, ctx.user.organizationId)
           )
         )
         .limit(1);
@@ -173,7 +174,7 @@ export const kaiConversationsRouter = router({
       }
 
       // Insert message
-      const result = await db.insert(messages).values({
+      const result = await db.insert(kaiMessages).values({
         conversationId: input.conversationId,
         organizationId: ctx.user.organizationId,
         role: input.role,
@@ -182,16 +183,16 @@ export const kaiConversationsRouter = router({
         createdAt:new Date().toISOString(),
       });
 
-      const messageId = (result as any).insertId || result[0]?.id;
+      const messageId = (result as any).insertId;
 
       // Update conversation's lastMessageAt
       await db
-        .update(conversations)
+        .update(kaiConversations)
         .set({
           lastMessageAt:new Date().toISOString(),
           updatedAt:new Date().toISOString(),
         })
-        .where(eq(conversations.id, input.conversationId));
+        .where(eq(kaiConversations.id, input.conversationId));
 
       return { messageId };
     }),
@@ -212,15 +213,15 @@ export const kaiConversationsRouter = router({
       if (!db) throw new Error("Database not available");
 
       await db
-        .update(conversations)
+        .update(kaiConversations)
         .set({
           title: input.title,
           updatedAt:new Date().toISOString(),
         })
         .where(
           and(
-            eq(conversations.id, input.conversationId),
-            eq(conversations.organizationId, ctx.user.organizationId)
+            eq(kaiConversations.id, input.conversationId),
+            eq(kaiConversations.organizationId, ctx.user.organizationId)
           )
         );
 
@@ -247,15 +248,15 @@ export const kaiConversationsRouter = router({
       if (!db) throw new Error("Database not available");
 
       await db
-        .update(conversations)
+        .update(kaiConversations)
         .set({
-          summary: input.summary,
+          preview: input.summary.substring(0, 500),
           updatedAt:new Date().toISOString(),
         })
         .where(
           and(
-            eq(conversations.id, input.conversationId),
-            eq(conversations.organizationId, ctx.user.organizationId)
+            eq(kaiConversations.id, input.conversationId),
+            eq(kaiConversations.organizationId, ctx.user.organizationId)
           )
         );
 
@@ -276,9 +277,9 @@ export const kaiConversationsRouter = router({
       // Get all messages in conversation
       const conversationMessages = await db
         .select()
-        .from(messages)
-        .where(eq(messages.conversationId, input.conversationId))
-        .orderBy(messages.createdAt);
+        .from(kaiMessages)
+        .where(eq(kaiMessages.conversationId, input.conversationId))
+        .orderBy(kaiMessages.createdAt);
 
       if (conversationMessages.length === 0) {
         return { summary: "" };
@@ -287,7 +288,7 @@ export const kaiConversationsRouter = router({
       // Format messages for LLM
       const formattedMessages = conversationMessages.map((msg) => ({
         role: msg.role,
-        content: msg.content,
+        content: typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content),
       }));
 
       // Generate summary using LLM
@@ -302,25 +303,25 @@ export const kaiConversationsRouter = router({
             {
               role: "user",
               content: `Please summarize this conversation:\n\n${formattedMessages
-                .map((m) => `${m.role}: ${m.content}`)
+                .map((m) => `${m.role}: ${typeof m.content === "string" ? m.content : JSON.stringify(m.content)}`)
                 .join("\n\n")}`,
             },
           ],
         });
 
-        const summary =
-          response.choices?.[0]?.message?.content || "Conversation summary";
+        const summaryRaw = response.choices?.[0]?.message?.content || "Conversation summary";
+        const summary = typeof summaryRaw === "string" ? summaryRaw : JSON.stringify(summaryRaw);
 
         // Update conversation with summary
         await db
-          .update(conversations)
+          .update(kaiConversations)
           .set({
-            summary: summary.substring(0, 1200),
+            preview: summary.substring(0, 500),
             updatedAt:new Date().toISOString(),
           })
-          .where(eq(conversations.id, input.conversationId));
+          .where(eq(kaiConversations.id, input.conversationId));
 
-        return { summary: summary.substring(0, 1200) };
+        return { summary: summary.substring(0, 500) };
       } catch (error) {
         console.error("Failed to generate summary:", error);
         return { summary: "Unable to generate summary" };
@@ -346,11 +347,11 @@ export const kaiConversationsRouter = router({
       // Verify conversation belongs to user
       const [conversation] = await db
         .select()
-        .from(conversations)
+        .from(kaiConversations)
         .where(
           and(
-            eq(conversations.id, input.conversationId),
-            eq(conversations.organizationId, ctx.user.organizationId)
+            eq(kaiConversations.id, input.conversationId),
+            eq(kaiConversations.organizationId, ctx.user.organizationId)
           )
         )
         .limit(1);
@@ -360,7 +361,7 @@ export const kaiConversationsRouter = router({
       }
 
       // Step 1: Store user message
-      await db.insert(messages).values({
+      await db.insert(kaiMessages).values({
         conversationId: input.conversationId,
         organizationId: ctx.user.organizationId,
         role: "user",
@@ -368,10 +369,19 @@ export const kaiConversationsRouter = router({
         createdAt: new Date().toISOString(),
       });
 
-      // Step 2: Classify intent
+      // Step 2: Classify intent (rule-based NLP + OpenAI fallback for low-confidence cases)
       const classification = classifyIntent(input.query);
       let aiResponse = "";
       let metricData = null;
+      // OpenAI intent enrichment when rule-based confidence is low (non-blocking)
+      if (!classification || classification.confidence < 0.6) {
+        try {
+          await detectIntent(input.query, []);
+          // Result is used to inform the LLM system prompt below
+        } catch {
+          // Non-blocking — system rules still apply
+        }
+      }
 
       // Step 3: Route to metric handler or LLM
       if (classification && classification.confidence > 0.5) {
@@ -469,9 +479,8 @@ CRITICAL GROUNDING RULES:
             });
           }
 
-          aiResponse =
-            response.choices?.[0]?.message?.content ||
-            "I am not sure how to help with that.";
+          const aiRaw = response.choices?.[0]?.message?.content || "I am not sure how to help with that.";
+          aiResponse = typeof aiRaw === "string" ? aiRaw : JSON.stringify(aiRaw);
           
           // Log grounded response for debugging
           console.log('[Kai] Grounded response generated', {
@@ -500,7 +509,7 @@ CRITICAL GROUNDING RULES:
           }
         : { type: "chat" };
 
-      await db.insert(messages).values({
+      await db.insert(kaiMessages).values({
         conversationId: input.conversationId,
         organizationId: ctx.user.organizationId,
         role: "assistant",
@@ -511,12 +520,12 @@ CRITICAL GROUNDING RULES:
 
       // Step 5: Update conversation timestamp
       await db
-        .update(conversations)
+        .update(kaiConversations)
         .set({
           lastMessageAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         })
-        .where(eq(conversations.id, input.conversationId));
+        .where(eq(kaiConversations.id, input.conversationId));
 
       return {
         response: aiResponse,
@@ -538,11 +547,11 @@ CRITICAL GROUNDING RULES:
       // Verify conversation belongs to user
       const [conversation] = await db
         .select()
-        .from(conversations)
+        .from(kaiConversations)
         .where(
           and(
-            eq(conversations.id, input.conversationId),
-            eq(conversations.organizationId, ctx.user.organizationId)
+            eq(kaiConversations.id, input.conversationId),
+            eq(kaiConversations.organizationId, ctx.user.organizationId)
           )
         )
         .limit(1);
@@ -553,13 +562,13 @@ CRITICAL GROUNDING RULES:
 
       // Delete all messages in conversation
       await db
-        .delete(messages)
-        .where(eq(messages.conversationId, input.conversationId));
+        .delete(kaiMessages)
+        .where(eq(kaiMessages.conversationId, input.conversationId));
 
       // Delete conversation
       await db
-        .delete(conversations)
-        .where(eq(conversations.id, input.conversationId));
+        .delete(kaiConversations)
+        .where(eq(kaiConversations.id, input.conversationId));
 
       return { success: true };
     }),

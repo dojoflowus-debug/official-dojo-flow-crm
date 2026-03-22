@@ -30,6 +30,11 @@ import {
 import { parseStyleFromText, type StylePreset } from "./kaiPromptEngine";
 import { runContextInjection, getProgramSuggestions, loadBusinessContext } from "./contextInjectionEngine";
 import { analyzeBrief } from "./creativeBriefEngine";
+import {
+  detectIntent,
+  generateMarketingCopy,
+  enrichPromptContext,
+} from "./kaiIntelligenceLayer";
 
 // ── Zod schemas ───────────────────────────────────────────────────────────────
 
@@ -179,7 +184,7 @@ export const kaiCreativeRouter = router({
     .input(
       z.object({
         prompt: z.string().min(0).max(2000),
-        answers: z.record(z.string()).default({}),
+        answers: z.record(z.string(), z.string()).default({}),
         fastMode: z.boolean().default(false),
       })
     )
@@ -192,6 +197,20 @@ export const kaiCreativeRouter = router({
         input.answers,
         input.fastMode
       );
+      // Enhance with OpenAI intent detection when prompt is non-empty (non-blocking)
+      if (input.prompt.trim().length > 3) {
+        try {
+          const programNames = (context.programs ?? []).map((p: { name: string }) => p.name);
+          const intent = await detectIntent(input.prompt, programNames);
+          (analysis as unknown as Record<string, unknown>).openAiIntent = intent;
+          // If OpenAI detects a program that the rule engine missed, surface it
+          if (intent.detectedProgram && !analysis.programConfirmed) {
+            (analysis as unknown as Record<string, unknown>).aiSuggestedProgram = intent.detectedProgram;
+          }
+        } catch {
+          // OpenAI failure is non-blocking — system rules still apply
+        }
+      }
       return analysis;
     }),
 
@@ -218,7 +237,23 @@ export const kaiCreativeRouter = router({
       // ALWAYS load brand — context injection enriches the prompt with real business data
       const brand = await getBrandDataForOrg(orgId);
       // Run context injection to enrich prompt with school name, phone, logo, programs
-      const { enrichedPrompt } = await runContextInjection(input.prompt, orgId, true);
+      const { enrichedPrompt: contextEnrichedPrompt } = await runContextInjection(input.prompt, orgId, true);
+      // OpenAI creative direction enhancement (non-blocking, runs after system rules)
+      let enrichedPrompt = contextEnrichedPrompt;
+      try {
+        const aiDirection = await enrichPromptContext(input.prompt, {
+          schoolName: brand.schoolName ?? "",
+          phone: brand.phone ?? null,
+          logoUrl: brand.logoUrl ?? null,
+          programs: Array.isArray((brand as any).programs) ? (brand as any).programs : [],
+          primaryColor: brand.primaryColor ?? null,
+        });
+        if (aiDirection) {
+          enrichedPrompt = `${contextEnrichedPrompt}\n\nCreative direction: ${aiDirection}`;
+        }
+      } catch {
+        // OpenAI failure is non-blocking — use context-enriched prompt
+      }
 
       const result = await generateImage(
         enrichedPrompt,
@@ -643,8 +678,23 @@ export const kaiCreativeRouter = router({
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.currentOrganizationId as number;
       const brand = await getBrandDataForOrg(orgId);
-      const { enrichedPrompt: enrichedChatPrompt } = await runContextInjection(input.prompt, orgId, true);
-
+      const { enrichedPrompt: contextChatPrompt } = await runContextInjection(input.prompt, orgId, true);
+      // OpenAI creative direction enhancement (non-blocking, runs after system rules)
+      let enrichedChatPrompt = contextChatPrompt;
+      try {
+        const aiChatDirection = await enrichPromptContext(input.prompt, {
+          schoolName: brand.schoolName ?? "",
+          phone: brand.phone ?? null,
+          logoUrl: brand.logoUrl ?? null,
+          programs: Array.isArray((brand as any).programs) ? (brand as any).programs : [],
+          primaryColor: brand.primaryColor ?? null,
+        });
+        if (aiChatDirection) {
+          enrichedChatPrompt = `${contextChatPrompt}\n\nCreative direction: ${aiChatDirection}`;
+        }
+      } catch {
+        // OpenAI failure is non-blocking
+      }
       // Auto-detect style from prompt if not explicitly set
       const resolvedStyle = (input.style === "auto" || !input.style)
         ? parseStyleFromText(input.prompt)
@@ -720,5 +770,36 @@ export const kaiCreativeRouter = router({
         assetId,
         savedToLibrary,
       };
+    }),
+
+  // ── Generate marketing copy: OpenAI-powered copywriting for flyers/ads ───────
+  generateCopy: orgScopedProcedure
+    .input(
+      z.object({
+        program: z.string().min(1).max(200),
+        audience: z.string().optional(),
+        format: z.enum(["flyer", "social_post", "email", "sms", "ad"]).default("flyer"),
+        tone: z.string().optional(),
+        keyContent: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const orgId = ctx.currentOrganizationId as number;
+      const brand = await getBrandDataForOrg(orgId);
+      const copy = await generateMarketingCopy(
+        input.program,
+        input.audience,
+        input.tone ?? "bold and energetic",
+        {
+          schoolName: brand.schoolName ?? "",
+          phone: brand.phone ?? null,
+          website: brand.website ?? null,
+          primaryColor: brand.primaryColor ?? null,
+        },
+        {
+          programName: input.program,
+        }
+      );
+      return copy;
     }),
 });

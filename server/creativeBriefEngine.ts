@@ -36,12 +36,14 @@ export interface BriefQuestion {
 export interface BriefAnalysis {
   score: number;              // 0–100
   isComplete: boolean;        // score >= 60
+  programConfirmed: boolean;  // hard gate: program must be confirmed
   missingFields: string[];
   questions: BriefQuestion[];
   enrichedBrief: string;      // the full brief to use for generation
   detectedProgram: string | null;
   detectedAudience: string | null;
   detectedTone: string | null;
+  availablePrograms: string[];
 }
 
 // ── Keyword banks ─────────────────────────────────────────────────────────────
@@ -301,6 +303,7 @@ export function analyzeBrief(
   return {
     score: scoring.score,
     isComplete,
+    programConfirmed,
     missingFields,
     questions,
     enrichedBrief,
