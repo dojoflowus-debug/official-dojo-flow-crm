@@ -341,7 +341,6 @@ export default function KaiCommand() {
   // Connect KaiBar send handler to handleSendMessage
   useEffect(() => {
     setKaiBarSendHandler(async (input: string, kaiBarAttachments: any[]) => {
-      console.log('[KaiBar] Send button clicked, input:', input, 'attachments:', kaiBarAttachments);
       try {
         setKaiBarLoading(true);
         // Pass input and attachments directly to handleSendMessage instead of relying on state
@@ -648,8 +647,6 @@ export default function KaiCommand() {
 
   const conversationsQuery = trpc.kai.getConversations.useQuery(undefined, {
     onSuccess: (data) => {
-      console.log('[Convos] loading for user:', user?.id);
-      console.log('[Convos] Total conversations returned:', data?.length);
     },
     onError: (error) => {
       console.error('[Convos] Failed to load conversations:', error);
@@ -670,7 +667,6 @@ export default function KaiCommand() {
   
   const addMessageMutation = trpc.kai.addMessage.useMutation({
     onSuccess: (data) => {
-      console.log('[handleSendMessage] Message saved with ID:', data.id);
     },
     onError: (error) => {
       console.error('[handleSendMessage] Failed to save message:', error);
@@ -942,15 +938,12 @@ export default function KaiCommand() {
 
   // Handle export conversation
   const handleExport = async (format: 'json' | 'markdown' | 'csv') => {
-    console.log('[KaiCommand] Export button clicked, format:', format, 'conversationId:', selectedConversationId);
     if (!selectedConversationId) {
-      console.warn('[KaiCommand] Export failed: no conversation selected');
       toast.error('Please select a conversation to export');
       return;
     }
     
     try {
-      console.log('[KaiCommand] Exporting conversation...');
       const result = await trpc.kai.exportConversations.query({
         conversationId: parseInt(selectedConversationId),
         format,
@@ -967,7 +960,6 @@ export default function KaiCommand() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      console.log('[KaiCommand] Export successful:', result.filename);
       toast.success(`Exported conversation as ${format.toUpperCase()}`);
     } catch (error: any) {
       const errorMessage = error?.message || 'Unknown error';
@@ -978,9 +970,7 @@ export default function KaiCommand() {
 
   // Handle export all conversations
   const handleExportAll = async (format: 'json' | 'markdown' | 'csv') => {
-    console.log('[KaiCommand] Export All button clicked, format:', format);
     try {
-      console.log('[KaiCommand] Exporting all conversations...');
       const result = await trpc.kai.exportConversations.query({
         format,
       });
@@ -996,7 +986,6 @@ export default function KaiCommand() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      console.log('[KaiCommand] Export all successful, count:', result.count);
       toast.success(`Exported ${result.count} conversation(s) as ${format.toUpperCase()}`);
     } catch (error: any) {
       const errorMessage = error?.message || 'Unknown error';
@@ -1077,29 +1066,19 @@ export default function KaiCommand() {
 
   // Handle starting a new chat
   const handleNewChat = async () => {
-    console.log('[NewChat] clicked');
-    console.log('[NewChat] userId:', user?.id);
-    console.log('[NewChat] activeOrgId:', user?.activeOrgId);
-    console.log('[NewChat] mutation pending:', createConversationMutation.isPending);
     try {
-      console.log('[NewChat] Creating new conversation...');
       const result = await createConversationMutation.mutateAsync({});
-      console.log('[NewChat] API response:', result);
-      console.log('[NewChat] New conversation created with ID:', result.id);
       
       // Wait a moment for the mutation to complete
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Refresh conversations list and wait for it to complete
       await utils.kai.getConversations.invalidate();
-      console.log('[NewChat] Conversations list invalidated');
       const allConversations = await utils.kai.getConversations.getData();
-      console.log('[NewChat] Total conversations after creation:', allConversations?.length);
       
       // Select the new conversation
       const conversationId = result.id.toString();
       setSelectedConversationId(conversationId);
-      console.log('[KaiCommand] Selected conversation:', conversationId);
       
       // Clear messages for fresh start
       setMessages([]);
@@ -1108,7 +1087,6 @@ export default function KaiCommand() {
       
       // Show success toast
       toast.success('New conversation created');
-      console.log('[NewChat] SUCCESS: New conversation setup complete');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('[NewChat] FAILED:', errorMessage, error);
@@ -1120,26 +1098,22 @@ export default function KaiCommand() {
       setSelectedConversationId(newId);
       setMessages([]);
       setMessageInput('');
-      console.log('[KaiCommand] Fallback conversation created:', newId);
     }
   };
 
   // Handle fullscreen toggle
   const handleFullScreen = () => {
-    console.log('[KaiCommand] Full Screen button clicked, current state:', isFullScreen);
     setIsFullScreen(!isFullScreen);
     toast.success(isFullScreen ? 'Exited full screen' : 'Entered full screen mode');
   };
 
   // Handle add staff to conversation
   const handleAddStaff = () => {
-    console.log('[KaiCommand] Add Staff button clicked, conversationId:', selectedConversationId);
     if (!selectedConversationId) {
       toast.error('Please select a conversation first');
       return;
     }
     setShowAddStaffModal(true);
-    console.log('[KaiCommand] Opening Add Staff modal');
   };
 
   // Convert backend conversations to frontend format
@@ -1173,7 +1147,6 @@ export default function KaiCommand() {
   // Clear messages when switching to new conversation
   useEffect(() => {
     if (selectedConversationId?.startsWith('new-')) {
-      console.log('[KaiCommand] Switching to new conversation, clearing messages');
       // Preserve onboarding messages if onboarding is active
       setMessages(prev => {
         const hasOnboardingMessages = prev.some(m => (m as any).isOnboarding);
@@ -1185,7 +1158,6 @@ export default function KaiCommand() {
 
   // Load messages when conversation changes
   useEffect(() => {
-    console.log('[KaiCommand] messagesQuery.data changed:', messagesQuery.data);
     if (messagesQuery.data && messagesQuery.data.length > 0) {
       const loadedMessages: Message[] = messagesQuery.data.map(m => {
         // Parse metadata to extract ui_blocks
@@ -1208,8 +1180,6 @@ export default function KaiCommand() {
           ui_blocks
         };
       });
-      console.log('[KaiCommand] Loaded messages with ui_blocks:', loadedMessages.filter(m => m.ui_blocks && m.ui_blocks.length > 0).length);
-      console.log('[KaiCommand] Loaded messages:', loadedMessages);
       
       // Deduplicate messages: merge loaded messages with existing optimistic messages
       // Use clientMessageId to match optimistic messages with server messages
@@ -1242,16 +1212,12 @@ export default function KaiCommand() {
         const finalMessages = Array.from(messageMap.values()).sort((a, b) => 
           new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
         );
-        console.log('[PHASE A TEST] Final messages after deduplication:', finalMessages.length);
         const testCard = finalMessages.find(m => m.id === 'hardcoded-test-card');
-        console.log('[PHASE A TEST] Test card survived?', testCard);
         if (testCard) {
-          console.log('[PHASE A TEST] Test card ui_blocks:', testCard.ui_blocks);
         }
         return finalMessages;
       });
     } else if (messagesQuery.data && messagesQuery.data.length === 0) {
-      console.log('[KaiCommand] No messages for this conversation');
       // Don't clear messages if onboarding is active — onboarding messages live in local state only
       setMessages(prev => {
         const hasOnboardingMessages = prev.some(m => (m as any).isOnboarding);
@@ -1261,22 +1227,12 @@ export default function KaiCommand() {
     }
   }, [messagesQuery.data]);
 
-  // Log conversations query changes
-  useEffect(() => {
-    console.log('[KaiCommand] conversationsQuery state:', {
-      isLoading: conversationsQuery.isLoading,
-      isError: conversationsQuery.isError,
-      data: conversationsQuery.data,
-      error: conversationsQuery.error
-    });
-  }, [conversationsQuery.data, conversationsQuery.isLoading, conversationsQuery.isError]);
+  // (debug logging removed)
 
   // Smart collections with dynamic counts based on actual data
-  console.log('[KaiCommand] conversations array:', conversations);
   const urgentCount = conversations.filter(c => !c.archivedAt && c.status === 'urgent').length;
   const insightsCount = conversations.filter(c => !c.archivedAt && c.category === 'kai').length;
   const pendingCount = conversations.filter(c => !c.archivedAt && c.status === 'attention').length;
-  console.log('[KaiCommand] collection counts:', { urgentCount, insightsCount, pendingCount });
   
   // Tactical status filters
   const smartCollections = [
@@ -1402,7 +1358,6 @@ export default function KaiCommand() {
   // Don't auto-select if onboarding is active — onboarding runs in a clean state without existing messages
   useEffect(() => {
     if (!selectedConversationId && conversations.length > 0 && !isOnboardingActive) {
-      console.log('[KaiCommand] Auto-selecting first conversation:', conversations[0].id);
       setSelectedConversationId(conversations[0].id);
     }
   }, [conversations, selectedConversationId, isOnboardingActive]);
@@ -1841,7 +1796,6 @@ export default function KaiCommand() {
     setMessages(prev => [...prev, analyzingMessage]);
     
     try {
-      console.log('[KaiCommand] Extracting schedule from:', { fileUrl, storageKey, fileType, fileName });
       
       const result = await extractScheduleMutation.mutateAsync({
         fileUrl,
@@ -1850,12 +1804,10 @@ export default function KaiCommand() {
         fileName
       });
       
-      console.log('[KaiCommand] Extraction result:', result);
       
       if (result.success && result.classes.length > 0) {
         // If a conversation was created, navigate to it
         if (result.conversationId) {
-          console.log('[KaiCommand] Navigating to conversation:', result.conversationId);
           setSelectedConversationId(result.conversationId);
           
           // Refresh conversations to show the new one
@@ -1974,19 +1926,14 @@ export default function KaiCommand() {
 
   // Handle creating classes from extracted schedule
   const handleCreateClasses = async (selectedClasses: ExtractedClass[]) => {
-    console.log('[KaiCommand] handleCreateClasses CALLED with', selectedClasses.length, 'classes');
     setIsCreatingClasses(true);
     
     try {
-      console.log('[KaiCommand] Creating', selectedClasses.length, 'classes');
-      console.log('[KaiCommand] Payload:', JSON.stringify(selectedClasses.slice(0, 2), null, 2));
-      console.log('[KaiCommand] Calling createClassesMutation.mutateAsync...');
       
       const result = await createClassesMutation.mutateAsync({
         classes: selectedClasses
       });
       
-      console.log('[KaiCommand] Create result:', result);
       
       if (result.success) {
         toast.success(`Successfully created ${result.createdCount} classes!`);
@@ -1994,7 +1941,6 @@ export default function KaiCommand() {
         
         // Note: Classes page uses REST API (/api/classes), not tRPC
         // The page will refresh when user navigates to it
-        console.log('[KaiCommand] Classes created successfully, IDs:', result.createdIds);
         
         // Build success message
         let successContent = `✅ **Created ${result.createdCount} classes** successfully!`;
@@ -2093,25 +2039,9 @@ export default function KaiCommand() {
     overrideInput?: string,
     overrideAttachments?: typeof attachments
   ) => {
-    console.log('[SEND] click/enter', {
-      conversationId: selectedConversationId,
-      textLen: messageInput?.length,
-      isSending: sendingRef.current,
-      ts: Date.now()
-    });
     // Use override values if provided, otherwise fall back to state
     const inputText = overrideInput !== undefined ? overrideInput : messageInput;
     const inputAttachments = overrideAttachments !== undefined ? overrideAttachments : attachments;
-    
-    // Initial logging with exact format requested
-    console.log('[SEND] attempt', {
-      conversationId: selectedConversationId,
-      textLen: inputText?.length,
-      isSending: sendingRef.current,
-      ts: Date.now(),
-      source,
-      attachmentsCount: inputAttachments.length
-    });
     
     // Check subscription status before sending message
     // Don't show paywall while subscription status is still loading
@@ -2387,21 +2317,17 @@ export default function KaiCommand() {
 
     // CRITICAL: Prevent duplicate sends with in-flight lock
     if (sendingRef.current) {
-      console.warn('[SEND] blocked by lock', { source, ts: Date.now() });
       return;
     }
     if (!inputText.trim() && inputAttachments.length === 0) {
-      console.log('HANDLE_SEND_BLOCKED_REASON', 'Empty message and no attachments');
       return;
     }
     
     // Acquire the sending lock immediately to prevent race conditions
     sendingRef.current = true;
-    console.log('[KaiSend] Lock acquired, source:', source);
     
     // Check if any attachments are still uploading
     if (inputAttachments.some(att => att.uploading)) {
-      console.log('HANDLE_SEND_BLOCKED_REASON', 'Attachments still uploading');
       sendingRef.current = false; // Release lock on early return
       toast.error('Please wait for attachments to finish uploading');
       return;
@@ -2482,7 +2408,6 @@ export default function KaiCommand() {
     
     // Optimistic UI update: Add user message to local state immediately with clientMessageId
     const clientMessageId = crypto.randomUUID();
-    console.log('[SEND] request', { clientMessageId });
     const optimisticUserMessage: Message = {
       id: clientMessageId,
       clientMessageId: clientMessageId, // Store for deduplication
@@ -2496,14 +2421,12 @@ export default function KaiCommand() {
     
     if (conversationId) {
       try {
-        console.log('[handleSendMessage] Saving user message to conversation:', conversationId);
         const messageResult = await addMessageMutation.mutateAsync({
           conversationId,
           role: 'user',
           content: currentInput,
           metadata: JSON.stringify({ clientMessageId })
         });
-        console.log('[handleSendMessage] User message saved:', messageResult);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Failed to save message';
         console.error('[handleSendMessage] Failed to save message:', errorMessage, error);
@@ -2515,7 +2438,6 @@ export default function KaiCommand() {
         return;
       }
     } else {
-      console.warn('[handleSendMessage] No conversation ID available to save message');
     }
 
     // Determine if this is a solo conversation (1 human + Kai)
@@ -2562,7 +2484,6 @@ export default function KaiCommand() {
             totalClasses: stats.totalClasses
           } : undefined
         };
-        console.log('SEND_REQUEST_PAYLOAD', payload);
         const response = await kaiChatMutation.mutateAsync(payload);
 
         // Generate TTS audio if voice is enabled
@@ -2578,7 +2499,6 @@ export default function KaiCommand() {
             if (ttsResult.success) {
               audioUrl = ttsResult.audioUrl;
               audioDuration = ttsResult.audioDuration;
-              console.log('[KaiCommand] TTS generated:', { audioUrl, audioDuration });
             } else {
               console.error('[KaiCommand] TTS generation failed:', ttsResult.error);
             }
@@ -2597,7 +2517,6 @@ export default function KaiCommand() {
           audioDuration,
           ui_blocks: response.ui_blocks || [] // Include UI blocks from backend
         };
-        console.log('[KaiCommand] Created AI message with ui_blocks:', aiMessage.ui_blocks);
         setMessages(prev => [...prev, aiMessage]);
         
         // Parse response for structured data to populate InfoPanel
@@ -2605,7 +2524,6 @@ export default function KaiCommand() {
         if (infoPanelContent) {
           setInfoPanelData(infoPanelContent);
           setInfoPanelOpen(true);
-          console.log('[KaiCommand] InfoPanel populated:', infoPanelContent);
         }
         
         // Set current speech message ID for voice controls
@@ -2616,7 +2534,6 @@ export default function KaiCommand() {
         // Save AI response to database
         if (conversationId) {
           try {
-            console.log('[handleSendMessage] Saving AI message to conversation:', conversationId);
             const aiMessageResult = await addMessageMutation.mutateAsync({
               conversationId,
               role: 'assistant',
@@ -2627,18 +2544,13 @@ export default function KaiCommand() {
                 audioDuration
               })
             });
-            console.log('[handleSendMessage] Saved with ui_blocks:', response.ui_blocks);
-            console.log('[handleSendMessage] AI message saved:', aiMessageResult);
             // Refresh conversations to update preview
             await utils.kai.getConversations.invalidate();
-            console.log('[handleSendMessage] Conversations list refreshed');
-            console.log('[SEND] success', { clientMessageId });
           } catch (error) {
             console.error('[handleSendMessage] Failed to save AI message:', error);
             toast.error('Failed to save AI response to database');
           }
         } else {
-          console.warn('[handleSendMessage] No conversation ID available to save AI message');
         }
       } catch (error) {
         console.error('SEND_FAILED', error);
@@ -2695,7 +2607,6 @@ export default function KaiCommand() {
         // CRITICAL: Always reset sending lock in finally block
         sendingRef.current = false;
         setIsLoading(false);
-        console.log('[SEND] unlock', { ts: Date.now() });
         // Maintain input focus after send
         setTimeout(() => {
           messageInputRef.current?.focus();
@@ -2708,7 +2619,6 @@ export default function KaiCommand() {
       pendingMessageIdsRef.current.delete(messageId);
       // Release lock
       sendingRef.current = false;
-      console.log('[SEND] no-kai-response - lock released');
       // Maintain input focus
       setTimeout(() => {
         messageInputRef.current?.focus();
