@@ -291,6 +291,13 @@ export function analyzeBrief(
   const questions = isComplete ? [] : buildQuestions(scoring, context, mergedPrompt);
   const enrichedBrief = buildEnrichedBrief(mergedPrompt, context, answers);
 
+  // Include available programs so the client can always show the smart opening card
+  const availablePrograms = context.programs.length > 0
+    ? context.programs.slice(0, 6).map((p) =>
+        p.ageRange ? `${p.name} (${p.ageRange})` : p.name
+      )
+    : ["Little Ninjas", "Kickboxing", "Adult Karate", "Self Defense", "Kids Program"];
+
   return {
     score: scoring.score,
     isComplete,
@@ -300,6 +307,7 @@ export function analyzeBrief(
     detectedProgram: scoring.detectedProgram,
     detectedAudience: scoring.detectedAudience,
     detectedTone: scoring.detectedTone,
+    availablePrograms,
   };
 }
 

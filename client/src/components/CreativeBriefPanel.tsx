@@ -129,6 +129,85 @@ export function CreativeBriefPanel({
   }
 
   // ── Guided Mode — show questions ──────────────────────────────────────────
+
+  // Smart opening: always show when no program is detected yet and answeredIds is empty.
+  // Uses availablePrograms from the server (real stored programs or defaults).
+  const showSmartOpening = !analysis.detectedProgram && answeredIds.length === 0;
+  const smartPrograms = (analysis as any).availablePrograms as string[] | undefined;
+
+  if (showSmartOpening && smartPrograms && smartPrograms.length > 0) {
+    const formatType = prompt.toLowerCase().includes("instagram") ? "post" :
+      prompt.toLowerCase().includes("banner") ? "banner" :
+      prompt.toLowerCase().includes("ad") ? "ad" : "flyer";
+
+    return (
+      <div className={`rounded-xl border ${base} overflow-hidden`}>
+        {/* Kai suggestion header */}
+        <div className={`flex items-center gap-2 px-4 py-3 border-b ${isDark ? "border-white/10" : "border-slate-100"}`}>
+          <span className="text-red-500 text-sm">✦</span>
+          <span className="text-sm font-semibold">Kai Creative</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/20">
+            Program required
+          </span>
+        </div>
+
+        {/* Smart suggestion body */}
+        <div className="px-4 py-4">
+          <p className={`text-sm font-medium mb-1`}>
+            I can create a {formatType} for:
+          </p>
+          <p className={`text-xs mb-3 ${muted}`}>Choose a program to get started</p>
+
+          {/* Program chips — real stored programs */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {smartPrograms.map((chip) => (
+              <button
+                key={chip}
+                onClick={() => handleChipSelect("program", chip)}
+                className={`text-sm px-4 py-2 rounded-full border font-medium transition-all hover:scale-105 active:scale-95 ${
+                  isDark
+                    ? "border-red-500/40 text-white bg-red-600/10 hover:bg-red-600 hover:border-red-500 hover:text-white"
+                    : "border-red-300 text-red-700 bg-red-50 hover:bg-red-600 hover:border-red-600 hover:text-white"
+                }`}
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+
+          {/* Custom program input */}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={customInput}
+              onChange={(e) => setCustomInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && customInput.trim()) {
+                  handleChipSelect("program", customInput.trim());
+                }
+              }}
+              placeholder="Or type a different program…"
+              className={`flex-1 text-xs px-3 py-2 rounded-lg border outline-none transition-colors ${
+                isDark
+                  ? "bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500/50"
+                  : "bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-400"
+              }`}
+            />
+            <button
+              onClick={() => {
+                if (customInput.trim()) handleChipSelect("program", customInput.trim());
+              }}
+              disabled={!customInput.trim()}
+              className="text-xs px-3 py-2 rounded-lg bg-red-600 text-white font-medium disabled:opacity-40 hover:bg-red-700 transition-colors"
+            >
+              Use this
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`rounded-xl border ${base} overflow-hidden`}>
       {/* Header */}
