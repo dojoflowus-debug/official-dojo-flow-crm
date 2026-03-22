@@ -56,7 +56,15 @@ queryClient.getQueryCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.query.state.error;
     redirectToLoginIfUnauthorized(error);
-    console.error("[API Query Error]", error);
+    // Suppress UNAUTHORIZED errors on public/login routes — they are expected
+    const isUnauthedError = error instanceof TRPCClientError && error.message === UNAUTHED_ERR_MSG;
+    const currentPath = window.location.pathname;
+    const isPublicPath = ['/owner', '/staff/login', '/student-login', '/login', '/kiosk-home', '/kiosk-live', '/lead-capture', '/public', '/forgot-password', '/reset-password'].some(
+      r => currentPath === r || currentPath.startsWith(r + '/')
+    );
+    if (!(isUnauthedError && isPublicPath)) {
+      console.error("[API Query Error]", error);
+    }
   }
 });
 

@@ -1,4 +1,5 @@
 import { Suspense, useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import './App.css';
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,14 +20,23 @@ import { CookieNotice } from "./components/CookieNotice";
 import { SplashLoader } from "./components/SplashLoader";
 import { trpc } from "@/lib/trpc";
 
+// Public routes where auth errors are expected and should not be logged
+const PUBLIC_ROUTES = ['/owner', '/staff/login', '/student-login', '/login', '/kiosk-home', '/kiosk-live', '/lead-capture', '/lead-capture-location', '/locations', '/public', '/forgot-password', '/reset-password'];
+
 // ─── Splash-aware root component ─────────────────────────────────────────────
 // Sits inside the tRPC provider so it can call trpc.auth.me directly.
-function AppWithSplash() {
+function AppWithSplashInner() {
+  const location = useLocation();
+  const isPublicRoute = PUBLIC_ROUTES.some(
+    r => location.pathname === r || location.pathname.startsWith(r + '/')
+  );
   // Use the auth.me query to determine when the app is truly ready.
   // We set staleTime to 0 so it always fires on first mount.
   const { isLoading: authLoading } = trpc.auth.me.useQuery(undefined, {
     retry: false,
     refetchOnWindowFocus: false,
+    // Suppress error reporting on public/login pages where UNAUTHORIZED is expected
+    meta: { suppressError: isPublicRoute },
   });
 
   // Give the splash a minimum display time of 800 ms so it never flashes.
@@ -42,7 +52,6 @@ function AppWithSplash() {
     <>
       <SplashLoader ready={appReady} />
       <div id="app-shell">
-      <BrowserRouter>
         <IndustryEnvironmentInitializer />
         <DebugOverlay />
         <CreditsRefreshOnReturn />
@@ -57,9 +66,16 @@ function AppWithSplash() {
           </Suspense>
         </AppShellGuard>
         <CookieNotice />
-      </BrowserRouter>
       </div>
     </>
+  );
+}
+
+function AppWithSplash() {
+  return (
+    <BrowserRouter>
+      <AppWithSplashInner />
+    </BrowserRouter>
   );
 }
 
