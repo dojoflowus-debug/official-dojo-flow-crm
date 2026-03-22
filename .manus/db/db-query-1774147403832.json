@@ -1,0 +1,49 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'dojo_settings' AND COLUMN_NAME IN ('ownerRank', 'programsTaught', 'paymentSetupLater', 'twilioAccountSid', 'twilioAuthToken', 'twilioPhoneNumber', 'enableSmsForLeads', 'emailProvider', 'senderEmail', 'sendgridApiKey', 'smtpHost', 'smtpPort', 'smtpUser', 'smtpPassword', 'enableEmailForLeads');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'dojo_settings' AND COLUMN_NAME IN ('ownerRank', 'programsTaught', 'paymentSetupLater', 'twilioAccountSid', 'twilioAuthToken', 'twilioPhoneNumber', 'enableSmsForLeads', 'emailProvider', 'senderEmail', 'sendgridApiKey', 'smtpHost', 'smtpPort', 'smtpUser', 'smtpPassword', 'enableEmailForLeads');",
+  "rows": [
+    {
+      "COLUMN_NAME": "paymentSetupLater"
+    },
+    {
+      "COLUMN_NAME": "twilioAccountSid"
+    },
+    {
+      "COLUMN_NAME": "twilioAuthToken"
+    },
+    {
+      "COLUMN_NAME": "twilioPhoneNumber"
+    },
+    {
+      "COLUMN_NAME": "enableSmsForLeads"
+    },
+    {
+      "COLUMN_NAME": "emailProvider"
+    },
+    {
+      "COLUMN_NAME": "senderEmail"
+    },
+    {
+      "COLUMN_NAME": "sendgridApiKey"
+    },
+    {
+      "COLUMN_NAME": "smtpHost"
+    },
+    {
+      "COLUMN_NAME": "smtpPort"
+    },
+    {
+      "COLUMN_NAME": "smtpUser"
+    },
+    {
+      "COLUMN_NAME": "smtpPassword"
+    },
+    {
+      "COLUMN_NAME": "enableEmailForLeads"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\npaymentSetupLater\ntwilioAccountSid\ntwilioAuthToken\ntwilioPhoneNumber\nenableSmsForLeads\nemailProvider\nsenderEmail\nsendgridApiKey\nsmtpHost\nsmtpPort\nsmtpUser\nsmtpPassword\nenableEmailForLeads\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}
