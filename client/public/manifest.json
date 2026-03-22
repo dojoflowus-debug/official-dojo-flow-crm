@@ -1,37 +1,39 @@
 {
-  "name": "DojoFlow",
+  "name": "DojoFlow CRM",
   "short_name": "DojoFlow",
-  "description": "Martial arts school management system - manage students, leads, classes, billing, and more",
-  "start_url": "/",
+  "description": "Martial arts school management — students, leads, classes, AI marketing, and more",
+  "start_url": "/kai",
   "display": "standalone",
-  "background_color": "#1A1B1F",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#0a0a0a",
   "theme_color": "#E53935",
   "orientation": "portrait-primary",
   "scope": "/",
+  "id": "dojoflow-crm",
   "icons": [
     {
       "src": "/icon-48.png",
       "sizes": "48x48",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icon-72.png",
       "sizes": "72x72",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icon-96.png",
       "sizes": "96x96",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icon-144.png",
       "sizes": "144x144",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icon-192.png",
@@ -58,7 +60,38 @@
       "purpose": "any maskable"
     }
   ],
+  "shortcuts": [
+    {
+      "name": "Kai AI",
+      "short_name": "Kai",
+      "description": "Open Kai AI Command Center",
+      "url": "/kai",
+      "icons": [{ "src": "/icon-96.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Students",
+      "short_name": "Students",
+      "description": "View and manage students",
+      "url": "/students",
+      "icons": [{ "src": "/icon-96.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Kai Creative",
+      "short_name": "Creative",
+      "description": "AI Marketing Studio",
+      "url": "/kai/creative",
+      "icons": [{ "src": "/icon-96.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Leads",
+      "short_name": "Leads",
+      "description": "View and manage leads",
+      "url": "/leads",
+      "icons": [{ "src": "/icon-96.png", "sizes": "96x96", "type": "image/png" }]
+    }
+  ],
   "categories": ["business", "productivity", "education"],
   "lang": "en-US",
-  "dir": "ltr"
+  "dir": "ltr",
+  "prefer_related_applications": false
 }

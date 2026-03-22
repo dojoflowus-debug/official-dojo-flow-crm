@@ -36,6 +36,7 @@ import { useKaiOnboarding } from '@/hooks/useKaiOnboarding';
 // KaiOnboardingOverlay removed — onboarding is handled in-chat via useKaiOnboarding
 import { useKaiTutorial } from '@/contexts/KaiTutorialContext';
 import { UserAvatar } from '@/components/UserAvatar';
+import { useMobileLayout } from '@/hooks/useMobileLayout';
 import '@/styles/kai-light-command-center.css';
 
 // Global layout constants for unified chat layout
@@ -193,6 +194,10 @@ export default function KaiCommand() {
   const dragCounterRef = useRef(0);
   const [expandedInput, setExpandedInput] = useState(false);
   const [commandCenterWidth, setCommandCenterWidth] = useState(320);
+  const { isMobile, isTablet } = useMobileLayout();
+  // On mobile, collapse the left panel entirely; on tablet, use narrower width
+  const effectiveCommandWidth = isMobile ? 0 : isTablet ? Math.min(commandCenterWidth, 240) : commandCenterWidth;
+  const [mobileOpsOpen, setMobileOpsOpen] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   // Use global Focus Mode context
@@ -2969,8 +2974,8 @@ export default function KaiCommand() {
         height: 'calc(100vh - var(--topbar-h, 56px))',
         maxHeight: 'calc(100vh - var(--topbar-h, 56px))',
         gridTemplateColumns: managementPanelOpen 
-          ? `${isFocusMode ? 0 : commandCenterWidth}px 8px minmax(520px, 1fr) clamp(360px, 30vw, 520px)`
-          : `${isFocusMode ? 0 : commandCenterWidth}px 8px 1fr`,
+          ? `${isFocusMode ? 0 : effectiveCommandWidth}px ${effectiveCommandWidth === 0 ? '0px' : '8px'} minmax(${isMobile ? '100%' : '520px'}, 1fr) ${isMobile ? '0px' : 'clamp(360px, 30vw, 520px)'}`
+          : `${isFocusMode ? 0 : effectiveCommandWidth}px ${effectiveCommandWidth === 0 ? '0px' : '8px'} 1fr`,
         gridAutoFlow: 'column',
         transition: 'grid-template-columns 0.3s ease-in-out'
       }}>
@@ -2978,7 +2983,7 @@ export default function KaiCommand() {
         {/* Sidebar: fixed width, z-index 20 to stay above main content but below modals */}
         <div 
           style={{ 
-            width: isFocusMode ? '0px' : `${commandCenterWidth}px`,
+            width: isFocusMode ? '0px' : `${effectiveCommandWidth}px`,
             opacity: isFocusMode ? 0 : 1,
             transform: isFocusMode ? 'translateX(-20px)' : 'translateX(0)',
             pointerEvents: isFocusMode ? 'none' : 'auto',
@@ -3286,9 +3291,19 @@ export default function KaiCommand() {
               className={`text-[10px] uppercase tracking-widest font-medium ${isCinematic ? 'text-white/70' : isDark ? 'text-white/40' : 'text-slate-400'}`}
               style={isCinematic ? { textShadow: '0 2px 4px rgba(0,0,0,0.75)' } : {}}
             >
-              COMMAND CENTER • OPERATIONAL STATUS: ACTIVE • ALL SYSTEMS NOMINAL
+              {isMobile ? 'COMMAND CENTER' : 'COMMAND CENTER • OPERATIONAL STATUS: ACTIVE • ALL SYSTEMS NOMINAL'}
             </p>
             <div className="flex items-center gap-1">
+              {/* Mobile: Ops list toggle button */}
+              {isMobile && (
+                <button
+                  onClick={() => setMobileOpsOpen(prev => !prev)}
+                  className={`h-8 w-8 flex items-center justify-center rounded-md transition-colors ${isDark || isCinematic ? 'hover:bg-white/10 text-white/70' : 'hover:bg-slate-100 text-slate-600'}`}
+                  title="Operations list"
+                >
+                  <Menu className="w-4 h-4" />
+                </button>
+              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
@@ -4374,12 +4389,55 @@ export default function KaiCommand() {
         featureName={paywallFeatureName}
       />
       
-
+      {/* Mobile Ops Drawer - slides up from bottom when mobileOpsOpen */}
+      {isMobile && mobileOpsOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 z-[800]"
+            onClick={() => setMobileOpsOpen(false)}
+          />
+          {/* Drawer */}
+          <div
+            className={`fixed bottom-[var(--bottom-nav-height,72px)] left-0 right-0 z-[810] rounded-t-2xl overflow-hidden ${
+              isDark || isCinematic ? 'bg-[oklch(0.09_0.008_25)]' : 'bg-white'
+            } shadow-2xl`}
+            style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}
+          >
+            {/* Drawer handle */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+              <span className={`text-xs font-semibold uppercase tracking-wider ${isDark || isCinematic ? 'text-white/60' : 'text-slate-500'}`}>Operations</span>
+              <button onClick={() => setMobileOpsOpen(false)} className="p-1">
+                <X className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/60' : 'text-slate-500'}`} />
+              </button>
+            </div>
+            {/* Ops list */}
+            <div className="overflow-y-auto flex-1 p-3 space-y-2">
+              {filteredConversations.map(conv => (
+                <button
+                  key={conv.id}
+                  onClick={() => { setSelectedConversationId(conv.id); setMobileOpsOpen(false); }}
+                  className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors ${
+                    selectedConversationId === conv.id
+                      ? 'bg-primary/20 border border-primary/40'
+                      : isDark || isCinematic ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-slate-50 hover:bg-slate-100 border border-slate-200'
+                  }`}
+                >
+                  <p className={`text-sm font-medium truncate ${isDark || isCinematic ? 'text-white/90' : 'text-slate-800'}`}>{conv.title}</p>
+                  <p className={`text-xs truncate mt-0.5 ${isDark || isCinematic ? 'text-white/40' : 'text-slate-400'}`}>{conv.preview}</p>
+                </button>
+              ))}
+              {filteredConversations.length === 0 && (
+                <p className={`text-center text-sm py-8 ${isDark || isCinematic ? 'text-white/30' : 'text-slate-400'}`}>No operations yet</p>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
-
-// Conversation Card Component - Tactical Mission Tile
+// Conversation Card Component - Tactical Mission Tilele
 function ConversationCard({ 
   conversation, 
   getCategoryColor,

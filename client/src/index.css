@@ -1046,3 +1046,69 @@ select option:hover {
     color: white !important;
   }
 }
+
+
+/* ===== MOBILE OPTIMIZATION (App-Ready) ===== */
+
+/* Prevent double-tap zoom on interactive elements */
+button, a, [role="button"], input, select, textarea, label {
+  touch-action: manipulation;
+}
+
+/* Minimum touch target size (44px per Apple HIG) */
+@media (max-width: 767px) {
+  button, a[role="button"], [role="button"] {
+    min-height: 44px;
+  }
+
+  .app-shell-bottom-nav a,
+  .app-shell-bottom-nav button {
+    min-height: 52px;
+    min-width: 52px;
+  }
+
+  /* Prevent horizontal overflow */
+  body, #root {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Scrollable tables */
+  .mobile-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Stack grid layouts on mobile */
+  .mobile-stack {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* iOS safe area padding */
+@supports (-webkit-touch-callout: none) {
+  .app-shell-bottom-nav {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+  }
+}
+
+/* Smooth momentum scrolling */
+.scrollable {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Touch active feedback */
+@media (hover: none) and (pointer: coarse) {
+  button:active, a:active, [role="button"]:active {
+    opacity: 0.7;
+    transform: scale(0.97);
+    transition: opacity 0.1s, transform 0.1s;
+  }
+}
+
+/* Hide scrollbars on mobile */
+@media (max-width: 767px) {
+  ::-webkit-scrollbar { display: none; }
+  * { scrollbar-width: none; }
+}

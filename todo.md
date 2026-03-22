@@ -8662,3 +8662,15 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Show both results side-by-side with style label badges (e.g. "Energetic" vs "Premium")
 - [ ] Add "Pick This" button on each result — promotes to main result and saves to library
 - [ ] Add lightbox support on both A/B result images
+
+## Mobile Optimization (Mar 22, 2026)
+- [ ] Add useMobileLayout hook (detects screen < 768px)
+- [ ] Kai Command: hide left sidebar on mobile, show as bottom sheet drawer
+- [ ] Kai Command: full-width chat on mobile, input pinned above bottom nav
+- [ ] KaiCreative: larger touch targets, full-width buttons, image preview fills screen
+- [ ] Bottom nav: 44px min touch targets, haptic feedback on tap
+- [ ] Students page: card view on mobile instead of table
+- [ ] Leads page: card view on mobile instead of table
+- [ ] PWA manifest: add shortcuts for Kai, Students, Creative
+- [ ] Global: prevent double-tap zoom on buttons, touch-action CSS
+- [ ] Add mobile-specific CSS variables for safe area insets
