@@ -148,7 +148,7 @@ export const KaiLeadCapture: React.FC<KaiLeadCaptureProps> = ({
       }
     } catch (error) {
       console.error('Error processing message:', error);
-      addMessage('kai', "Sorry, I had trouble processing that. Can you try again?");
+      addMessage('kai', "Let me try that again — go ahead and resend your message.");
     } finally {
       setIsLoading(false);
     }

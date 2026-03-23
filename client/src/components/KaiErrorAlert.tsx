@@ -51,33 +51,33 @@ export function KaiErrorAlert({
     switch (error.type) {
       case 'timeout':
         return {
-          title: 'Request Timeout',
-          description: 'The AI took too long to respond. Please try again.',
+          title: 'Taking a moment',
+          description: 'That took longer than expected. Tap retry to pick up where we left off.',
           icon: '⏱️'
         };
       case 'network':
         return {
-          title: 'Network Error',
-          description: 'Unable to connect to the AI service. Check your connection and try again.',
+          title: 'Connection Issue',
+          description: 'Check your connection and tap retry — everything will pick up where you left off.',
           icon: '🌐'
         };
       case 'validation':
         return {
-          title: 'Invalid Request',
-          description: 'Your message could not be processed. Please try a different message.',
+          title: 'Before I get started',
+          description: 'I just need a couple quick details — try rephrasing your request.',
           icon: '⚠️'
         };
       case 'server':
         return {
-          title: 'Service Error',
-          description: 'The AI service encountered an error. Please try again in a moment.',
+          title: 'One moment',
+          description: 'The service is catching up — tap retry and we\'ll get right back to it.',
           icon: '⚙️'
         };
       default:
         return {
-          title: 'Something Went Wrong',
-          description: error.message || 'An unexpected error occurred. Please try again.',
-          icon: '❌'
+          title: 'Let\'s try that again',
+          description: error.message || 'Tap retry and we\'ll pick right back up.',
+          icon: '↩️'
         };
     }
   };

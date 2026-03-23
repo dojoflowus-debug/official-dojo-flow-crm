@@ -163,7 +163,7 @@ export default function KaiLeadCaptureLocation() {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'kai',
-        content: 'Sorry, something went wrong. Please try again.',
+        content: 'Let me try that again — go ahead and resend your message.',
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);

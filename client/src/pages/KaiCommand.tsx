@@ -420,7 +420,7 @@ export default function KaiCommand() {
       toast.success(`Note saved to ${result.studentName}'s profile`);
     } catch (error: any) {
       console.error('Failed to save note to student card:', error);
-      toast.error(`Couldn't save note. ${error?.message || 'Unknown error'}`);
+      toast.error(`Note didn't save — please try again.`);
     }
   };
   
@@ -754,7 +754,7 @@ export default function KaiCommand() {
       }
       console.error('Failed to delete conversation:', error);
       const errorMessage = error?.message || 'Unknown error';
-      toast.error(`Couldn't delete chat. ${errorMessage}`);
+      toast.error(`Chat couldn't be deleted right now — try again.`);
     }
   };
 
@@ -782,7 +782,7 @@ export default function KaiCommand() {
       }
       console.error('Failed to archive conversation:', error);
       const errorMessage = error?.message || 'Unknown error';
-      toast.error(`Couldn't archive chat. ${errorMessage}`);
+      toast.error(`Chat couldn't be archived right now — try again.`);
     }
   };
 
@@ -810,7 +810,7 @@ export default function KaiCommand() {
       }
       console.error('Failed to restore conversation:', error);
       const errorMessage = error?.message || 'Unknown error';
-      toast.error(`Couldn't restore chat. ${errorMessage}`);
+      toast.error(`Chat couldn't be restored right now — try again.`);
     }
   };
 
@@ -838,7 +838,7 @@ export default function KaiCommand() {
       }
       console.error('Failed to rename conversation:', error);
       const errorMessage = error?.message || 'Unknown error';
-      toast.error(`Couldn't rename chat. ${errorMessage}`);
+      toast.error(`Rename didn't go through — try again.`);
     }
   };
 
@@ -864,7 +864,7 @@ export default function KaiCommand() {
         utils.kai.getConversations.setData(undefined, previousConversations);
       }
       console.error('Failed to update priority:', error);
-      toast.error(`Couldn't update priority. ${error?.message || 'Unknown error'}`);
+      toast.error(`Priority update didn't save — try again.`);
     }
   };
 
@@ -890,7 +890,7 @@ export default function KaiCommand() {
         utils.kai.getConversations.setData(undefined, previousConversations);
       }
       console.error('Failed to update category:', error);
-      toast.error(`Couldn't update category. ${error?.message || 'Unknown error'}`);
+      toast.error(`Category update didn't save — try again.`);
     }
   };
 
@@ -930,7 +930,7 @@ export default function KaiCommand() {
       toast.success('Conversation summarized');
     } catch (error: any) {
       console.error('Failed to summarize conversation:', error);
-      toast.error(`Couldn't summarize. ${error?.message || 'Unknown error'}`);
+      toast.error(`Summary not available right now — try again.`);
     } finally {
       setIsSummarizing(false);
     }
@@ -1024,7 +1024,7 @@ export default function KaiCommand() {
       toast.success('Data extracted from conversation');
     } catch (error: any) {
       console.error('Failed to extract from conversation:', error);
-      toast.error(`Couldn't extract. ${error?.message || 'Unknown error'}`);
+      toast.error(`Extraction didn't complete — try again.`);
     } finally {
       setIsExtracting(false);
     }
@@ -1872,7 +1872,7 @@ export default function KaiCommand() {
         setMessages(prev => [...prev.filter(m => m.id !== analyzingMessage.id), successMessage]);
       } else {
         // Show detailed error message
-        let errorContent = `I couldn't extract classes from **${fileName}**.`;
+        let errorContent = `Before I can import classes from **${fileName}**, I need a couple things to line up.`;
         
         // Add specific error reason
         if (result.error) {
@@ -1915,7 +1915,7 @@ export default function KaiCommand() {
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         role: 'assistant',
-        content: `Sorry, I encountered an error while analyzing the schedule:\n\n**Error:** ${errorMsg}\n\nPlease make sure the file is a valid Excel (.xlsx) or CSV file and try again.`,
+        content: `I wasn't able to read that file — let's make sure it's a valid Excel (.xlsx) or CSV file and try again.\n\n**Details:** ${errorMsg}`,
         timestamp: new Date()
       };
       setMessages(prev => [...prev.filter(m => m.id !== analyzingMessage.id), errorMessage]);
@@ -2238,7 +2238,7 @@ export default function KaiCommand() {
         const errMsg: Message = {
           id: (messageIdCounterRef.current++).toString(),
           role: 'assistant',
-          content: `Sorry, I couldn't edit that image: ${err?.message ?? 'Unknown error'}. You can also try the Edit Image tab in Kai Creative.`,
+          content: `Before I get started on that edit, I just need a couple quick details — try rephrasing what you'd like changed, or head to the Edit Image tab in Kai Creative.`,
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, errMsg]);
@@ -2304,7 +2304,9 @@ export default function KaiCommand() {
         const errMsg: Message = {
           id: (messageIdCounterRef.current++).toString(),
           role: 'assistant',
-          content: `Sorry, I couldn’t generate that image: ${err?.message ?? 'Unknown error'}. Try rephrasing or visit Kai Creative directly.`,
+          content: err?.message?.includes('details') || err?.message?.includes('required')
+            ? `Before I get started, I just need a couple quick details. What program is this for, and who's the audience?`
+            : `Let me try that a different way — try rephrasing your request or head to Kai Creative for more options.`,
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, errMsg]);
