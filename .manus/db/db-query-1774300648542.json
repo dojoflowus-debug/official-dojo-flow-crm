@@ -1,0 +1,35 @@
+{
+  "query": "SELECT email, role, \"globalRole\" FROM users LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT email, role, \"globalRole\" FROM users LIMIT 5;",
+  "rows": [
+    {
+      "email": "demo@dojoflow.com",
+      "role": "owner",
+      "globalRole": "globalRole"
+    },
+    {
+      "email": "sensei30002003@gmail.com",
+      "role": "owner",
+      "globalRole": "globalRole"
+    },
+    {
+      "email": "NULL",
+      "role": "user",
+      "globalRole": "globalRole"
+    },
+    {
+      "email": "NULL",
+      "role": "user",
+      "globalRole": "globalRole"
+    },
+    {
+      "email": "NULL",
+      "role": "user",
+      "globalRole": "globalRole"
+    }
+  ],
+  "messages": [],
+  "stdout": "email\trole\tglobalRole\ndemo@dojoflow.com\towner\tglobalRole\nsensei30002003@gmail.com\towner\tglobalRole\nNULL\tuser\tglobalRole\nNULL\tuser\tglobalRole\nNULL\tuser\tglobalRole\n",
+  "stderr": "",
+  "execution_time_ms": 173
+}

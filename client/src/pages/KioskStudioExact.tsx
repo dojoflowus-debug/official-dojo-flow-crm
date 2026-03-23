@@ -20,8 +20,13 @@ import {
   Monitor,
   Smartphone,
   RotateCcw,
+  ToggleLeft,
+  ToggleRight,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/hooks/useAuth";
 import { KioskConfig, DEFAULT_KIOSK_CONFIG } from "../../../shared/kioskConfig";
 import KioskPreviewLive from "@/components/kiosk/KioskPreviewLive";
 import Toast from "@/components/Toast";
@@ -117,8 +122,33 @@ export default function KioskStudioExact() {
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [activeStudioTab, setActiveStudioTab] = useState<
-    "theme" | "layout" | "content" | "behavior" | "deployment"
+    "theme" | "layout" | "content" | "behavior" | "deployment" | "features" | "link"
   >("theme");
+
+  // Feature flags state
+  const { user } = useAuth();
+  const orgId = user?.activeOrgId;
+  const [featureFlags, setFeatureFlags] = useState<{
+    showLockButton: boolean;
+    showArcadeGames: boolean;
+    showDayPass: boolean;
+    showEnrollNow: boolean;
+    showNewStudents: boolean;
+    showClassSchedule: boolean;
+    showAttendanceLeaderboard: boolean;
+    showBeltPromotion: boolean;
+  }>({
+    showLockButton: true,
+    showArcadeGames: true,
+    showDayPass: true,
+    showEnrollNow: true,
+    showNewStudents: true,
+    showClassSchedule: true,
+    showAttendanceLeaderboard: true,
+    showBeltPromotion: true,
+  });
+  const [flagsSaving, setFlagsSaving] = useState(false);
+  const [flagsSaveMsg, setFlagsSaveMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const [currentMoodPreset, setCurrentMoodPreset] =
     useState<string>("dojo-dark");
@@ -212,6 +242,11 @@ export default function KioskStudioExact() {
   );
   const updateKioskMutation = trpc.kiosk.updateKiosk.useMutation();
   const publishKioskMutation = trpc.kiosk.publishKiosk.useMutation();
+  const { data: featureFlagsData } = trpc.kiosk.getKioskFeatureFlags.useQuery(
+    { orgId: orgId! },
+    { enabled: !!orgId }
+  );
+  const saveFeatureFlagsMutation = trpc.kiosk.saveKioskFeatureFlags.useMutation();
 
   // Initialize and load saved state from localStorage
   useEffect(() => {
@@ -261,6 +296,27 @@ export default function KioskStudioExact() {
     if (!selectedLocation) setSelectedLocation(1);
     if (!selectedKiosk) setSelectedKiosk(1);
   }, []);
+
+  // Sync feature flags from server
+  useEffect(() => {
+    if (featureFlagsData) {
+      setFeatureFlags(prev => ({ ...prev, ...featureFlagsData }));
+    }
+  }, [featureFlagsData]);
+
+  const handleSaveFeatureFlags = async () => {
+    if (!orgId) return;
+    setFlagsSaving(true);
+    try {
+      await saveFeatureFlagsMutation.mutateAsync({ orgId, flags: featureFlags });
+      setFlagsSaveMsg({ type: 'success', text: 'Feature flags saved!' });
+      setTimeout(() => setFlagsSaveMsg(null), 3000);
+    } catch (err) {
+      setFlagsSaveMsg({ type: 'error', text: 'Failed to save flags' });
+    } finally {
+      setFlagsSaving(false);
+    }
+  };
 
   // Load kiosk config
   useEffect(() => {
@@ -345,11 +401,24 @@ export default function KioskStudioExact() {
 
   const currentConfig = previewMode === "draft" ? draftConfig : publishedConfig;
 
+  const FEATURE_FLAG_LABELS: Record<string, { label: string; description: string }> = {
+    showLockButton: { label: 'Lock Button', description: 'Show the kiosk lock button' },
+    showArcadeGames: { label: 'Arcade Games', description: 'Show the Play Arcade Games button' },
+    showDayPass: { label: 'Buy a Day Pass', description: 'Show the Buy a Day Pass button' },
+    showEnrollNow: { label: 'Enroll Now', description: 'Show the Enroll Now button' },
+    showNewStudents: { label: 'New Students Panel', description: 'Show the welcome panel for new students' },
+    showClassSchedule: { label: 'Class Schedule', description: "Show today's class schedule section" },
+    showAttendanceLeaderboard: { label: 'Attendance Leaderboard', description: 'Show the Perfect Attendance leaderboard' },
+    showBeltPromotion: { label: 'Belt Promotion Panel', description: 'Show the Runner Up for Next Belt section' },
+  };
+
+  const kioskPublicUrl = `${window.location.origin}/kiosk-home`;
+
   return (
     <ManagementLayout>
       <div
-        className="flex flex-col h-screen w-screen overflow-hidden"
-        style={{ backgroundColor: "#0B0D10" }}
+        className="flex flex-col overflow-hidden"
+        style={{ backgroundColor: "#0B0D10", height: 'calc(100vh - 56px - var(--bottom-nav-height, 72px))' }}
       >
       {/* TOP COMMAND BAR - Slim, minimal, professional */}
       <div
@@ -555,7 +624,7 @@ export default function KioskStudioExact() {
               className="flex flex-col"
             >
               <TabsList
-                className="grid w-full grid-cols-5 mb-4"
+                className="grid w-full grid-cols-7 mb-4"
                 style={{
                   background: "rgba(22, 27, 34, 0.4)",
                   borderColor: "rgba(255,255,255,0.08)",
@@ -575,6 +644,12 @@ export default function KioskStudioExact() {
                 </TabsTrigger>
                 <TabsTrigger value="deployment" className="text-xs">
                   Deploy
+                </TabsTrigger>
+                <TabsTrigger value="features" className="text-xs">
+                  Features
+                </TabsTrigger>
+                <TabsTrigger value="link" className="text-xs">
+                  Link
                 </TabsTrigger>
               </TabsList>
 
@@ -683,6 +758,89 @@ export default function KioskStudioExact() {
                     success(`Version "${version.name}" deployed successfully!`);
                   }}
                 />
+              </TabsContent>
+
+              {/* FEATURES TAB */}
+              <TabsContent value="features" className="space-y-3">
+                <div className="space-y-1 mb-3">
+                  <p className="text-xs font-bold text-white">Kiosk Features</p>
+                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Toggle which sections appear on the live kiosk screen</p>
+                </div>
+                {(Object.keys(featureFlags) as Array<keyof typeof featureFlags>).map(key => {
+                  const meta = FEATURE_FLAG_LABELS[key];
+                  const enabled = featureFlags[key];
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setFeatureFlags(prev => ({ ...prev, [key]: !prev[key] }))}
+                      className="w-full flex items-center justify-between rounded-xl px-3 py-2.5 transition-all"
+                      style={{
+                        background: enabled ? 'rgba(220,38,38,0.1)' : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${enabled ? 'rgba(220,38,38,0.25)' : 'rgba(255,255,255,0.07)'}`,
+                      }}
+                    >
+                      <div className="text-left">
+                        <p className="text-xs font-bold" style={{ color: enabled ? '#fff' : 'rgba(255,255,255,0.5)' }}>{meta.label}</p>
+                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{meta.description}</p>
+                      </div>
+                      {enabled
+                        ? <ToggleRight className="w-5 h-5 text-red-400 flex-shrink-0" />
+                        : <ToggleLeft className="w-5 h-5 flex-shrink-0" style={{ color: 'rgba(255,255,255,0.25)' }} />}
+                    </button>
+                  );
+                })}
+                {flagsSaveMsg && (
+                  <p className={`text-xs text-center ${flagsSaveMsg.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>{flagsSaveMsg.text}</p>
+                )}
+                <button
+                  onClick={handleSaveFeatureFlags}
+                  disabled={flagsSaving}
+                  className="w-full py-2 rounded-xl text-xs font-bold transition-all"
+                  style={{ background: 'rgba(220,38,38,0.8)', color: '#fff', opacity: flagsSaving ? 0.6 : 1 }}
+                >
+                  {flagsSaving ? 'Saving...' : 'Save Feature Settings'}
+                </button>
+              </TabsContent>
+
+              {/* KIOSK LINK TAB */}
+              <TabsContent value="link" className="space-y-4">
+                <div className="space-y-1 mb-3">
+                  <p className="text-xs font-bold text-white">Deployable Kiosk Link</p>
+                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Share or bookmark this URL to open the live kiosk screen on any device</p>
+                </div>
+                <div
+                  className="rounded-xl p-3"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                >
+                  <p className="text-xs font-mono break-all" style={{ color: 'rgba(255,255,255,0.7)' }}>{kioskPublicUrl}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(kioskPublicUrl); success('Link copied!'); }}
+                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition-all"
+                    style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}
+                  >
+                    <Copy className="w-3.5 h-3.5" /> Copy Link
+                  </button>
+                  <a
+                    href={kioskPublicUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition-all"
+                    style={{ background: 'rgba(220,38,38,0.8)', color: '#fff' }}
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" /> Open Kiosk
+                  </a>
+                </div>
+                <div
+                  className="rounded-xl p-3 mt-2"
+                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+                >
+                  <p className="text-xs font-bold text-white mb-1">How to deploy</p>
+                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>1. Open this link on your kiosk tablet or screen</p>
+                  <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>2. Set the browser to full-screen (F11 or kiosk mode)</p>
+                  <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>3. The screen auto-refreshes every 60 seconds</p>
+                </div>
               </TabsContent>
             </Tabs>
           </div>

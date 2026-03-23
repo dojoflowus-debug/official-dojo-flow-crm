@@ -8886,3 +8886,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Update KioskHome to read feature flags and conditionally render each section based on flags
 - [x] Added 7 new unit tests for feature flag logic (17 total kiosk tests, all passing)
 
+
+## Feature: Kiosk Studio Nav Bar + Deployable Link (Session 8)
+- [x] Fixed KioskStudioExact height from h-screen/w-screen to calc(100vh - 56px - 72px) so AppShell top header and bottom nav are both visible
+- [x] Added "Link" tab to KioskStudioExact Deploy panel with: live kiosk URL display, Copy Link button, Open Kiosk button, and deployment instructions
+- [x] Added "Features" tab to KioskStudioExact with 8 feature flag toggles (same flags as KioskStudio.tsx), wired to getKioskFeatureFlags/saveKioskFeatureFlags tRPC procedures
+- [x] All 33 kiosk tests passing (16 server + 17 client)
