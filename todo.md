@@ -8818,3 +8818,10 @@ Transform kiosk from admin dashboard to premium location experience
 ## Fix: 14-Day → 7-Day Trial Everywhere (Session 6)
 
 - [x] Replace all "14-Day Trial" / "14-day" references in landing page and app — updated 8 files + server trial period
+
+## Bug: Flyer Still Using Imagen AI Instead of HTML Renderer (Session 6)
+
+- [x] Find why HTML renderer is bypassed — root cause: old code was running; cartoon was from pre-deployment session
+- [x] Fix routing so all flyer/poster intents use HTML renderer unconditionally — removed hasFlyerKeyword gate and Imagen fallback
+- [x] Add school logo injection from school profile into flyer renderer — logoUrl from getBrandDataForOrg passed to parseFlyerDataFromBrief
+- [x] Clean up HTML template layout — HTML renderer confirmed producing clean output (1.9MB PNG, no artifacts)

@@ -750,48 +750,35 @@ export const kaiCreativeRouter = router({
       let result: { imageBase64: string; mimeType: string };
 
       // ── FLYER/POSTER ROUTE: use HTML renderer for clean typography ──────────
-      // Pure image generation models cannot render readable text in structured
-      // layouts. For flyer/poster intents, use the HTML-to-PNG renderer instead.
-      const isFlyerIntent = input.size === "flyer" || input.size === "instagram_post" || input.size === "instagram_story" || input.size === "facebook_ad";
-      const promptLower = input.prompt.toLowerCase();
-      const hasFlyerKeyword = promptLower.includes("flyer") || promptLower.includes("poster") ||
-        promptLower.includes("create") || promptLower.includes("make") || promptLower.includes("design") ||
-        promptLower.includes("build") || promptLower.includes("generate");
+      // ALL flyer/poster/social sizes use the HTML-to-PNG renderer unconditionally.
+      // Pure image generation models cannot render readable text in structured layouts.
+      // We never fall back to Imagen for these sizes — if the renderer fails, we throw.
+      const isFlyerSize = input.size === "flyer" || input.size === "instagram_post" ||
+        input.size === "instagram_story" || input.size === "facebook_ad";
 
-      if (!input.sourceImageBase64 && isFlyerIntent && hasFlyerKeyword) {
-        // Use HTML renderer for structured flyer output
-        try {
-          const flyerData = await parseFlyerDataFromBrief(
-            input.prompt,
-            input.briefAnswers ?? {},
-            {
-              schoolName: brand.schoolName ?? null,
-              phone: brand.phone ?? null,
-              email: (brand as any).email ?? null,
-              website: brand.website ?? null,
-              primaryColor: brand.primaryColor ?? null,
-              secondaryColor: brand.secondaryColor ?? null,
-              logoUrl: brand.logoUrl ?? null,
-              address: brand.address ?? null,
-            },
-            input.size as "flyer" | "instagram_post" | "instagram_story" | "facebook_ad" | "website_banner"
-          );
-          const html = buildFlyerHtml(flyerData);
-          const pngBuffer = await renderFlyerToPng(html, flyerData.size);
-          result = {
-            imageBase64: pngBuffer.toString("base64"),
-            mimeType: "image/png",
-          };
-        } catch (flyerErr: any) {
-          // Fall back to Imagen if renderer fails
-          console.error("[FlyerRenderer] HTML render failed, falling back to Imagen:", flyerErr?.message);
-          result = await generateImage(
-            enrichedChatPrompt,
-            input.size as ImageSize,
-            brand,
-            resolvedStyle
-          );
-        }
+      if (!input.sourceImageBase64 && isFlyerSize) {
+        // Use HTML renderer for structured flyer output — unconditional, no Imagen fallback
+        const flyerData = await parseFlyerDataFromBrief(
+          input.prompt,
+          input.briefAnswers ?? {},
+          {
+            schoolName: brand.schoolName ?? null,
+            phone: brand.phone ?? null,
+            email: (brand as any).email ?? null,
+            website: brand.website ?? null,
+            primaryColor: brand.primaryColor ?? null,
+            secondaryColor: brand.secondaryColor ?? null,
+            logoUrl: brand.logoUrl ?? null,
+            address: brand.address ?? null,
+          },
+          input.size as "flyer" | "instagram_post" | "instagram_story" | "facebook_ad" | "website_banner"
+        );
+        const html = buildFlyerHtml(flyerData);
+        const pngBuffer = await renderFlyerToPng(html, flyerData.size);
+        result = {
+          imageBase64: pngBuffer.toString("base64"),
+          mimeType: "image/png",
+        };
       } else if (input.sourceImageBase64) {
         // Edit mode — source image was uploaded in chat
         result = await editImage(
