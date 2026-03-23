@@ -491,7 +491,7 @@ CRITICAL GROUNDING RULES:
           });
         } catch (error) {
           console.error("[Kai] LLM error:", error);
-          aiResponse = "Sorry, I encountered an error. Please try again.";
+          aiResponse = "Something went wrong — please try again.";
           // Log full error for debugging
           console.error('[Kai] Full error details:', {
             error: error instanceof Error ? error.message : String(error),

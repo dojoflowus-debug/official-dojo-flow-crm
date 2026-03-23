@@ -430,13 +430,13 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
   const result = results[0];
   
   if (result.error) {
-    return { text: `I couldn't find that information: ${result.error}`, ui_blocks: [] };
+    return { text: `No results found — ${result.error}`, ui_blocks: [] };
   }
   
   // Handle search_students results
   if (result.students && Array.isArray(result.students)) {
     if (result.students.length === 0) {
-      return { text: "I couldn't find any students matching that search.", ui_blocks: [] };
+      return { text: "No students matched that search — try a different name or filter.", ui_blocks: [] };
     }
     if (result.students.length === 1) {
       const s = result.students[0];
@@ -476,7 +476,7 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
   // Handle search_leads results
   if (result.leads && Array.isArray(result.leads)) {
     if (result.leads.length === 0) {
-      return { text: "I couldn't find any leads matching that search.", ui_blocks: [] };
+      return { text: "No leads matched that search — try a different name or filter.", ui_blocks: [] };
     }
     if (result.leads.length === 1) {
       const l = result.leads[0];
@@ -3936,7 +3936,7 @@ Return the data as a structured JSON object.`
             };
           } else {
             return {
-              response: `I couldn't find any students matching "${nameQuery}". Please try a different name or check the spelling.`
+              response: `No students found for "${nameQuery}" — try a different name or check the spelling.`
             };
           }
         }

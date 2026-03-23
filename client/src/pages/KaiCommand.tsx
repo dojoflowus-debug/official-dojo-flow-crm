@@ -2263,15 +2263,6 @@ export default function KaiCommand() {
       setAttachments([]);
       setIsLoading(true);
 
-      // Contextual ack: "Got it. I'm creating a 4x9 rack card for Little Ninjas now."
-      const ackMsg: Message = {
-        id: (messageIdCounterRef.current++).toString(),
-        role: 'assistant',
-        content: buildCreativeAck(inputText.trim()),
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, ackMsg]);
-
       const detectedSize = parseFormatFromPrompt(inputText.trim());
       try {
         const result = await generateFromChatMutation.mutateAsync({
@@ -2301,12 +2292,16 @@ export default function KaiCommand() {
         };
         setMessages(prev => [...prev, creativeMsg]);
       } catch (err: any) {
+        // Extract the server's gate message directly — it's already friendly
+        const serverMsg = err?.message || err?.data?.message || '';
+        const isGateBlock = serverMsg.includes('details') || serverMsg.includes('build this together') || serverMsg.includes('brief panel');
+        const friendlyContent = isGateBlock
+          ? `Before I get started, I just need a couple quick details — what program is this for, and who\'s the audience?`
+          : `Let me try a different approach — head to Kai Creative to build this with a guided brief.`;
         const errMsg: Message = {
           id: (messageIdCounterRef.current++).toString(),
           role: 'assistant',
-          content: err?.message?.includes('details') || err?.message?.includes('required')
-            ? `Before I get started, I just need a couple quick details. What program is this for, and who's the audience?`
-            : `Let me try that a different way — try rephrasing your request or head to Kai Creative for more options.`,
+          content: friendlyContent,
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, errMsg]);

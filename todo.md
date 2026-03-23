@@ -8753,3 +8753,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add quality validation gate - reject weak headlines, enforce benefit-driven copy
 - [x] Upgrade fallback copy to use benefit-driven headlines
 - [x] Enforce phone number in CTA output
+
+## Kai Creative UX Fixes (Session 6)
+
+- [x] Remove premature 'Got it — I'm creating that flyer now' ack message from KaiCommand.tsx — Kai now asks questions first instead of announcing generation before server validation
+- [x] Replace all remaining 'Sorry', 'I couldn't', 'couldn't generate' language across server/routers.ts, server/kai-metric-handler.ts, server/kaiConversationsRouter.ts with forward-moving language
+- [x] Gate error handling in KaiCommand now shows friendly guided question instead of generic fallback

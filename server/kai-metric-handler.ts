@@ -52,7 +52,7 @@ export async function processMetricQuery(
     console.error('[Kai] Metric query error:', error);
     return {
       success: false,
-      message: 'Sorry, I encountered an error processing your request. Please try again.',
+      message: 'Something went wrong — please try again.',
       procedure: 'error',
     };
   }
