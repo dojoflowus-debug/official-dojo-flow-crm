@@ -8825,3 +8825,8 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix routing so all flyer/poster intents use HTML renderer unconditionally — removed hasFlyerKeyword gate and Imagen fallback
 - [x] Add school logo injection from school profile into flyer renderer — logoUrl from getBrandDataForOrg passed to parseFlyerDataFromBrief
 - [x] Clean up HTML template layout — HTML renderer confirmed producing clean output (1.9MB PNG, no artifacts)
+
+### Feature: Kai Operator Status Format (Session 6)
+- [x] Find Kai system prompt files — found in openai.ts (chatWithKai), kaiConversationsRouter.ts (processQuery), kaiIntelligenceLayer.ts (brief/intent)
+- [x] Add structured operator format instructions (Diagnosis / Root cause / Action taken / Current status / Next step) — added to both primary system prompts
+- [x] Enforce direct engineer-style language — no vague phrases, no apologies — tone rules added to both prompts
