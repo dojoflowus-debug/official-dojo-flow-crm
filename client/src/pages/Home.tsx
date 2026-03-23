@@ -424,7 +424,7 @@ export default function Home() {
                 transition: 'opacity 0.7s ease 0.75s',
               }}
             >
-              No credit card required · 14-day free trial · Cancel anytime
+              No credit card required · 7-day free trial · Cancel anytime
             </p>
           </div>
 
@@ -694,7 +694,7 @@ export default function Home() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600">Future Growth.</span>
             </h2>
             <p className="text-gray-400 text-lg max-w-xl mx-auto">
-              All plans include a 14-day free trial. No credit card required. Cancel anytime.
+              All plans include a 7-day free trial. No credit card required. Cancel anytime.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
@@ -773,7 +773,7 @@ export default function Home() {
               href="/login"
               className="group flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold px-10 py-5 rounded-xl text-lg transition-all duration-200 shadow-2xl shadow-red-900/40 hover:shadow-red-900/60 hover:-translate-y-1"
             >
-              Start Free Trial — 14 Days
+              Start Free Trial — 7 Days
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </a>
             <button className="flex items-center justify-center gap-3 border border-white/[0.12] hover:border-white/25 text-white font-semibold px-10 py-5 rounded-xl text-lg transition-all duration-200 hover:bg-white/[0.04]">

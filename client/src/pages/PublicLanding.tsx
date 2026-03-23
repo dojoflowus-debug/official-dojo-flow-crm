@@ -204,7 +204,7 @@ export default function PublicLanding() {
             <p className="text-xl md:text-2xl font-light mb-3 max-w-2xl mx-auto" style={{ color: "rgba(255,255,255,0.72)", letterSpacing: "-0.01em" }}>The operating system for every studio, gym, and school.</p>
             <p className="text-sm md:text-base font-light mb-12" style={{ color: "rgba(255,255,255,0.36)" }}>Martial Arts · Gymnastics · Dance · Fitness · Yoga · Boxing</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button onClick={() => setShowKaiOnboarding(true)} className="pill pill-white">Start Free 14-Day Trial <ArrowRight size={16} /></button>
+              <button onClick={() => setShowKaiOnboarding(true)} className="pill pill-white">Start Free 7-Day Trial <ArrowRight size={16} /></button>
               <a href="#industries" className="pill pill-ghost">See All Industries</a>
             </div>
             <p className="mt-8 text-xs" style={{ color: "rgba(255,255,255,0.26)" }}>No credit card required · Cancel anytime · Full platform access from day one</p>
@@ -221,7 +221,7 @@ export default function PublicLanding() {
         <section className="py-5 overflow-hidden" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
           <div className="overflow-hidden">
             <div className="marquee-track">
-              {[...Array(2)].flatMap(() => ["10,000+ Students Managed", "98% Retention Rate", "40% Revenue Growth", "6 Industries Served", "24/7 Kai AI Support", "14-Day Free Trial", "No Contracts", "White-Glove Onboarding"]).map((item, i) => (
+              {[...Array(2)].flatMap(() => ["10,000+ Students Managed", "98% Retention Rate", "40% Revenue Growth", "6 Industries Served", "24/7 Kai AI Support", "7-Day Free Trial", "No Contracts", "White-Glove Onboarding"]).map((item, i) => (
                 <span key={i} className="flex items-center gap-6 px-8 text-sm font-medium whitespace-nowrap" style={{ color: "rgba(255,255,255,0.32)" }}>
                   {item} <span className="w-1 h-1 rounded-full inline-block" style={{ background: "rgba(225,29,72,0.6)", flexShrink: 0 }} />
                 </span>
@@ -372,7 +372,7 @@ export default function PublicLanding() {
             <div className="mb-16 text-center scroll-reveal">
               <span className="section-label mb-4">Pricing</span>
               <h2 className="section-title mb-4">Simple, transparent pricing.</h2>
-              <p className="text-base font-light" style={{ color: "rgba(255,255,255,0.42)" }}>Start free for 14 days. No credit card required.</p>
+              <p className="text-base font-light" style={{ color: "rgba(255,255,255,0.42)" }}>Start free for 7 days. No credit card required.</p>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
               {PRICING.map((plan, i) => (
@@ -454,7 +454,7 @@ export default function PublicLanding() {
             <h2 className="font-bold mb-6" style={{ fontSize: "clamp(2.5rem,7vw,5rem)", letterSpacing: "-0.05em", lineHeight: 0.95 }}>Your studio.<br /><span style={{ color: "rgba(255,255,255,0.28)" }}>Fully automated.</span></h2>
             <p className="text-lg font-light mb-12" style={{ color: "rgba(255,255,255,0.38)" }}>Join thousands of studio owners who've reclaimed their time with DojoFlow.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button onClick={() => setShowKaiOnboarding(true)} className="pill pill-white" style={{ padding: "16px 32px", fontSize: "16px" }}>Start Free 14-Day Trial <ArrowRight size={18} /></button>
+              <button onClick={() => setShowKaiOnboarding(true)} className="pill pill-white" style={{ padding: "16px 32px", fontSize: "16px" }}>Start Free 7-Day Trial <ArrowRight size={18} /></button>
               <a href="#contact" className="pill pill-ghost" style={{ padding: "16px 32px", fontSize: "16px" }}>Talk to Sales</a>
             </div>
             <p className="mt-6 text-xs" style={{ color: "rgba(255,255,255,0.22)" }}>No credit card · No contracts · Full access from day one</p>

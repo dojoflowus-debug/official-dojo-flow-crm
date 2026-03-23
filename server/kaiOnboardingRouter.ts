@@ -74,7 +74,7 @@ export const kaiOnboardingRouter = router({
         estimatedStudents: parseStudentCount(input.studentCount),
         planId: 1, // Default to Starter plan
         subscriptionStatus: "trial",
-        trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days trial
+        trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days trial
       });
 
       const organizationId = newOrg.insertId;
@@ -176,7 +176,7 @@ export const kaiOnboardingRouter = router({
         estimatedStudents: parseLegacyStudentCount(input.studentCount),
         planId: 1, // Default to Starter plan
         subscriptionStatus: "trial",
-        trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days trial
+        trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days trial
       });
 
       const organizationId = newOrg.insertId;

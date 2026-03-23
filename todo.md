@@ -8814,3 +8814,7 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Update all flyer CTA defaults from "free trial class" to "7 day trial"
 - [x] Update extractCta to map "free trial" to 7 day trial copy
 - [x] Update all per-program benefit copy that mentions "First class FREE"
+
+## Fix: 14-Day → 7-Day Trial Everywhere (Session 6)
+
+- [x] Replace all "14-Day Trial" / "14-day" references in landing page and app — updated 8 files + server trial period

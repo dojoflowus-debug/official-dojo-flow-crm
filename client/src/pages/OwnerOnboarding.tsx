@@ -416,7 +416,7 @@ function PlanSelectionStep({ userId, onNext }: StepProps) {
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-2">Choose Your Plan</h2>
-        <p className="text-slate-600">Start with a 14-day free trial, cancel anytime</p>
+        <p className="text-slate-600">Start with a 7-day free trial, cancel anytime</p>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">

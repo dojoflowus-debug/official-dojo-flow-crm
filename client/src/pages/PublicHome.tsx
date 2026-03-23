@@ -105,7 +105,7 @@ export default function PublicHome() {
                 </Button>
               </Link>
               <p className="text-sm text-slate-400">
-                14-day free trial • No credit card required
+                7-day free trial • No credit card required
               </p>
             </div>
           </div>
@@ -440,7 +440,7 @@ export default function PublicHome() {
               </Button>
             </Link>
             <p className="text-sm text-slate-400 mt-4">
-              No credit card required • 14-day free trial • Cancel anytime
+              No credit card required • 7-day free trial • Cancel anytime
             </p>
           </div>
         </div>

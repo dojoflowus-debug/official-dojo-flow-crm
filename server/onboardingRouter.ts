@@ -197,7 +197,7 @@ export const onboardingRouter = router({
         logoUrl: schoolData.logoUrl,
         planId: progress.selectedPlanId,
         subscriptionStatus: progress.paymentCompleted ? "active" : "trial",
-        trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days trial
+        trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days trial
       });
 
       const organizationId = newOrg.insertId;

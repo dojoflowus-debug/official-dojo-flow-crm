@@ -489,7 +489,7 @@ export default function ForFitness() {
               </Link>
             </div>
             <p className="mt-8 text-sm text-gray-600">
-              14-day free trial • No credit card required • Cancel anytime
+              7-day free trial • No credit card required • Cancel anytime
             </p>
           </div>
         </div>
