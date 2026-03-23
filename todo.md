@@ -8846,3 +8846,7 @@ Transform kiosk from admin dashboard to premium location experience
 ## Bug: Kai Creative Crashes with React Error #31 (Session 7)
 - [x] React error #31 in /kai/creative when creating an ad — fixed: clarification was rendered as `{contextQuery.data.clarification}` (full object); changed to `clarification?.needed && clarification?.question` guard with `.question` string extraction; also fixed warnings to use `warning.field` as key and `warning.message` as text instead of the full MissingDataWarning object
 
+
+## Bug: Start Free Trial Button Not Working (Session 7)
+- [x] "Start Free Trial" button on the marketing landing page does not work — fixed: all CTA buttons now link to /login?tab=signup; Login.tsx reads the tab param and auto-selects Sign Up; post-registration redirect changed from /kai to /setup-wizard so new users configure their dojo before accessing Kai
+

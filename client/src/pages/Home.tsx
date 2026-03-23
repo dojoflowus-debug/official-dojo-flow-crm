@@ -402,7 +402,7 @@ export default function Home() {
               }}
             >
               <a
-                href="/login"
+                href="/login?tab=signup"
                 className="group flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold px-8 py-4 rounded-xl text-base transition-all duration-200 shadow-xl shadow-red-900/40 hover:shadow-red-900/60 hover:-translate-y-0.5"
               >
                 Start Free Trial
@@ -650,7 +650,7 @@ export default function Home() {
               ))}
             </div>
             <a
-              href="/login"
+              href="/login?tab=signup"
               className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold px-8 py-4 rounded-xl text-base transition-all duration-200 shadow-xl shadow-red-900/40 hover:-translate-y-0.5"
             >
               Talk to Kai <ArrowRight className="w-4 h-4" />
@@ -733,7 +733,7 @@ export default function Home() {
                   ))}
                 </div>
                 <a
-                  href="/login"
+                  href="/login?tab=signup"
                   className={`block text-center font-bold py-3.5 rounded-xl text-sm transition-all duration-200 ${
                     plan.highlighted
                       ? 'bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-900/40 hover:-translate-y-0.5'
@@ -770,7 +770,7 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="/login"
+              href="/login?tab=signup"
               className="group flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold px-10 py-5 rounded-xl text-lg transition-all duration-200 shadow-2xl shadow-red-900/40 hover:shadow-red-900/60 hover:-translate-y-1"
             >
               Start Free Trial — 7 Days

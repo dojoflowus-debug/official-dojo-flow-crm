@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Eye, EyeOff, Calendar, Users, Zap, TrendingUp } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 /**
  * Login Page Component
@@ -23,12 +23,18 @@ export default function Login() {
   const [keepLoggedIn, setKeepLoggedIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<"signin" | "signup">(
+    searchParams.get("tab") === "signup" ? "signup" : "signin"
+  );
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // If tab param changes after mount, sync it
+    const tab = searchParams.get("tab");
+    if (tab === "signup") setActiveTab("signup");
+  }, [searchParams]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,8 +79,8 @@ export default function Login() {
         return;
       }
       
-      // Redirect to Kai Command on success
-      window.location.href = '/kai';
+      // New users go to setup wizard to configure their dojo before accessing Kai
+      window.location.href = '/setup-wizard';
     } catch (err) {
       setError('Network error. Please try again.');
     }
