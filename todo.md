@@ -8850,3 +8850,17 @@ Transform kiosk from admin dashboard to premium location experience
 ## Bug: Start Free Trial Button Not Working (Session 7)
 - [x] "Start Free Trial" button on the marketing landing page does not work — fixed: all CTA buttons now link to /login?tab=signup; Login.tsx reads the tab param and auto-selects Sign Up; post-registration redirect changed from /kai to /setup-wizard so new users configure their dojo before accessing Kai
 
+
+## Feature: Kiosk Rebuild — MyDojo Style (Session 7)
+- [x] Audit current broken kiosk code at /kiosk-studio
+- [x] Rebuild kiosk live screen: dark fiery background, Ready to Train hero, new student welcome panel
+- [x] Add Tap to Check In CTA button (large, prominent)
+- [x] Add action buttons: Buy a Day Pass, Enroll Now, Play Arcade Games
+- [x] Add live class schedule panel (Top Warriors / current classes)
+- [x] Add Perfect Attendance leaderboard panel
+- [x] Add Runner Up for Next Belt panel
+- [x] Wire up real data from DB: getLiveKioskData, searchStudentsByOrg, checkInStudentByOrg procedures added
+- [x] Add check-in flow: tap → name search → confirm check-in (CheckInModal component)
+- [x] Update AppShell Kiosk nav to link to /kiosk-home
+- [x] Add 10 unit tests for KioskHome helper functions (all passing)
+

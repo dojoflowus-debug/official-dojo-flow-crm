@@ -1,277 +1,380 @@
 /**
- * KioskHome - Premium Location Experience
- * 
- * Full-screen, cinematic, touch-first kiosk home screen
- * Designed to look like a luxury gym lobby digital display
- * 
+ * KioskHome — DojoFlow Kiosk Live Screen
+ *
+ * Full-screen kiosk display modelled after the MyDojo check-in experience.
  * Layout:
- * - Hero section (top): Location name, live clock, next class countdown, temperature
- * - Action cards (middle): Large touch targets (Check In, Book Class, Schedule, Programs, About)
- * - Schedule preview (below): Today's classes at a glance
- * - Navigation dock (persistent): Bottom navigation for other sections
+ *   - Dark fiery background (CSS gradient + animated particles)
+ *   - Dojo logo + "READY TO TRAIN 👊" hero
+ *   - New Students welcome panel (leads from last 7 days)
+ *   - 🔥 TAP TO CHECK IN 🔥  (primary CTA)
+ *   - Secondary action buttons: Buy a Day Pass, Enroll Now, Play Arcade Games
+ *   - Bottom 2-col: Today's Classes (left) + Perfect Attendance / Runner Up (right)
+ *   - Lock button (bottom-right)
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Flame, MapPin, Calendar, Users, Info, HelpCircle } from 'lucide-react';
+import { Lock, Flame, Users, Clock, MapPin, Trophy, Star, Gamepad2, Ticket, UserPlus } from 'lucide-react';
+import { trpc } from '@/lib/trpc';
+import { useAuth } from '@/hooks/useAuth';
 
-interface ActionCard {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: React.ReactNode;
-  color: 'primary' | 'secondary' | 'accent' | 'muted';
-  action: () => void;
+// ─── helpers ────────────────────────────────────────────────────────────────
+
+function formatTime(t: string): string {
+  if (!t) return '';
+  // already formatted like "10:00 AM"
+  if (t.includes(' ')) return t;
+  // HH:MM 24h
+  const [h, m] = t.split(':').map(Number);
+  if (isNaN(h)) return t;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
 }
 
-interface ScheduleItem {
-  id: string;
-  time: string;
-  className: string;
-  instructor: string;
-  spots: number;
+function minutesUntil(startTime: string): number {
+  if (!startTime) return 0;
+  const now = new Date();
+  const [h, m] = startTime.split(':').map(Number);
+  if (isNaN(h)) return 0;
+  const classMinutes = h * 60 + (m || 0);
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  return Math.max(0, classMinutes - nowMinutes);
 }
 
-export default function KioskHome() {
-  const navigate = useNavigate();
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [temperature, setTemperature] = useState(72);
-  const [nextClassTime, setNextClassTime] = useState('2:30 PM');
-  const [nextClassName, setNextClassName] = useState('Advanced Kickboxing');
-  const [todaySchedule, setTodaySchedule] = useState<ScheduleItem[]>([
-    {
-      id: '1',
-      time: '10:00 AM',
-      className: 'Beginner Karate',
-      instructor: 'Sensei Mike',
-      spots: 8,
-    },
-    {
-      id: '2',
-      time: '11:30 AM',
-      className: 'Youth Taekwondo',
-      instructor: 'Sensei Sarah',
-      spots: 5,
-    },
-    {
-      id: '3',
-      time: '2:30 PM',
-      className: 'Advanced Kickboxing',
-      instructor: 'Coach James',
-      spots: 3,
-    },
-    {
-      id: '4',
-      time: '4:00 PM',
-      className: 'Family Fitness',
-      instructor: 'Sensei Alex',
-      spots: 12,
-    },
-  ]);
+function initials(name: string): string {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
 
-  // Update clock every second
+const AVATAR_COLORS = [
+  'bg-purple-600', 'bg-blue-600', 'bg-green-600', 'bg-orange-600',
+  'bg-pink-600', 'bg-teal-600', 'bg-indigo-600', 'bg-rose-600',
+];
+
+function avatarColor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+// ─── Check-in modal ──────────────────────────────────────────────────────────
+
+interface CheckInModalProps {
+  orgId: number;
+  onClose: () => void;
+}
+
+function CheckInModal({ orgId, onClose }: CheckInModalProps) {
+  const [query, setQuery] = useState('');
+  const [confirmed, setConfirmed] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const searchQuery = trpc.kiosk.searchStudentsByOrg.useQuery(
+    { orgId, query },
+    { enabled: query.length >= 2 }
+  );
+  const checkIn = trpc.kiosk.checkInStudentByOrg.useMutation();
+
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
+    inputRef.current?.focus();
   }, []);
 
-  const actionCards: ActionCard[] = [
-    {
-      id: 'checkin',
-      title: 'Check In',
-      subtitle: 'Start your session',
-      icon: <Users className="w-12 h-12" />,
-      color: 'primary',
-      action: () => navigate('/kiosk/checkin'),
-    },
-    {
-      id: 'book',
-      title: 'Book a Class',
-      subtitle: 'Reserve your spot',
-      icon: <Calendar className="w-12 h-12" />,
-      color: 'accent',
-      action: () => navigate('/kiosk/book'),
-    },
-    {
-      id: 'schedule',
-      title: "Today's Schedule",
-      subtitle: 'View all classes',
-      icon: <Clock className="w-12 h-12" />,
-      color: 'secondary',
-      action: () => navigate('/kiosk/schedule'),
-    },
-    {
-      id: 'programs',
-      title: 'Programs',
-      subtitle: 'Our offerings',
-      icon: <Flame className="w-12 h-12" />,
-      color: 'muted',
-      action: () => navigate('/kiosk/programs'),
-    },
-    {
-      id: 'about',
-      title: 'About Us',
-      subtitle: 'Learn more',
-      icon: <Info className="w-12 h-12" />,
-      color: 'muted',
-      action: () => navigate('/kiosk/about'),
-    },
-  ];
+  async function handleCheckIn(studentId: number, name: string) {
+    try {
+      await checkIn.mutateAsync({ orgId, studentId });
+      setConfirmed(name);
+      setTimeout(onClose, 2500);
+    } catch {
+      // ignore
+    }
+  }
 
-  const formattedTime = currentTime.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
+  if (confirmed) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div className="text-center">
+          <div className="text-8xl mb-6">🥋</div>
+          <h2 className="text-5xl font-black text-white mb-3">CHECKED IN!</h2>
+          <p className="text-3xl text-red-400 font-bold">{confirmed}</p>
+          <p className="text-xl text-white/60 mt-4">Train hard. See you on the mat!</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white overflow-hidden">
-      {/* Hero Section */}
-      <section className="relative h-screen max-h-[600px] flex flex-col justify-between p-8 md:p-12 bg-cover bg-center" style={{
-        backgroundImage: 'linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.7) 100%), url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1200 600%22%3E%3Cdefs%3E%3ClinearGradient id=%22grad%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E%3Cstop offset=%220%25%22 style=%22stop-color:%23dc2626;stop-opacity:0.1%22 /%3E%3Cstop offset=%22100%25%22 style=%22stop-color:%23ea580c;stop-opacity:0.05%22 /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%221200%22 height=%22600%22 fill=%22url(%23grad)%22/%3E%3C/svg%3E")',
-      }}>
-        {/* Top: Location name and clock */}
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-5xl md:text-6xl font-bold mb-2 text-white drop-shadow-lg">
-              Dojo 1
-            </h1>
-            <p className="text-xl text-slate-300 flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-red-500" />
-              Downtown Location
-            </p>
-          </div>
-          <div className="text-right">
-            <div className="text-5xl md:text-6xl font-bold text-white drop-shadow-lg mb-2">
-              {formattedTime}
-            </div>
-            <div className="text-2xl text-slate-300 flex items-center justify-end gap-2">
-              <Flame className="w-6 h-6 text-red-500" />
-              {temperature}°F
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom: Next class countdown */}
-        <div className="bg-gradient-to-r from-red-600/20 to-orange-600/20 border border-red-500/30 rounded-2xl p-6 backdrop-blur-sm">
-          <p className="text-sm text-slate-300 mb-2">NEXT CLASS STARTS IN</p>
-          <div className="flex items-baseline gap-3">
-            <h2 className="text-4xl md:text-5xl font-bold text-red-400">
-              {nextClassTime}
-            </h2>
-            <p className="text-2xl text-slate-300">
-              {nextClassName}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Action Cards Section */}
-      <section className="px-8 md:px-12 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          {actionCards.map((card) => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="bg-gray-900 border border-red-800/50 rounded-3xl p-8 w-full max-w-lg mx-4 shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        <h2 className="text-3xl font-black text-white text-center mb-6">WHO'S CHECKING IN?</h2>
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Type your name..."
+          className="w-full bg-gray-800 border border-gray-600 rounded-2xl px-5 py-4 text-white text-xl placeholder-gray-500 focus:outline-none focus:border-red-500 mb-4"
+        />
+        {searchQuery.isLoading && (
+          <p className="text-gray-400 text-center py-4">Searching...</p>
+        )}
+        {searchQuery.data && searchQuery.data.length === 0 && query.length >= 2 && (
+          <p className="text-gray-400 text-center py-4">No students found</p>
+        )}
+        <div className="space-y-2 max-h-64 overflow-y-auto">
+          {(searchQuery.data || []).map((s: any) => (
             <button
-              key={card.id}
-              onClick={card.action}
-              className={`group relative h-48 rounded-2xl overflow-hidden transition-all duration-300 transform hover:scale-105 active:scale-95 ${
-                card.color === 'primary'
-                  ? 'bg-gradient-to-br from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 shadow-lg shadow-red-600/50'
-                  : card.color === 'accent'
-                  ? 'bg-gradient-to-br from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 shadow-lg shadow-orange-600/50'
-                  : card.color === 'secondary'
-                  ? 'bg-gradient-to-br from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 shadow-lg shadow-slate-600/50'
-                  : 'bg-gradient-to-br from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 shadow-lg shadow-slate-600/30'
-              }`}
+              key={s.id}
+              onClick={() => handleCheckIn(s.id, `${s.firstName} ${s.lastName || ''}`.trim())}
+              className="w-full flex items-center gap-4 bg-gray-800 hover:bg-red-900/40 border border-gray-700 hover:border-red-600 rounded-2xl px-5 py-3 transition-all"
             >
-              {/* Glow effect on hover */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
-              {/* Content */}
-              <div className="relative h-full flex flex-col items-center justify-center gap-4 p-6 text-center">
-                <div className="text-white/80 group-hover:text-white transition-colors">
-                  {card.icon}
-                </div>
-                <div>
-                  <h3 className="text-2xl md:text-3xl font-bold mb-1">
-                    {card.title}
-                  </h3>
-                  <p className="text-sm text-white/70 group-hover:text-white/90">
-                    {card.subtitle}
-                  </p>
-                </div>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 ${avatarColor(`${s.firstName} ${s.lastName}`)}`}>
+                {initials(`${s.firstName} ${s.lastName || ''}`)}
+              </div>
+              <div className="text-left">
+                <p className="text-white font-bold">{s.firstName} {s.lastName}</p>
+                {s.program && <p className="text-gray-400 text-sm">{s.program}</p>}
               </div>
             </button>
           ))}
         </div>
-      </section>
+        <button
+          onClick={onClose}
+          className="w-full mt-6 py-3 rounded-2xl border border-gray-600 text-gray-400 hover:text-white hover:border-gray-400 transition-all"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
 
-      {/* Today's Schedule Preview */}
-      <section className="px-8 md:px-12 py-12 bg-slate-900/50">
-        <h2 className="text-3xl font-bold mb-8">Today's Classes</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {todaySchedule.map((item) => (
-            <div
-              key={item.id}
-              className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 hover:bg-slate-800 transition-colors cursor-pointer group"
-            >
-              <div className="text-red-400 font-bold text-2xl mb-2">
-                {item.time}
-              </div>
-              <h3 className="text-xl font-bold mb-2 group-hover:text-red-400 transition-colors">
-                {item.className}
-              </h3>
-              <p className="text-slate-400 mb-3">
-                with {item.instructor}
-              </p>
-              <div className="flex items-center gap-2 text-sm text-slate-400">
-                <Users className="w-4 h-4" />
-                {item.spots} spots available
-              </div>
-            </div>
-          ))}
+// ─── Main page ───────────────────────────────────────────────────────────────
+
+export default function KioskHome() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const orgId = user?.activeOrgId || 1;
+  const [showCheckIn, setShowCheckIn] = useState(false);
+  const [now, setNow] = useState(new Date());
+
+  // Refresh clock every minute
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(t);
+  }, []);
+
+  const liveData = trpc.kiosk.getLiveKioskData.useQuery(
+    { orgId },
+    { refetchInterval: 60_000 }
+  );
+
+  const { todayClasses = [], newStudents = [], leaderboard = [] } = liveData.data || {};
+
+  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  return (
+    <div className="min-h-screen w-full overflow-y-auto text-white relative select-none"
+      style={{
+        background: 'radial-gradient(ellipse at 50% 0%, #3d0000 0%, #1a0000 40%, #0a0000 100%)',
+      }}
+    >
+      {/* Animated fire particles overlay */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden>
+        {[...Array(12)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full opacity-20 animate-pulse"
+            style={{
+              width: `${60 + i * 20}px`,
+              height: `${60 + i * 20}px`,
+              background: `radial-gradient(circle, rgba(220,38,38,0.6) 0%, transparent 70%)`,
+              left: `${(i * 8.3) % 100}%`,
+              top: `${(i * 13.7) % 100}%`,
+              animationDelay: `${i * 0.4}s`,
+              animationDuration: `${2 + (i % 3)}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="relative z-10 max-w-3xl mx-auto px-4 py-8 pb-24">
+
+        {/* ── Hero ── */}
+        <div className="text-center mb-6">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-black border-2 border-red-700 flex items-center justify-center shadow-lg shadow-red-900/50">
+            <Flame className="w-10 h-10 text-red-500" />
+          </div>
+          <h1 className="text-5xl sm:text-6xl font-black tracking-tight uppercase drop-shadow-lg">
+            READY TO TRAIN 👊
+          </h1>
+          <p className="text-gray-400 mt-2 text-lg">Tap or Scan to Begin</p>
+          <p className="text-gray-500 text-sm mt-1">{dateStr} · {timeStr}</p>
         </div>
-      </section>
 
-      {/* Persistent Navigation Dock */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-slate-950 to-slate-900/80 border-t border-slate-700 backdrop-blur-sm">
-        <div className="flex justify-around items-center h-20 px-4 max-w-7xl mx-auto">
-          <button className="flex flex-col items-center gap-1 text-slate-300 hover:text-red-400 transition-colors group">
-            <div className="w-8 h-8 rounded-lg bg-slate-800 group-hover:bg-red-600/20 flex items-center justify-center transition-colors">
-              <MapPin className="w-5 h-5" />
+        {/* ── New Students panel ── */}
+        {newStudents.length > 0 && (
+          <div className="mb-4 rounded-2xl border border-purple-700/40 bg-purple-900/20 backdrop-blur-sm p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+              <span className="font-black text-white text-sm tracking-widest uppercase">Welcome New Students!</span>
             </div>
-            <span className="text-xs font-medium">Home</span>
+            <p className="text-gray-400 text-xs mb-3">We're excited to have you here for your first lesson</p>
+            <div className="space-y-2">
+              {newStudents.map((s: any) => (
+                <div key={s.id} className="flex items-center justify-between bg-black/30 rounded-xl px-4 py-2">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs ${avatarColor(s.name)}`}>
+                      {initials(s.name)}
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold text-sm">{s.name}</p>
+                      <p className="text-gray-400 text-xs">{s.program}{s.time ? ` · ${s.time}` : ''}</p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold bg-yellow-400 text-black px-2 py-0.5 rounded-full">NEW STUDENT</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Primary CTA ── */}
+        <button
+          onClick={() => setShowCheckIn(true)}
+          className="w-full mb-3 py-6 rounded-2xl bg-gradient-to-r from-red-700 to-red-600 hover:from-red-600 hover:to-red-500 active:scale-95 transition-all shadow-xl shadow-red-900/60 text-white font-black text-3xl tracking-widest uppercase"
+        >
+          🔥 TAP TO CHECK IN 🔥
+        </button>
+
+        {/* ── Secondary action buttons ── */}
+        <div className="space-y-2 mb-4">
+          <button className="w-full flex items-center justify-between bg-gray-900/70 hover:bg-gray-800/80 border border-gray-700 rounded-2xl px-5 py-4 transition-all active:scale-95">
+            <div className="flex items-center gap-3">
+              <Ticket className="w-5 h-5 text-gray-300" />
+              <span className="font-black text-white uppercase tracking-wider text-sm">Buy a Day Pass</span>
+            </div>
+            <span className="text-xs font-bold bg-gray-700 text-gray-200 px-3 py-1 rounded-full">Walk-ins Welcome</span>
           </button>
-          <button className="flex flex-col items-center gap-1 text-slate-300 hover:text-red-400 transition-colors group">
-            <div className="w-8 h-8 rounded-lg bg-slate-800 group-hover:bg-red-600/20 flex items-center justify-center transition-colors">
-              <Calendar className="w-5 h-5" />
+
+          <button
+            onClick={() => navigate('/login?tab=signup')}
+            className="w-full flex items-center justify-between bg-gray-900/70 hover:bg-gray-800/80 border border-gray-700 rounded-2xl px-5 py-4 transition-all active:scale-95"
+          >
+            <div className="flex items-center gap-3">
+              <UserPlus className="w-5 h-5 text-gray-300" />
+              <span className="font-black text-white uppercase tracking-wider text-sm">Enroll Now</span>
             </div>
-            <span className="text-xs font-medium">Schedule</span>
+            <span className="text-xs font-bold bg-green-700 text-green-100 px-3 py-1 rounded-full">Start Today</span>
           </button>
-          <button className="flex flex-col items-center gap-1 text-slate-300 hover:text-red-400 transition-colors group">
-            <div className="w-8 h-8 rounded-lg bg-slate-800 group-hover:bg-red-600/20 flex items-center justify-center transition-colors">
-              <Users className="w-5 h-5" />
+
+          <button
+            onClick={() => navigate('/arcade')}
+            className="w-full flex items-center justify-between bg-gray-900/70 hover:bg-gray-800/80 border border-purple-800/50 rounded-2xl px-5 py-4 transition-all active:scale-95"
+          >
+            <div className="flex items-center gap-3">
+              <Gamepad2 className="w-5 h-5 text-purple-400" />
+              <span className="font-black text-white uppercase tracking-wider text-sm">Play Arcade Games</span>
             </div>
-            <span className="text-xs font-medium">Check In</span>
-          </button>
-          <button className="flex flex-col items-center gap-1 text-slate-300 hover:text-red-400 transition-colors group">
-            <div className="w-8 h-8 rounded-lg bg-slate-800 group-hover:bg-red-600/20 flex items-center justify-center transition-colors">
-              <Flame className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-medium">Programs</span>
-          </button>
-          <button className="flex flex-col items-center gap-1 text-slate-300 hover:text-red-400 transition-colors group">
-            <div className="w-8 h-8 rounded-lg bg-slate-800 group-hover:bg-red-600/20 flex items-center justify-center transition-colors">
-              <HelpCircle className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-medium">Help</span>
+            <span className="text-xs font-bold bg-purple-700 text-purple-100 px-3 py-1 rounded-full">4 Games</span>
           </button>
         </div>
-      </nav>
 
-      {/* Bottom padding for nav dock */}
-      <div className="h-20" />
+        <p className="text-center text-gray-500 text-xs mb-6">Check-in opens 15 minutes before class.</p>
+
+        {/* ── Bottom 2-col ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          {/* Today's Classes */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Flame className="w-4 h-4 text-red-500" />
+              <span className="font-black text-white text-sm tracking-widest uppercase">Top Warriors</span>
+              <span className="text-gray-500 text-xs ml-1">Current Begin</span>
+            </div>
+            <div className="space-y-2">
+              {todayClasses.length === 0 && (
+                <div className="bg-black/40 rounded-xl px-4 py-3 text-gray-500 text-sm">No classes scheduled today</div>
+              )}
+              {todayClasses.map((c: any) => {
+                const mins = minutesUntil(c.startTime);
+                return (
+                  <div key={c.id} className="bg-black/50 border border-gray-800 rounded-xl px-4 py-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-black text-white text-sm uppercase truncate">{c.name}</p>
+                        <p className="text-gray-400 text-xs flex items-center gap-1 mt-0.5">
+                          <Users className="w-3 h-3 flex-shrink-0" /> {c.instructor}
+                        </p>
+                        <p className="text-gray-500 text-xs flex items-center gap-1 mt-0.5">
+                          <Clock className="w-3 h-3 flex-shrink-0" />
+                          {formatTime(c.startTime)}{c.endTime ? ` - ${formatTime(c.endTime)}` : ''}
+                        </p>
+                      </div>
+                      <span className={`flex-shrink-0 text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap ${mins === 0 ? 'bg-red-700 text-white' : 'bg-gray-700 text-gray-200'}`}>
+                        Opens in {mins}m
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Leaderboard + Runner Up */}
+          <div className="space-y-4">
+            {/* Perfect Attendance */}
+            <div className="bg-black/50 border border-gray-800 rounded-2xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Flame className="w-4 h-4 text-red-500" />
+                <span className="font-black text-white text-sm tracking-widest uppercase">Perfect Attendance</span>
+              </div>
+              {leaderboard.length === 0 && (
+                <p className="text-gray-500 text-sm">No attendance data yet</p>
+              )}
+              {leaderboard.slice(0, 3).map((s: any, i: number) => (
+                <div key={s.studentId} className="flex items-center gap-3 py-2 border-b border-gray-800 last:border-0">
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 ${i === 0 ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-white'}`}>
+                    {i + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-semibold text-sm truncate">{s.name}</p>
+                    <p className="text-gray-400 text-xs">{s.streak} Classes Straight</p>
+                  </div>
+                  {i === 0 && <Flame className="w-4 h-4 text-red-500 flex-shrink-0" />}
+                </div>
+              ))}
+            </div>
+
+            {/* Runner Up for Next Belt */}
+            <div className="bg-black/50 border border-gray-800 rounded-2xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                <span className="font-black text-white text-sm tracking-widest uppercase">Runner Up for Next Belt</span>
+              </div>
+              <p className="text-gray-500 text-sm">No students close to promotion yet</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Lock button ── */}
+      <button
+        onClick={() => navigate('/kiosk-studio')}
+        className="fixed bottom-6 right-6 z-20 flex flex-col items-center gap-1 text-gray-500 hover:text-gray-300 transition-colors"
+        title="Lock kiosk"
+      >
+        <Lock className="w-5 h-5" />
+        <span className="text-xs">LOCK</span>
+      </button>
+
+      {/* ── Check-in modal ── */}
+      {showCheckIn && (
+        <CheckInModal orgId={orgId} onClose={() => setShowCheckIn(false)} />
+      )}
     </div>
   );
 }

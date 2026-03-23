@@ -929,4 +929,144 @@ export const kioskRouter = router({
         updatedAt: k.updatedAt,
       };
     }),
+
+  /**
+   * Search students by org (for kiosk home check-in modal)
+   */
+  searchStudentsByOrg: publicProcedure
+    .input(z.object({ orgId: z.number(), query: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      const { students } = await import("../drizzle/schema");
+      const { like, or, and } = await import("drizzle-orm");
+      return ctx.db
+        .select({ id: students.id, firstName: students.firstName, lastName: students.lastName, program: students.program })
+        .from(students)
+        .where(
+          and(
+            eq(students.organizationId, input.orgId),
+            or(
+              like(students.firstName, `%${input.query}%`),
+              like(students.lastName, `%${input.query}%`)
+            )
+          )
+        )
+        .limit(10);
+    }),
+
+  /**
+   * Check in a student by org (for kiosk home check-in modal)
+   */
+  checkInStudentByOrg: publicProcedure
+    .input(z.object({ orgId: z.number(), studentId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      const { studentAttendance } = await import("../drizzle/schema");
+      await ctx.db.insert(studentAttendance).values({
+        studentId: input.studentId,
+        classDate: new Date().toISOString(),
+        status: 'attended',
+        checkedInAt: new Date().toISOString(),
+        isQualified: 1,
+      });
+      return { success: true };
+    }),
+
+  /**
+   * Get live kiosk home screen data: today's classes, new students/leads, attendance leaderboard
+   * Public endpoint — no auth required (kiosk is a public display)
+   */
+  getLiveKioskData: publicProcedure
+    .input(z.object({ orgId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.db) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      }
+      const { classes: classesTable, students, leads, studentAttendance } = await import("../drizzle/schema");
+      const { and, gte, desc, sql } = await import("drizzle-orm");
+
+      const now = new Date();
+      const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][now.getDay()];
+
+      // Today's active classes for this org
+      const todayClasses = await ctx.db
+        .select()
+        .from(classesTable)
+        .where(and(eq(classesTable.organizationId, input.orgId), eq(classesTable.isActive, 1)))
+        .orderBy(classesTable.startTime)
+        .limit(20);
+
+      // Filter to classes that run today based on dayOfWeek
+      const filteredClasses = todayClasses.filter(c => {
+        if (!c.dayOfWeek) return true;
+        const days = c.dayOfWeek.split(',').map((d: string) => d.trim().toLowerCase());
+        return days.includes(dayName.toLowerCase()) || days.includes(dayName.slice(0,3).toLowerCase());
+      });
+      const displayClasses = filteredClasses.length > 0 ? filteredClasses : todayClasses.slice(0, 8);
+
+      // New leads from the last 7 days
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const newLeads = await ctx.db
+        .select()
+        .from(leads)
+        .where(and(eq(leads.organizationId, input.orgId), gte(leads.createdAt, sevenDaysAgo)))
+        .orderBy(desc(leads.createdAt))
+        .limit(5);
+
+      // Attendance leaderboard: count attended records per student
+      const recentAttendance = await ctx.db
+        .select()
+        .from(studentAttendance)
+        .where(eq(studentAttendance.status, 'attended'))
+        .orderBy(desc(studentAttendance.classDate))
+        .limit(200);
+
+      const streakMap: Record<number, number> = {};
+      for (const rec of recentAttendance) {
+        if (rec.studentId) streakMap[rec.studentId] = (streakMap[rec.studentId] || 0) + 1;
+      }
+
+      const topStudentIds = Object.entries(streakMap)
+        .sort(([,a],[,b]) => (b as number) - (a as number))
+        .slice(0, 5)
+        .map(([id]) => Number(id));
+
+      let topStudents: Array<{id: number; firstName: string; lastName: string | null}> = [];
+      if (topStudentIds.length > 0) {
+        topStudents = await ctx.db
+          .select({ id: students.id, firstName: students.firstName, lastName: students.lastName })
+          .from(students)
+          .where(sql`${students.id} IN (${sql.join(topStudentIds.map(id => sql`${id}`), sql`, `)})`)
+          .limit(5);
+      }
+
+      const leaderboard = topStudentIds.map(id => {
+        const s = topStudents.find(st => st.id === id);
+        return {
+          studentId: id,
+          name: s ? `${s.firstName} ${s.lastName || ''}`.trim() : `Student #${id}`,
+          streak: streakMap[id] || 0,
+        };
+      });
+
+      return {
+        todayClasses: displayClasses.map(c => ({
+          id: c.id,
+          name: c.name,
+          instructor: c.instructor || 'Coach',
+          startTime: c.startTime || c.time || '',
+          endTime: c.endTime || '',
+          capacity: c.capacity,
+          enrolled: c.enrolled,
+        })),
+        newStudents: newLeads.map(l => ({
+          id: l.id,
+          name: `${l.firstName || ''} ${l.lastName || ''}`.trim() || 'New Student',
+          program: l.interestedProgram || 'Not Sure',
+          time: '',
+        })),
+        leaderboard,
+        dayName,
+      };
+    }),
 });

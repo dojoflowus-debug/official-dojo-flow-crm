@@ -40,7 +40,7 @@ const NAVIGATION = [
   { id: 'classes', name: 'Classes', href: '/classes', icon: Calendar },
   { id: 'floor-plans', name: 'Floor Plans', href: '/floor-plans', icon: Grid3x3 },
   { id: 'operations', name: 'Operations', href: '/operations/merchandise', icon: Package },
-  { id: 'kiosk-studio', name: 'Kiosk', href: '/kiosk-studio', icon: Grid3x3 },
+  { id: 'kiosk-studio', name: 'Kiosk', href: '/kiosk-home', icon: Grid3x3 },
   { id: 'staff', name: 'Staff', href: '/staff', icon: UserCog },
   { id: 'programs', name: 'Programs', href: '/programs', icon: BookOpen },
   { id: 'reports', name: 'Reports', href: '/reports', icon: BarChart3 },
