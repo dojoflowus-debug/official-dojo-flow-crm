@@ -37,6 +37,7 @@ const KaiDashboard = lazy(() => import("../pages/KaiDashboard"));
 const KaiCommand = lazy(() => import("../pages/KaiCommand"));
 const KaiCreative = lazy(() => import("../pages/KaiCreative"));
 const ReleaseNotes = lazy(() => import("../pages/ReleaseNotes"));
+const Changelog = lazy(() => import("../pages/Changelog"));
 const KaiCommandDashboard = lazy(() => import("../pages/KaiCommandDashboard"));
 const CRMDashboard = lazy(() => import("../pages/CRMDashboard"));
 const KaiDebugHarnessMock = lazy(() => import("../pages/KaiDebugHarnessMock"));
@@ -176,6 +177,7 @@ export const appRoutes: RouteConfig[] = [
   { path: "/forgot-password", element: <ForgotPassword />, label: "Forgot Password" },
   { path: "/reset-password", element: <ResetPassword />, label: "Reset Password" },
   { path: "/kai/release-notes/v0-9-0-beta", element: <AppShell><ReleaseNotes /></AppShell>, label: "Release Notes" },
+  { path: "/changelog", element: <AppShell><Changelog /></AppShell>, label: "Changelog" },
   { path: "/test-settings", element: <TestSettingsModal />, label: "Test Settings Modal" },
   { path: "/kai", element: <AppShell><KaiCommand /></AppShell>, label: "Kai Command" },
   { path: "/kai/creative", element: <AppShell><KaiCreative /></AppShell>, label: "Kai Creative" },

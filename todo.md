@@ -8759,3 +8759,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Remove premature 'Got it — I'm creating that flyer now' ack message from KaiCommand.tsx — Kai now asks questions first instead of announcing generation before server validation
 - [x] Replace all remaining 'Sorry', 'I couldn't', 'couldn't generate' language across server/routers.ts, server/kai-metric-handler.ts, server/kaiConversationsRouter.ts with forward-moving language
 - [x] Gate error handling in KaiCommand now shows friendly guided question instead of generic fallback
+
+## Changelog Page & Beta Banner Update (Session 6 cont.)
+
+- [x] Locate and read the Kai beta banner modal component
+- [x] Build /changelog page with full feature history organized by version
+- [x] Update banner modal content to reflect all features added since v0.9.0-beta
+- [x] Wire 'Read what's new' button to navigate to /changelog page
+- [x] Add Changelog link to navigation (accessible from the app via /changelog route)

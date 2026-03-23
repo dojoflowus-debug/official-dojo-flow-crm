@@ -332,7 +332,7 @@ export default function KaiCommand() {
 
   // Check if beta notice should be shown on mount
   useEffect(() => {
-    const hasSeenNotice = localStorage.getItem('kai_beta_notice_v0.9.0');
+    const hasSeenNotice = localStorage.getItem('kai_beta_notice_v0.9.6');
     if (!hasSeenNotice) {
       setShowBetaNotice(true);
     }
@@ -2849,15 +2849,14 @@ export default function KaiCommand() {
 
   // Handle beta notice actions
   const handleReadNotes = () => {
-    localStorage.setItem('kai_beta_notice_v0.9.0', 'true');
+    localStorage.setItem('kai_beta_notice_v0.9.6', 'true');
     setShowBetaNotice(false);
-    navigate('/kai/release-notes/v0-9-0-beta');
+    navigate('/changelog');
   };
 
   const handleSkipNotice = () => {
-    localStorage.setItem('kai_beta_notice_v0.9.0', 'true');
+    localStorage.setItem('kai_beta_notice_v0.9.6', 'true');
     setShowBetaNotice(false);
-    // Note: Notification creation would go here if we had a notifications table
   };
 
   return (
