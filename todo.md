@@ -8838,3 +8838,7 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Kai responds "Let me try a different approach — head to Kai Creative" — fixed: root cause was dojoSettings.orgId field mismatch (should be organizationId) causing programs to not load, making the brief gate always block; fixed field name in contextInjectionEngine.ts; also replaced the deflection fallback message with a specific clarifying question
 - [x] System prompt operator format changes not reflected in production — confirmed: operator format is in openai.ts chatWithKai (used by trpc.kai.chat) and kaiConversationsRouter.ts; server auto-restarted after contextInjectionEngine.ts fix and changes are live
 
+
+## Feature: View in Creative Library Link in Kai Chat (Session 7)
+- [x] After a flyer/creative image is generated in Kai chat, display a 'View in Creative Library' inline link below the CreativePreviewCard that navigates to /kai/creative — added button with ExternalLink icon, theme-aware red color, stopPropagation to avoid triggering the card's ResultsPanel click
+

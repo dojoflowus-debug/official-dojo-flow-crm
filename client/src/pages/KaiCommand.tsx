@@ -89,7 +89,8 @@ import {
   Upload,
   RefreshCw,
   FileSpreadsheet,
-  Download
+  Download,
+  ExternalLink
 } from 'lucide-react';
 
 // Kai Logo for center panel - uses actual logo image
@@ -4011,6 +4012,23 @@ export default function KaiCommand() {
                                     navigate('/kai/creative');
                                   }}
                                 />
+                                {/* View in Creative Library link */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate('/kai/creative');
+                                  }}
+                                  className={`mt-2 flex items-center gap-1.5 text-xs font-medium transition-colors ${
+                                    isCinematic
+                                      ? 'text-red-400 hover:text-red-300'
+                                      : isDark
+                                        ? 'text-red-400 hover:text-red-300'
+                                        : 'text-red-600 hover:text-red-700'
+                                  }`}
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  View in Creative Library
+                                </button>
                               </div>
                             )}
 
