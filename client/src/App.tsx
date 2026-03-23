@@ -26,7 +26,7 @@ const PUBLIC_ROUTES = [
   '/public', '/public-old', '/schools', '/fitness', '/studios', '/kai-onboarding', '/welcome',
   '/owner', '/staff/login', '/student-login', '/login', '/forgot-password', '/reset-password', '/select-organization',
   '/onboarding', '/owner/onboarding', '/onboarding/setup',
-  '/kiosk', '/kiosk-home', '/kiosk-live', '/checkin',
+  '/kiosk', '/kiosk-home', '/kiosk-live', '/checkin', '/arcade',
   '/lead-capture', '/lead-capture-location', '/locations',
   '/student', '/enrollment', '/waiver', '/payment', '/new-visitor', '/events', '/shop', '/referral', '/feedback',
 ];

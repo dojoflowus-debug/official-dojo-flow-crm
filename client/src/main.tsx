@@ -50,6 +50,7 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
     '/kiosk-home',
     '/kiosk-live',
     '/checkin',
+    '/arcade',
     // Lead capture & locations
     '/lead-capture',
     '/lead-capture-location',
@@ -89,7 +90,7 @@ queryClient.getQueryCache().subscribe(event => {
     // Suppress UNAUTHORIZED errors on public/login routes — they are expected
     const isUnauthedError = error instanceof TRPCClientError && error.message === UNAUTHED_ERR_MSG;
     const currentPath = window.location.pathname;
-    const isPublicPath = ['/', '/public', '/public-old', '/schools', '/fitness', '/studios', '/kai-onboarding', '/welcome', '/owner', '/staff/login', '/student-login', '/login', '/forgot-password', '/reset-password', '/select-organization', '/onboarding', '/kiosk', '/kiosk-home', '/kiosk-live', '/checkin', '/lead-capture', '/lead-capture-location', '/locations', '/student', '/enrollment', '/waiver', '/payment', '/new-visitor', '/events', '/shop', '/referral', '/feedback'].some(
+    const isPublicPath = ['/', '/public', '/public-old', '/schools', '/fitness', '/studios', '/kai-onboarding', '/welcome', '/owner', '/staff/login', '/student-login', '/login', '/forgot-password', '/reset-password', '/select-organization', '/onboarding', '/kiosk', '/kiosk-home', '/kiosk-live', '/checkin', '/arcade', '/lead-capture', '/lead-capture-location', '/locations', '/student', '/enrollment', '/waiver', '/payment', '/new-visitor', '/events', '/shop', '/referral', '/feedback'].some(
       r => currentPath === r || currentPath.startsWith(r + '/')
     );
     if (!(isUnauthedError && isPublicPath)) {

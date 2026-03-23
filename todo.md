@@ -8868,3 +8868,13 @@ Transform kiosk from admin dashboard to premium location experience
 ## Bug: Kiosk Logo Not Showing (Session 7)
 - [x] Replace generic flame icon on kiosk home with dojo's actual logo from school profile (auto-loaded) — fixed root cause: DB was null for unauthenticated requests because db init was inside auth try/catch; moved db init outside auth block in context.ts so public procedures always get DB access; kiosk now loads logo_dark_url from school_profiles and falls back to flame icon if none set
 
+
+## Feature: Kiosk Arcade Page — 4 Games (Session 7)
+- [x] Create /arcade route with game selection grid (dark kiosk theme, back button to /kiosk-home)
+- [x] Game 1: Ninja Dodge — dodge falling shurikens, tap/click to move left/right
+- [x] Game 2: Belt Breaker — Breakout-style game, break colored belt tiles
+- [x] Game 3: Dojo Memory — card flip memory match with martial arts icons
+- [x] Game 4: Reaction Strike — tap the target as fast as possible, measures reaction time
+- [x] Wire "PLAY ARCADE GAMES" button on /kiosk-home to navigate to /arcade
+- [x] Add /arcade to public routes in both App.tsx and main.tsx (root cause: main.tsx had separate inline public route list)
+
