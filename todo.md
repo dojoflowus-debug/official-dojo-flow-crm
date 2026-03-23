@@ -8830,3 +8830,6 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Find Kai system prompt files — found in openai.ts (chatWithKai), kaiConversationsRouter.ts (processQuery), kaiIntelligenceLayer.ts (brief/intent)
 - [x] Add structured operator format instructions (Diagnosis / Root cause / Action taken / Current status / Next step) — added to both primary system prompts
 - [x] Enforce direct engineer-style language — no vague phrases, no apologies — tone rules added to both prompts
+
+## Bug: Kai Chat Textarea Doesn't Shrink Back (Session 7)
+- [x] Textarea grows when text is entered but does not return to original height when cleared — fixed: added useEffect in MentionInput.tsx that resets height to 'auto' then recalculates scrollHeight whenever the controlled `value` prop changes (catches external clears from parent)

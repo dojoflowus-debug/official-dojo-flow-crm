@@ -243,6 +243,14 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
     }
   }, [showSuggestions, flatSuggestions, selectedIndex, selectSuggestion, onSubmit, value, mentions]);
 
+  // Auto-resize: recalculate height whenever the controlled value changes (handles external clears)
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 120) + 'px';
+    }
+  }, [value]);
+
   // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
