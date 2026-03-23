@@ -8808,3 +8808,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Build precision hero image prompt engine — program-specific Pexels queries with photorealistic results
 - [x] Wire Pexels hero images into flyerRenderer.ts with cinematic full-bleed overlay template
 - [x] Redesigned HTML template to cinematic full-bleed layout matching Manus reference style
+
+## Change: Flyer Offer — 7 Day Trial (Session 6)
+
+- [x] Update all flyer CTA defaults from "free trial class" to "7 day trial"
+- [x] Update extractCta to map "free trial" to 7 day trial copy
+- [x] Update all per-program benefit copy that mentions "First class FREE"

@@ -187,12 +187,12 @@ export function buildFlyerHtml(data: FlyerData): string {
 
   const headline = data.headline || `Join Our ${data.programName} Program!`;
   const subheadline = data.subheadline || (data.audience ? `${data.programName} · ${data.audience}` : data.programName);
-  const cta = data.callToAction || "Sign Up for a FREE Trial Class!";
+  const cta = data.callToAction || "Start Your FREE 7-Day Trial!";
   const benefits = data.benefits || [
     "Build confidence, focus & discipline",
     "Fun, safe learning environment",
     "Expert instructors, small class sizes",
-    "First class FREE — no commitment",
+    "FREE 7-Day Trial — no commitment required",
   ];
 
   const scale = isStory ? 1.5 : isSquare ? 1.1 : isBanner ? 0.75 : 1;
@@ -590,7 +590,7 @@ export async function parseFlyerDataFromBrief(
 ): Promise<FlyerData> {
   const programName = briefAnswers.program || extractProgram(prompt) || "Martial Arts Program";
   const audience = briefAnswers.audience || extractAudience(prompt) || null;
-  const cta = briefAnswers.content || extractCta(prompt) || "Sign Up for a FREE Trial Class!";
+  const cta = briefAnswers.content || extractCta(prompt) || "Start Your FREE 7-Day Trial!";
 
   const headlineMap: Record<string, string> = {
     "little ninjas": "Unleash Your Child's Inner Ninja!",
@@ -616,13 +616,13 @@ export async function parseFlyerDataFromBrief(
       "Build confidence, focus & discipline",
       "Develop motor skills & coordination",
       "Fun, safe environment for ages 3–5",
-      "Expert instructors, small class sizes",
+      "FREE 7-Day Trial — no commitment required",
     ],
     ninja: [
       "Build confidence, focus & discipline",
       "Develop motor skills & coordination",
       "Fun, safe environment for ages 3–5",
-      "Expert instructors, small class sizes",
+      "FREE 7-Day Trial — no commitment required",
     ],
     kickboxing: [
       "Full-body workout — burn up to 800 cal/hr",
@@ -704,8 +704,8 @@ function extractAudience(prompt: string): string | null {
 
 function extractCta(prompt: string): string | null {
   const lower = prompt.toLowerCase();
-  if (lower.includes("free trial")) return "Sign Up for a FREE Trial Class!";
-  if (lower.includes("enroll")) return "Enroll Today — Limited Spots Available!";
+  if (lower.includes("free trial") || lower.includes("7 day") || lower.includes("7-day")) return "Start Your FREE 7-Day Trial!";
+  if (lower.includes("enroll")) return "Enroll Today — 7-Day Trial Available!";
   if (lower.includes("limited spots")) return "Limited Spots Available — Register Now!";
   return null;
 }
