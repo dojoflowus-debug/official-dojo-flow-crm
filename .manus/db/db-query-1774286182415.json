@@ -1,0 +1,15 @@
+{
+  "query": "SELECT sp.phone, sp.school_name, sp.email FROM school_profiles sp JOIN organizations o ON sp.organization_id = o.id WHERE o.id = 1 LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT sp.phone, sp.school_name, sp.email FROM school_profiles sp JOIN organizations o ON sp.organization_id = o.id WHERE o.id = 1 LIMIT 1;",
+  "rows": [
+    {
+      "phone": "7779311",
+      "school_name": "Demo Dojo",
+      "email": "test@demodojo.com"
+    }
+  ],
+  "messages": [],
+  "stdout": "phone\tschool_name\temail\n7779311\tDemo Dojo\ttest@demodojo.com\n",
+  "stderr": "",
+  "execution_time_ms": 116
+}

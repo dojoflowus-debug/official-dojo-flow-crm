@@ -8833,3 +8833,8 @@ Transform kiosk from admin dashboard to premium location experience
 
 ## Bug: Kai Chat Textarea Doesn't Shrink Back (Session 7)
 - [x] Textarea grows when text is entered but does not return to original height when cleared — fixed: added useEffect in MentionInput.tsx that resets height to 'auto' then recalculates scrollHeight whenever the controlled `value` prop changes (catches external clears from parent)
+
+## Bug: Kai Deflects Flyer Requests in Main Chat (Session 7)
+- [x] Kai responds "Let me try a different approach — head to Kai Creative" — fixed: root cause was dojoSettings.orgId field mismatch (should be organizationId) causing programs to not load, making the brief gate always block; fixed field name in contextInjectionEngine.ts; also replaced the deflection fallback message with a specific clarifying question
+- [x] System prompt operator format changes not reflected in production — confirmed: operator format is in openai.ts chatWithKai (used by trpc.kai.chat) and kaiConversationsRouter.ts; server auto-restarted after contextInjectionEngine.ts fix and changes are live
+

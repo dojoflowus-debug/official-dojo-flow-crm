@@ -141,7 +141,7 @@ export async function loadBusinessContext(orgId: number): Promise<BusinessContex
         if (db) {
           const [settings] = await db.select({ programsTaught: dojoSettings.programsTaught })
             .from(dojoSettings)
-            .where(eq(dojoSettings.orgId, orgId))
+            .where(eq(dojoSettings.organizationId, orgId))
             .limit(1);
           if (settings?.programsTaught) {
             const names = (settings.programsTaught as string).split(/[,;|]+/).map((s) => s.trim()).filter(Boolean);

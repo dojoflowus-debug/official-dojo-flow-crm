@@ -1,0 +1,218 @@
+{
+  "query": "DESCRIBE programs;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute DESCRIBE programs;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "name",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "type",
+      "Type": "enum('membership','class_pack','drop_in','private')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "ageRange",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "billing",
+      "Type": "enum('monthly','weekly','per_session','one_time')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "price",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "contractLength",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "maxSize",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "isCoreProgram",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "showOnKiosk",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "allowAutopilot",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "description",
+      "Type": "mediumtext",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "isActive",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "waiverRequired",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "paymentRequired",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "approvalRequired",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "trialType",
+      "Type": "enum('none','free','prorated')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "none",
+      "Extra": ""
+    },
+    {
+      "Field": "trialLengthDays",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "7",
+      "Extra": ""
+    },
+    {
+      "Field": "trialPrice",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Field": "termLength",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "eligibility",
+      "Type": "enum('open','invitation_only','upgrade_only')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "open",
+      "Extra": ""
+    },
+    {
+      "Field": "showOnEnrollment",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "sortOrder",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "organizationId",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\t\tNULL\tauto_increment\nname\tvarchar(255)\tNO\t\tNULL\t\ntype\tenum('membership','class_pack','drop_in','private')\tNO\t\tNULL\t\nageRange\tvarchar(100)\tYES\t\tNULL\t\nbilling\tenum('monthly','weekly','per_session','one_time')\tYES\t\tNULL\t\nprice\tint\tYES\t\tNULL\t\ncontractLength\tvarchar(50)\tYES\t\tNULL\t\nmaxSize\tint\tYES\t\t20\t\nisCoreProgram\tint\tYES\t\t0\t\nshowOnKiosk\tint\tYES\t\t1\t\nallowAutopilot\tint\tYES\t\t0\t\ndescription\tmediumtext\tYES\t\tNULL\t\nisActive\tint\tNO\t\t1\t\nwaiverRequired\tint\tNO\t\t1\t\npaymentRequired\tint\tNO\t\t1\t\napprovalRequired\tint\tNO\t\t0\t\ntrialType\tenum('none','free','prorated')\tYES\t\tnone\t\ntrialLengthDays\tint\tYES\t\t7\t\ntrialPrice\tint\tYES\t\t0\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\ntermLength\tint\tYES\t\tNULL\t\neligibility\tenum('open','invitation_only','upgrade_only')\tNO\t\topen\t\nshowOnEnrollment\tint\tNO\t\t1\t\nsortOrder\tint\tNO\t\t0\t\norganizationId\tint\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

@@ -2361,7 +2361,8 @@ export default function KaiCommand() {
             friendlyContent = `I have the program and audience — just need one more detail: what\'s the key offer or call to action? (e.g., free trial, enroll now, limited spots)`;
           }
         } else {
-          friendlyContent = `Let me try a different approach — head to Kai Creative to build this with a guided brief.`;
+          // Non-gate error — ask for the missing details directly instead of deflecting
+          friendlyContent = `To generate this, I need a bit more context. What program is this for, and who's the target audience? (e.g., "Little Ninjas for kids ages 3–7" or "Adult Kickboxing, free trial offer")`;
         }
         const errMsg: Message = {
           id: (messageIdCounterRef.current++).toString(),
