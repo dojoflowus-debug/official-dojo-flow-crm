@@ -8786,3 +8786,11 @@ Transform kiosk from admin dashboard to premium location experience
 
 - [x] When user says "create the flyer now" after already providing program/audience details earlier in the conversation, Kai re-asks "what program is this for?" instead of using the established context — fixed: creative route now scans last 10 messages for program/audience and passes as briefAnswers
 - [x] Fix: gate now scans recent conversation history for program/audience before asking; error handler gives specific missing-field guidance
+
+## Feature: HTML-to-Image Flyer Renderer (Session 6)
+
+- [x] Audit current flyer generation pipeline — Gemini Imagen 4 confirmed; cannot render structured text layouts
+- [x] Build server-side HTML flyer templates (flyerRenderer.ts) with brand color injection, hero slot, benefits, CTA, footer
+- [x] Add puppeteer-core renderer using system Chromium — tested and confirmed working (8KB+ PNG output)
+- [x] Wire HTML renderer into generateFromChat mutation — flyer/poster intents use renderer; falls back to Imagen on error
+- [x] Brand colors, school name, phone, email, website, logo, and address all injected from school profile via getBrandDataForOrg

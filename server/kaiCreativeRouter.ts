@@ -36,6 +36,11 @@ import {
   generateMarketingCopy,
   enrichPromptContext,
 } from "./kaiIntelligenceLayer";
+import {
+  buildFlyerHtml,
+  renderFlyerToPng,
+  parseFlyerDataFromBrief,
+} from "./flyerRenderer";
 
 // ── Zod schemas ───────────────────────────────────────────────────────────────
 
@@ -93,6 +98,7 @@ async function getBrandDataForOrg(orgId: number): Promise<
       schoolName: profile?.schoolName ?? null,
       tagline: profile?.tagline ?? null,
       phone: profile?.phone ?? null,
+      email: profile?.email ?? null,
       website: profile?.website ?? null,
       primaryColor,
       secondaryColor,
@@ -743,7 +749,50 @@ export const kaiCreativeRouter = router({
 
       let result: { imageBase64: string; mimeType: string };
 
-      if (input.sourceImageBase64) {
+      // ── FLYER/POSTER ROUTE: use HTML renderer for clean typography ──────────
+      // Pure image generation models cannot render readable text in structured
+      // layouts. For flyer/poster intents, use the HTML-to-PNG renderer instead.
+      const isFlyerIntent = input.size === "flyer" || input.size === "instagram_post" || input.size === "instagram_story" || input.size === "facebook_ad";
+      const promptLower = input.prompt.toLowerCase();
+      const hasFlyerKeyword = promptLower.includes("flyer") || promptLower.includes("poster") ||
+        promptLower.includes("create") || promptLower.includes("make") || promptLower.includes("design") ||
+        promptLower.includes("build") || promptLower.includes("generate");
+
+      if (!input.sourceImageBase64 && isFlyerIntent && hasFlyerKeyword) {
+        // Use HTML renderer for structured flyer output
+        try {
+          const flyerData = parseFlyerDataFromBrief(
+            input.prompt,
+            input.briefAnswers ?? {},
+            {
+              schoolName: brand.schoolName ?? null,
+              phone: brand.phone ?? null,
+              email: (brand as any).email ?? null,
+              website: brand.website ?? null,
+              primaryColor: brand.primaryColor ?? null,
+              secondaryColor: brand.secondaryColor ?? null,
+              logoUrl: brand.logoUrl ?? null,
+              address: brand.address ?? null,
+            },
+            input.size as "flyer" | "instagram_post" | "instagram_story" | "facebook_ad" | "website_banner"
+          );
+          const html = buildFlyerHtml(flyerData);
+          const pngBuffer = await renderFlyerToPng(html, flyerData.size);
+          result = {
+            imageBase64: pngBuffer.toString("base64"),
+            mimeType: "image/png",
+          };
+        } catch (flyerErr: any) {
+          // Fall back to Imagen if renderer fails
+          console.error("[FlyerRenderer] HTML render failed, falling back to Imagen:", flyerErr?.message);
+          result = await generateImage(
+            enrichedChatPrompt,
+            input.size as ImageSize,
+            brand,
+            resolvedStyle
+          );
+        }
+      } else if (input.sourceImageBase64) {
         // Edit mode — source image was uploaded in chat
         result = await editImage(
           enrichedChatPrompt,
@@ -754,7 +803,7 @@ export const kaiCreativeRouter = router({
           resolvedStyle
         );
       } else {
-        // Generate mode — text prompt only
+        // Generate mode — text prompt only (photos, illustrations, etc.)
         result = await generateImage(
           enrichedChatPrompt,
           input.size as ImageSize,
