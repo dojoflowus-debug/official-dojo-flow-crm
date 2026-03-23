@@ -621,22 +621,22 @@ export default function KaiCreative() {
             {contextQuery.data && (
               <div className="space-y-2 mt-1">
                 {/* Missing data warnings */}
-                {contextQuery.data.warnings.filter(w => !dismissedWarnings.includes(w)).map((warning) => (
-                  <div key={warning} className={`flex items-start gap-2 text-xs px-3 py-2 rounded-lg border ${
+                {contextQuery.data.warnings.filter(w => !dismissedWarnings.includes(w.field)).map((warning) => (
+                  <div key={warning.field} className={`flex items-start gap-2 text-xs px-3 py-2 rounded-lg border ${
                     isDark ? "bg-amber-500/10 border-amber-500/20 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-700"
                   }`}>
                     <span className="mt-0.5">⚠</span>
-                    <span className="flex-1">{warning}</span>
-                    <button onClick={() => setDismissedWarnings(prev => [...prev, warning])} className="opacity-50 hover:opacity-100 ml-1">✕</button>
+                    <span className="flex-1">{warning.message}</span>
+                    <button onClick={() => setDismissedWarnings(prev => [...prev, warning.field])} className="opacity-50 hover:opacity-100 ml-1">✕</button>
                   </div>
                 ))}
                 {/* Clarification question */}
-                {contextQuery.data.clarification && (
+                {contextQuery.data.clarification?.needed && contextQuery.data.clarification?.question && (
                   <div className={`text-xs px-3 py-2 rounded-lg border ${
                     isDark ? "bg-blue-500/10 border-blue-500/20 text-blue-300" : "bg-blue-50 border-blue-200 text-blue-700"
                   }`}>
                     <div className="flex items-center gap-1.5 mb-1.5 font-medium">
-                      <span>✦</span> {contextQuery.data.clarification}
+                      <span>✶</span> {contextQuery.data.clarification.question}
                     </div>
                     {/* Program suggestion chips */}
                     {contextQuery.data.programs.length > 0 && (

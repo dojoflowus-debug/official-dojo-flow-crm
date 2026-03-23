@@ -8842,3 +8842,7 @@ Transform kiosk from admin dashboard to premium location experience
 ## Feature: View in Creative Library Link in Kai Chat (Session 7)
 - [x] After a flyer/creative image is generated in Kai chat, display a 'View in Creative Library' inline link below the CreativePreviewCard that navigates to /kai/creative — added button with ExternalLink icon, theme-aware red color, stopPropagation to avoid triggering the card's ResultsPanel click
 
+
+## Bug: Kai Creative Crashes with React Error #31 (Session 7)
+- [x] React error #31 in /kai/creative when creating an ad — fixed: clarification was rendered as `{contextQuery.data.clarification}` (full object); changed to `clarification?.needed && clarification?.question` guard with `.question` string extraction; also fixed warnings to use `warning.field` as key and `warning.message` as text instead of the full MissingDataWarning object
+
