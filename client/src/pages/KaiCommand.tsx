@@ -2249,7 +2249,7 @@ export default function KaiCommand() {
     }
     // --- END UPLOADED IMAGE ROUTE ---
 
-    // ─── CREATIVE GENERATION ROUTE ──────────────────────────────────────────
+     // ─── CREATIVE GENERATION ROUTE ──────────────────────────────────────────
     // Fires when detectIntent() returns 'creative_generation' (no image attachment)
     if (chatIntent === 'creative_generation') {
       const userMsg: Message = {
@@ -2262,12 +2262,62 @@ export default function KaiCommand() {
       setMessageInput('');
       setAttachments([]);
       setIsLoading(true);
-
       const detectedSize = parseFormatFromPrompt(inputText.trim());
+
+      // ── Extract program/audience context from recent conversation history ──
+      // When the user says "create the flyer now" without repeating the details,
+      // scan the last 10 messages to find program and audience they already provided.
+      const extractBriefFromHistory = (): Record<string, string> => {
+        const recentMessages = messages.slice(-10);
+        const conversationText = recentMessages
+          .filter(m => m.role === 'user')
+          .map(m => m.content)
+          .join(' ');
+        const answers: Record<string, string> = {};
+        // Extract program — look for "for our X class", "for X program", "X class", etc.
+        const programPatterns = [
+          /for\s+(?:our\s+)?([a-z][a-z\s]{1,40}?)\s+(?:class|program|camp|course)/i,
+          /(?:class|program)\s+(?:is\s+)?(?:called\s+)?([a-z][a-z\s]{1,40})/i,
+          /(?:little ninjas|ninja|kickboxing|karate|taekwondo|bjj|jiu.jitsu|muay thai|boxing|wrestling|judo|mma|self.?defense|fitness|yoga|gymnastics|dance)/i,
+        ];
+        for (const pattern of programPatterns) {
+          const match = conversationText.match(pattern);
+          if (match) {
+            answers.program = match[1]?.trim() || match[0]?.trim() || '';
+            break;
+          }
+        }
+        // Extract audience — look for "ages X-Y", "age X", "kids", "adults", etc.
+        const audiencePatterns = [
+          /ages?\s+[\d–\-]+(?:\s*[–\-]\s*[\d]+)?/i,
+          /\d+\s*(?:to|–|-|and)\s*\d+\s*(?:year|yr)/i,
+          /(?:kids|children|toddlers?|adults?|teens?|teenagers?|seniors?|youth|beginners?)/i,
+        ];
+        for (const pattern of audiencePatterns) {
+          const match = conversationText.match(pattern);
+          if (match) {
+            answers.audience = match[0]?.trim() || '';
+            break;
+          }
+        }
+        return answers;
+      };
+
+      const historyBriefAnswers = extractBriefFromHistory();
+      // Merge current prompt text into a richer prompt that includes history context
+      const historyContext = [
+        historyBriefAnswers.program ? `Program: ${historyBriefAnswers.program}` : '',
+        historyBriefAnswers.audience ? `Audience: ${historyBriefAnswers.audience}` : '',
+      ].filter(Boolean).join(', ');
+      const enrichedPromptText = historyContext
+        ? `${inputText.trim()} (${historyContext})`
+        : inputText.trim();
+
       try {
         const result = await generateFromChatMutation.mutateAsync({
-          prompt: inputText.trim(),
+          prompt: enrichedPromptText,
           size: detectedSize,
+          briefAnswers: Object.keys(historyBriefAnswers).length > 0 ? historyBriefAnswers : undefined,
         });
 
         const cardData: CreativePreviewCardData = {
@@ -2295,9 +2345,24 @@ export default function KaiCommand() {
         // Extract the server's gate message directly — it's already friendly
         const serverMsg = err?.message || err?.data?.message || '';
         const isGateBlock = serverMsg.includes('details') || serverMsg.includes('build this together') || serverMsg.includes('brief panel');
-        const friendlyContent = isGateBlock
-          ? `Before I get started, I just need a couple quick details — what program is this for, and who\'s the audience?`
-          : `Let me try a different approach — head to Kai Creative to build this with a guided brief.`;
+        // If we already tried to extract context from history and the gate still fired,
+        // give a more specific prompt about what's still missing.
+        let friendlyContent: string;
+        if (isGateBlock) {
+          const hasProgram = !!historyBriefAnswers.program;
+          const hasAudience = !!historyBriefAnswers.audience;
+          if (!hasProgram && !hasAudience) {
+            friendlyContent = `To create this flyer, I need two quick details — what program is it for, and who\'s the audience?`;
+          } else if (!hasProgram) {
+            friendlyContent = `Almost there — which program is this flyer for? (e.g., Little Ninjas, Kickboxing, Adult Karate)`;
+          } else if (!hasAudience) {
+            friendlyContent = `Got the program! Who\'s the audience — what age group or skill level is this for?`;
+          } else {
+            friendlyContent = `I have the program and audience — just need one more detail: what\'s the key offer or call to action? (e.g., free trial, enroll now, limited spots)`;
+          }
+        } else {
+          friendlyContent = `Let me try a different approach — head to Kai Creative to build this with a guided brief.`;
+        }
         const errMsg: Message = {
           id: (messageIdCounterRef.current++).toString(),
           role: 'assistant',

@@ -8781,3 +8781,8 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Timezone step says "What timezone is **new** in?" — fixed: city_state_zip parser now correctly handles "city zip" format; city is title-cased before storage
 - [x] Completion message says "running **KArate**" — fixed: buildCompletionMessage now title-cases each program name via toTitleCaseWord()
 - [x] Completion message says "You're all set, **Sensei demo Sensei Demo**" — fixed: buildCompletionMessage deduplicates title+name when name already starts with title
+
+## Bug: Kai Flyer Gate Re-fires After Context Already Established (Session 6)
+
+- [x] When user says "create the flyer now" after already providing program/audience details earlier in the conversation, Kai re-asks "what program is this for?" instead of using the established context — fixed: creative route now scans last 10 messages for program/audience and passes as briefAnswers
+- [x] Fix: gate now scans recent conversation history for program/audience before asking; error handler gives specific missing-field guidance
