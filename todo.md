@@ -8801,3 +8801,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Build stock photo fetcher that maps program keywords to relevant search queries
 - [x] Integrate fetcher into flyerRenderer.ts so hero images use real photos
 - [x] Ensure photos are fetched as base64 and embedded in the HTML template
+
+## Feature: Two-Step AI Flyer Pipeline (Manus-style) (Session 6)
+
+- [x] Audit available AI image generation models — Pexels real photos chosen over AI generation for consistency
+- [x] Build precision hero image prompt engine — program-specific Pexels queries with photorealistic results
+- [x] Wire Pexels hero images into flyerRenderer.ts with cinematic full-bleed overlay template
+- [x] Redesigned HTML template to cinematic full-bleed layout matching Manus reference style

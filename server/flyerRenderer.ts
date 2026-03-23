@@ -7,7 +7,9 @@
  * asking an image generation model to "draw a flyer" (which garbles text).
  *
  * Hero images are fetched from Pexels (real stock photography) using
- * program-specific search queries, giving flyers a photorealistic look.
+ * program-specific search queries. The template uses a full-bleed hero
+ * photo as the background with a cinematic gradient overlay — matching
+ * the Manus reference flyer style.
  */
 
 import puppeteer from "puppeteer-core";
@@ -16,11 +18,11 @@ import http from "http";
 
 // ── Pexels stock photo fetcher ────────────────────────────────────────────────
 const PROGRAM_PHOTO_QUERIES: Record<string, string> = {
-  "little ninjas": "children karate class kids martial arts",
-  ninja: "children karate class kids martial arts",
-  karate: "karate martial arts class students training",
+  "little ninjas": "children karate class kids martial arts dojo",
+  ninja: "children karate class kids martial arts dojo",
+  karate: "karate martial arts class students training dojo",
   "adult karate": "adult karate martial arts training dojo",
-  kickboxing: "kickboxing class fitness training",
+  kickboxing: "kickboxing class fitness training gym",
   bjj: "brazilian jiu jitsu grappling class",
   "jiu-jitsu": "jiu jitsu martial arts class",
   taekwondo: "taekwondo martial arts class kicking",
@@ -29,10 +31,10 @@ const PROGRAM_PHOTO_QUERIES: Record<string, string> = {
   mma: "mixed martial arts training class",
   wrestling: "wrestling training class",
   judo: "judo martial arts class",
-  "self defense": "self defense class training women",
+  "self defense": "self defense class training women empowerment",
   "self-defense": "self defense class training",
   fitness: "fitness class workout training gym",
-  yoga: "yoga class studio",
+  yoga: "yoga class studio peaceful",
   dance: "dance class studio performance",
 };
 
@@ -146,6 +148,22 @@ function lighten(hex: string, amount = 0.9): string {
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
 
+function darken(hex: string, amount = 0.4): string {
+  const clean = hex.replace("#", "");
+  const r = Math.max(0, Math.round(parseInt(clean.substring(0, 2), 16) * (1 - amount)));
+  const g = Math.max(0, Math.round(parseInt(clean.substring(2, 4), 16) * (1 - amount)));
+  const b = Math.max(0, Math.round(parseInt(clean.substring(4, 6), 16) * (1 - amount)));
+  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const clean = hex.replace("#", "");
+  const r = parseInt(clean.substring(0, 2), 16);
+  const g = parseInt(clean.substring(2, 4), 16);
+  const b = parseInt(clean.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -155,11 +173,11 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#039;");
 }
 
-// ── HTML template builder ─────────────────────────────────────────────────────
+// ── HTML template builder — Cinematic full-bleed layout ───────────────────────
 export function buildFlyerHtml(data: FlyerData): string {
   const primary = data.primaryColor || "#C8102E";
   const secondary = data.secondaryColor || "#1A1A1A";
-  const lightPrimary = lighten(primary, 0.9);
+  const darkPrimary = darken(primary, 0.3);
 
   const size = data.size || "flyer";
   const dims = SIZE_DIMS[size] || SIZE_DIMS.flyer;
@@ -177,41 +195,55 @@ export function buildFlyerHtml(data: FlyerData): string {
     "First class FREE — no commitment",
   ];
 
-  // Hero section — use real photo if available, otherwise gradient placeholder
-  const heroSection = data.heroImageUrl
-    ? `<div class="hero-img" style="background-image: url('${data.heroImageUrl}');"></div>`
-    : `<div class="hero-placeholder">
-        <div class="hero-icon">🥋</div>
-        <div class="hero-program-label">${escapeHtml(data.programName)}</div>
-       </div>`;
+  const scale = isStory ? 1.5 : isSquare ? 1.1 : isBanner ? 0.75 : 1;
+  const headlinePx = Math.round(52 * scale);
+  const subPx = Math.round(22 * scale);
+  const benefitPx = Math.round(17 * scale);
+  const ctaPx = Math.round(20 * scale);
+  const contactPx = Math.round(14 * scale);
+  const logoMaxH = Math.round(48 * scale);
 
-  const logoSection = data.logoUrl
-    ? `<img class="school-logo" src="${data.logoUrl}" alt="${escapeHtml(data.schoolName)}" />`
-    : `<div class="school-name-badge">${escapeHtml(data.schoolName)}</div>`;
-
-  const testimonialSection = data.testimonial
-    ? `<div class="testimonial">"${escapeHtml(data.testimonial)}"</div>`
-    : "";
-
-  const scale = isStory ? 1.4 : isSquare ? 1.1 : isBanner ? 0.8 : 1;
-  const headlinePx = Math.round(44 * scale);
-  const subPx = Math.round(20 * scale);
-  const benefitPx = Math.round(16 * scale);
-  const ctaPx = Math.round(19 * scale);
-  const contactPx = Math.round(13 * scale);
-
-  // Smart headline coloring — bold the last word in a different color
+  // Smart headline coloring — last word in primary color
   const headlineWords = escapeHtml(headline).split(" ");
   const coloredHeadline = headlineWords.length > 2
-    ? headlineWords.slice(0, -1).join(" ") + ` <span>${headlineWords[headlineWords.length - 1]}</span>`
-    : `<span>${escapeHtml(headline)}</span>`;
+    ? headlineWords.slice(0, -1).join(" ") + ` <span class="hl-accent">${headlineWords[headlineWords.length - 1]}</span>`
+    : `<span class="hl-accent">${escapeHtml(headline)}</span>`;
+
+  // Logo or school name wordmark
+  const logoSection = data.logoUrl
+    ? `<img class="school-logo" src="${data.logoUrl}" alt="${escapeHtml(data.schoolName)}" />`
+    : `<div class="school-wordmark">${escapeHtml(data.schoolName)}</div>`;
+
+  // Background: full-bleed photo or cinematic gradient fallback
+  const bgStyle = data.heroImageUrl
+    ? `background-image: url('${data.heroImageUrl}'); background-size: cover; background-position: center top;`
+    : `background: linear-gradient(160deg, ${secondary} 0%, ${darken(secondary, 0.2)} 40%, ${darkPrimary} 100%);`;
+
+  // Benefits icons (clean bullet style)
+  const benefitItems = benefits.slice(0, isBanner ? 3 : 4).map(b =>
+    `<li><span class="benefit-dot"></span><span>${escapeHtml(b)}</span></li>`
+  ).join("\n      ");
+
+  // Contact footer items
+  const footerItems = [
+    data.phone ? `<div class="footer-item"><span class="footer-icon">📞</span>${escapeHtml(data.phone)}</div>` : "",
+    data.email ? `<div class="footer-item"><span class="footer-icon">✉</span>${escapeHtml(data.email)}</div>` : "",
+    data.website ? `<div class="footer-item"><span class="footer-icon">🌐</span>${escapeHtml(data.website)}</div>` : "",
+    data.address ? `<div class="footer-item footer-address"><span class="footer-icon">📍</span>${escapeHtml(data.address)}</div>` : "",
+  ].filter(Boolean).join('<div class="footer-sep">·</div>');
+
+  const testimonialHtml = data.testimonial
+    ? `<div class="testimonial-bar">
+        <span class="testimonial-quote">"${escapeHtml(data.testimonial)}"</span>
+       </div>`
+    : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Open+Sans:wght@400;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=Open+Sans:wght@400;600&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -220,184 +252,201 @@ export function buildFlyerHtml(data: FlyerData): string {
     height: ${dims.height}px;
     overflow: hidden;
     font-family: 'Montserrat', sans-serif;
-    background: #ffffff;
   }
 
+  /* ── Full-bleed canvas ── */
   .flyer {
     width: ${dims.width}px;
     height: ${dims.height}px;
-    display: flex;
-    flex-direction: column;
-    background: #ffffff;
+    position: relative;
     overflow: hidden;
+    ${bgStyle}
   }
 
-  .header {
-    background: ${secondary};
-    padding: ${isStory ? "28px 40px" : "18px 32px"};
+  /* ── Cinematic gradient overlay ── */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.72) 0%,
+        rgba(0,0,0,0.28) 35%,
+        rgba(0,0,0,0.18) 55%,
+        rgba(0,0,0,0.82) 100%
+      );
+  }
+
+  /* ── Color accent stripe at top ── */
+  .top-stripe {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: ${Math.round(6 * scale)}px;
+    background: ${primary};
+  }
+
+  /* ── Content layer ── */
+  .content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    padding: ${isStory ? "48px 52px" : isBanner ? "28px 48px" : "32px 44px"};
+  }
+
+  /* ── TOP: Logo + program badge ── */
+  .top-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-shrink: 0;
-    min-height: ${isStory ? "90px" : "64px"};
+    margin-bottom: auto;
+    padding-bottom: ${isStory ? "32px" : "20px"};
   }
 
   .school-logo {
-    max-height: ${isStory ? "56px" : "40px"};
-    max-width: 200px;
+    max-height: ${logoMaxH}px;
+    max-width: ${Math.round(180 * scale)}px;
     object-fit: contain;
-    filter: brightness(0) invert(1);
+    filter: brightness(0) invert(1) drop-shadow(0 2px 8px rgba(0,0,0,0.5));
   }
 
-  .school-name-badge {
+  .school-wordmark {
     color: #ffffff;
-    font-size: ${isStory ? "24px" : "18px"};
-    font-weight: 800;
+    font-size: ${Math.round(20 * scale)}px;
+    font-weight: 900;
     letter-spacing: 0.5px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.7);
   }
 
-  .header-program-tag {
+  .program-badge {
     background: ${primary};
     color: #ffffff;
-    font-size: ${isStory ? "14px" : "11px"};
-    font-weight: 700;
-    padding: 5px 14px;
-    border-radius: 20px;
+    font-size: ${Math.round(11 * scale)}px;
+    font-weight: 800;
+    padding: ${Math.round(6 * scale)}px ${Math.round(16 * scale)}px;
+    border-radius: 40px;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 1.2px;
     white-space: nowrap;
+    box-shadow: 0 4px 16px ${hexToRgba(primary, 0.5)};
   }
 
-  .hero-img {
-    flex: 1;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    min-height: ${isStory ? "580px" : isSquare ? "360px" : "300px"};
-    position: relative;
-  }
+  /* ── MIDDLE: spacer to push content to bottom ── */
+  .spacer { flex: 1; }
 
-  .hero-img::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 40%;
-    background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.4));
-  }
-
-  .hero-placeholder {
-    flex: 1;
-    min-height: ${isStory ? "500px" : isSquare ? "320px" : "260px"};
-    background: linear-gradient(135deg, ${secondary} 0%, ${primary} 100%);
+  /* ── BOTTOM: headline + benefits + CTA ── */
+  .bottom-content {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-  }
-
-  .hero-icon { font-size: ${isStory ? "110px" : "72px"}; line-height: 1; }
-
-  .hero-program-label {
-    color: rgba(255,255,255,0.85);
-    font-size: ${isStory ? "26px" : "18px"};
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-  }
-
-  .content {
-    background: #ffffff;
-    padding: ${isStory ? "36px 44px" : "24px 32px"};
-    flex-shrink: 0;
+    gap: ${isStory ? "20px" : "14px"};
   }
 
   .headline {
     font-size: ${headlinePx}px;
     font-weight: 900;
-    line-height: 1.1;
-    color: ${secondary};
-    margin-bottom: 6px;
+    line-height: 1.05;
+    color: #ffffff;
     letter-spacing: -0.5px;
+    text-shadow: 0 3px 20px rgba(0,0,0,0.6);
   }
 
-  .headline span { color: ${primary}; }
+  .hl-accent { color: ${primary}; }
 
   .subheadline {
     font-size: ${subPx}px;
     font-weight: 700;
-    color: ${primary};
-    margin-bottom: ${isStory ? "24px" : "16px"};
+    color: rgba(255,255,255,0.88);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
   }
 
+  /* ── Benefits ── */
   .benefits {
     list-style: none;
-    margin-bottom: ${isStory ? "24px" : "16px"};
     display: flex;
-    flex-direction: column;
-    gap: ${isStory ? "9px" : "6px"};
+    flex-direction: ${isBanner ? "row" : "column"};
+    gap: ${isStory ? "10px" : "7px"};
+    flex-wrap: wrap;
   }
 
   .benefits li {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 10px;
     font-size: ${benefitPx}px;
-    color: #333333;
-    line-height: 1.4;
-    font-weight: 500;
+    color: rgba(255,255,255,0.92);
+    font-weight: 600;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.5);
   }
 
-  .benefits li::before {
-    content: '';
-    width: ${isStory ? "9px" : "7px"};
-    height: ${isStory ? "9px" : "7px"};
-    min-width: ${isStory ? "9px" : "7px"};
+  .benefit-dot {
+    width: ${Math.round(8 * scale)}px;
+    height: ${Math.round(8 * scale)}px;
+    min-width: ${Math.round(8 * scale)}px;
     background: ${primary};
     border-radius: 50%;
-    margin-top: ${isStory ? "6px" : "5px"};
+    box-shadow: 0 0 8px ${hexToRgba(primary, 0.7)};
   }
 
+  /* ── CTA button ── */
   .cta-section {
-    background: ${primary};
-    margin: 0 -${isStory ? "44px" : "32px"};
-    padding: ${isStory ? "20px 44px" : "14px 32px"};
-    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: ${isStory ? "20px" : "14px"};
+    flex-wrap: wrap;
+    margin-top: ${isStory ? "8px" : "4px"};
   }
 
-  .cta-text {
+  .cta-button {
+    background: ${primary};
     color: #ffffff;
     font-size: ${ctaPx}px;
     font-weight: 800;
+    padding: ${Math.round(14 * scale)}px ${Math.round(32 * scale)}px;
+    border-radius: 6px;
     text-transform: uppercase;
     letter-spacing: 1px;
-    line-height: 1.3;
+    white-space: nowrap;
+    box-shadow: 0 6px 24px ${hexToRgba(primary, 0.6)};
   }
 
-  .testimonial {
-    background: ${lightPrimary};
+  .cta-phone {
+    color: rgba(255,255,255,0.9);
+    font-size: ${Math.round(ctaPx * 0.85)}px;
+    font-weight: 700;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+
+  /* ── Testimonial bar ── */
+  .testimonial-bar {
+    background: ${hexToRgba(primary, 0.2)};
     border-left: 4px solid ${primary};
-    padding: ${isStory ? "14px 18px" : "10px 14px"};
-    font-size: ${Math.round(14 * scale)}px;
-    color: #444;
-    font-style: italic;
-    line-height: 1.5;
-    margin: ${isStory ? "18px 0" : "12px 0"};
+    padding: ${isStory ? "12px 18px" : "8px 14px"};
+    border-radius: 0 4px 4px 0;
   }
 
+  .testimonial-quote {
+    color: rgba(255,255,255,0.88);
+    font-size: ${Math.round(14 * scale)}px;
+    font-style: italic;
+    font-weight: 500;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.4);
+  }
+
+  /* ── Footer contact strip ── */
   .footer {
-    background: ${secondary};
-    padding: ${isStory ? "18px 44px" : "12px 32px"};
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(4px);
+    padding: ${isStory ? "16px 52px" : "10px 44px"};
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: ${isStory ? "20px" : "14px"};
-    flex-shrink: 0;
+    gap: ${isStory ? "16px" : "10px"};
     flex-wrap: wrap;
+    border-top: 2px solid ${hexToRgba(primary, 0.5)};
   }
 
   .footer-item {
@@ -409,45 +458,71 @@ export function buildFlyerHtml(data: FlyerData): string {
     gap: 5px;
   }
 
-  .footer-item .icon { color: ${primary}; }
+  .footer-icon { font-size: ${Math.round(contactPx * 0.9)}px; }
 
-  .footer-divider {
-    color: rgba(255,255,255,0.3);
-    font-size: ${contactPx}px;
+  .footer-address {
+    color: rgba(255,255,255,0.65);
+    font-size: ${Math.round(contactPx * 0.85)}px;
   }
+
+  .footer-sep {
+    color: ${hexToRgba(primary, 0.7)};
+    font-size: ${contactPx}px;
+    font-weight: 700;
+  }
+
+  /* ── Bottom color stripe ── */
+  .bottom-stripe {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: ${Math.round(4 * scale)}px;
+    background: ${primary};
+  }
+
 </style>
 </head>
 <body>
 <div class="flyer">
 
-  <div class="header">
-    ${logoSection}
-    ${data.audience ? `<div class="header-program-tag">${escapeHtml(data.audience)}</div>` : ""}
-  </div>
+  <!-- Cinematic overlay -->
+  <div class="overlay"></div>
+  <div class="top-stripe"></div>
 
-  ${heroSection}
-
+  <!-- Content layer -->
   <div class="content">
-    <h1 class="headline">${coloredHeadline}</h1>
-    <p class="subheadline">${escapeHtml(subheadline)}</p>
 
-    <ul class="benefits">
-      ${benefits.slice(0, 4).map(b => `<li>${escapeHtml(b)}</li>`).join("\n      ")}
-    </ul>
+    <!-- Top bar: logo + program badge -->
+    <div class="top-bar">
+      ${logoSection}
+      ${data.audience ? `<div class="program-badge">${escapeHtml(data.audience)}</div>` : `<div class="program-badge">${escapeHtml(data.programName)}</div>`}
+    </div>
 
-    ${testimonialSection}
+    <!-- Spacer pushes headline to bottom half -->
+    <div class="spacer"></div>
 
-    <div class="cta-section">
-      <div class="cta-text">${escapeHtml(cta)}</div>
+    <!-- Bottom content block -->
+    <div class="bottom-content">
+
+      <h1 class="headline">${coloredHeadline}</h1>
+      <p class="subheadline">${escapeHtml(subheadline)}</p>
+
+      <ul class="benefits">
+        ${benefitItems}
+      </ul>
+
+      ${testimonialHtml}
+
+      <div class="cta-section">
+        <div class="cta-button">${escapeHtml(cta)}</div>
+        ${data.phone ? `<div class="cta-phone">📞 ${escapeHtml(data.phone)}</div>` : ""}
+      </div>
+
     </div>
   </div>
 
-  <div class="footer">
-    ${data.phone ? `<div class="footer-item"><span class="icon">📞</span>${escapeHtml(data.phone)}</div><div class="footer-divider">·</div>` : ""}
-    ${data.email ? `<div class="footer-item"><span class="icon">✉</span>${escapeHtml(data.email)}</div><div class="footer-divider">·</div>` : ""}
-    ${data.website ? `<div class="footer-item"><span class="icon">🌐</span>${escapeHtml(data.website)}</div>` : ""}
-    ${!data.phone && !data.email && !data.website ? `<div class="footer-item">${escapeHtml(data.schoolName)}</div>` : ""}
-  </div>
+  <!-- Footer contact strip -->
+  ${footerItems ? `<div class="footer">${footerItems}</div>` : ""}
+  <div class="bottom-stripe"></div>
 
 </div>
 </body>
@@ -482,8 +557,10 @@ export async function renderFlyerToPng(
   const page = await browser.newPage();
   try {
     await page.setViewport({ width: dims.width, height: dims.height, deviceScaleFactor: 2 });
-    await page.setContent(html, { waitUntil: "networkidle0", timeout: 20000 });
+    await page.setContent(html, { waitUntil: "networkidle0", timeout: 25000 });
     await page.evaluate(() => document.fonts.ready);
+    // Extra wait for background images to fully render
+    await new Promise(r => setTimeout(r, 800));
     const screenshot = await page.screenshot({
       type: "png",
       clip: { x: 0, y: 0, width: dims.width, height: dims.height },
