@@ -1087,4 +1087,53 @@ export const kioskRouter = router({
         schoolName,
       };
     }),
+
+  /**
+   * Get kiosk feature flags for the home screen (public)
+   */
+  getKioskFeatureFlags: publicProcedure
+    .input(z.object({ orgId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const defaults = {
+        showLockButton: true,
+        showArcadeGames: true,
+        showDayPass: true,
+        showEnrollNow: true,
+        showNewStudents: true,
+        showClassSchedule: true,
+        showAttendanceLeaderboard: true,
+        showBeltPromotion: true,
+      };
+      if (!ctx.db) return defaults;
+      const { dojoSettings: ds } = await import('../drizzle/schema');
+      const [row] = await ctx.db
+        .select({ kioskFeatureFlags: ds.kioskFeatureFlags })
+        .from(ds)
+        .where(eq(ds.organizationId, input.orgId))
+        .limit(1);
+      if (!row?.kioskFeatureFlags) return defaults;
+      try {
+        return { ...defaults, ...JSON.parse(row.kioskFeatureFlags) };
+      } catch {
+        return defaults;
+      }
+    }),
+
+  /**
+   * Save kiosk feature flags (protected)
+   */
+  saveKioskFeatureFlags: protectedProcedure
+    .input(z.object({
+      orgId: z.number(),
+      flags: z.record(z.boolean()),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+      const { dojoSettings: ds } = await import('../drizzle/schema');
+      await ctx.db
+        .update(ds)
+        .set({ kioskFeatureFlags: JSON.stringify(input.flags) })
+        .where(eq(ds.organizationId, input.orgId));
+      return { success: true };
+    }),
 });

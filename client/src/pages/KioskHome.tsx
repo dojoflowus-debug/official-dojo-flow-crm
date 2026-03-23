@@ -319,6 +319,22 @@ export default function KioskHome() {
     { refetchInterval: 60_000 }
   );
 
+  const featureFlagsQuery = trpc.kiosk.getKioskFeatureFlags.useQuery(
+    { orgId },
+    { refetchInterval: 30_000 }
+  );
+
+  const flags = featureFlagsQuery.data ?? {
+    showLockButton: true,
+    showArcadeGames: true,
+    showDayPass: true,
+    showEnrollNow: true,
+    showNewStudents: true,
+    showClassSchedule: true,
+    showAttendanceLeaderboard: true,
+    showBeltPromotion: true,
+  };
+
   const data = liveData.data as any;
   const todayClasses: any[] = data?.todayClasses || [];
   const newStudents: any[] = data?.newStudents || [];
@@ -404,7 +420,7 @@ export default function KioskHome() {
         </div>
 
         {/* ── New Students ── */}
-        {newStudents.length > 0 && (
+        {flags.showNewStudents && newStudents.length > 0 && (
           <div
             className="mb-5 rounded-3xl p-5"
             style={{
@@ -471,69 +487,77 @@ export default function KioskHome() {
         </button>
 
         {/* ── Action buttons ── */}
-        <div className="space-y-2 mb-5">
-          <button
-            className="w-full flex items-center justify-between rounded-2xl px-5 py-4 transition-all active:scale-95"
-            style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              backdropFilter: 'blur(10px)',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-            }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.2)' }}>
-                <Ticket className="w-4 h-4 text-red-400" />
-              </div>
-              <span className="font-black text-white uppercase tracking-wider text-sm">Buy a Day Pass</span>
-            </div>
-            <span className="text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}>
-              Walk-ins Welcome
-            </span>
-          </button>
+        {(flags.showDayPass || flags.showEnrollNow || flags.showArcadeGames) && (
+          <div className="space-y-2 mb-5">
+            {flags.showDayPass && (
+              <button
+                className="w-full flex items-center justify-between rounded-2xl px-5 py-4 transition-all active:scale-95"
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.2)' }}>
+                    <Ticket className="w-4 h-4 text-red-400" />
+                  </div>
+                  <span className="font-black text-white uppercase tracking-wider text-sm">Buy a Day Pass</span>
+                </div>
+                <span className="text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  Walk-ins Welcome
+                </span>
+              </button>
+            )}
 
-          <button
-            onClick={() => navigate('/login?tab=signup')}
-            className="w-full flex items-center justify-between rounded-2xl px-5 py-4 transition-all active:scale-95"
-            style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              backdropFilter: 'blur(10px)',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-            }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(5,150,105,0.15)', border: '1px solid rgba(5,150,105,0.2)' }}>
-                <UserPlus className="w-4 h-4 text-emerald-400" />
-              </div>
-              <span className="font-black text-white uppercase tracking-wider text-sm">Enroll Now</span>
-            </div>
-            <span className="text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #059669, #047857)', color: '#fff', boxShadow: '0 0 12px rgba(5,150,105,0.4)' }}>
-              Start Today
-            </span>
-          </button>
+            {flags.showEnrollNow && (
+              <button
+                onClick={() => navigate('/login?tab=signup')}
+                className="w-full flex items-center justify-between rounded-2xl px-5 py-4 transition-all active:scale-95"
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(5,150,105,0.15)', border: '1px solid rgba(5,150,105,0.2)' }}>
+                    <UserPlus className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <span className="font-black text-white uppercase tracking-wider text-sm">Enroll Now</span>
+                </div>
+                <span className="text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #059669, #047857)', color: '#fff', boxShadow: '0 0 12px rgba(5,150,105,0.4)' }}>
+                  Start Today
+                </span>
+              </button>
+            )}
 
-          <button
-            onClick={() => navigate('/arcade')}
-            className="w-full flex items-center justify-between rounded-2xl px-5 py-4 transition-all active:scale-95"
-            style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(147,51,234,0.2)',
-              backdropFilter: 'blur(10px)',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-            }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(147,51,234,0.15)', border: '1px solid rgba(147,51,234,0.2)' }}>
-                <Gamepad2 className="w-4 h-4 text-purple-400" />
-              </div>
-              <span className="font-black text-white uppercase tracking-wider text-sm">Play Arcade Games</span>
-            </div>
-            <span className="text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', boxShadow: '0 0 12px rgba(124,58,237,0.4)' }}>
-              4 Games
-            </span>
-          </button>
-        </div>
+            {flags.showArcadeGames && (
+              <button
+                onClick={() => navigate('/arcade')}
+                className="w-full flex items-center justify-between rounded-2xl px-5 py-4 transition-all active:scale-95"
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(147,51,234,0.2)',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(147,51,234,0.15)', border: '1px solid rgba(147,51,234,0.2)' }}>
+                    <Gamepad2 className="w-4 h-4 text-purple-400" />
+                  </div>
+                  <span className="font-black text-white uppercase tracking-wider text-sm">Play Arcade Games</span>
+                </div>
+                <span className="text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', boxShadow: '0 0 12px rgba(124,58,237,0.4)' }}>
+                  4 Games
+                </span>
+              </button>
+            )}
+          </div>
+        )}
 
         <p className="text-center text-xs mb-6 tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.2)' }}>
           Check-in opens 15 minutes before class
@@ -543,7 +567,7 @@ export default function KioskHome() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
           {/* Classes */}
-          <div>
+          {flags.showClassSchedule && <div>
             <div className="flex items-center gap-2 mb-3">
               <Flame className="w-4 h-4 text-red-500" style={{ filter: 'drop-shadow(0 0 6px rgba(220,38,38,0.8))' }} />
               <span className="font-black text-white text-sm tracking-widest uppercase" style={{ textShadow: '0 0 10px rgba(220,38,38,0.4)' }}>Top Warriors</span>
@@ -584,59 +608,65 @@ export default function KioskHome() {
                 );
               })}
             </div>
-          </div>
+          </div>}
 
           {/* Leaderboard */}
-          <div className="space-y-3">
-            <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(220,38,38,0.15)', backdropFilter: 'blur(10px)' }}>
-              <div className="flex items-center gap-2 mb-3">
-                <Flame className="w-4 h-4 text-red-500" style={{ filter: 'drop-shadow(0 0 6px rgba(220,38,38,0.8))' }} />
-                <span className="font-black text-white text-sm tracking-widest uppercase" style={{ textShadow: '0 0 10px rgba(220,38,38,0.4)' }}>Perfect Attendance</span>
-              </div>
-              {leaderboard.length === 0 && (
-                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.2)' }}>No attendance data yet</p>
-              )}
-              {leaderboard.slice(0, 3).map((s: any, i: number) => (
-                <div key={s.studentId} className="flex items-center gap-3 py-2" style={{ borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                  <span
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
-                    style={i === 0
-                      ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#000', boxShadow: '0 0 10px rgba(245,158,11,0.4)' }
-                      : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }
-                    }
-                  >
-                    {i + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white font-bold text-sm truncate">{s.name}</p>
-                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{s.streak} Classes Straight</p>
-                  </div>
-                  {i === 0 && <Flame className="w-4 h-4 text-red-500 flex-shrink-0" style={{ filter: 'drop-shadow(0 0 4px rgba(220,38,38,0.6))' }} />}
+          {(flags.showAttendanceLeaderboard || flags.showBeltPromotion) && <div className="space-y-3">
+            {flags.showAttendanceLeaderboard && (
+              <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(220,38,38,0.15)', backdropFilter: 'blur(10px)' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <Flame className="w-4 h-4 text-red-500" style={{ filter: 'drop-shadow(0 0 6px rgba(220,38,38,0.8))' }} />
+                  <span className="font-black text-white text-sm tracking-widest uppercase" style={{ textShadow: '0 0 10px rgba(220,38,38,0.4)' }}>Perfect Attendance</span>
                 </div>
-              ))}
-            </div>
-
-            <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(250,204,21,0.12)', backdropFilter: 'blur(10px)' }}>
-              <div className="flex items-center gap-2 mb-3">
-                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" style={{ filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.6))' }} />
-                <span className="font-black text-white text-sm tracking-widest uppercase" style={{ textShadow: '0 0 10px rgba(250,204,21,0.3)' }}>Runner Up for Next Belt</span>
+                {leaderboard.length === 0 && (
+                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.2)' }}>No attendance data yet</p>
+                )}
+                {leaderboard.slice(0, 3).map((s: any, i: number) => (
+                  <div key={s.studentId} className="flex items-center gap-3 py-2" style={{ borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                    <span
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
+                      style={i === 0
+                        ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#000', boxShadow: '0 0 10px rgba(245,158,11,0.4)' }
+                        : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }
+                      }
+                    >
+                      {i + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-bold text-sm truncate">{s.name}</p>
+                      <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{s.streak} Classes Straight</p>
+                    </div>
+                    {i === 0 && <Flame className="w-4 h-4 text-red-500 flex-shrink-0" style={{ filter: 'drop-shadow(0 0 4px rgba(220,38,38,0.6))' }} />}
+                  </div>
+                ))}
               </div>
-              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.2)' }}>No students close to promotion yet</p>
-            </div>
-          </div>
+            )}
+
+            {flags.showBeltPromotion && (
+              <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(250,204,21,0.12)', backdropFilter: 'blur(10px)' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" style={{ filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.6))' }} />
+                  <span className="font-black text-white text-sm tracking-widest uppercase" style={{ textShadow: '0 0 10px rgba(250,204,21,0.3)' }}>Runner Up for Next Belt</span>
+                </div>
+                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.2)' }}>No students close to promotion yet</p>
+              </div>
+            )}
+          </div>}
         </div>
       </div>
 
       {/* Lock */}
-      <button
-        onClick={() => navigate('/kiosk-studio')}
-        className="fixed bottom-6 right-6 z-20 flex flex-col items-center gap-1 transition-all"
-        style={{ color: 'rgba(255,255,255,0.15)' }}
-        title="Lock kiosk"
-      >
-        <Lock className="w-5 h-5" />
-        <span className="text-xs tracking-widest uppercase">LOCK</span>
-      </button>
+      {flags.showLockButton && (
+        <button
+          onClick={() => navigate('/kiosk-studio')}
+          className="fixed bottom-6 right-6 z-20 flex flex-col items-center gap-1 transition-all"
+          style={{ color: 'rgba(255,255,255,0.15)' }}
+          title="Lock kiosk"
+        >
+          <Lock className="w-5 h-5" />
+          <span className="text-xs tracking-widest uppercase">LOCK</span>
+        </button>
+      )}
 
       {showCheckIn && (
         <CheckInModal orgId={orgId} onClose={() => setShowCheckIn(false)} />

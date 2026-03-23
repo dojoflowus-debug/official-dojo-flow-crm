@@ -460,6 +460,7 @@ export const dojoSettings = mysqlTable("dojo_settings", {
 	logoLightUrl: varchar({ length: 500 }),
 	organizationId: int(),
 	kioskTheme: varchar({ length: 50 }).default('default'),
+	kioskFeatureFlags: text(),
 });
 
 export const enrollments = mysqlTable("enrollments", {

@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { AlertCircle, Save, Zap, Code, Plus, MoreVertical, Trash2, Copy, Edit2, Eye } from 'lucide-react';
+import { AlertCircle, Save, Zap, Code, Plus, MoreVertical, Trash2, Copy, Edit2, Eye, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { KioskTypographyControls } from '@/components/KioskTypographyControls';
@@ -9,6 +9,7 @@ import { KioskConfigSchema } from '../../../shared/kioskConfigSchema';
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import KioskPreviewLive from '@/components/kiosk/KioskPreviewLive';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Kiosk {
   id: number;
@@ -20,11 +21,45 @@ interface Kiosk {
   updatedAt: string;
 }
 
+interface KioskFeatureFlags {
+  showLockButton: boolean;
+  showArcadeGames: boolean;
+  showDayPass: boolean;
+  showEnrollNow: boolean;
+  showNewStudents: boolean;
+  showClassSchedule: boolean;
+  showAttendanceLeaderboard: boolean;
+  showBeltPromotion: boolean;
+}
+
+const DEFAULT_FEATURE_FLAGS: KioskFeatureFlags = {
+  showLockButton: true,
+  showArcadeGames: true,
+  showDayPass: true,
+  showEnrollNow: true,
+  showNewStudents: true,
+  showClassSchedule: true,
+  showAttendanceLeaderboard: true,
+  showBeltPromotion: true,
+};
+
+const FEATURE_FLAG_LABELS: Record<keyof KioskFeatureFlags, { label: string; description: string }> = {
+  showLockButton: { label: 'Lock Button', description: 'Show the kiosk lock/PIN button in the header' },
+  showArcadeGames: { label: 'Arcade Games', description: 'Show the Play Arcade Games action button' },
+  showDayPass: { label: 'Buy a Day Pass', description: 'Show the Buy a Day Pass action button' },
+  showEnrollNow: { label: 'Enroll Now', description: 'Show the Enroll Now action button' },
+  showNewStudents: { label: 'New Students Panel', description: 'Show the welcome panel for new students' },
+  showClassSchedule: { label: 'Class Schedule', description: "Show today's class schedule section" },
+  showAttendanceLeaderboard: { label: 'Attendance Leaderboard', description: 'Show the Perfect Attendance leaderboard' },
+  showBeltPromotion: { label: 'Belt Promotion Panel', description: 'Show the Runner Up for Next Belt section' },
+};
+
 export default function KioskStudio() {
   const { locationId } = useParams<{ locationId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'design' | 'content' | 'behavior' | 'screensaver'>('design');
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'design' | 'content' | 'behavior' | 'screensaver' | 'features'>('design');
   const [draftConfig, setDraftConfig] = useState<KioskConfig>(DEFAULT_KIOSK_CONFIG);
   const [lastSavedConfig, setLastSavedConfig] = useState<KioskConfig>(DEFAULT_KIOSK_CONFIG);
   const [publishedConfig, setPublishedConfig] = useState<KioskConfig>(DEFAULT_KIOSK_CONFIG);
@@ -41,6 +76,9 @@ export default function KioskStudio() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [previewMode, setPreviewMode] = useState<'draft' | 'published'>('draft');
+  const [featureFlags, setFeatureFlags] = useState<KioskFeatureFlags>(DEFAULT_FEATURE_FLAGS);
+  const [flagsSaving, setFlagsSaving] = useState(false);
+  const [flagsSaveMessage, setFlagsSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Calculate dirty state
   const isDirty = JSON.stringify(draftConfig) !== JSON.stringify(lastSavedConfig);
@@ -63,6 +101,21 @@ export default function KioskStudio() {
   // Initialize mutations
   const saveDraftMutation = trpc.kioskDevice.saveDraft.useMutation();
   const publishMutation = trpc.kioskDevice.publish.useMutation();
+  const saveFeatureFlagsMutation = trpc.kiosk.saveKioskFeatureFlags.useMutation();
+
+  // Load feature flags for the org
+  const orgId = user?.activeOrgId;
+  const { data: featureFlagsData } = trpc.kiosk.getKioskFeatureFlags.useQuery(
+    { orgId: orgId! },
+    { enabled: !!orgId }
+  );
+
+  // Sync feature flags from server
+  useEffect(() => {
+    if (featureFlagsData) {
+      setFeatureFlags({ ...DEFAULT_FEATURE_FLAGS, ...featureFlagsData });
+    }
+  }, [featureFlagsData]);
   const createKioskMutation = trpc.kioskDevice.create.useMutation();
   const updateKioskMutation = trpc.kioskDevice.update.useMutation();
   const deleteKioskMutation = trpc.kioskDevice.delete.useMutation();
@@ -314,6 +367,25 @@ export default function KioskStudio() {
       await refetchKiosks();
     } catch (error) {
       console.error('Failed to duplicate kiosk:', error);
+    }
+  };
+
+  const handleSaveFeatureFlags = async () => {
+    if (!orgId) return;
+    setFlagsSaving(true);
+    try {
+      await saveFeatureFlagsMutation.mutateAsync({
+        orgId,
+        flags: featureFlags as Record<string, boolean>,
+      });
+      setFlagsSaveMessage({ type: 'success', text: '✓ Feature flags saved' });
+      setTimeout(() => setFlagsSaveMessage(null), 3000);
+    } catch (error) {
+      console.error('[KioskStudio] Feature flags save error:', error);
+      setFlagsSaveMessage({ type: 'error', text: '✗ Failed to save flags' });
+      setTimeout(() => setFlagsSaveMessage(null), 5000);
+    } finally {
+      setFlagsSaving(false);
     }
   };
 
@@ -608,12 +680,13 @@ export default function KioskStudio() {
           {!hasNoKiosks && (
             <>
               <div className="flex border-b border-slate-800 px-6">
-                {(['design', 'content', 'behavior', 'screensaver'] as const).map((tab) => {
+                {(['design', 'content', 'behavior', 'screensaver', 'features'] as const).map((tab) => {
                   const tabLabels: Record<string, string> = {
                     design: 'Design',
                     content: 'Content',
                     behavior: 'Behavior',
                     screensaver: 'Screensaver',
+                    features: 'Features',
                   };
                   return (
                     <button
@@ -836,6 +909,59 @@ export default function KioskStudio() {
                         onChange={(e) => handleScreensaverChange('message', e.target.value)}
                         className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
                       />
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'features' && (
+                  <div className="space-y-4">
+                    <div className="mb-4">
+                      <h3 className="text-sm font-semibold text-white mb-1">Kiosk Feature Toggles</h3>
+                      <p className="text-xs text-slate-400">Control which elements appear on the live kiosk home screen. Changes apply immediately after saving.</p>
+                    </div>
+                    {(Object.keys(FEATURE_FLAG_LABELS) as Array<keyof KioskFeatureFlags>).map((flagKey) => {
+                      const { label, description } = FEATURE_FLAG_LABELS[flagKey];
+                      const isEnabled = featureFlags[flagKey];
+                      return (
+                        <div
+                          key={flagKey}
+                          className="flex items-start justify-between gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:border-slate-600 transition-colors"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-white">{label}</p>
+                            <p className="text-xs text-slate-400 mt-0.5">{description}</p>
+                          </div>
+                          <button
+                            onClick={() => setFeatureFlags(prev => ({ ...prev, [flagKey]: !prev[flagKey] }))}
+                            className={`flex-shrink-0 transition-colors ${
+                              isEnabled ? 'text-red-400 hover:text-red-300' : 'text-slate-500 hover:text-slate-400'
+                            }`}
+                            title={isEnabled ? 'Click to disable' : 'Click to enable'}
+                          >
+                            {isEnabled
+                              ? <ToggleRight className="w-8 h-8" />
+                              : <ToggleLeft className="w-8 h-8" />}
+                          </button>
+                        </div>
+                      );
+                    })}
+                    <div className="pt-2">
+                      {flagsSaveMessage && (
+                        <div className={`mb-3 px-3 py-2 rounded text-xs font-medium ${
+                          flagsSaveMessage.type === 'success' ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'
+                        }`}>
+                          {flagsSaveMessage.text}
+                        </div>
+                      )}
+                      <button
+                        onClick={handleSaveFeatureFlags}
+                        disabled={flagsSaving || !orgId}
+                        className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {flagsSaving && <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                        <Save className="w-4 h-4" />
+                        {flagsSaving ? 'Saving...' : 'Save Feature Flags'}
+                      </button>
                     </div>
                   </div>
                 )}

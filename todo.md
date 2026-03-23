@@ -8878,3 +8878,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Wire "PLAY ARCADE GAMES" button on /kiosk-home to navigate to /arcade
 - [x] Add /arcade to public routes in both App.tsx and main.tsx (root cause: main.tsx had separate inline public route list)
 
+
+## Feature: Kiosk Studio Customization Toggles (Session 7)
+- [x] Add kioskFeatureFlags text column to dojo_settings table (db:push applied, confirmed in DB)
+- [x] Add getKioskFeatureFlags (public query) and saveKioskFeatureFlags (protected mutation) tRPC procedures to kioskRouter.ts
+- [x] Add Features tab to Kiosk Studio with toggle switches for: Lock Button, Arcade Games, Buy a Day Pass, Enroll Now, New Students Panel, Class Schedule, Attendance Leaderboard, Belt Promotion Panel
+- [x] Update KioskHome to read feature flags and conditionally render each section based on flags
+- [x] Added 7 new unit tests for feature flag logic (17 total kiosk tests, all passing)
+
