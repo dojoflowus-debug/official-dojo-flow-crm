@@ -982,8 +982,24 @@ export const kioskRouter = router({
       if (!ctx.db) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
       }
-      const { classes: classesTable, students, leads, studentAttendance } = await import("../drizzle/schema");
+      const { classes: classesTable, students, leads, studentAttendance, schoolProfiles } = await import("../drizzle/schema");
       const { and, gte, desc, sql } = await import("drizzle-orm");
+
+      // Fetch school logo and name from school_profiles
+      const profileRows = await ctx.db
+        .select({
+          schoolName: schoolProfiles.schoolName,
+          logoDarkUrl: schoolProfiles.logoDarkUrl,
+          logoIconDarkUrl: schoolProfiles.logoIconDarkUrl,
+          logoDarkData: schoolProfiles.logoDarkData,
+          logoLightUrl: schoolProfiles.logoLightUrl,
+        })
+        .from(schoolProfiles)
+        .where(eq(schoolProfiles.organizationId, input.orgId))
+        .limit(1);
+      const profile = profileRows[0] || null;
+      const logoUrl = profile?.logoDarkUrl || profile?.logoIconDarkUrl || profile?.logoDarkData || profile?.logoLightUrl || null;
+      const schoolName = profile?.schoolName || null;
 
       const now = new Date();
       const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][now.getDay()];
@@ -1067,6 +1083,8 @@ export const kioskRouter = router({
         })),
         leaderboard,
         dayName,
+        logoUrl,
+        schoolName,
       };
     }),
 });

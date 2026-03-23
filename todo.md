@@ -8864,3 +8864,7 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Update AppShell Kiosk nav to link to /kiosk-home
 - [x] Add 10 unit tests for KioskHome helper functions (all passing)
 
+
+## Bug: Kiosk Logo Not Showing (Session 7)
+- [x] Replace generic flame icon on kiosk home with dojo's actual logo from school profile (auto-loaded) — fixed root cause: DB was null for unauthenticated requests because db init was inside auth try/catch; moved db init outside auth block in context.ts so public procedures always get DB access; kiosk now loads logo_dark_url from school_profiles and falls back to flame icon if none set
+

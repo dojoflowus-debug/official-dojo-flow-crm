@@ -171,7 +171,7 @@ export default function KioskHome() {
     { refetchInterval: 60_000 }
   );
 
-  const { todayClasses = [], newStudents = [], leaderboard = [] } = liveData.data || {};
+  const { todayClasses = [], newStudents = [], leaderboard = [], logoUrl, schoolName } = liveData.data || {};
 
   const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -205,8 +205,24 @@ export default function KioskHome() {
 
         {/* ── Hero ── */}
         <div className="text-center mb-6">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-black border-2 border-red-700 flex items-center justify-center shadow-lg shadow-red-900/50">
-            <Flame className="w-10 h-10 text-red-500" />
+          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-black border-2 border-red-700 flex items-center justify-center shadow-lg shadow-red-900/50 overflow-hidden">
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={schoolName || 'Dojo Logo'}
+                className="w-full h-full object-contain p-1"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                  (e.currentTarget.nextElementSibling as HTMLElement | null)?.style.setProperty('display', 'flex');
+                }}
+              />
+            ) : null}
+            <div
+              className="w-full h-full items-center justify-center"
+              style={{ display: logoUrl ? 'none' : 'flex' }}
+            >
+              <Flame className="w-10 h-10 text-red-500" />
+            </div>
           </div>
           <h1 className="text-5xl sm:text-6xl font-black tracking-tight uppercase drop-shadow-lg">
             READY TO TRAIN 👊

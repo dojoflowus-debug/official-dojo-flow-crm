@@ -23,16 +23,16 @@ export async function createContext(
   let locationSlug: string | null = null;
   let db: Database | null = null;
 
+  // Always initialize DB — must run regardless of auth status so public procedures work
+  try {
+    const { getDb } = await import("../db");
+    db = await getDb();
+  } catch (e) {
+    console.log('[Context] Error getting database:', e);
+  }
+
   try {
     user = await sdk.authenticateRequest(opts.req);
-    
-    // Get database connection
-    try {
-      const { getDb } = await import("../db");
-      db = await getDb();
-    } catch (e) {
-      console.log('[Context] Error getting database:', e);
-    }
     
     // Extract organization and location context from session cookie
     const sessionCookie = opts.req.cookies?.session;
