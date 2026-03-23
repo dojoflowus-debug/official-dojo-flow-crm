@@ -6,11 +6,96 @@
  * flyers with clean typography and structured layouts — far superior to
  * asking an image generation model to "draw a flyer" (which garbles text).
  *
- * Usage:
- *   const png = await renderFlyerToPng(buildFlyerHtml(data));
+ * Hero images are fetched from Pexels (real stock photography) using
+ * program-specific search queries, giving flyers a photorealistic look.
  */
 
 import puppeteer from "puppeteer-core";
+import https from "https";
+import http from "http";
+
+// ── Pexels stock photo fetcher ────────────────────────────────────────────────
+const PROGRAM_PHOTO_QUERIES: Record<string, string> = {
+  "little ninjas": "children karate class kids martial arts",
+  ninja: "children karate class kids martial arts",
+  karate: "karate martial arts class students training",
+  "adult karate": "adult karate martial arts training dojo",
+  kickboxing: "kickboxing class fitness training",
+  bjj: "brazilian jiu jitsu grappling class",
+  "jiu-jitsu": "jiu jitsu martial arts class",
+  taekwondo: "taekwondo martial arts class kicking",
+  boxing: "boxing training class gym",
+  "muay thai": "muay thai kickboxing training",
+  mma: "mixed martial arts training class",
+  wrestling: "wrestling training class",
+  judo: "judo martial arts class",
+  "self defense": "self defense class training women",
+  "self-defense": "self defense class training",
+  fitness: "fitness class workout training gym",
+  yoga: "yoga class studio",
+  dance: "dance class studio performance",
+};
+
+function getPhotoQuery(programName: string): string {
+  const lower = programName.toLowerCase();
+  return (
+    Object.entries(PROGRAM_PHOTO_QUERIES).find(([k]) => lower.includes(k))?.[1] ??
+    "martial arts class training dojo"
+  );
+}
+
+async function fetchUrlBuffer(url: string, headers: Record<string, string> = {}): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const client = url.startsWith("https") ? https : http;
+    const req = (client as typeof https).get(url, { headers } as any, (res: any) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        fetchUrlBuffer(res.headers.location as string, headers).then(resolve).catch(reject);
+        return;
+      }
+      const chunks: Buffer[] = [];
+      res.on("data", (chunk: Buffer) => chunks.push(chunk));
+      res.on("end", () => resolve(Buffer.concat(chunks)));
+      res.on("error", reject);
+    });
+    req.on("error", reject);
+    req.setTimeout(12000, () => {
+      req.destroy();
+      reject(new Error("Timeout fetching URL"));
+    });
+  });
+}
+
+export async function fetchHeroPhotoAsBase64(
+  programName: string,
+  orientation: "landscape" | "portrait" = "portrait"
+): Promise<{ dataUrl: string; credit: string } | null> {
+  const apiKey = process.env.PEXELS_API_KEY;
+  if (!apiKey) return null;
+
+  const query = encodeURIComponent(getPhotoQuery(programName));
+  const apiUrl = `https://api.pexels.com/v1/search?query=${query}&per_page=5&orientation=${orientation}&size=large`;
+
+  try {
+    const apiBuf = await fetchUrlBuffer(apiUrl, { Authorization: apiKey });
+    const json = JSON.parse(apiBuf.toString("utf-8"));
+    if (!json.photos || json.photos.length === 0) return null;
+
+    const photo = json.photos[Math.floor(Math.random() * json.photos.length)];
+    const photoUrl: string = photo.src.large2x || photo.src.large || photo.src.original;
+    const photographer: string = photo.photographer || "Pexels";
+
+    const imgBuf = await fetchUrlBuffer(photoUrl);
+    const base64 = imgBuf.toString("base64");
+
+    return {
+      dataUrl: `data:image/jpeg;base64,${base64}`,
+      credit: photographer,
+    };
+  } catch (err: any) {
+    console.warn("[FlyerRenderer] Pexels fetch failed:", err?.message);
+    return null;
+  }
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface FlyerData {
@@ -27,25 +112,25 @@ export interface FlyerData {
 
   // Program / content
   programName: string;
-  audience?: string | null;       // e.g. "Ages 3–5"
-  headline?: string | null;       // e.g. "Unleash Your Child's Inner Ninja!"
+  audience?: string | null;
+  headline?: string | null;
   subheadline?: string | null;
-  benefits?: string[];            // up to 4 bullet points
-  callToAction?: string | null;   // e.g. "Sign up for a FREE Trial Class!"
-  offer?: string | null;          // e.g. "First class FREE"
+  benefits?: string[];
+  callToAction?: string | null;
+  offer?: string | null;
   testimonial?: string | null;
 
   // Layout
   size?: "flyer" | "instagram_post" | "instagram_story" | "facebook_ad" | "website_banner";
   style?: "bold" | "clean" | "cinematic" | "playful";
 
-  // Optional hero image (base64 or URL)
+  // Hero image (base64 data URL or external URL)
   heroImageUrl?: string | null;
 }
 
 // ── Dimensions ────────────────────────────────────────────────────────────────
 const SIZE_DIMS: Record<string, { width: number; height: number }> = {
-  flyer:           { width: 816, height: 1056 },  // 8.5×11 @ 96dpi
+  flyer:           { width: 816, height: 1056 },
   instagram_post:  { width: 1080, height: 1080 },
   instagram_story: { width: 1080, height: 1920 },
   facebook_ad:     { width: 1200, height: 1500 },
@@ -53,15 +138,7 @@ const SIZE_DIMS: Record<string, { width: number; height: number }> = {
 };
 
 // ── Color helpers ─────────────────────────────────────────────────────────────
-function hexToRgb(hex: string): string {
-  const clean = hex.replace("#", "");
-  const r = parseInt(clean.substring(0, 2), 16);
-  const g = parseInt(clean.substring(2, 4), 16);
-  const b = parseInt(clean.substring(4, 6), 16);
-  return `${r}, ${g}, ${b}`;
-}
-
-function lighten(hex: string, amount = 0.85): string {
+function lighten(hex: string, amount = 0.9): string {
   const clean = hex.replace("#", "");
   const r = Math.min(255, Math.round(parseInt(clean.substring(0, 2), 16) + (255 - parseInt(clean.substring(0, 2), 16)) * amount));
   const g = Math.min(255, Math.round(parseInt(clean.substring(2, 4), 16) + (255 - parseInt(clean.substring(2, 4), 16)) * amount));
@@ -69,12 +146,20 @@ function lighten(hex: string, amount = 0.85): string {
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 // ── HTML template builder ─────────────────────────────────────────────────────
 export function buildFlyerHtml(data: FlyerData): string {
   const primary = data.primaryColor || "#C8102E";
   const secondary = data.secondaryColor || "#1A1A1A";
   const lightPrimary = lighten(primary, 0.9);
-  const rgbPrimary = hexToRgb(primary);
 
   const size = data.size || "flyer";
   const dims = SIZE_DIMS[size] || SIZE_DIMS.flyer;
@@ -82,7 +167,7 @@ export function buildFlyerHtml(data: FlyerData): string {
   const isStory = size === "instagram_story";
   const isBanner = size === "website_banner";
 
-  const headline = data.headline || `Unleash Your Child's Inner Ninja!`;
+  const headline = data.headline || `Join Our ${data.programName} Program!`;
   const subheadline = data.subheadline || (data.audience ? `${data.programName} · ${data.audience}` : data.programName);
   const cta = data.callToAction || "Sign Up for a FREE Trial Class!";
   const benefits = data.benefits || [
@@ -92,40 +177,39 @@ export function buildFlyerHtml(data: FlyerData): string {
     "First class FREE — no commitment",
   ];
 
+  // Hero section — use real photo if available, otherwise gradient placeholder
   const heroSection = data.heroImageUrl
     ? `<div class="hero-img" style="background-image: url('${data.heroImageUrl}');"></div>`
     : `<div class="hero-placeholder">
         <div class="hero-icon">🥋</div>
-        <div class="hero-program-label">${data.programName}</div>
+        <div class="hero-program-label">${escapeHtml(data.programName)}</div>
        </div>`;
 
   const logoSection = data.logoUrl
-    ? `<img class="school-logo" src="${data.logoUrl}" alt="${data.schoolName}" />`
-    : `<div class="school-name-badge">${data.schoolName}</div>`;
-
-  const contactLine = [
-    data.phone,
-    data.email,
-    data.website,
-  ].filter(Boolean).join("  ·  ");
+    ? `<img class="school-logo" src="${data.logoUrl}" alt="${escapeHtml(data.schoolName)}" />`
+    : `<div class="school-name-badge">${escapeHtml(data.schoolName)}</div>`;
 
   const testimonialSection = data.testimonial
-    ? `<div class="testimonial">"${data.testimonial}"</div>`
+    ? `<div class="testimonial">"${escapeHtml(data.testimonial)}"</div>`
     : "";
 
-  // Scale font sizes for different formats
   const scale = isStory ? 1.4 : isSquare ? 1.1 : isBanner ? 0.8 : 1;
-  const headlinePx = Math.round(48 * scale);
-  const subPx = Math.round(22 * scale);
-  const benefitPx = Math.round(17 * scale);
-  const ctaPx = Math.round(20 * scale);
-  const contactPx = Math.round(14 * scale);
+  const headlinePx = Math.round(44 * scale);
+  const subPx = Math.round(20 * scale);
+  const benefitPx = Math.round(16 * scale);
+  const ctaPx = Math.round(19 * scale);
+  const contactPx = Math.round(13 * scale);
+
+  // Smart headline coloring — bold the last word in a different color
+  const headlineWords = escapeHtml(headline).split(" ");
+  const coloredHeadline = headlineWords.length > 2
+    ? headlineWords.slice(0, -1).join(" ") + ` <span>${headlineWords[headlineWords.length - 1]}</span>`
+    : `<span>${escapeHtml(headline)}</span>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Open+Sans:wght@400;600&display=swap');
 
@@ -135,7 +219,7 @@ export function buildFlyerHtml(data: FlyerData): string {
     width: ${dims.width}px;
     height: ${dims.height}px;
     overflow: hidden;
-    font-family: 'Montserrat', 'Open Sans', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     background: #ffffff;
   }
 
@@ -145,23 +229,21 @@ export function buildFlyerHtml(data: FlyerData): string {
     display: flex;
     flex-direction: column;
     background: #ffffff;
-    position: relative;
     overflow: hidden;
   }
 
-  /* ── Header strip ── */
   .header {
     background: ${secondary};
-    padding: ${isStory ? "28px 40px" : "20px 36px"};
+    padding: ${isStory ? "28px 40px" : "18px 32px"};
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-shrink: 0;
-    min-height: ${isStory ? "100px" : "72px"};
+    min-height: ${isStory ? "90px" : "64px"};
   }
 
   .school-logo {
-    max-height: ${isStory ? "60px" : "44px"};
+    max-height: ${isStory ? "56px" : "40px"};
     max-width: 200px;
     object-fit: contain;
     filter: brightness(0) invert(1);
@@ -169,7 +251,7 @@ export function buildFlyerHtml(data: FlyerData): string {
 
   .school-name-badge {
     color: #ffffff;
-    font-size: ${isStory ? "26px" : "20px"};
+    font-size: ${isStory ? "24px" : "18px"};
     font-weight: 800;
     letter-spacing: 0.5px;
   }
@@ -177,7 +259,7 @@ export function buildFlyerHtml(data: FlyerData): string {
   .header-program-tag {
     background: ${primary};
     color: #ffffff;
-    font-size: ${isStory ? "15px" : "12px"};
+    font-size: ${isStory ? "14px" : "11px"};
     font-weight: 700;
     padding: 5px 14px;
     border-radius: 20px;
@@ -186,13 +268,12 @@ export function buildFlyerHtml(data: FlyerData): string {
     white-space: nowrap;
   }
 
-  /* ── Hero image ── */
   .hero-img {
     flex: 1;
     background-size: cover;
-    background-position: center top;
+    background-position: center;
     background-repeat: no-repeat;
-    min-height: ${isStory ? "600px" : isSquare ? "380px" : "320px"};
+    min-height: ${isStory ? "580px" : isSquare ? "360px" : "300px"};
     position: relative;
   }
 
@@ -202,13 +283,13 @@ export function buildFlyerHtml(data: FlyerData): string {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 50%;
-    background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.5));
+    height: 40%;
+    background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.4));
   }
 
   .hero-placeholder {
     flex: 1;
-    min-height: ${isStory ? "500px" : isSquare ? "340px" : "280px"};
+    min-height: ${isStory ? "500px" : isSquare ? "320px" : "260px"};
     background: linear-gradient(135deg, ${secondary} 0%, ${primary} 100%);
     display: flex;
     flex-direction: column;
@@ -217,23 +298,19 @@ export function buildFlyerHtml(data: FlyerData): string {
     gap: 16px;
   }
 
-  .hero-icon {
-    font-size: ${isStory ? "120px" : "80px"};
-    line-height: 1;
-  }
+  .hero-icon { font-size: ${isStory ? "110px" : "72px"}; line-height: 1; }
 
   .hero-program-label {
     color: rgba(255,255,255,0.85);
-    font-size: ${isStory ? "28px" : "20px"};
+    font-size: ${isStory ? "26px" : "18px"};
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 2px;
   }
 
-  /* ── Content area ── */
   .content {
     background: #ffffff;
-    padding: ${isStory ? "40px 48px" : "28px 36px"};
+    padding: ${isStory ? "36px 44px" : "24px 32px"};
     flex-shrink: 0;
   }
 
@@ -246,26 +323,23 @@ export function buildFlyerHtml(data: FlyerData): string {
     letter-spacing: -0.5px;
   }
 
-  .headline span {
-    color: ${primary};
-  }
+  .headline span { color: ${primary}; }
 
   .subheadline {
     font-size: ${subPx}px;
-    font-weight: 600;
+    font-weight: 700;
     color: ${primary};
-    margin-bottom: ${isStory ? "28px" : "20px"};
+    margin-bottom: ${isStory ? "24px" : "16px"};
     text-transform: uppercase;
     letter-spacing: 1px;
   }
 
-  /* ── Benefits ── */
   .benefits {
     list-style: none;
-    margin-bottom: ${isStory ? "28px" : "20px"};
+    margin-bottom: ${isStory ? "24px" : "16px"};
     display: flex;
     flex-direction: column;
-    gap: ${isStory ? "10px" : "7px"};
+    gap: ${isStory ? "9px" : "6px"};
   }
 
   .benefits li {
@@ -280,19 +354,18 @@ export function buildFlyerHtml(data: FlyerData): string {
 
   .benefits li::before {
     content: '';
-    width: ${isStory ? "10px" : "8px"};
-    height: ${isStory ? "10px" : "8px"};
-    min-width: ${isStory ? "10px" : "8px"};
+    width: ${isStory ? "9px" : "7px"};
+    height: ${isStory ? "9px" : "7px"};
+    min-width: ${isStory ? "9px" : "7px"};
     background: ${primary};
     border-radius: 50%;
     margin-top: ${isStory ? "6px" : "5px"};
   }
 
-  /* ── CTA button ── */
   .cta-section {
     background: ${primary};
-    margin: 0 -${isStory ? "48px" : "36px"};
-    padding: ${isStory ? "22px 48px" : "16px 36px"};
+    margin: 0 -${isStory ? "44px" : "32px"};
+    padding: ${isStory ? "20px 44px" : "14px 32px"};
     text-align: center;
   }
 
@@ -305,26 +378,24 @@ export function buildFlyerHtml(data: FlyerData): string {
     line-height: 1.3;
   }
 
-  /* ── Testimonial ── */
   .testimonial {
     background: ${lightPrimary};
     border-left: 4px solid ${primary};
-    padding: ${isStory ? "16px 20px" : "12px 16px"};
-    font-size: ${Math.round(15 * scale)}px;
+    padding: ${isStory ? "14px 18px" : "10px 14px"};
+    font-size: ${Math.round(14 * scale)}px;
     color: #444;
     font-style: italic;
     line-height: 1.5;
-    margin: ${isStory ? "20px 0" : "14px 0"};
+    margin: ${isStory ? "18px 0" : "12px 0"};
   }
 
-  /* ── Footer ── */
   .footer {
     background: ${secondary};
-    padding: ${isStory ? "20px 48px" : "14px 36px"};
+    padding: ${isStory ? "18px 44px" : "12px 32px"};
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: ${isStory ? "24px" : "16px"};
+    gap: ${isStory ? "20px" : "14px"};
     flex-shrink: 0;
     flex-wrap: wrap;
   }
@@ -335,45 +406,29 @@ export function buildFlyerHtml(data: FlyerData): string {
     font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
   }
 
-  .footer-item .icon {
-    color: ${primary};
-    font-size: ${Math.round(contactPx * 1.2)}px;
-  }
+  .footer-item .icon { color: ${primary}; }
 
   .footer-divider {
     color: rgba(255,255,255,0.3);
     font-size: ${contactPx}px;
-  }
-
-  /* ── Diagonal accent ── */
-  .diagonal-accent {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 8px;
-    background: ${primary};
   }
 </style>
 </head>
 <body>
 <div class="flyer">
 
-  <!-- Header -->
   <div class="header">
     ${logoSection}
-    ${data.audience ? `<div class="header-program-tag">${data.audience}</div>` : ""}
+    ${data.audience ? `<div class="header-program-tag">${escapeHtml(data.audience)}</div>` : ""}
   </div>
 
-  <!-- Hero -->
   ${heroSection}
 
-  <!-- Content -->
   <div class="content">
-    <h1 class="headline">${escapeHtml(headline).replace(/inner/i, '<span>Inner</span>').replace(/ninja/i, '<span>Ninja</span>')}</h1>
+    <h1 class="headline">${coloredHeadline}</h1>
     <p class="subheadline">${escapeHtml(subheadline)}</p>
 
     <ul class="benefits">
@@ -387,7 +442,6 @@ export function buildFlyerHtml(data: FlyerData): string {
     </div>
   </div>
 
-  <!-- Footer -->
   <div class="footer">
     ${data.phone ? `<div class="footer-item"><span class="icon">📞</span>${escapeHtml(data.phone)}</div><div class="footer-divider">·</div>` : ""}
     ${data.email ? `<div class="footer-item"><span class="icon">✉</span>${escapeHtml(data.email)}</div><div class="footer-divider">·</div>` : ""}
@@ -398,15 +452,6 @@ export function buildFlyerHtml(data: FlyerData): string {
 </div>
 </body>
 </html>`;
-}
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
 }
 
 // ── Puppeteer renderer ────────────────────────────────────────────────────────
@@ -437,8 +482,7 @@ export async function renderFlyerToPng(
   const page = await browser.newPage();
   try {
     await page.setViewport({ width: dims.width, height: dims.height, deviceScaleFactor: 2 });
-    await page.setContent(html, { waitUntil: "networkidle0", timeout: 15000 });
-    // Wait for fonts to load
+    await page.setContent(html, { waitUntil: "networkidle0", timeout: 20000 });
     await page.evaluate(() => document.fonts.ready);
     const screenshot = await page.screenshot({
       type: "png",
@@ -452,7 +496,7 @@ export async function renderFlyerToPng(
 }
 
 // ── Parse flyer data from brief + brand context ───────────────────────────────
-export function parseFlyerDataFromBrief(
+export async function parseFlyerDataFromBrief(
   prompt: string,
   briefAnswers: Record<string, string>,
   brand: {
@@ -466,12 +510,11 @@ export function parseFlyerDataFromBrief(
     address?: string | null;
   },
   size: FlyerData["size"] = "flyer"
-): FlyerData {
+): Promise<FlyerData> {
   const programName = briefAnswers.program || extractProgram(prompt) || "Martial Arts Program";
   const audience = briefAnswers.audience || extractAudience(prompt) || null;
   const cta = briefAnswers.content || extractCta(prompt) || "Sign Up for a FREE Trial Class!";
 
-  // Build headline from program
   const headlineMap: Record<string, string> = {
     "little ninjas": "Unleash Your Child's Inner Ninja!",
     ninja: "Unleash Your Child's Inner Ninja!",
@@ -487,8 +530,9 @@ export function parseFlyerDataFromBrief(
     fitness: "Transform Your Body. Transform Your Life.",
   };
   const lowerProgram = programName.toLowerCase();
-  const headline = Object.entries(headlineMap).find(([k]) => lowerProgram.includes(k))?.[1]
-    || `Join Our ${programName} Program!`;
+  const headline =
+    Object.entries(headlineMap).find(([k]) => lowerProgram.includes(k))?.[1] ||
+    `Join Our ${programName} Program!`;
 
   const benefitsMap: Record<string, string[]> = {
     "little ninjas": [
@@ -515,14 +559,36 @@ export function parseFlyerDataFromBrief(
       "Belt progression system",
       "Classes for all ages & skill levels",
     ],
+    bjj: [
+      "Learn real self-defense techniques",
+      "Build strength, flexibility & focus",
+      "Beginner-friendly, all body types",
+      "Compete or train recreationally",
+    ],
+    taekwondo: [
+      "Olympic-style kicking techniques",
+      "Build speed, agility & coordination",
+      "Belt progression with clear goals",
+      "Fun for kids and adults alike",
+    ],
+    boxing: [
+      "Full-body cardio & strength training",
+      "Learn proper technique from day one",
+      "Build mental toughness & discipline",
+      "All skill levels welcome",
+    ],
   };
-  const benefits = Object.entries(benefitsMap).find(([k]) => lowerProgram.includes(k))?.[1]
-    || [
+  const benefits =
+    Object.entries(benefitsMap).find(([k]) => lowerProgram.includes(k))?.[1] || [
       "Expert instruction from certified coaches",
       "Safe, welcoming environment for all levels",
       "Build strength, confidence & discipline",
       "Flexible class schedules",
     ];
+
+  // Fetch a real stock photo from Pexels for the hero image
+  const orientation = size === "website_banner" ? "landscape" : "portrait";
+  const heroPhoto = await fetchHeroPhotoAsBase64(programName, orientation);
 
   return {
     schoolName: brand.schoolName || "Your Dojo",
@@ -539,15 +605,18 @@ export function parseFlyerDataFromBrief(
     subheadline: audience ? `${programName} · ${audience}` : programName,
     benefits,
     callToAction: cta,
+    heroImageUrl: heroPhoto?.dataUrl || null,
     size,
   };
 }
 
 function extractProgram(prompt: string): string | null {
   const lower = prompt.toLowerCase();
-  const programs = ["little ninjas", "kickboxing", "karate", "taekwondo", "bjj", "jiu-jitsu",
+  const programs = [
+    "little ninjas", "kickboxing", "karate", "taekwondo", "bjj", "jiu-jitsu",
     "muay thai", "boxing", "wrestling", "judo", "mma", "self defense", "self-defense",
-    "fitness", "yoga", "gymnastics", "dance"];
+    "fitness", "yoga", "gymnastics", "dance",
+  ];
   return programs.find(p => lower.includes(p)) || null;
 }
 

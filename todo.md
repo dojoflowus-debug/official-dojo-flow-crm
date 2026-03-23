@@ -8794,3 +8794,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add puppeteer-core renderer using system Chromium — tested and confirmed working (8KB+ PNG output)
 - [x] Wire HTML renderer into generateFromChat mutation — flyer/poster intents use renderer; falls back to Imagen on error
 - [x] Brand colors, school name, phone, email, website, logo, and address all injected from school profile via getBrandDataForOrg
+
+## Fix: Real Stock Photos for Flyer Hero Images (Session 6)
+
+- [x] Set up Pexels API key for stock photo fetching
+- [x] Build stock photo fetcher that maps program keywords to relevant search queries
+- [x] Integrate fetcher into flyerRenderer.ts so hero images use real photos
+- [x] Ensure photos are fetched as base64 and embedded in the HTML template

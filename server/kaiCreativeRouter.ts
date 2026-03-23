@@ -761,7 +761,7 @@ export const kaiCreativeRouter = router({
       if (!input.sourceImageBase64 && isFlyerIntent && hasFlyerKeyword) {
         // Use HTML renderer for structured flyer output
         try {
-          const flyerData = parseFlyerDataFromBrief(
+          const flyerData = await parseFlyerDataFromBrief(
             input.prompt,
             input.briefAnswers ?? {},
             {
