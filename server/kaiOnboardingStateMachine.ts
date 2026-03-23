@@ -325,8 +325,14 @@ async function saveOnboardingState(
   const db = await getDb();
   if (!db) return;
 
-  const profileWithLocks = { ...state.profile, completedSteps: state.completedSteps || [] };
-
+  // Strip any raw base64 data URLs from the profile before persisting to the
+  // TEXT column (65 KB limit). CDN URLs are short strings and safe to store;
+  // base64-encoded images can easily exceed the limit and cause silent failures.
+  const isBase64 = (v: unknown) => typeof v === 'string' && v.startsWith('data:');
+  const safeProfile = Object.fromEntries(
+    Object.entries(state.profile).map(([k, v]) => [k, isBase64(v) ? null : v])
+  ) as typeof state.profile;
+  const profileWithLocks = { ...safeProfile, completedSteps: state.completedSteps || [] };
   try {
     await db
       .update(organizations)
@@ -1364,7 +1370,19 @@ export async function processOnboardingStep(
 
       if (!city) {
         const parts = normalisedInput.split(/[,\s]+/);
-        if (parts.length >= 3) {
+        const lastPart = parts[parts.length - 1];
+        const lastIsZip = /^\d{5}(-\d{4})?$/.test(lastPart);
+        const secondLastIsStateAbbr = parts.length >= 3 && /^[A-Z]{2}$/i.test(parts[parts.length - 2]);
+        if (lastIsZip && secondLastIsStateAbbr && parts.length >= 3) {
+          // "city state zip" format
+          postal = lastPart;
+          state = parts[parts.length - 2].toUpperCase();
+          city = parts.slice(0, parts.length - 2).join(" ");
+        } else if (lastIsZip && parts.length >= 2) {
+          // "city zip" format — no state abbreviation
+          postal = lastPart;
+          city = parts.slice(0, parts.length - 1).join(" ");
+        } else if (parts.length >= 3) {
           postal = parts[parts.length - 1];
           state = parts[parts.length - 2];
           city = parts.slice(0, parts.length - 2).join(" ");
@@ -1374,6 +1392,10 @@ export async function processOnboardingStep(
         } else {
           city = normalisedInput;
         }
+      }
+      // Title-case the city for clean display (e.g., "new york" → "New York")
+      if (city) {
+        city = city.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
       }
 
       const streetUpdate = parsedCsz.isComplete && parsedCsz.street && !currentProfile.addressStreet
@@ -1759,12 +1781,30 @@ export async function processOnboardingStep(
   }
 }
 
+function toTitleCaseWord(str: string): string {
+  return str.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+}
+
 function buildCompletionMessage(profile: OnboardingProfile, hasMartialArts: boolean): string {
-  const titleName = profile.title && profile.name
-    ? `${profile.title} ${profile.name}`
-    : profile.name || "there";
+  // Deduplicate title+name: if name already starts with the title, don't prepend it again
+  let titleName: string;
+  if (profile.title && profile.name) {
+    const nameLower = profile.name.toLowerCase();
+    const titleLower = profile.title.toLowerCase();
+    if (nameLower.startsWith(titleLower)) {
+      titleName = profile.name; // name already includes the title
+    } else {
+      titleName = `${profile.title} ${profile.name}`;
+    }
+  } else {
+    titleName = profile.name || "there";
+  }
+
   const schoolName = profile.schoolName || "your school";
-  const programList = profile.programs.length > 0 ? profile.programs.join(", ") : null;
+
+  // Title-case each program name for clean display (e.g., "KArate" → "Karate")
+  const programs = profile.programs.map((p) => toTitleCaseWord(p));
+  const programList = programs.length > 0 ? programs.join(", ") : null;
 
   return `You're all set, **${titleName}**. ✅\n\n**${schoolName}** is live in DojoFlow${programList ? ` — running **${programList}**` : ""}.\n\nI'm here whenever you need me — students, leads, attendance, scheduling. **What would you like to do first?**`;
 }

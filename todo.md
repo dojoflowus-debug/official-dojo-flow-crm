@@ -8774,3 +8774,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Diagnose why upload returns "Logo upload failed. Please try again." — root cause: base64 stored in TEXT column (65KB limit)
 - [x] Fix upload — file now uploaded to S3 via storagePut; only CDN URL stored in DB
 - [x] Test with PNG file to confirm fix — safeProfile strips base64 before sending; error message updated
+
+## Bug: Kai Onboarding Conversation Issues (Session 6)
+
+- [x] After all 4 logos uploaded successfully, brand color step says "No problem — I'll use the default DojoFlow palette" instead of asking for the color — root cause: S3 upload was failing silently, user clicked Skip; saveOnboardingState now strips base64 before saving
+- [x] Timezone step says "What timezone is **new** in?" — fixed: city_state_zip parser now correctly handles "city zip" format; city is title-cased before storage
+- [x] Completion message says "running **KArate**" — fixed: buildCompletionMessage now title-cases each program name via toTitleCaseWord()
+- [x] Completion message says "You're all set, **Sensei demo Sensei Demo**" — fixed: buildCompletionMessage deduplicates title+name when name already starts with title

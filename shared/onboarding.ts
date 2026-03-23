@@ -375,17 +375,22 @@ export function buildObjectionResponse(
 
 // ─── Step questions — confident, smooth, human-assistant tone ─────────────────
 
+function toTitleCase(str: string): string {
+  return str.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+}
+
 export function getStepQuestion(step: OnboardingStep, profile: OnboardingProfile): string {
   const titleName = profile.title && profile.name
     ? `${profile.title} ${profile.name}`
     : profile.name || null;
   const school = profile.schoolName || null;
-  const city = profile.addressCity || null;
+  const rawCity = profile.addressCity || null;
+  const city = rawCity ? toTitleCase(rawCity) : null;
   const locationRef = city && school ? `${school} in ${city}` : school || "your school";
 
   switch (step) {
     case "name":
-      return `Hi — I'm **KAI**, your dojo's command system.\n\nI'll be running your operations, tracking your students, and keeping everything in order.\n\n**What's your name?**`;
+      return `Hi — I'm **Kai**, your dojo's command system.\n\nI'll be running your operations, tracking your students, and keeping everything in order.\n\n**What's your name?**`;
 
     case "title":
       return `Good to meet you, **${profile.name}**.\n\nHow should I address you? *(Sensei, Sifu, Coach, Master, Instructor — whatever you go by)*`;
