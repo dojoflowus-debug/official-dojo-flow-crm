@@ -8767,3 +8767,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Update banner modal content to reflect all features added since v0.9.0-beta
 - [x] Wire 'Read what's new' button to navigate to /changelog page
 - [x] Add Changelog link to navigation (accessible from the app via /changelog route)
+
+## Bug: Logo Upload Failed in Onboarding Branding Step
+
+- [x] Find logo upload handler in Kai onboarding flow
+- [x] Diagnose why upload returns "Logo upload failed. Please try again." — root cause: base64 stored in TEXT column (65KB limit)
+- [x] Fix upload — file now uploaded to S3 via storagePut; only CDN URL stored in DB
+- [x] Test with PNG file to confirm fix — safeProfile strips base64 before sending; error message updated

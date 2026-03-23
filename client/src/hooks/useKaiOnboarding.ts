@@ -450,12 +450,22 @@ export function useKaiOnboarding({
         const dataUrl = e.target?.result as string;
         if (!dataUrl) return;
 
+        // Strip any base64 logo data from the profile before sending to server
+        // to avoid inflating the request payload with large data URLs
+        const safeProfile = {
+          ...profile,
+          logoLightUrl: profile.logoLightUrl?.startsWith('data:') ? null : profile.logoLightUrl,
+          logoDarkUrl: profile.logoDarkUrl?.startsWith('data:') ? null : profile.logoDarkUrl,
+          logoIconLightUrl: profile.logoIconLightUrl?.startsWith('data:') ? null : profile.logoIconLightUrl,
+          logoIconDarkUrl: profile.logoIconDarkUrl?.startsWith('data:') ? null : profile.logoIconDarkUrl,
+        };
+
         try {
           const result = await uploadLogoMutation.mutateAsync({
             type,
             dataUrl,
             fileName: file.name,
-            currentProfile: profile,
+            currentProfile: safeProfile,
             hasMartialArts,
             completedSteps,
           });
@@ -490,7 +500,7 @@ export function useKaiOnboarding({
             {
               id: msgId("logo-error"),
               role: "assistant",
-              content: "Logo upload failed. Please try again.",
+              content: "That file didn't come through — make sure it's a PNG or SVG under 5MB, then tap Upload Logo to try again.",
               isOnboarding: true,
               step: currentStep,
               showLogoUpload: true,

@@ -5,6 +5,7 @@ import { getDb } from "./db";
 import { dojoSettings, organizations, schoolProfiles, users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { upsertSchoolProfile } from "./schoolProfileDb";
+import { storagePut } from "./storage.js";
 
 // ─── Re-export shared types (no server deps) ─────────────────────────────────
 export { ONBOARDING_STEPS, getStepQuestion } from "../shared/onboarding";
@@ -2062,22 +2063,43 @@ export const kaiOnboardingStateMachineRouter = router({
         currency: input.currentProfile.currency ?? null,
       };
 
-      // Save logo to DB
+      // Upload logo to S3 and get a CDN URL
+      // We store only the URL (not the raw base64) to avoid overflowing TEXT columns
+      let logoUrl: string = input.dataUrl; // fallback to base64 if S3 unavailable
+      try {
+        // Strip the data URL prefix to get raw base64
+        const matches = input.dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+        if (matches) {
+          const mimeType = matches[1];
+          const base64Data = matches[2];
+          const buffer = Buffer.from(base64Data, "base64");
+          const ext = mimeType.split("/")[1]?.replace("jpeg", "jpg") || "png";
+          const fileName = input.fileName?.replace(/\s+/g, "-").toLowerCase() || `logo-${Date.now()}.${ext}`;
+          const s3Key = `logos/org-${orgId}/${input.type}-${Date.now()}-${fileName}`;
+          const result = await storagePut(s3Key, buffer, mimeType);
+          logoUrl = result.url;
+        }
+      } catch (s3Err: any) {
+        console.warn("[uploadLogo] S3 upload failed, falling back to base64 storage:", s3Err?.message);
+        // Keep logoUrl as the base64 dataUrl as fallback
+      }
+
+      // Save logo URL to DB (CDN URL or base64 fallback)
       const updateData =
-        input.type === "light" ? { logoLightUrl: input.dataUrl, logoLightData: input.dataUrl } :
-        input.type === "dark" ? { logoDarkUrl: input.dataUrl, logoDarkData: input.dataUrl } :
-        input.type === "icon-light" ? { logoIconLightUrl: input.dataUrl } :
-        { logoIconDarkUrl: input.dataUrl };
+        input.type === "light" ? { logoLightUrl: logoUrl, logoLightData: logoUrl } :
+        input.type === "dark" ? { logoDarkUrl: logoUrl, logoDarkData: logoUrl } :
+        input.type === "icon-light" ? { logoIconLightUrl: logoUrl } :
+        { logoIconDarkUrl: logoUrl };
 
       await upsertSchoolProfile(orgId, updateData);
 
-      // Update local profile
+      // Update local profile — use only the URL (never raw base64) to keep state small
       const updatedProfile: OnboardingProfile = {
         ...normalizedProfile,
-        ...(input.type === "light" ? { logoLightUrl: input.dataUrl } :
-            input.type === "dark" ? { logoDarkUrl: input.dataUrl } :
-            input.type === "icon-light" ? { logoIconLightUrl: input.dataUrl } :
-            { logoIconDarkUrl: input.dataUrl }),
+        ...(input.type === "light" ? { logoLightUrl: logoUrl } :
+            input.type === "dark" ? { logoDarkUrl: logoUrl } :
+            input.type === "icon-light" ? { logoIconLightUrl: logoUrl } :
+            { logoIconDarkUrl: logoUrl }),
       };
 
       const completedStep: OnboardingStep =
