@@ -2,7 +2,7 @@ import { router, protectedProcedure, publicProcedure } from "./_core/trpc";
 import { getUserByOpenId, getDb } from "./db";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { organizationUsers, organizations, users } from "../drizzle/schema";
+import { organizationUsers, organizations, users, dojoSettings } from "../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { storagePut } from "./storage";
@@ -174,15 +174,53 @@ export const authRouter = router({
         }
       }
 
+      // Deduplication guard: if the user has an instructor title stored in their org's
+      // dojoSettings, ensure the saved name is always "<Title> <BaseName>" — never doubled.
+      // e.g. if title = "Sensei" and user types "Sensei Demo", save as "Sensei Demo" (not "Sensei Sensei Demo")
+      // e.g. if title = "Sensei" and user types "Demo", save as "Sensei Demo"
+      let resolvedName = input.name;
+      if (resolvedName !== undefined) {
+        try {
+          // Get the user's active org ID from their membership
+          const [membership] = await db
+            .select({ organizationId: organizationUsers.organizationId })
+            .from(organizationUsers)
+            .where(eq(organizationUsers.userId, ctx.user.id))
+            .limit(1);
+
+          if (membership) {
+            const [orgSettings] = await db
+              .select({ instructorTitle: dojoSettings.instructorTitle })
+              .from(dojoSettings)
+              .where(eq(dojoSettings.organizationId, membership.organizationId))
+              .limit(1);
+
+            const title = orgSettings?.instructorTitle?.trim();
+            if (title) {
+              // Strip any existing title prefix (case-insensitive) before applying
+              let baseName = resolvedName.trim();
+              if (baseName.toLowerCase().startsWith(title.toLowerCase() + ' ')) {
+                baseName = baseName.slice(title.length + 1).trim();
+              }
+              // Rebuild as "<Title> <BaseName>" only if baseName is non-empty
+              resolvedName = baseName ? `${title} ${baseName}` : title;
+            }
+          }
+        } catch (e) {
+          // Non-fatal: if we can't fetch the title, save the name as-is
+          console.warn('[updateProfile] Could not fetch instructor title for dedup guard:', e);
+        }
+      }
+
       // Update user profile
       await db
         .update(users)
         .set({
-          ...(input.name !== undefined && { name: input.name }),
+          ...(resolvedName !== undefined && { name: resolvedName }),
           ...(input.email !== undefined && { email: input.email }),
           ...(input.phone !== undefined && { phone: input.phone }),
           ...(input.bio !== undefined && { bio: input.bio }),
-          updatedAt:new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         })
         .where(eq(users.id, ctx.user.id));
 

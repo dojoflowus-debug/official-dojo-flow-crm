@@ -8897,3 +8897,7 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fixed root cause: onboarding title step was prepending title to name even when name already contained the title (e.g. "Sensei Demo" → "Sensei Sensei Demo")
 - [x] Fixed in kaiOnboardingStateMachine.ts: both the title step and NLU name_update path now strip the previous title prefix from the stored name before prepending the new title
 - [x] Fixed affected user's name directly in DB: 'Sensei demo Sensei Demo' → 'Sensei Demo'
+
+## Feature: Profile Edit Name Deduplication Guard (Session 8)
+- [x] Added deduplication guard to updateProfile mutation in authRouter.ts: fetches instructorTitle from dojoSettings, strips existing title prefix, then prepends title before saving
+- [x] Added 4 unit tests for the deduplication guard: no-dup when title already present, prepend when missing, fix doubled title, pass-through when no title configured (all 10 tests passing)
