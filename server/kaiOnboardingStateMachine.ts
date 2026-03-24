@@ -822,9 +822,15 @@ export async function processOnboardingStep(
       await persistProfileField(orgId, "name", updatedProfile.name);
       try {
         const db = await getDb();
+        // Strip any previously-prepended title from the name to avoid duplication
+        const prevTitle = currentProfile.title;
+        let baseName = updatedProfile.name;
+        if (prevTitle && baseName.toLowerCase().startsWith(prevTitle.toLowerCase() + ' ')) {
+          baseName = baseName.slice(prevTitle.length + 1).trim();
+        }
         const fullDisplayName = updatedProfile.title
-          ? `${updatedProfile.title} ${updatedProfile.name}`
-          : updatedProfile.name;
+          ? `${updatedProfile.title} ${baseName}`
+          : baseName;
         if (db) await db.update(users).set({ name: fullDisplayName, updatedAt: new Date().toISOString() }).where(eq(users.id, userId));
       } catch (e) { console.error('[OnboardingSM] NLU: Failed to update users.name:', e); }
     }
@@ -987,7 +993,14 @@ export async function processOnboardingStep(
       try {
         const db = await getDb();
         if (db) {
-          const fullName = updatedProfile.name ? `${title} ${updatedProfile.name}` : title;
+          // Strip any previously-prepended title from the stored name to avoid duplication
+          // e.g. if name is already "Sensei Demo" and new title is "Sensei", result should be "Sensei Demo" not "Sensei Sensei Demo"
+          const previousTitle = currentProfile.title;
+          let baseName = updatedProfile.name || '';
+          if (previousTitle && baseName.toLowerCase().startsWith(previousTitle.toLowerCase() + ' ')) {
+            baseName = baseName.slice(previousTitle.length + 1).trim();
+          }
+          const fullName = baseName ? `${title} ${baseName}` : title;
           await db.update(users).set({ name: fullName, updatedAt: new Date().toISOString() }).where(eq(users.id, userId));
         }
       } catch (e) {

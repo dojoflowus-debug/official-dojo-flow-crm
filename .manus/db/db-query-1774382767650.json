@@ -1,0 +1,18 @@
+{
+  "query": "SELECT email, name FROM users WHERE name LIKE '%Sensei%' OR name LIKE '%sensei%' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT email, name FROM users WHERE name LIKE '%Sensei%' OR name LIKE '%sensei%' LIMIT 10;",
+  "rows": [
+    {
+      "email": "demo@dojoflow.com",
+      "name": "Demo Sensei"
+    },
+    {
+      "email": "sensei30002003@gmail.com",
+      "name": "Sensei demo Sensei Demo"
+    }
+  ],
+  "messages": [],
+  "stdout": "email\tname\ndemo@dojoflow.com\tDemo Sensei\nsensei30002003@gmail.com\tSensei demo Sensei Demo\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

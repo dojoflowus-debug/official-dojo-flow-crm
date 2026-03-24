@@ -8892,3 +8892,8 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Added "Link" tab to KioskStudioExact Deploy panel with: live kiosk URL display, Copy Link button, Open Kiosk button, and deployment instructions
 - [x] Added "Features" tab to KioskStudioExact with 8 feature flag toggles (same flags as KioskStudio.tsx), wired to getKioskFeatureFlags/saveKioskFeatureFlags tRPC procedures
 - [x] All 33 kiosk tests passing (16 server + 17 client)
+
+## Bug: Kai Chat Duplicate User Name (Session 8)
+- [x] Fixed root cause: onboarding title step was prepending title to name even when name already contained the title (e.g. "Sensei Demo" → "Sensei Sensei Demo")
+- [x] Fixed in kaiOnboardingStateMachine.ts: both the title step and NLU name_update path now strip the previous title prefix from the stored name before prepending the new title
+- [x] Fixed affected user's name directly in DB: 'Sensei demo Sensei Demo' → 'Sensei Demo'
