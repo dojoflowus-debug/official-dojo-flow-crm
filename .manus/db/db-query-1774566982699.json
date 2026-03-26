@@ -1,0 +1,17 @@
+{
+  "query": "UPDATE ai_credit_balance \nSET balance = balance + 20000, \n    totalPurchased = totalPurchased + 20000 \nWHERE organizationId = 1;\n\nSELECT id, organizationId, balance, totalPurchased, totalUsed FROM ai_credit_balance WHERE organizationId = 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute UPDATE ai_credit_balance \nSET balance = balance + 20000, \n    totalPurchased = totalPurchased + 20000 \nWHERE organizationId = 1;\n\nSELECT id, organizationId, balance, totalPurchased, totalUsed FROM ai_credit_balance WHERE organizationId = 1;",
+  "rows": [
+    {
+      "id": "1",
+      "organizationId": "1",
+      "balance": "20987",
+      "totalPurchased": "20000",
+      "totalUsed": "13"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torganizationId\tbalance\ttotalPurchased\ttotalUsed\n1\t1\t20987\t20000\t13\n",
+  "stderr": "",
+  "execution_time_ms": 70
+}

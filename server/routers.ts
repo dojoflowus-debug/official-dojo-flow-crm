@@ -6127,7 +6127,7 @@ Return the data as a structured JSON object.`
         const db = await getDb();
         if (!db) throw new Error('Database not available');
 
-        const orgId = ctx.user.organizationId;
+        const orgId = ctx.currentOrganizationId;
         if (!orgId) throw new Error('Organization context missing');
 
         let insertedCount = 0;

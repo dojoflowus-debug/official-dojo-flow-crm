@@ -8960,3 +8960,8 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] pdfToImages.ts utility module created: renders each PDF page to PNG at scale 2.0 as base64 data URL
 - [x] routers.ts PDF branch updated to use pdfToBase64Images() — no system binaries needed
 - [x] 23 unit tests passing across 3 test files (including 3 new pdfjs-dist + canvas tests)
+
+## Bug: PDF Import Still Returns Placeholder Data + Import Fails (Session 11)
+- [ ] PDF still returns John Doe/Emily Smith etc. — pdfjs-dist fix not reaching production, investigate root cause
+- [ ] "Import failed: Organization context missing" — organizationId not passed to import endpoint
+- [ ] Add 20,000 credits to test account via database

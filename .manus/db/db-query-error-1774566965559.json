@@ -1,0 +1,8 @@
+{
+  "query": "SELECT o.id, o.name, u.email, u.name as user_name, oc.balance, oc.id as credit_id \nFROM organizations o \nJOIN organization_users ou ON ou.organization_id = o.id \nJOIN users u ON u.id = ou.user_id \nLEFT JOIN organization_credits oc ON oc.organization_id = o.id\nORDER BY o.id DESC \nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT o.id, o.name, u.email, u.name as user_name, oc.balance, oc.id as credit_id \nFROM organizations o \nJOIN organization_users ou ON ou.organization_id = o.id \nJOIN users u ON u.id = ou.user_id \nLEFT JOIN organization_credits oc ON oc.organization_id = o.id\nORDER BY o.id DESC \nLIMIT 10;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table 'caitgcu2duvj49bxgjvncb.organization_credits' doesn't exist"
+  ]
+}
