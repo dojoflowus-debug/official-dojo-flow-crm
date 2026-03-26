@@ -436,7 +436,7 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
   // Handle search_students results
   if (result.students && Array.isArray(result.students)) {
     if (result.students.length === 0) {
-      return { text: "No students matched that search — try a different name or filter.", ui_blocks: [] };
+      return { text: "No students matched that search. If your roster is empty, drop a PDF, Excel, or CSV file into this chat bar and I'll import your students automatically.", ui_blocks: [] };
     }
     if (result.students.length === 1) {
       const s = result.students[0];
@@ -476,7 +476,7 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
   // Handle search_leads results
   if (result.leads && Array.isArray(result.leads)) {
     if (result.leads.length === 0) {
-      return { text: "No leads matched that search — try a different name or filter.", ui_blocks: [] };
+      return { text: "No leads matched that search — try a different name, email, or phone number.", ui_blocks: [] };
     }
     if (result.leads.length === 1) {
       const l = result.leads[0];
@@ -530,23 +530,31 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
     const leads = result.activeLeads || 0;
     const attendance = result.attendanceToday || 0;
     const atRisk = result.atRiskStudents || 0;
+
+    // Empty roster — warm, actionable import offer
+    if (active === 0 && total === 0) {
+      return {
+        text: `Your roster is empty — let's fix that. Setup is easy: just drop your current student list, class schedule, or program documents right into this chat bar. I can read **PDFs**, **Excel files**, **CSVs**, and even **photos of handwritten lists**. I'll extract the data and place it exactly where it belongs — students, classes, programs — all in one go.\n\nReady to import your roster?`,
+        ui_blocks: []
+      };
+    }
     
-    let text = `You currently have ${active} active students across your organization.`;
+    let text = `You have **${active} active student${active === 1 ? '' : 's'}** on your roster.`;
     
     if (total > active) {
-      text += ` (${total} total including inactive)`;
+      text += ` (${total - active} inactive)`;
     }
     
     if (leads > 0) {
-      text += ` You also have ${leads} active leads in your pipeline.`;
+      text += ` You also have **${leads} lead${leads === 1 ? '' : 's'}** in the pipeline.`;
     }
     
     if (attendance > 0) {
-      text += ` ${attendance} students attended today.`;
+      text += ` **${attendance}** checked in today.`;
     }
     
     if (atRisk > 0) {
-      text += ` Note: ${atRisk} students are currently inactive.`;
+      text += ` ⚠️ **${atRisk} student${atRisk === 1 ? '' : 's'}** need attention — consider running a re-engagement check.`;
     }
     
     return { text, ui_blocks: [] };

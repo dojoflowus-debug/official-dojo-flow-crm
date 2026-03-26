@@ -8914,3 +8914,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Added student import preview card to KaiCommand.tsx: scrollable checkbox table (Name/Email/Phone/Belt/Program), Select All toggle, Cancel and Import buttons
 - [x] Wired PDF and image file uploads (click + drag-and-drop handlers) to auto-trigger parseStudentsFromDocument
 - [x] 10 unit tests written and passing (response shape, DB integration, dedup logic, empty-roster detection)
+
+## Feature: Kai Response Refinement (Session 9)
+- [x] Fixed root cause: formatFunctionResults was returning a hardcoded flat string bypassing the system prompt entirely
+- [x] Added empty-roster detection directly in formatFunctionResults: when activeStudents=0 AND totalStudents=0, returns warm import offer with supported file formats
+- [x] Improved all dashboard stats responses: bold numbers, singular/plural, at-risk warning with emoji
+- [x] Improved empty search response: offers import flow instead of dead-end message
+- [x] Server restarted and confirmed running with new logic
