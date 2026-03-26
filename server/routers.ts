@@ -6028,7 +6028,7 @@ Return the data as a structured JSON object.`
             });
 
             const raw = llmResponse.choices?.[0]?.message?.content || '';
-            const jsonMatch = raw.match(/\[\s*\{[\s\S]*?\}\s*\]/);
+            const jsonMatch = raw.match(/\[[\s\S]*\]/);
             if (!jsonMatch) throw new Error('Could not extract student data from spreadsheet');
             const parsed = JSON.parse(jsonMatch[0]);
             return { success: true, students: parsed, source: 'spreadsheet', fileName: input.fileName };
@@ -6088,9 +6088,12 @@ Return the data as a structured JSON object.`
               ]
             });
             const raw = visionResponse.choices?.[0]?.message?.content || '';
-            const jsonMatch = raw.match(/\[\s*\{[\s\S]*?\}\s*\]/);
+            console.log('[studentImport.vision] raw response length:', raw.length, 'finish_reason:', visionResponse.choices?.[0]?.finish_reason);
+            console.log('[studentImport.vision] raw preview (first 500):', raw.substring(0, 500));
+            const jsonMatch = raw.match(/\[[\s\S]*\]/);
             if (!jsonMatch) throw new Error('Could not extract student data from document');
             const parsed = JSON.parse(jsonMatch[0]);
+            console.log('[studentImport.vision] parsed student count:', parsed.length);
             return { success: true, students: parsed, source: 'vision', fileName: input.fileName };
 
           } else {

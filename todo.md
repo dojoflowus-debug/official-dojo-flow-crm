@@ -8965,3 +8965,7 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] PDF still returns John Doe/Emily Smith etc. — pdfjs-dist fix not reaching production, investigate root cause
 - [ ] "Import failed: Organization context missing" — organizationId not passed to import endpoint
 - [ ] Add 20,000 credits to test account via database
+
+## Bug: PDF Import Only 3 Students (Greedy Regex Fix)
+- [x] Fix non-greedy regex `/[\s\S]*?/` in parseStudentsFromDocument — was stopping at first `}]` found (after 3rd student), changed to greedy `/[\s\S]*/` to capture full JSON array
+- [x] Add debug logging to vision branch to capture raw LLM response length and student count
