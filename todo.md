@@ -8906,3 +8906,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Disabled auto-launch useEffect in KaiTutorialContext.tsx that fired 1.5s after page load and placed the tooltip at 0,0 when the target DOM element was not found
 - [x] Disabled ghost-mode idle timer that also triggered the broken overlay after 15s of inactivity
 - [x] Tutorial system preserved intact — can still be triggered explicitly via Kai chat commands; re-enable auto-launch once tutorial step selectors are verified
+
+## Feature: Kai Smart Import — Empty Roster Detection + Document Upload (Session 9)
+- [x] Added empty-roster detection to Kai system prompt in openai.ts: when activeStudents=0, Kai proactively offers to import students and explains the drag-and-drop flow
+- [x] Built parseStudentsFromDocument tRPC procedure: handles PDF (URL), Excel/CSV (xlsx parse), and images (base64 vision via LLM)
+- [x] Built bulkImportStudents tRPC procedure with per-row deduplication (skips existing firstName+lastName combos) and error collection
+- [x] Added student import preview card to KaiCommand.tsx: scrollable checkbox table (Name/Email/Phone/Belt/Program), Select All toggle, Cancel and Import buttons
+- [x] Wired PDF and image file uploads (click + drag-and-drop handlers) to auto-trigger parseStudentsFromDocument
+- [x] 10 unit tests written and passing (response shape, DB integration, dedup logic, empty-roster detection)

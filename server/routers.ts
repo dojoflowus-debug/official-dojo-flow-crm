@@ -5897,6 +5897,177 @@ Return the data as a structured JSON object.`
       }),
   }),
 
+  // Student document import router — parse any file type and bulk-insert students
+  studentImport: router({
+    /**
+     * Parse a student roster from any uploaded file (PDF, Excel, CSV, image of handwritten list).
+     * Uses the LLM vision/file API to extract student records and returns a preview array
+     * for the user to review before committing.
+     */
+    parseStudentsFromDocument: orgScopedProcedure
+      .input(z.object({
+        fileUrl: z.string().optional(),
+        storageKey: z.string().optional(),
+        fileType: z.string(),
+        fileName: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { invokeLLM } = await import('./_core/llm');
+        const { storageGetBuffer } = await import('./storage');
+
+        const lowerName = input.fileName.toLowerCase();
+        const lowerType = input.fileType.toLowerCase();
+
+        const isSpreadsheet = lowerName.endsWith('.xlsx') || lowerName.endsWith('.xls') ||
+          lowerName.endsWith('.csv') || lowerType.includes('spreadsheet') || lowerType.includes('csv');
+        const isImage = lowerType.startsWith('image/') || lowerName.endsWith('.jpg') ||
+          lowerName.endsWith('.jpeg') || lowerName.endsWith('.png') || lowerName.endsWith('.webp');
+        const isPdf = lowerName.endsWith('.pdf') || lowerType.includes('pdf');
+
+        try {
+          if (isSpreadsheet) {
+            // Parse Excel/CSV with xlsx library, then use LLM to intelligently map columns
+            const xlsx = await import('xlsx');
+            let arrayBuffer: ArrayBuffer;
+            if (input.storageKey) {
+              arrayBuffer = await storageGetBuffer(input.storageKey);
+            } else if (input.fileUrl) {
+              const resp = await fetch(input.fileUrl);
+              if (!resp.ok) throw new Error(`Failed to fetch file: ${resp.status}`);
+              arrayBuffer = await resp.arrayBuffer();
+            } else {
+              throw new Error('No file URL or storage key provided');
+            }
+            const workbook = xlsx.read(arrayBuffer, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const rows = xlsx.utils.sheet_to_json(worksheet, { header: 1, raw: false }) as any[][];
+            const fileContent = rows.map((r: any[]) => r.join('\t')).join('\n');
+
+            const llmResponse = await invokeLLM({
+              messages: [
+                {
+                  role: 'system',
+                  content: 'You are a data extraction assistant. Extract student records from the provided tabular data. Return ONLY a valid JSON array of objects with these fields (use null for missing values): firstName, lastName, email, phone, dateOfBirth (YYYY-MM-DD format or null), beltRank, program, guardianName, guardianPhone. Do not include any explanation, markdown, or code fences — just the raw JSON array.'
+                },
+                {
+                  role: 'user',
+                  content: `Extract student records from this data:\n\n${fileContent.substring(0, 8000)}`
+                }
+              ]
+            });
+
+            const raw = llmResponse.choices?.[0]?.message?.content || '';
+            const jsonMatch = raw.match(/\[\s*\{[\s\S]*?\}\s*\]/);
+            if (!jsonMatch) throw new Error('Could not extract student data from spreadsheet');
+            const parsed = JSON.parse(jsonMatch[0]);
+            return { success: true, students: parsed, source: 'spreadsheet', fileName: input.fileName };
+
+          } else if (isPdf || isImage) {
+            // Use LLM file_url or image_url for PDF/image parsing
+            let fileUrl = input.fileUrl;
+            if (!fileUrl && input.storageKey) {
+              const { storageGet } = await import('./storage');
+              const result = await storageGet(input.storageKey);
+              fileUrl = result.url;
+            }
+            if (!fileUrl) throw new Error('No file URL available for PDF/image parsing');
+
+            const contentItem = isPdf
+              ? { type: 'file_url' as const, file_url: { url: fileUrl, mime_type: 'application/pdf' as const } }
+              : { type: 'image_url' as const, image_url: { url: fileUrl, detail: 'high' as const } };
+
+            const visionResponse = await invokeLLM({
+              messages: [
+                {
+                  role: 'user',
+                  content: [
+                    contentItem,
+                    {
+                      type: 'text',
+                      text: 'Extract all student/person records from this document. Return ONLY a valid JSON array of objects with these fields (use null for missing values): firstName, lastName, email, phone, dateOfBirth (YYYY-MM-DD format or null), beltRank, program, guardianName, guardianPhone. Do not include any explanation, markdown, or code fences — just the raw JSON array.'
+                    }
+                  ]
+                }
+              ]
+            });
+
+            const raw = visionResponse.choices?.[0]?.message?.content || '';
+            const jsonMatch = raw.match(/\[\s*\{[\s\S]*?\}\s*\]/);
+            if (!jsonMatch) throw new Error('Could not extract student data from document');
+            const parsed = JSON.parse(jsonMatch[0]);
+            return { success: true, students: parsed, source: 'vision', fileName: input.fileName };
+
+          } else {
+            throw new Error(`Unsupported file type: ${input.fileType}. Please upload a PDF, Excel (.xlsx/.xls), CSV, or image file.`);
+          }
+
+        } catch (err: any) {
+          console.error('[studentImport.parseStudentsFromDocument] Error:', err);
+          return { success: false, students: [], error: err.message, fileName: input.fileName };
+        }
+      }),
+
+    /**
+     * Bulk insert confirmed student records into the students table.
+     * Called after the user reviews and approves the parsed preview.
+     */
+    bulkImportStudents: orgScopedProcedure
+      .input(z.object({
+        students: z.array(z.object({
+          firstName: z.string(),
+          lastName: z.string(),
+          email: z.string().nullable().optional(),
+          phone: z.string().nullable().optional(),
+          dateOfBirth: z.string().nullable().optional(),
+          beltRank: z.string().nullable().optional(),
+          program: z.string().nullable().optional(),
+          guardianName: z.string().nullable().optional(),
+          guardianPhone: z.string().nullable().optional(),
+        }))
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import('./db');
+        const { students } = await import('../drizzle/schema');
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+
+        const orgId = ctx.user.organizationId;
+        if (!orgId) throw new Error('Organization context missing');
+
+        let insertedCount = 0;
+        const errors: string[] = [];
+
+        for (const student of input.students) {
+          try {
+            await db.insert(students).values({
+              firstName: student.firstName,
+              lastName: student.lastName,
+              email: student.email || null,
+              phone: student.phone || null,
+              dateOfBirth: student.dateOfBirth || null,
+              beltRank: student.beltRank || null,
+              program: student.program || null,
+              guardianName: student.guardianName || null,
+              guardianPhone: student.guardianPhone || null,
+              status: 'Active',
+              organizationId: orgId,
+            });
+            insertedCount++;
+          } catch (err: any) {
+            errors.push(`${student.firstName} ${student.lastName}: ${err.message}`);
+          }
+        }
+
+        return {
+          success: insertedCount > 0,
+          insertedCount,
+          totalRequested: input.students.length,
+          errors: errors.length > 0 ? errors : undefined,
+        };
+      }),
+  }),
+
   // Programs management router
   programs: router({
     // Get all programs

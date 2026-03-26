@@ -1471,7 +1471,31 @@ export default function KaiCommand() {
   // Schedule extraction mutations
   const extractScheduleMutation = trpc.kai.scheduleExtractor.extractSchedule.useMutation();
   const createClassesMutation = trpc.kai.scheduleExtractor.createClassesFromSchedule.useMutation();
-  
+
+  // Student import mutations
+  const parseStudentsMutation = trpc.studentImport.parseStudentsFromDocument.useMutation();
+  const bulkImportStudentsMutation = trpc.studentImport.bulkImportStudents.useMutation();
+
+  // Student import state
+  const [studentImportPreview, setStudentImportPreview] = useState<{
+    students: Array<{
+      firstName: string;
+      lastName: string;
+      email?: string | null;
+      phone?: string | null;
+      dateOfBirth?: string | null;
+      beltRank?: string | null;
+      program?: string | null;
+      guardianName?: string | null;
+      guardianPhone?: string | null;
+    }>;
+    fileName: string;
+    source: string;
+  } | null>(null);
+  const [selectedStudentRows, setSelectedStudentRows] = useState<Set<number>>(new Set());
+  const [isParsingStudents, setIsParsingStudents] = useState(false);
+  const [isImportingStudents, setIsImportingStudents] = useState(false);
+
   // Get instructors for the review screen
   const instructorsQuery = trpc.classes.getInstructors.useQuery();
   const instructors = instructorsQuery.data || [];
@@ -1547,10 +1571,23 @@ export default function KaiCommand() {
             file.name.endsWith('.xlsx') ||
             file.name.endsWith('.xls') ||
             file.name.endsWith('.csv');
+
+          // Check if this is a student roster file (PDF or image)
+          const isStudentRosterFile =
+            file.type === 'application/pdf' ||
+            file.name.endsWith('.pdf') ||
+            file.type.startsWith('image/') ||
+            file.name.endsWith('.jpg') ||
+            file.name.endsWith('.jpeg') ||
+            file.name.endsWith('.png') ||
+            file.name.endsWith('.webp');
           
           if (isScheduleFile) {
             // Auto-extract schedule from the file using storage key for reliable server-side reading
             handleScheduleExtraction(result.url, file.type, file.name, result.key);
+          } else if (isStudentRosterFile) {
+            // Auto-parse student roster from PDF or image
+            handleStudentDocumentImport(result.url, file.type, file.name, result.key);
           }
         } catch (error: any) {
           console.error('Upload failed:', error);
@@ -1749,10 +1786,23 @@ export default function KaiCommand() {
             file.name.endsWith('.xlsx') ||
             file.name.endsWith('.xls') ||
             file.name.endsWith('.csv');
+
+          // Check if this is a student roster file (PDF or image)
+          const isStudentRosterFile =
+            file.type === 'application/pdf' ||
+            file.name.endsWith('.pdf') ||
+            file.type.startsWith('image/') ||
+            file.name.endsWith('.jpg') ||
+            file.name.endsWith('.jpeg') ||
+            file.name.endsWith('.png') ||
+            file.name.endsWith('.webp');
           
           if (isScheduleFile) {
             // Auto-extract schedule from the file using storage key for reliable server-side reading
             handleScheduleExtraction(result.url, file.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', file.name, result.key);
+          } else if (isStudentRosterFile) {
+            // Auto-parse student roster from PDF or image
+            handleStudentDocumentImport(result.url, file.type, file.name, result.key);
           }
         } catch (error: any) {
           console.error('Upload failed:', error);
@@ -1922,6 +1972,108 @@ export default function KaiCommand() {
       setMessages(prev => [...prev.filter(m => m.id !== analyzingMessage.id), errorMessage]);
     } finally {
       setIsExtractingSchedule(false);
+    }
+  };
+
+  // Handle student document import — parses any file and shows preview
+  const handleStudentDocumentImport = async (fileUrl: string, fileType: string, fileName: string, storageKey?: string) => {
+    setIsParsingStudents(true);
+    const analyzingMessage: Message = {
+      id: `parsing-students-${Date.now()}`,
+      role: 'assistant',
+      content: `Analyzing **${fileName}**... I'll extract the student records and show you a preview before anything is saved.`,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, analyzingMessage]);
+
+    try {
+      const result = await parseStudentsMutation.mutateAsync({
+        fileUrl,
+        storageKey,
+        fileType,
+        fileName
+      });
+
+      if (result.success && result.students && result.students.length > 0) {
+        setStudentImportPreview({
+          students: result.students,
+          fileName,
+          source: result.source || 'document'
+        });
+        // Pre-select all rows
+        setSelectedStudentRows(new Set(result.students.map((_: any, i: number) => i)));
+
+        const previewMessage: Message = {
+          id: `student-preview-${Date.now()}`,
+          role: 'assistant',
+          content: `I found **${result.students.length} student records** in **${fileName}**. Review the list below and uncheck any rows you don't want to import, then click **Import Students** to confirm.`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev.filter(m => m.id !== analyzingMessage.id), previewMessage]);
+      } else {
+        const errorMessage: Message = {
+          id: `student-parse-error-${Date.now()}`,
+          role: 'assistant',
+          content: result.error
+            ? `I wasn't able to extract student records from **${fileName}**. \n\n**Reason:** ${result.error}\n\nTry a file with columns like: First Name, Last Name, Email, Phone, Belt Rank.`
+            : `No student records were found in **${fileName}**. Make sure the file contains a student list with at least a first and last name column.`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev.filter(m => m.id !== analyzingMessage.id), errorMessage]);
+      }
+    } catch (err: any) {
+      const errorMessage: Message = {
+        id: `student-parse-error-${Date.now()}`,
+        role: 'assistant',
+        content: `Something went wrong reading **${fileName}**. \n\n**Details:** ${err?.message || 'Unknown error'}`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev.filter(m => m.id !== analyzingMessage.id), errorMessage]);
+    } finally {
+      setIsParsingStudents(false);
+    }
+  };
+
+  // Confirm and bulk-import selected students
+  const handleConfirmStudentImport = async () => {
+    if (!studentImportPreview) return;
+    const studentsToImport = studentImportPreview.students.filter((_, i) => selectedStudentRows.has(i));
+    if (studentsToImport.length === 0) {
+      toast.error('No students selected. Check at least one row to import.');
+      return;
+    }
+    setIsImportingStudents(true);
+    try {
+      const result = await bulkImportStudentsMutation.mutateAsync({ students: studentsToImport });
+      if (result.success) {
+        toast.success(`Successfully imported ${result.insertedCount} student${result.insertedCount !== 1 ? 's' : ''}!`);
+        setStudentImportPreview(null);
+        setSelectedStudentRows(new Set());
+        const successMessage: Message = {
+          id: `student-import-done-${Date.now()}`,
+          role: 'assistant',
+          content: `✅ **${result.insertedCount} student${result.insertedCount !== 1 ? 's' : ''} imported** successfully!${
+            result.errors && result.errors.length > 0
+              ? `\n\n⚠️ **${result.errors.length} row${result.errors.length !== 1 ? 's' : ''} skipped:**\n${result.errors.slice(0, 5).join('\n')}`
+              : ''
+          }\n\nHead to the **Students** page to see your roster. You can now drop your class schedule or programs to continue setup.`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, successMessage]);
+      } else {
+        toast.error('Import failed. Check the error details below.');
+        const failMessage: Message = {
+          id: `student-import-fail-${Date.now()}`,
+          role: 'assistant',
+          content: `Import failed.${result.errors ? `\n\n**Errors:**\n${result.errors.slice(0, 5).join('\n')}` : ''}`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, failMessage]);
+      }
+    } catch (err: any) {
+      toast.error(`Import failed: ${err?.message || 'Unknown error'}`);
+    } finally {
+      setIsImportingStudents(false);
     }
   };
 
@@ -4135,6 +4287,114 @@ export default function KaiCommand() {
                     />
                   )}
                   
+                  {/* Student Import Preview Card */}
+                  {studentImportPreview && (
+                    <div className="mx-4 mb-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden">
+                      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-red-400" />
+                          <span className="text-sm font-semibold text-white">
+                            {selectedStudentRows.size} of {studentImportPreview.students.length} students selected
+                          </span>
+                          <span className="text-xs text-white/40">from {studentImportPreview.fileName}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (selectedStudentRows.size === studentImportPreview.students.length) {
+                                setSelectedStudentRows(new Set());
+                              } else {
+                                setSelectedStudentRows(new Set(studentImportPreview.students.map((_, i) => i)));
+                              }
+                            }}
+                            className="text-xs text-white/50 hover:text-white/80 transition-colors"
+                          >
+                            {selectedStudentRows.size === studentImportPreview.students.length ? 'Deselect all' : 'Select all'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setStudentImportPreview(null); setSelectedStudentRows(new Set()); }}
+                            className="text-white/40 hover:text-white/70 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="overflow-x-auto max-h-64 overflow-y-auto">
+                        <table className="w-full text-xs">
+                          <thead className="sticky top-0 bg-black/40">
+                            <tr>
+                              <th className="w-8 px-3 py-2"></th>
+                              <th className="px-3 py-2 text-left text-white/50 font-medium">Name</th>
+                              <th className="px-3 py-2 text-left text-white/50 font-medium">Email</th>
+                              <th className="px-3 py-2 text-left text-white/50 font-medium">Phone</th>
+                              <th className="px-3 py-2 text-left text-white/50 font-medium">Belt</th>
+                              <th className="px-3 py-2 text-left text-white/50 font-medium">Program</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {studentImportPreview.students.map((s, i) => (
+                              <tr
+                                key={i}
+                                className={`border-t border-white/5 cursor-pointer transition-colors ${
+                                  selectedStudentRows.has(i) ? 'bg-red-500/10' : 'opacity-40'
+                                }`}
+                                onClick={() => {
+                                  setSelectedStudentRows(prev => {
+                                    const next = new Set(prev);
+                                    if (next.has(i)) next.delete(i); else next.add(i);
+                                    return next;
+                                  });
+                                }}
+                              >
+                                <td className="px-3 py-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedStudentRows.has(i)}
+                                    onChange={() => {}}
+                                    className="accent-red-500"
+                                  />
+                                </td>
+                                <td className="px-3 py-2 text-white font-medium">{s.firstName} {s.lastName}</td>
+                                <td className="px-3 py-2 text-white/60">{s.email || '—'}</td>
+                                <td className="px-3 py-2 text-white/60">{s.phone || '—'}</td>
+                                <td className="px-3 py-2 text-white/60">{s.beltRank || '—'}</td>
+                                <td className="px-3 py-2 text-white/60">{s.program || '—'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="px-4 py-3 border-t border-white/10 flex items-center justify-between">
+                        <span className="text-xs text-white/40">
+                          {isImportingStudents ? 'Importing...' : `${selectedStudentRows.size} student${selectedStudentRows.size !== 1 ? 's' : ''} will be added to your roster`}
+                        </span>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => { setStudentImportPreview(null); setSelectedStudentRows(new Set()); }}
+                            className="px-3 py-1.5 text-xs rounded-lg border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleConfirmStudentImport}
+                            disabled={selectedStudentRows.size === 0 || isImportingStudents}
+                            className="px-4 py-1.5 text-xs rounded-lg bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium transition-colors flex items-center gap-1.5"
+                          >
+                            {isImportingStudents ? (
+                              <><Loader2 className="w-3 h-3 animate-spin" /> Importing...</>
+                            ) : (
+                              <><Upload className="w-3 h-3" /> Import {selectedStudentRows.size} Student{selectedStudentRows.size !== 1 ? 's' : ''}</>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div ref={messagesEndRef} />
                 </div>
               )}
