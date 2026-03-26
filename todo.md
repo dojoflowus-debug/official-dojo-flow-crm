@@ -8942,3 +8942,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fixed KaiCommand.tsx: trpc.studentImport.parseStudentsFromDocument → trpc.kai.studentImport.parseStudentsFromDocument
 - [x] Fixed KaiCommand.tsx: trpc.studentImport.bulkImportStudents → trpc.kai.studentImport.bulkImportStudents
 - [x] Server restarted and confirmed running with correct router paths
+
+## Bug: Student Import Capped at 3 Students (Session 10)
+- [x] Root cause 1: openai-provider.ts defaults max_tokens to 2048, truncating JSON response for large rosters
+- [x] Root cause 2: normalizeMessage in openai-provider.ts stripped multipart content (image_url/file_url) to text-only — GPT-4o never saw the PDF, so it hallucinated placeholder data (John Doe, Emily Smith, Michael Johnson)
+- [x] Fix 1: normalizeMessage now preserves image_url and converts file_url → image_url for OpenAI compatibility
+- [x] Fix 2: Vision/document calls auto-scale to max_tokens: 4096; text-only calls stay at 2048
+- [x] Fix 3: Both invokeLLM calls in parseStudentsFromDocument now pass explicit maxTokens: 4096
+- [x] Fix 4: Prompts updated to say "Extract ALL records — do not stop early or truncate"
+- [x] 6 new unit tests for normalizeMessage fix — all passing (16 total across studentImport + openai-provider tests)

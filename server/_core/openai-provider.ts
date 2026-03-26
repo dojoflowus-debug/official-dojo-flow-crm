@@ -15,26 +15,53 @@ export function assertOpenAIKey() {
   }
 }
 
+/**
+ * Normalize a message for the OpenAI API.
+ * Preserves multipart content blocks (image_url, file_url, text) so that
+ * vision and document-parsing calls work correctly. Previously this function
+ * stripped all non-text content, which caused GPT-4o to hallucinate placeholder
+ * data instead of reading the actual uploaded PDF/image.
+ */
 function normalizeMessage(message: Message) {
   const { role, content } = message;
 
+  // Plain string — pass through as-is
   if (typeof content === 'string') {
     return { role, content };
   }
 
-  if (Array.isArray(content)) {
-    const textContent = content
-      .filter((c) => c.type === 'text')
-      .map((c) => (c.type === 'text' ? c.text : ''))
-      .join('\n');
-    return { role, content: textContent };
+  // Single content block
+  if (!Array.isArray(content)) {
+    if (content.type === 'text') {
+      return { role, content: content.text };
+    }
+    // image_url or file_url block — wrap in array for OpenAI
+    return { role, content: [content] };
   }
 
-  if (content.type === 'text') {
-    return { role, content: content.text };
-  }
+  // Multipart array — preserve all blocks that OpenAI supports.
+  // OpenAI supports: text, image_url. For file_url (PDF), we convert to
+  // image_url with the same URL so GPT-4o vision can read it.
+  const normalizedParts = (content as any[]).map((c: any) => {
+    if (c.type === 'text') {
+      return { type: 'text', text: c.text };
+    }
+    if (c.type === 'image_url') {
+      return { type: 'image_url', image_url: c.image_url };
+    }
+    if (c.type === 'file_url') {
+      // OpenAI doesn't have a native file_url type — send the PDF URL as an
+      // image_url with detail:high so GPT-4o vision can render and read it.
+      return {
+        type: 'image_url',
+        image_url: { url: c.file_url?.url ?? c.file_url, detail: 'high' },
+      };
+    }
+    // Fallback: stringify unknown block types
+    return { type: 'text', text: JSON.stringify(c) };
+  });
 
-  return { role, content: JSON.stringify(content) };
+  return { role, content: normalizedParts };
 }
 
 export async function invokeOpenAI(params: InvokeParams): Promise<InvokeResult> {
@@ -42,10 +69,24 @@ export async function invokeOpenAI(params: InvokeParams): Promise<InvokeResult> 
 
   const { messages, maxTokens, max_tokens, tools, tool_choice, toolChoice } = params;
 
+  // Detect whether any message contains image/file content so we can use a
+  // higher token budget for vision/document extraction calls.
+  const hasVisionContent = messages.some((m) => {
+    const c = m.content;
+    if (Array.isArray(c)) {
+      return (c as any[]).some((block: any) => block.type === 'image_url' || block.type === 'file_url');
+    }
+    return false;
+  });
+
+  // Vision/document calls need more tokens to return full JSON arrays.
+  // Default for text-only calls stays at 2048; vision calls get 4096.
+  const defaultTokens = hasVisionContent ? 4096 : 2048;
+
   const payload: Record<string, unknown> = {
     model: 'gpt-4o',
     messages: messages.map(normalizeMessage),
-    max_tokens: maxTokens || max_tokens || 2048,
+    max_tokens: maxTokens || max_tokens || defaultTokens,
     temperature: 0.7,
   };
   

@@ -6014,14 +6014,15 @@ Return the data as a structured JSON object.`
             const fileContent = rows.map((r: any[]) => r.join('\t')).join('\n');
 
             const llmResponse = await invokeLLM({
+              maxTokens: 4096,
               messages: [
                 {
                   role: 'system',
-                  content: 'You are a data extraction assistant. Extract student records from the provided tabular data. Return ONLY a valid JSON array of objects with these fields (use null for missing values): firstName, lastName, email, phone, dateOfBirth (YYYY-MM-DD format or null), beltRank, program, guardianName, guardianPhone. Do not include any explanation, markdown, or code fences — just the raw JSON array.'
+                  content: 'You are a data extraction assistant. Extract ALL student records from the provided tabular data — include every single row, do not stop early or truncate the list. Return ONLY a valid JSON array of objects with these fields (use null for missing values): firstName, lastName, email, phone, dateOfBirth (YYYY-MM-DD format or null), beltRank, program, guardianName, guardianPhone. Do not include any explanation, markdown, or code fences — just the raw JSON array.'
                 },
                 {
                   role: 'user',
-                  content: `Extract student records from this data:\n\n${fileContent.substring(0, 8000)}`
+                  content: `Extract ALL student records from this data (include every row, do not truncate):\n\n${fileContent.substring(0, 12000)}`
                 }
               ]
             });
@@ -6047,6 +6048,7 @@ Return the data as a structured JSON object.`
               : { type: 'image_url' as const, image_url: { url: fileUrl, detail: 'high' as const } };
 
             const visionResponse = await invokeLLM({
+              maxTokens: 4096,
               messages: [
                 {
                   role: 'user',
@@ -6054,7 +6056,7 @@ Return the data as a structured JSON object.`
                     contentItem,
                     {
                       type: 'text',
-                      text: 'Extract all student/person records from this document. Return ONLY a valid JSON array of objects with these fields (use null for missing values): firstName, lastName, email, phone, dateOfBirth (YYYY-MM-DD format or null), beltRank, program, guardianName, guardianPhone. Do not include any explanation, markdown, or code fences — just the raw JSON array.'
+                      text: 'Extract ALL student/person records from this document — include every single row visible in the table, do not stop early or truncate the list. Return ONLY a valid JSON array of objects with these fields (use null for missing values): firstName, lastName, email, phone, dateOfBirth (YYYY-MM-DD format or null), beltRank, program, guardianName, guardianPhone. Do not include any explanation, markdown, or code fences — just the raw JSON array.'
                     }
                   ]
                 }
