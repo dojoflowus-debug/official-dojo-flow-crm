@@ -141,6 +141,11 @@ interface Message {
   }>;
   /** Creative image card — rendered when Kai generates an image from chat */
   creativeImage?: CreativePreviewCardData;
+  /** Quick-reply action buttons shown below the message */
+  quickReplies?: Array<{
+    label: string;
+    action: string; // identifier for the action to trigger
+  }>;
 }
 
 // Attachment type
@@ -2049,17 +2054,34 @@ export default function KaiCommand() {
         toast.success(`Successfully imported ${result.insertedCount} student${result.insertedCount !== 1 ? 's' : ''}!`);
         setStudentImportPreview(null);
         setSelectedStudentRows(new Set());
+
+        // Message 1: import confirmation
         const successMessage: Message = {
           id: `student-import-done-${Date.now()}`,
           role: 'assistant',
-          content: `✅ **${result.insertedCount} student${result.insertedCount !== 1 ? 's' : ''} imported** successfully!${
+          content: `**${result.insertedCount} student${result.insertedCount !== 1 ? 's' : ''} imported** successfully!${
             result.errors && result.errors.length > 0
-              ? `\n\n⚠️ **${result.errors.length} row${result.errors.length !== 1 ? 's' : ''} skipped:**\n${result.errors.slice(0, 5).join('\n')}`
+              ? `\n\n**${result.errors.length} row${result.errors.length !== 1 ? 's' : ''} skipped:**\n${result.errors.slice(0, 5).join('\n')}`
               : ''
-          }\n\nHead to the **Students** page to see your roster. You can now drop your class schedule or programs to continue setup.`,
+          }\n\nYour roster is live — head to the **Students** page to review it.`,
           timestamp: new Date()
         };
         setMessages(prev => [...prev, successMessage]);
+
+        // Message 2: schedule nudge (after a short delay so it feels like a natural follow-up)
+        setTimeout(() => {
+          const nudgeMessage: Message = {
+            id: `schedule-nudge-${Date.now()}`,
+            role: 'assistant',
+            content: `Want to set up your **class schedule** next? Drop an Excel, CSV, or PDF file into the chat bar and I'll import it automatically — or I can walk you through creating classes one by one.`,
+            timestamp: new Date(),
+            quickReplies: [
+              { label: '📅 Yes, import my schedule', action: 'open_schedule_import' },
+              { label: 'Skip for now', action: 'dismiss_nudge' },
+            ],
+          };
+          setMessages(prev => [...prev, nudgeMessage]);
+        }, 1200);
       } else {
         toast.error('Import failed. Check the error details below.');
         const failMessage: Message = {
@@ -4226,6 +4248,68 @@ export default function KaiCommand() {
                             )}
                           </div>
                         </>
+                      )}
+                      {/* Quick-reply action buttons */}
+                      {message.quickReplies && message.quickReplies.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {message.quickReplies.map((qr) => (
+                            <button
+                              key={qr.action}
+                              onClick={() => {
+                                if (qr.action === 'open_schedule_import') {
+                                  // Open the file picker pre-filtered to schedule files
+                                  const input = document.createElement('input');
+                                  input.type = 'file';
+                                  input.accept = '.xlsx,.xls,.csv,.pdf';
+                                  input.onchange = async (e) => {
+                                    const file = (e.target as HTMLInputElement).files?.[0];
+                                    if (file) {
+                                      // Simulate dropping the file into the chat
+                                      const dataTransfer = new DataTransfer();
+                                      dataTransfer.items.add(file);
+                                      const dropEvent = new DragEvent('drop', { dataTransfer, bubbles: true });
+                                      // Trigger file upload via the existing fileInputRef path
+                                      const fileInput = document.querySelector('input[type="file"][accept*="xlsx"]') as HTMLInputElement;
+                                      if (fileInput) {
+                                        Object.defineProperty(fileInput, 'files', { value: dataTransfer.files, writable: false });
+                                        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                                      } else {
+                                        // Fallback: add a Kai message guiding the user
+                                        setMessages(prev => [...prev, {
+                                          id: `schedule-guide-${Date.now()}`,
+                                          role: 'assistant',
+                                          content: 'Click the **paperclip icon** in the chat bar below and select your schedule file (Excel, CSV, or PDF). I\'ll parse it and show you a preview before creating any classes.',
+                                          timestamp: new Date(),
+                                        }]);
+                                      }
+                                    }
+                                  };
+                                  input.click();
+                                } else if (qr.action === 'dismiss_nudge') {
+                                  // Remove the quick replies from this message
+                                  setMessages(prev => prev.map(m =>
+                                    m.id === message.id ? { ...m, quickReplies: [] } : m
+                                  ));
+                                  setMessages(prev => [...prev, {
+                                    id: `skip-ack-${Date.now()}`,
+                                    role: 'assistant',
+                                    content: 'No problem! You can set up your class schedule anytime by dropping a file into the chat bar or visiting the **Classes** page.',
+                                    timestamp: new Date(),
+                                  }]);
+                                }
+                              }}
+                              className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${
+                                qr.action === 'open_schedule_import'
+                                  ? 'bg-red-600 hover:bg-red-700 text-white border-red-600'
+                                  : isDark || isCinematic
+                                    ? 'bg-white/10 hover:bg-white/20 text-white/80 border-white/20'
+                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                              }`}
+                            >
+                              {qr.label}
+                            </button>
+                          ))}
+                        </div>
                       )}
                     </div>
                   ))}

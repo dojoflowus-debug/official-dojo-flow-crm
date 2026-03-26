@@ -8929,3 +8929,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Added get_classes tool definition to crmTools in openai.ts with correct description
 - [x] Added get_classes to Data Query Tools list and EMPTY SCHEDULE DETECTION rule to Kai system prompt
 - [x] 6 unit tests written and passing for the empty-schedule detection logic
+
+## Feature: Kai Post-Import Schedule Nudge (Session 9)
+- [x] Added quickReplies field to Message interface in KaiCommand.tsx
+- [x] After successful bulkImportStudents: message 1 confirms import count + skipped rows; message 2 (1.2s delay) asks about schedule setup
+- [x] Added two quick-reply buttons: '📅 Yes, import my schedule' (opens file picker for .xlsx/.xls/.csv/.pdf) and 'Skip for now' (dismisses with acknowledgement)
+- [x] Rendered quick-reply buttons in the chat message area with theme-aware styling (red primary, ghost secondary)
+- [x] 10 unit tests written and passing for nudge message construction and dismiss logic
