@@ -8936,3 +8936,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Added two quick-reply buttons: '📅 Yes, import my schedule' (opens file picker for .xlsx/.xls/.csv/.pdf) and 'Skip for now' (dismisses with acknowledgement)
 - [x] Rendered quick-reply buttons in the chat message area with theme-aware styling (red primary, ghost secondary)
 - [x] 10 unit tests written and passing for nudge message construction and dismiss logic
+
+## Bug: studentImport.parseStudentsFromDocument Not Found (Session 9)
+- [x] Root cause: studentImport router is nested inside the kai router (lines 5970-6138 of routers.ts), so correct tRPC path is kai.studentImport.* not studentImport.*
+- [x] Fixed KaiCommand.tsx: trpc.studentImport.parseStudentsFromDocument → trpc.kai.studentImport.parseStudentsFromDocument
+- [x] Fixed KaiCommand.tsx: trpc.studentImport.bulkImportStudents → trpc.kai.studentImport.bulkImportStudents
+- [x] Server restarted and confirmed running with correct router paths

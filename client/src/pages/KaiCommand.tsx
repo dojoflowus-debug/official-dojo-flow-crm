@@ -1478,8 +1478,8 @@ export default function KaiCommand() {
   const createClassesMutation = trpc.kai.scheduleExtractor.createClassesFromSchedule.useMutation();
 
   // Student import mutations
-  const parseStudentsMutation = trpc.studentImport.parseStudentsFromDocument.useMutation();
-  const bulkImportStudentsMutation = trpc.studentImport.bulkImportStudents.useMutation();
+  const parseStudentsMutation = trpc.kai.studentImport.parseStudentsFromDocument.useMutation();
+  const bulkImportStudentsMutation = trpc.kai.studentImport.bulkImportStudents.useMutation();
 
   // Student import state
   const [studentImportPreview, setStudentImportPreview] = useState<{
