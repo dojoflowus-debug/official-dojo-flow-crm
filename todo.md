@@ -8954,7 +8954,9 @@ Transform kiosk from admin dashboard to premium location experience
 
 ## Bug: PDF Import Fails with "unsupported image format" (Session 10 cont.)
 - [x] Root cause: OpenAI image_url endpoint only accepts png/jpeg/gif/webp — PDFs sent as image_url are rejected
-- [x] Fix: Use pdftoppm (poppler-utils, pre-installed) to convert PDF pages to PNG server-side, then send as base64 data URLs
-- [x] pdftoppm confirmed working: converts PDF to PNG at 150dpi via stdin, no temp file cleanup issues
-- [x] For multi-page PDFs, all pages sent as separate image_url blocks (capped at 10 pages) in a single GPT-4o call
-- [x] 4 new unit tests for PDF conversion — all 20 tests passing across 3 test files
+- [x] Attempt 1: pdftoppm (poppler-utils) — works locally but not in deployed container (ENOENT)
+- [x] Fix (attempt 2): Switched to pure Node.js approach using pdfjs-dist + canvas npm packages
+- [x] pdfjs-dist legacy build + canvas installed and verified working in Node.js
+- [x] pdfToImages.ts utility module created: renders each PDF page to PNG at scale 2.0 as base64 data URL
+- [x] routers.ts PDF branch updated to use pdfToBase64Images() — no system binaries needed
+- [x] 23 unit tests passing across 3 test files (including 3 new pdfjs-dist + canvas tests)

@@ -61,6 +61,7 @@
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
+    "canvas": "^3.2.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -86,6 +87,7 @@
     "openai": "^4.104.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
+    "pdfjs-dist": "^5.5.207",
     "puppeteer-core": "^24.40.0",
     "qrcode.react": "^4.2.0",
     "react": "^19.1.1",
@@ -153,6 +155,7 @@
     "onlyBuiltDependencies": [
       "@tailwindcss/oxide",
       "bcrypt",
+      "canvas",
       "core-js",
       "esbuild"
     ]

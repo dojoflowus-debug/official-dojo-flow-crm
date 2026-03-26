@@ -103,3 +103,61 @@ describe('PDF-to-image conversion via pdftoppm', () => {
     expect(imageBlocks[0].image_url.url).toMatch(/^data:image\/png;base64,/);
   });
 });
+
+describe('PDF-to-image conversion via pdfjs-dist + canvas (Node.js, no system binaries)', () => {
+  const testPdfPath = '/home/ubuntu/upload/kai_test_roster_realnames.pdf';
+
+  it('pdfjs-dist legacy build should be loadable', async () => {
+    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs' as any);
+    expect(typeof pdfjs.getDocument).toBe('function');
+    expect(pdfjs.GlobalWorkerOptions).toBeDefined();
+  });
+
+  it('canvas module should be loadable', async () => {
+    const { createCanvas } = await import('canvas');
+    expect(typeof createCanvas).toBe('function');
+    const c = createCanvas(100, 100);
+    expect(c.width).toBe(100);
+  });
+
+  it('should render a PDF page to PNG using pdfjs-dist + canvas', async () => {
+    if (!existsSync(testPdfPath)) {
+      console.warn('Test PDF not found, skipping');
+      return;
+    }
+    const { getDocument, GlobalWorkerOptions } = await import('pdfjs-dist/legacy/build/pdf.mjs' as any);
+    const { createCanvas, DOMMatrix } = await import('canvas');
+    const { createRequire } = await import('module');
+    const require = createRequire(import.meta.url);
+
+    if (typeof (globalThis as any).DOMMatrix === 'undefined') {
+      (globalThis as any).DOMMatrix = DOMMatrix;
+    }
+    if (!GlobalWorkerOptions.workerSrc) {
+      const pdfjsPath = require.resolve('pdfjs-dist/legacy/build/pdf.mjs');
+      GlobalWorkerOptions.workerSrc = pdfjsPath.replace('pdf.mjs', 'pdf.worker.mjs');
+    }
+
+    const pdfBuffer = readFileSync(testPdfPath);
+    const pdfjsDir = require.resolve('pdfjs-dist/package.json').replace('package.json', '');
+    const pdf = await getDocument({
+      data: new Uint8Array(pdfBuffer),
+      standardFontDataUrl: `${pdfjsDir}standard_fonts/`,
+    }).promise;
+
+    expect(pdf.numPages).toBeGreaterThan(0);
+
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale: 2.0 });
+    const canvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, Math.ceil(viewport.width), Math.ceil(viewport.height));
+    await page.render({ canvasContext: ctx as any, viewport }).promise;
+
+    const buf: Buffer = canvas.toBuffer('image/png');
+    expect(buf.length).toBeGreaterThan(1000);
+    const dataUrl = `data:image/png;base64,${buf.toString('base64')}`;
+    expect(dataUrl).toMatch(/^data:image\/png;base64,/);
+  }, 15000);
+});

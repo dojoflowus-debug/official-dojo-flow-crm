@@ -6034,11 +6034,10 @@ Return the data as a structured JSON object.`
             return { success: true, students: parsed, source: 'spreadsheet', fileName: input.fileName };
 
           } else if (isPdf || isImage) {
-            // For PDFs: convert each page to PNG using pdftoppm (poppler-utils), then send
-            // all pages as base64 image_url blocks to GPT-4o vision.
-            // OpenAI's image_url endpoint only accepts png/jpeg/gif/webp — PDFs sent directly
-            // as file_url are rejected with "unsupported image format".
-            // For images: send directly as base64 image_url.
+            // For PDFs: use pdfjs-dist + canvas to render each page to PNG, then send
+            // as base64 image_url blocks to GPT-4o vision.
+            // OpenAI's image_url endpoint only accepts png/jpeg/gif/webp — PDFs cannot
+            // be sent directly. This is a pure Node.js approach, no system binaries needed.
             let fileBytes: Buffer;
             if (input.storageKey) {
               const ab = await storageGetBuffer(input.storageKey);
@@ -6054,32 +6053,14 @@ Return the data as a structured JSON object.`
             let imageBlocks: Array<{ type: 'image_url'; image_url: { url: string; detail: 'high' } }>;
 
             if (isPdf) {
-              // Convert PDF pages to PNG images using pdftoppm (poppler-utils, pre-installed)
-              const { spawnSync } = await import('child_process');
-              const { mkdtempSync, readdirSync, readFileSync } = await import('fs');
-              const { join } = await import('path');
-              const { tmpdir } = await import('os');
-              const tmpDir = mkdtempSync(join(tmpdir(), 'kai-pdf-'));
-              const outPrefix = join(tmpDir, 'page');
-              const result = spawnSync(
-                'pdftoppm',
-                ['-r', '150', '-png', '-', outPrefix],
-                { input: fileBytes, timeout: 30000, maxBuffer: 50 * 1024 * 1024 }
-              );
-              if (result.error) throw new Error(`pdftoppm error: ${result.error.message}`);
-              if (result.status !== 0) throw new Error(`pdftoppm failed: ${result.stderr?.toString()}`);
-              const pageFiles = readdirSync(tmpDir)
-                .filter((f: string) => f.endsWith('.png'))
-                .sort()
-                .slice(0, 10); // cap at 10 pages to stay within token limits
-              if (pageFiles.length === 0) throw new Error('pdftoppm produced no output pages');
-              imageBlocks = pageFiles.map((f: string) => {
-                const imgBuf = readFileSync(join(tmpDir, f));
-                return {
-                  type: 'image_url' as const,
-                  image_url: { url: `data:image/png;base64,${imgBuf.toString('base64')}`, detail: 'high' as const },
-                };
-              });
+              // Convert PDF pages to PNG images using pdfjs-dist + canvas (pure Node.js)
+              const { pdfToBase64Images } = await import('./pdfToImages');
+              const base64Images = await pdfToBase64Images(new Uint8Array(fileBytes));
+              if (base64Images.length === 0) throw new Error('PDF rendered no pages');
+              imageBlocks = base64Images.map((dataUrl: string) => ({
+                type: 'image_url' as const,
+                image_url: { url: dataUrl, detail: 'high' as const },
+              }));
             } else {
               // Image file — send directly as base64
               const mimeType = lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg') ? 'image/jpeg'
