@@ -8901,3 +8901,8 @@ Transform kiosk from admin dashboard to premium location experience
 ## Feature: Profile Edit Name Deduplication Guard (Session 8)
 - [x] Added deduplication guard to updateProfile mutation in authRouter.ts: fetches instructorTitle from dojoSettings, strips existing title prefix, then prepends title before saving
 - [x] Added 4 unit tests for the deduplication guard: no-dup when title already present, prepend when missing, fix doubled title, pass-through when no title configured (all 10 tests passing)
+
+## Bug: Broken Tutorial Overlay on All Pages (Session 9)
+- [x] Disabled auto-launch useEffect in KaiTutorialContext.tsx that fired 1.5s after page load and placed the tooltip at 0,0 when the target DOM element was not found
+- [x] Disabled ghost-mode idle timer that also triggered the broken overlay after 15s of inactivity
+- [x] Tutorial system preserved intact — can still be triggered explicitly via Kai chat commands; re-enable auto-launch once tutorial step selectors are verified

@@ -189,65 +189,16 @@ export function KaiTutorialProvider({ children }: { children: ReactNode }) {
   }, [location]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Auto-launch on first visit (spec §3) ──────────────────────────────────────────────────
-
-  useEffect(() => {
-    if (!activeModule) return;
-    if (isRunningRef.current) return;
-    if (completedModules[activeModule]) return;
-
-    // Don't wait forever for the DB — if query errors or takes >3s, launch anyway.
-    // If the DB later returns "completed", the tutorial will be skipped on the next visit.
-    const isDbReady = tutorialStatus.isFetched || tutorialStatus.isError;
-
-    if (isDbReady) {
-      const t = setTimeout(() => {
-        if (!isRunningRef.current && !completedModules[activeModule]) {
-          startTutorial(activeModule);
-        }
-      }, 1500);
-      return () => clearTimeout(t);
-    } else {
-      // Fallback: launch after 4s regardless of DB state
-      const fallback = setTimeout(() => {
-        if (!isRunningRef.current && !completedModules[activeModule]) {
-          startTutorial(activeModule);
-        }
-      }, 4000);
-      return () => clearTimeout(fallback);
-    }
-  }, [activeModule, tutorialStatus.isFetched, tutorialStatus.isError]); // eslint-disable-line react-hooks/exhaustive-deps
+  // DISABLED: Auto-launch caused a broken tooltip stuck at 0,0 (upper-left corner) on all
+  // pages when the target DOM element could not be found. Tutorial is now only triggered
+  // explicitly (e.g. via Kai chat command). Re-enable once tutorial steps have verified selectors.
+  //
+  // useEffect(() => { ... }, [activeModule, tutorialStatus.isFetched, tutorialStatus.isError]);
 
   // ── Ghost mode: 15s inactivity (spec §11) ────────────────────────────────────
-
-  useEffect(() => {
-    if (!activeModule || isRunning || completedModules[activeModule]) return;
-
-    const resetTimer = () => {
-      if (ghostTimerRef.current) clearTimeout(ghostTimerRef.current);
-      ghostTimerRef.current = setTimeout(() => {
-        if (
-          !isRunningRef.current &&
-          activeModule &&
-          !ghostOfferedRef.current.has(activeModule)
-        ) {
-          ghostOfferedRef.current.add(activeModule);
-          setGhostModeOffer({
-            module: activeModule,
-            message: GHOST_MESSAGES[activeModule],
-          });
-        }
-      }, GHOST_IDLE_MS);
-    };
-
-    const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];
-    events.forEach((e) => window.addEventListener(e, resetTimer, { passive: true }));
-    resetTimer();
-
-    return () => {
-      events.forEach((e) => window.removeEventListener(e, resetTimer));
-      if (ghostTimerRef.current) clearTimeout(ghostTimerRef.current);
-    };
-  }, [activeModule, isRunning, completedModules]);
+  // DISABLED: Ghost mode offer was also auto-triggering the broken tutorial.
+  //
+  // useEffect(() => { ... }, [activeModule, isRunning, completedModules]);
 
   // ── Step renderer ────────────────────────────────────────────────────────────
 
