@@ -150,6 +150,22 @@ const crmTools = [
   {
     type: 'function' as const,
     function: {
+      name: 'get_classes',
+      description: "Get today's class schedule for the dojo. Use this for questions like 'what classes are today?', 'show me the schedule', 'what's on today?', or 'do we have any classes?'. Returns the list of classes with times, instructors, and enrollment.",
+      parameters: {
+        type: 'object',
+        properties: {
+          date: {
+            type: 'string',
+            description: "Day of week to query (e.g. 'Monday', 'Tuesday'). Defaults to today if omitted.",
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
       name: 'search_leads',
       description: 'Search for leads by name, email, or phone number. Returns a list of matching leads with their IDs.',
       parameters: {
@@ -229,6 +245,7 @@ You have access to these functions for querying data:
 - list_at_risk_students: Find students who are inactive or on hold
 - list_late_payments: Find students with overdue payments
 - search_leads: Search for leads by name, email, or phone
+- get_classes: Get today's class schedule (or any day's schedule). Use for questions about today's classes, the weekly schedule, or what's on right now.
 - get_lead: Get full details for a specific lead by ID
 
 **Important Stats Definitions:**
@@ -298,6 +315,13 @@ Whenever you call get_dashboard_stats or get_student_count and the result shows 
 Then on the next line, add: "**Supported formats:** PDF · Excel (.xlsx/.xls) · CSV · Images of handwritten lists"
 
 This applies to ANY query that triggers a student count check and returns zero — including "flag students", "show students", "how many students", etc.
+
+**EMPTY SCHEDULE DETECTION (Critical):**
+Whenever you call get_classes and the result shows totalToday = 0 (or classes is an empty array), you MUST respond with a warm schedule import offer — do not just say "no classes found":
+
+"No classes are scheduled for today. Let's set that up — just drop your class schedule into this chat bar and I'll import it automatically. I can read Excel files, CSVs, PDFs, and even photos of a handwritten timetable. I'll create each class with the correct day, time, and instructor. Ready to import your schedule?"
+
+This applies to ANY query about today's or this week's schedule that returns zero classes.
 
 **DOCUMENT IMPORT AWARENESS:**
 When a user mentions uploading, dropping, or sharing a file (PDF, Excel, CSV, image), acknowledge it immediately and confirm you'll extract the data. Say something like: "Got it — analyzing your file now. I'll extract the student/schedule/program data and show you a preview before anything is saved."

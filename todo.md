@@ -8921,3 +8921,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Improved all dashboard stats responses: bold numbers, singular/plural, at-risk warning with emoji
 - [x] Improved empty search response: offers import flow instead of dead-end message
 - [x] Server restarted and confirmed running with new logic
+
+## Feature: Kai Empty-State Detection for Class Schedule (Session 9)
+- [x] Replaced mock get_classes case in executeCRMFunction with real DB query: fetches active classes for today's day-of-week scoped to the user's org
+- [x] Added empty-schedule detection to formatFunctionResults: when totalToday=0 returns warm schedule import offer (Excel/CSV/PDF/handwritten timetable)
+- [x] Added rich class list formatter: shows class name, time, instructor, and spots remaining when classes exist
+- [x] Added get_classes tool definition to crmTools in openai.ts with correct description
+- [x] Added get_classes to Data Query Tools list and EMPTY SCHEDULE DETECTION rule to Kai system prompt
+- [x] 6 unit tests written and passing for the empty-schedule detection logic

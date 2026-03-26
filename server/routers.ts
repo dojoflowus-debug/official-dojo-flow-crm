@@ -405,15 +405,47 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       const checkIns = await getKioskCheckIns();
       return { count: checkIns?.length || 0, period: args.period || 'today' };
     
-    case 'get_classes':
+    case 'get_classes': {
+      const orgIdForClasses = ctx?.currentOrganizationId;
+      if (!orgIdForClasses) return { classes: [], totalToday: 0, date: 'today' };
+
+      const { classes: classesTable } = await import('../drizzle/schema');
+      const { eq: eqCls, and: andCls, count: countCls } = await import('drizzle-orm');
+      const dbForClasses = await getDb();
+      if (!dbForClasses) return { classes: [], totalToday: 0, date: 'today' };
+
+      // Get today's day-of-week name (e.g. "Monday")
+      const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      const todayName = dayNames[new Date().getDay()];
+      const targetDay = (args.date && args.date !== 'today') ? args.date : todayName;
+
+      const todayClasses = await dbForClasses
+        .select({
+          id: classesTable.id,
+          name: classesTable.name,
+          time: classesTable.time,
+          startTime: classesTable.startTime,
+          endTime: classesTable.endTime,
+          instructor: classesTable.instructor,
+          enrolled: classesTable.enrolled,
+          capacity: classesTable.capacity,
+          program: classesTable.program,
+          level: classesTable.level,
+        })
+        .from(classesTable)
+        .where(andCls(
+          eqCls(classesTable.organizationId, orgIdForClasses),
+          eqCls(classesTable.dayOfWeek, targetDay),
+          eqCls(classesTable.isActive, 1)
+        ))
+        .orderBy(classesTable.time);
+
       return {
-        classes: [
-          { time: '4:00 PM', name: 'Kids Karate', ages: '6-12' },
-          { time: '5:30 PM', name: 'Teen Martial Arts', ages: '13-17' },
-          { time: '7:00 PM', name: 'Adult Kickboxing', ages: '18+' },
-        ],
-        date: args.date || 'today'
+        classes: todayClasses,
+        totalToday: todayClasses.length,
+        date: targetDay,
       };
+    }
     
     case 'get_inactive_students':
       // TODO: Implement actual inactive student query
@@ -567,7 +599,36 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
   if (result.revenue !== undefined) {
     return { text: `Revenue: $${result.revenue}`, ui_blocks: [] };
   }
-  
+
+  // Handle get_classes results
+  if (result.classes !== undefined && result.totalToday !== undefined) {
+    const total = result.totalToday as number;
+    const date = result.date || 'today';
+
+    // Empty schedule — warm, actionable import offer
+    if (total === 0) {
+      return {
+        text: `No classes are scheduled for ${date}. Let's set that up — just drop your class schedule into this chat bar and I'll import it automatically. I can read **Excel files**, **CSVs**, **PDFs**, and even **photos of a handwritten timetable**. I'll create each class with the correct day, time, and instructor.\n\nReady to import your schedule?`,
+        ui_blocks: []
+      };
+    }
+
+    // Classes exist — format a readable schedule
+    const classList = (result.classes as any[]).map((c: any) => {
+      const time = c.startTime || c.time || '';
+      const instructor = c.instructor ? ` · ${c.instructor}` : '';
+      const spots = (c.capacity && c.enrolled !== undefined)
+        ? ` (${c.capacity - c.enrolled} spots left)`
+        : '';
+      return `• **${c.name}** at ${time}${instructor}${spots}`;
+    }).join('\n');
+
+    return {
+      text: `Here are today's **${total} class${total === 1 ? '' : 'es'}** for ${date}:\n\n${classList}`,
+      ui_blocks: []
+    };
+  }
+
   return { text: JSON.stringify(result), ui_blocks: [] };
 }
 
