@@ -6034,18 +6034,62 @@ Return the data as a structured JSON object.`
             return { success: true, students: parsed, source: 'spreadsheet', fileName: input.fileName };
 
           } else if (isPdf || isImage) {
-            // Use LLM file_url or image_url for PDF/image parsing
-            let fileUrl = input.fileUrl;
-            if (!fileUrl && input.storageKey) {
-              const { storageGet } = await import('./storage');
-              const result = await storageGet(input.storageKey);
-              fileUrl = result.url;
+            // For PDFs: convert each page to PNG using pdftoppm (poppler-utils), then send
+            // all pages as base64 image_url blocks to GPT-4o vision.
+            // OpenAI's image_url endpoint only accepts png/jpeg/gif/webp — PDFs sent directly
+            // as file_url are rejected with "unsupported image format".
+            // For images: send directly as base64 image_url.
+            let fileBytes: Buffer;
+            if (input.storageKey) {
+              const ab = await storageGetBuffer(input.storageKey);
+              fileBytes = Buffer.from(ab);
+            } else if (input.fileUrl) {
+              const resp = await fetch(input.fileUrl);
+              if (!resp.ok) throw new Error(`Failed to fetch file: ${resp.status}`);
+              fileBytes = Buffer.from(await resp.arrayBuffer());
+            } else {
+              throw new Error('No file URL or storage key provided');
             }
-            if (!fileUrl) throw new Error('No file URL available for PDF/image parsing');
 
-            const contentItem = isPdf
-              ? { type: 'file_url' as const, file_url: { url: fileUrl, mime_type: 'application/pdf' as const } }
-              : { type: 'image_url' as const, image_url: { url: fileUrl, detail: 'high' as const } };
+            let imageBlocks: Array<{ type: 'image_url'; image_url: { url: string; detail: 'high' } }>;
+
+            if (isPdf) {
+              // Convert PDF pages to PNG images using pdftoppm (poppler-utils, pre-installed)
+              const { spawnSync } = await import('child_process');
+              const { mkdtempSync, readdirSync, readFileSync } = await import('fs');
+              const { join } = await import('path');
+              const { tmpdir } = await import('os');
+              const tmpDir = mkdtempSync(join(tmpdir(), 'kai-pdf-'));
+              const outPrefix = join(tmpDir, 'page');
+              const result = spawnSync(
+                'pdftoppm',
+                ['-r', '150', '-png', '-', outPrefix],
+                { input: fileBytes, timeout: 30000, maxBuffer: 50 * 1024 * 1024 }
+              );
+              if (result.error) throw new Error(`pdftoppm error: ${result.error.message}`);
+              if (result.status !== 0) throw new Error(`pdftoppm failed: ${result.stderr?.toString()}`);
+              const pageFiles = readdirSync(tmpDir)
+                .filter((f: string) => f.endsWith('.png'))
+                .sort()
+                .slice(0, 10); // cap at 10 pages to stay within token limits
+              if (pageFiles.length === 0) throw new Error('pdftoppm produced no output pages');
+              imageBlocks = pageFiles.map((f: string) => {
+                const imgBuf = readFileSync(join(tmpDir, f));
+                return {
+                  type: 'image_url' as const,
+                  image_url: { url: `data:image/png;base64,${imgBuf.toString('base64')}`, detail: 'high' as const },
+                };
+              });
+            } else {
+              // Image file — send directly as base64
+              const mimeType = lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg') ? 'image/jpeg'
+                : lowerName.endsWith('.webp') ? 'image/webp'
+                : 'image/png';
+              imageBlocks = [{
+                type: 'image_url' as const,
+                image_url: { url: `data:${mimeType};base64,${fileBytes.toString('base64')}`, detail: 'high' as const },
+              }];
+            }
 
             const visionResponse = await invokeLLM({
               maxTokens: 4096,
@@ -6053,7 +6097,7 @@ Return the data as a structured JSON object.`
                 {
                   role: 'user',
                   content: [
-                    contentItem,
+                    ...imageBlocks,
                     {
                       type: 'text',
                       text: 'Extract ALL student/person records from this document — include every single row visible in the table, do not stop early or truncate the list. Return ONLY a valid JSON array of objects with these fields (use null for missing values): firstName, lastName, email, phone, dateOfBirth (YYYY-MM-DD format or null), beltRank, program, guardianName, guardianPhone. Do not include any explanation, markdown, or code fences — just the raw JSON array.'
@@ -6062,7 +6106,6 @@ Return the data as a structured JSON object.`
                 }
               ]
             });
-
             const raw = visionResponse.choices?.[0]?.message?.content || '';
             const jsonMatch = raw.match(/\[\s*\{[\s\S]*?\}\s*\]/);
             if (!jsonMatch) throw new Error('Could not extract student data from document');

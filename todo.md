@@ -8951,3 +8951,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix 3: Both invokeLLM calls in parseStudentsFromDocument now pass explicit maxTokens: 4096
 - [x] Fix 4: Prompts updated to say "Extract ALL records — do not stop early or truncate"
 - [x] 6 new unit tests for normalizeMessage fix — all passing (16 total across studentImport + openai-provider tests)
+
+## Bug: PDF Import Fails with "unsupported image format" (Session 10 cont.)
+- [x] Root cause: OpenAI image_url endpoint only accepts png/jpeg/gif/webp — PDFs sent as image_url are rejected
+- [x] Fix: Use pdftoppm (poppler-utils, pre-installed) to convert PDF pages to PNG server-side, then send as base64 data URLs
+- [x] pdftoppm confirmed working: converts PDF to PNG at 150dpi via stdin, no temp file cleanup issues
+- [x] For multi-page PDFs, all pages sent as separate image_url blocks (capped at 10 pages) in a single GPT-4o call
+- [x] 4 new unit tests for PDF conversion — all 20 tests passing across 3 test files
