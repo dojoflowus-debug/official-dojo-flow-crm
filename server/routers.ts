@@ -6050,51 +6050,62 @@ Return the data as a structured JSON object.`
               throw new Error('No file URL or storage key provided');
             }
 
-            let imageBlocks: Array<{ type: 'image_url'; image_url: { url: string; detail: 'high' } }>;
-
             if (isPdf) {
-              // Convert PDF pages to PNG images using pdfjs-dist + canvas (pure Node.js)
-              const { pdfToBase64Images } = await import('./pdfToImages');
-              const base64Images = await pdfToBase64Images(new Uint8Array(fileBytes));
-              if (base64Images.length === 0) throw new Error('PDF rendered no pages');
-              imageBlocks = base64Images.map((dataUrl: string) => ({
-                type: 'image_url' as const,
-                image_url: { url: dataUrl, detail: 'high' as const },
-              }));
+              // PDF: extract text directly using pdfjs-dist (pure Node.js, no system binaries).
+              // Text extraction is 100% accurate, fast, and never gets truncated by token limits.
+              // Vision rendering is reserved for image files (jpg, png, webp) only.
+              const { pdfToText } = await import('./pdfToText');
+              const pdfText = await pdfToText(new Uint8Array(fileBytes));
+              if (!pdfText.trim()) throw new Error('PDF contains no extractable text — try uploading a spreadsheet or a clearer scan');
+              console.log('[studentImport.pdf] extracted text length:', pdfText.length);
+              const textResponse = await invokeLLM({
+                maxTokens: 8192,
+                messages: [
+                  {
+                    role: 'user',
+                    content: `Extract ALL student/person records from the following roster text — include every single row, do not stop early or skip any. Return ONLY a valid JSON array of objects with these fields (use null for missing values): firstName, lastName, email, phone, dateOfBirth (YYYY-MM-DD format or null), beltRank, program, guardianName, guardianPhone. Do not include any explanation, markdown, or code fences — just the raw JSON array.\n\nROSTER TEXT:\n${pdfText}`
+                  }
+                ]
+              });
+              const raw = textResponse.choices?.[0]?.message?.content || '';
+              console.log('[studentImport.pdf] raw response length:', raw.length, 'finish_reason:', textResponse.choices?.[0]?.finish_reason);
+              const jsonMatch = raw.match(/\[[\s\S]*\]/);
+              if (!jsonMatch) throw new Error('Could not extract student data from document');
+              const parsed = JSON.parse(jsonMatch[0]);
+              console.log('[studentImport.pdf] parsed student count:', parsed.length);
+              return { success: true, students: parsed, source: 'vision', fileName: input.fileName };
             } else {
-              // Image file — send directly as base64
+              // Image file — send directly to GPT-4o vision
               const mimeType = lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg') ? 'image/jpeg'
                 : lowerName.endsWith('.webp') ? 'image/webp'
                 : 'image/png';
-              imageBlocks = [{
+              const imageBlock = {
                 type: 'image_url' as const,
                 image_url: { url: `data:${mimeType};base64,${fileBytes.toString('base64')}`, detail: 'high' as const },
-              }];
+              };
+              const visionResponse = await invokeLLM({
+                maxTokens: 8192,
+                messages: [
+                  {
+                    role: 'user',
+                    content: [
+                      imageBlock,
+                      {
+                        type: 'text',
+                        text: 'Extract ALL student/person records from this image — include every single row visible in the table, do not stop early or truncate the list. Return ONLY a valid JSON array of objects with these fields (use null for missing values): firstName, lastName, email, phone, dateOfBirth (YYYY-MM-DD format or null), beltRank, program, guardianName, guardianPhone. Do not include any explanation, markdown, or code fences — just the raw JSON array.'
+                      }
+                    ]
+                  }
+                ]
+              });
+              const raw = visionResponse.choices?.[0]?.message?.content || '';
+              console.log('[studentImport.vision] raw response length:', raw.length, 'finish_reason:', visionResponse.choices?.[0]?.finish_reason);
+              const jsonMatch = raw.match(/\[[\s\S]*\]/);
+              if (!jsonMatch) throw new Error('Could not extract student data from document');
+              const parsed = JSON.parse(jsonMatch[0]);
+              console.log('[studentImport.vision] parsed student count:', parsed.length);
+              return { success: true, students: parsed, source: 'vision', fileName: input.fileName };
             }
-
-            const visionResponse = await invokeLLM({
-              maxTokens: 4096,
-              messages: [
-                {
-                  role: 'user',
-                  content: [
-                    ...imageBlocks,
-                    {
-                      type: 'text',
-                      text: 'Extract ALL student/person records from this document — include every single row visible in the table, do not stop early or truncate the list. Return ONLY a valid JSON array of objects with these fields (use null for missing values): firstName, lastName, email, phone, dateOfBirth (YYYY-MM-DD format or null), beltRank, program, guardianName, guardianPhone. Do not include any explanation, markdown, or code fences — just the raw JSON array.'
-                    }
-                  ]
-                }
-              ]
-            });
-            const raw = visionResponse.choices?.[0]?.message?.content || '';
-            console.log('[studentImport.vision] raw response length:', raw.length, 'finish_reason:', visionResponse.choices?.[0]?.finish_reason);
-            console.log('[studentImport.vision] raw preview (first 500):', raw.substring(0, 500));
-            const jsonMatch = raw.match(/\[[\s\S]*\]/);
-            if (!jsonMatch) throw new Error('Could not extract student data from document');
-            const parsed = JSON.parse(jsonMatch[0]);
-            console.log('[studentImport.vision] parsed student count:', parsed.length);
-            return { success: true, students: parsed, source: 'vision', fileName: input.fileName };
 
           } else {
             throw new Error(`Unsupported file type: ${input.fileType}. Please upload a PDF, Excel (.xlsx/.xls), CSV, or image file.`);

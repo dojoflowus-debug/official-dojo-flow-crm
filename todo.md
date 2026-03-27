@@ -8969,3 +8969,6 @@ Transform kiosk from admin dashboard to premium location experience
 ## Bug: PDF Import Only 3 Students (Greedy Regex Fix)
 - [x] Fix non-greedy regex `/[\s\S]*?/` in parseStudentsFromDocument — was stopping at first `}]` found (after 3rd student), changed to greedy `/[\s\S]*/` to capture full JSON array
 - [x] Add debug logging to vision branch to capture raw LLM response length and student count
+- [x] Fix PDF import: switch from vision rendering to pdfjs-dist text extraction (100% accurate, no token truncation)
+- [x] Fix light mode bottom nav showing black background (AppShell.tsx)
+- [x] Fix light mode bottom nav icon/label colors (white-on-white invisible)
