@@ -53,7 +53,7 @@ export default function Merchandise() {
   const types = ["uniform", "gear", "belt", "equipment", "other"];
 
   return (
-    <div className={`min-h-full ${isDark ? "bg-[#0F1115]" : "bg-background"}`}>
+    <>
       {/* Header */}
       <div className={`border-b ${isDark ? "bg-[#18181A] border-white/10" : "bg-white border-gray-200"}`}>
         <div className="max-w-7xl mx-auto px-6 py-8">
@@ -274,6 +274,6 @@ export default function Merchandise() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
