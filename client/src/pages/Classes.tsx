@@ -1175,7 +1175,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
         />
       </div>
 
-      <div className={`p-6 max-w-7xl mx-auto ${isDarkMode ? 'bg-[#0F1115]' : ''}`}>
+      <div className={`p-6 max-w-7xl mx-auto ${isDarkMode ? 'bg-[#0F1115]' : 'bg-background'}`}>
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <div>

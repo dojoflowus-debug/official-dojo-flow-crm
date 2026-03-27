@@ -395,7 +395,7 @@ export default function KaiCreative() {
 
   // ── Theme helpers ───────────────────────────────────────────────────────────
 
-  const bg      = isDark ? "bg-[oklch(0.09_0.008_25)]" : "bg-slate-50";
+  const bg      = isDark ? "bg-[oklch(0.09_0.008_25)]" : "bg-background";
   const card    = isDark ? "bg-[oklch(0.12_0.008_25)] border-white/8" : "bg-white border-slate-200";
   const text    = isDark ? "text-white" : "text-slate-900";
   const muted   = isDark ? "text-white/50" : "text-slate-400";

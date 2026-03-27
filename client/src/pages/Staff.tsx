@@ -374,7 +374,7 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
 
   return (
     <ManagementLayout>
-      <div className="p-8">
+      <div className="p-8 bg-background">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
