@@ -8972,3 +8972,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix PDF import: switch from vision rendering to pdfjs-dist text extraction (100% accurate, no token truncation)
 - [x] Fix light mode bottom nav showing black background (AppShell.tsx)
 - [x] Fix light mode bottom nav icon/label colors (white-on-white invisible)
+
+## Feature: Kai Thinking Indicator During PDF Import (Session 12)
+- [x] Add streaming status messages during PDF student import ("Reading PDF...", "Extracting data...", "Parsing records...")
+- [x] Create a "thinking" UI component that shows Kai's thought process with animated text
+- [x] Stream status updates from backend to frontend during parseStudentsFromDocument
+- [x] Test with 20-student PDF to verify smooth UX and no false pause perception

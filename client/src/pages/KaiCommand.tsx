@@ -29,6 +29,7 @@ import VoicePacedMessage from '@/components/VoicePacedMessage';
 import { KaiErrorAlert } from '@/components/KaiErrorAlert';
 import { BetaNoticeModal } from '@/components/BetaNoticeModal';
 import { KaiLoadingAnimation } from '@/components/KaiLoadingAnimation';
+import { KaiThinkingIndicator } from '@/components/KaiThinkingIndicator';
 import { CreativePreviewCard, type CreativePreviewCardData } from '@/components/CreativePreviewCard';
 import { PaywallModal } from '@/components/PaywallModal';
 import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus';
@@ -731,6 +732,8 @@ export default function KaiCommand() {
   
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [isParsingStudents, setIsParsingStudents] = useState(false);
+  const [studentThinkingMessages, setStudentThinkingMessages] = useState<string[]>([]);
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
   const utils = trpc.useUtils();
 
@@ -1498,7 +1501,6 @@ export default function KaiCommand() {
     source: string;
   } | null>(null);
   const [selectedStudentRows, setSelectedStudentRows] = useState<Set<number>>(new Set());
-  const [isParsingStudents, setIsParsingStudents] = useState(false);
   const [isImportingStudents, setIsImportingStudents] = useState(false);
 
   // Get instructors for the review screen
@@ -1983,6 +1985,13 @@ export default function KaiCommand() {
   // Handle student document import — parses any file and shows preview
   const handleStudentDocumentImport = async (fileUrl: string, fileType: string, fileName: string, storageKey?: string) => {
     setIsParsingStudents(true);
+    setStudentThinkingMessages([
+      'Reading document...',
+      'Extracting student data...',
+      'Parsing records...',
+      'Validating information...'
+    ]);
+    
     const analyzingMessage: Message = {
       id: `parsing-students-${Date.now()}`,
       role: 'assistant',
@@ -2036,6 +2045,7 @@ export default function KaiCommand() {
       setMessages(prev => [...prev.filter(m => m.id !== analyzingMessage.id), errorMessage]);
     } finally {
       setIsParsingStudents(false);
+      setStudentThinkingMessages([]);
     }
   };
 
@@ -3849,6 +3859,15 @@ export default function KaiCommand() {
               ) : (
                 /* Messages - z-index: 30 to ensure above environment */
                 <div className="space-y-6 relative" style={{ zIndex: 30 }}>
+                  {/* Kai Thinking Indicator during PDF parsing */}
+                  {isParsingStudents && (
+                    <KaiThinkingIndicator
+                      isVisible={isParsingStudents}
+                      messages={studentThinkingMessages}
+                      isDark={isDark}
+                    />
+                  )}
+                  
                   {messages.map((message) => (
                     <div key={message.id} className="flex gap-3 relative" style={{ zIndex: 30 }}>
                       {message.role === 'user' ? (
