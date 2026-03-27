@@ -8978,3 +8978,21 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Create a "thinking" UI component that shows Kai's thought process with animated text
 - [x] Stream status updates from backend to frontend during parseStudentsFromDocument
 - [x] Test with 20-student PDF to verify smooth UX and no false pause perception
+
+
+## Phase 17: Merchandise Page (Replace Operations)
+- [x] Delete Operations page and remove from navigation
+- [x] Create Merchandise page with product grid layout
+- [x] Set up merchandise database schema (name, description, price, image, category, quantity)
+- [ ] Implement add merchandise functionality (admin)
+- [ ] Implement edit merchandise functionality (admin)
+- [ ] Implement delete merchandise functionality (admin)
+- [ ] Add product image upload support
+- [x] Create product card component with image, name, price, category
+- [x] Implement product grid layout (4 columns, responsive)
+- [x] Add category filtering
+- [x] Add search functionality
+- [ ] Implement quick view modal for product details
+- [x] Add light mode styling for Merchandise page
+- [ ] Test all merchandise functionality
+- [ ] Save checkpoint with Merchandise page

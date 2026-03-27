@@ -39,7 +39,7 @@ const NAVIGATION = [
   { id: 'kai-command', name: 'Kai', href: '/kai', icon: Sparkles, isCenter: true },
   { id: 'classes', name: 'Classes', href: '/classes', icon: Calendar },
   { id: 'floor-plans', name: 'Floor Plans', href: '/floor-plans', icon: Grid3x3 },
-  { id: 'operations', name: 'Operations', href: '/operations/merchandise', icon: Package },
+  { id: 'merchandise', name: 'Merchandise', href: '/merchandise', icon: Package },
   { id: 'kiosk-studio', name: 'Kiosk', href: '/kiosk-home', icon: Grid3x3 },
   { id: 'staff', name: 'Staff', href: '/staff', icon: UserCog },
   { id: 'programs', name: 'Programs', href: '/programs', icon: BookOpen },
@@ -106,12 +106,22 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
   // Should show bottom nav (not in focus mode and not explicitly hidden)
   const showBottomNav = !hideBottomNav && !isFocusMode
 
+  // Determine page title based on route
+  const getPageTitle = () => {
+    const path = location.pathname
+    const navItem = NAVIGATION.find(item => isActive(item.href))
+    if (navItem) return navItem.name
+    if (path.startsWith('/kai')) return 'Kai'
+    if (path.startsWith('/settings')) return 'Settings'
+    return 'Dashboard'
+  }
+
   return (
     <KaiTutorialProvider>
     <KaiBarProvider>
       <div className="app-shell min-h-screen flex flex-col">
         {/* Universal Top Header */}
-        {!hideHeader && <CommandHeader title="Operations" isDarkMode={isDark} />}
+        {!hideHeader && <CommandHeader title={getPageTitle()} isDarkMode={isDark} />}
         
         {/* Main Content - with bottom padding for fixed nav and KaiBar (on /kai route only) */}
         <main 

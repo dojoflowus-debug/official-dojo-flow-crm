@@ -101,6 +101,7 @@ const Conversations = lazy(() => import("../pages/Conversations"));
 const FloorPlanBuilder = lazy(() => import("../pages/FloorPlanBuilder"));
 const FloorPlans = lazy(() => import("../pages/FloorPlans"));
 const FloorPlansCinematic = lazy(() => import("../pages/FloorPlansCinematic"));
+const Merchandise = lazy(() => import("../pages/Merchandise"));
 const Operations = lazy(() => import("../pages/Operations"));
 const PrintFulfillmentSheet = lazy(() => import("../pages/PrintFulfillmentSheet"));
 const ConfirmReceipt = lazy(() => import("../pages/ConfirmReceipt"));
@@ -277,6 +278,7 @@ export const appRoutes: RouteConfig[] = [
   { path: "/billing/pcbancard-application", element: <PCBancardApplication />, label: "PCBancard Application" },
   { path: "/billing/stripe-setup", element: <StripeSetup />, label: "Stripe Setup" },
   { path: "/billing/applications", element: <BillingApplications />, label: "Billing Applications" },
+  { path: "/merchandise", element: <AppShell><Merchandise /></AppShell>, label: "Merchandise" },
   { path: "/operations", element: <AppShell><Operations /></AppShell>, label: "Operations" },
   { path: "/operations/merchandise", element: <AppShell><Operations /></AppShell>, label: "Operations Merchandise" },
   { path: "/operations/merchandise/manage", element: <AppShell><Operations /></AppShell>, label: "Operations Merchandise Manage" },
