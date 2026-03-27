@@ -140,8 +140,8 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
               : isDark 
                 ? 'oklch(0.09 0.008 25)' 
                 : '#faf8f5',
-            backdropFilter: 'blur(24px) saturate(1.5)',
-            WebkitBackdropFilter: 'blur(24px) saturate(1.5)',
+            backdropFilter: isDark || isCinematic ? 'blur(24px) saturate(1.5)' : 'none',
+            WebkitBackdropFilter: isDark || isCinematic ? 'blur(24px) saturate(1.5)' : 'none',
             boxShadow: isCinematic 
               ? '0 -1px 0 rgba(255,255,255,0.06), 0 -8px 32px rgba(0,0,0,0.7), 0 0 20px rgba(229,57,53,0.12)' 
               : isDark
