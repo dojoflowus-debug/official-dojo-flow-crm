@@ -9,6 +9,7 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   ChevronDown,
   ChevronUp,
@@ -65,25 +66,27 @@ function SectionHeader({
   title,
   isOpen,
   onToggle,
+  isDark = true,
 }: {
   icon: React.ElementType;
   title: string;
   isOpen: boolean;
   onToggle: () => void;
+  isDark?: boolean;
 }) {
   return (
     <button
       onClick={onToggle}
-      className="w-full flex items-center justify-between py-2 text-left hover:text-white transition-colors"
+      className={`w-full flex items-center justify-between py-2 text-left transition-colors ${isDark ? "hover:text-white" : "hover:text-slate-900"}`}
     >
-      <div className="flex items-center gap-2 text-gray-300">
+      <div className={`flex items-center gap-2 ${isDark ? "text-gray-300" : "text-slate-700"}`}>
         <Icon className="w-3.5 h-3.5" />
         <span className="text-xs font-semibold uppercase tracking-wider">{title}</span>
       </div>
       {isOpen ? (
-        <ChevronUp className="w-3.5 h-3.5 text-gray-500" />
+        <ChevronUp className={`w-3.5 h-3.5 ${isDark ? "text-gray-500" : "text-slate-400"}`} />
       ) : (
-        <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+        <ChevronDown className={`w-3.5 h-3.5 ${isDark ? "text-gray-500" : "text-slate-400"}`} />
       )}
     </button>
   );
@@ -175,11 +178,14 @@ export function BrandDnaPanel({ onDnaLoaded }: BrandDnaPanelProps) {
 
   // ── Render ────────────────────────────────────────────────────────────────────
 
+  const { theme } = useTheme();
+  const isDark = theme === "dark" || theme === "cinematic";
+
   if (isLoading) {
     return (
-      <div className="bg-gray-900/60 border border-white/10 rounded-xl p-3 animate-pulse">
-        <div className="h-4 bg-gray-700 rounded w-1/2 mb-2" />
-        <div className="h-3 bg-gray-700 rounded w-3/4" />
+      <div className={`${isDark ? "bg-gray-900/60 border-white/10" : "bg-slate-100 border-slate-200"} border rounded-xl p-3 animate-pulse`}>
+        <div className={`h-4 ${isDark ? "bg-gray-700" : "bg-slate-300"} rounded w-1/2 mb-2`} />
+        <div className={`h-3 ${isDark ? "bg-gray-700" : "bg-slate-300"} rounded w-3/4`} />
       </div>
     );
   }
@@ -188,15 +194,15 @@ export function BrandDnaPanel({ onDnaLoaded }: BrandDnaPanelProps) {
   const hasLogo = !!(dna?.logoUrl);
 
   return (
-    <div className="bg-gray-900/60 border border-white/10 rounded-xl overflow-hidden">
+    <div className={`${isDark ? "bg-gray-900/60 border-white/10" : "bg-slate-100 border-slate-200"} border rounded-xl overflow-hidden`}>
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors"
+        className={`w-full flex items-center justify-between px-4 py-3 transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-slate-200"}`}
       >
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-red-400" />
-          <span className="text-sm font-semibold text-white">Brand DNA</span>
+          <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>Brand DNA</span>
           {isComplete ? (
             <span className="flex items-center gap-1 text-xs text-green-400 bg-green-400/10 px-2 py-0.5 rounded-full">
               <CheckCircle className="w-3 h-3" /> Active
@@ -208,40 +214,40 @@ export function BrandDnaPanel({ onDnaLoaded }: BrandDnaPanelProps) {
           )}
         </div>
         {isExpanded ? (
-          <ChevronUp className="w-4 h-4 text-gray-500" />
+          <ChevronUp className={`w-4 h-4 ${isDark ? "text-gray-500" : "text-slate-400"}`} />
         ) : (
-          <ChevronDown className="w-4 h-4 text-gray-500" />
+          <ChevronDown className={`w-4 h-4 ${isDark ? "text-gray-500" : "text-slate-400"}`} />
         )}
       </button>
 
       {isExpanded && dna && (
         <div className="px-4 pb-4 space-y-3">
           {/* Logo status */}
-          <div className="flex items-center gap-2 py-2 border-b border-white/5">
+          <div className={`flex items-center gap-2 py-2 border-b ${isDark ? "border-white/5" : "border-slate-200"}`}>
             {hasLogo ? (
               <div className="flex items-center gap-2">
                 <img
                   src={dna.logoUrl!}
                   alt="Brand logo"
-                  className="h-8 max-w-[80px] object-contain bg-white/5 rounded p-1"
+                  className={`h-8 max-w-[80px] object-contain rounded p-1 ${isDark ? "bg-white/5" : "bg-slate-200"}`}
                 />
                 <span className="text-xs text-green-400">Logo loaded ✓</span>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded bg-gray-700 flex items-center justify-center">
+                <div className={`w-8 h-8 rounded flex items-center justify-center ${isDark ? "bg-gray-700" : "bg-slate-300"}`}>
                   <AlertCircle className="w-4 h-4 text-amber-400" />
                 </div>
                 <div>
                   <p className="text-xs text-amber-400 font-medium">No logo uploaded</p>
-                  <p className="text-xs text-gray-500">Upload in School Profile → Branding</p>
+                  <p className={`text-xs ${isDark ? "text-gray-500" : "text-slate-500"}`}>Upload in School Profile → Branding</p>
                 </div>
               </div>
             )}
             <button
               onClick={() => syncMutation.mutate()}
               disabled={syncMutation.isLoading}
-              className="ml-auto flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors"
+              className={`ml-auto flex items-center gap-1 text-xs transition-colors ${isDark ? "text-gray-400 hover:text-white" : "text-slate-500 hover:text-slate-700"}`}
               title="Sync from School Profile"
             >
               <RefreshCw className={`w-3 h-3 ${syncMutation.isLoading ? "animate-spin" : ""}`} />
@@ -256,6 +262,7 @@ export function BrandDnaPanel({ onDnaLoaded }: BrandDnaPanelProps) {
               title="Colors"
               isOpen={openSections.colors}
               onToggle={() => toggleSection("colors")}
+              isDark={isDark}
             />
             {openSections.colors && (
               <div className="space-y-1.5 mt-1 pl-1">
@@ -263,14 +270,14 @@ export function BrandDnaPanel({ onDnaLoaded }: BrandDnaPanelProps) {
                   <div className="grid grid-cols-3 gap-2">
                     {(["primaryColor", "secondaryColor", "accentColor"] as const).map((key) => (
                       <div key={key} className="flex flex-col gap-1">
-                        <label className="text-xs text-gray-500 capitalize">
+                        <label className={`text-xs capitalize ${isDark ? "text-gray-500" : "text-slate-600"}`}>
                           {key.replace("Color", "")}
                         </label>
                         <input
                           type="color"
                           value={(editValues[key] as string) ?? "#000000"}
                           onChange={(e) => setEditValues((prev) => ({ ...prev, [key]: e.target.value }))}
-                          className="w-full h-8 rounded cursor-pointer border border-white/10 bg-transparent"
+                          className={`w-full h-8 rounded cursor-pointer border ${isDark ? "border-white/10 bg-transparent" : "border-slate-300 bg-white"}`}
                         />
                       </div>
                     ))}
@@ -293,6 +300,7 @@ export function BrandDnaPanel({ onDnaLoaded }: BrandDnaPanelProps) {
               title="Voice & Tone"
               isOpen={openSections.voice}
               onToggle={() => toggleSection("voice")}
+              isDark={isDark}
             />
             {openSections.voice && (
               <div className="space-y-2 mt-1 pl-1">
@@ -363,13 +371,14 @@ export function BrandDnaPanel({ onDnaLoaded }: BrandDnaPanelProps) {
               title="Audience"
               isOpen={openSections.audience}
               onToggle={() => toggleSection("audience")}
+              isDark={isDark}
             />
             {openSections.audience && (
               <div className="space-y-2 mt-1 pl-1">
                 {isEditing ? (
                   <>
                     <div>
-                      <label className="text-xs text-gray-500">Primary Audience</label>
+                      <label className={`text-xs ${isDark ? "text-gray-500" : "text-slate-600"}`}>Primary Audience</label>
                       <input
                         type="text"
                         value={editValues.primaryAudience ?? ""}
@@ -534,7 +543,7 @@ export function BrandDnaPanel({ onDnaLoaded }: BrandDnaPanelProps) {
                 </button>
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="px-3 bg-gray-700 hover:bg-gray-600 text-white text-xs py-2 rounded-lg transition-colors"
+                  className={`px-3 text-xs py-2 rounded-lg transition-colors ${isDark ? "bg-gray-700 hover:bg-gray-600 text-white" : "bg-slate-300 hover:bg-slate-400 text-slate-900"}`}
                 >
                   Cancel
                 </button>
@@ -542,7 +551,7 @@ export function BrandDnaPanel({ onDnaLoaded }: BrandDnaPanelProps) {
             ) : (
               <button
                 onClick={startEdit}
-                className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-medium py-2 rounded-lg border border-white/10 transition-colors"
+                className={`flex-1 text-xs font-medium py-2 rounded-lg border transition-colors ${isDark ? "bg-white/5 hover:bg-white/10 text-gray-300 border-white/10" : "bg-slate-200 hover:bg-slate-300 text-slate-900 border-slate-300"}`}
               >
                 Edit Brand DNA
               </button>
