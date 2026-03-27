@@ -119,7 +119,7 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
   return (
     <KaiTutorialProvider>
     <KaiBarProvider>
-      <div className="app-shell min-h-screen flex flex-col">
+      <div className={`app-shell min-h-screen flex flex-col ${isDark ? '' : 'bg-white'}`}>
         {/* Universal Top Header */}
         {!hideHeader && <CommandHeader title={getPageTitle()} isDarkMode={isDark} />}
         
