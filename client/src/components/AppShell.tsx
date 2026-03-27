@@ -139,14 +139,14 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
               ? 'rgba(8,6,12,0.88)' 
               : isDark 
                 ? 'oklch(0.09 0.008 25)' 
-                : 'oklch(0.99 0.003 60)',
+                : '#faf8f5',
             backdropFilter: 'blur(24px) saturate(1.5)',
             WebkitBackdropFilter: 'blur(24px) saturate(1.5)',
             boxShadow: isCinematic 
               ? '0 -1px 0 rgba(255,255,255,0.06), 0 -8px 32px rgba(0,0,0,0.7), 0 0 20px rgba(229,57,53,0.12)' 
               : isDark
                 ? '0 -1px 0 rgba(255,255,255,0.06), 0 -4px 20px rgba(0,0,0,0.5)'
-                : '0 -1px 0 rgba(0,0,0,0.08), 0 -4px 20px rgba(0,0,0,0.06)',
+                : '0 -1px 0 rgba(0,0,0,0.1), 0 -4px 20px rgba(0,0,0,0.08)',
             borderTop: isDark || isCinematic ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.08)',
           }}
         >
