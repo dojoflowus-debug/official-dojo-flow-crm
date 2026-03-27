@@ -125,7 +125,7 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
         
         {/* Main Content - with bottom padding for fixed nav and KaiBar (on /kai route only) */}
         <main 
-          className="flex-1"
+          className={`flex-1 ${isDark ? '' : 'bg-background'}`}
           style={{
             paddingBottom: '0px'
           }}

@@ -8996,3 +8996,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add light mode styling for Merchandise page
 - [ ] Test all merchandise functionality
 - [ ] Save checkpoint with Merchandise page
+
+
+## Phase 18: Fix Black Strip Issue on All Pages
+- [x] Fix black strip at bottom of pages in light mode
+- [x] Ensure main content extends full height
+- [x] Apply fix globally to all pages
+- [ ] Test on Classes, Staff, Programs, Merchandise, Students, Leads pages
+- [ ] Save checkpoint with black strip fix
