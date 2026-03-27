@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, email FROM users WHERE email IN ('tim.monacella@pcbancard.com', 'drteam@pcbancard.com')",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT id, email FROM users WHERE email IN ('tim.monacella@pcbancard.com', 'drteam@pcbancard.com')",
+  "rows": [
+    {
+      "id": "120053",
+      "email": "drteam@pcbancard.com"
+    },
+    {
+      "id": "120052",
+      "email": "tim.monacella@pcbancard.com"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\n120053\tdrteam@pcbancard.com\n120052\ttim.monacella@pcbancard.com\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

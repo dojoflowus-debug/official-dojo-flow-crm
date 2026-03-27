@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, name FROM organizations WHERE name IN ('Tim Monacella Organization', 'DR Team Organization')",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT id, name FROM organizations WHERE name IN ('Tim Monacella Organization', 'DR Team Organization')",
+  "rows": [
+    {
+      "id": "90001",
+      "name": "Tim Monacella Organization"
+    },
+    {
+      "id": "90002",
+      "name": "DR Team Organization"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n90001\tTim Monacella Organization\n90002\tDR Team Organization\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

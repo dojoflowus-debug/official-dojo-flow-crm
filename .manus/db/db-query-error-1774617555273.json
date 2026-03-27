@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO organizations (name, owner_id) VALUES \n('Tim Monacella Organization', 120052),\n('DR Team Organization', 120053)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute INSERT INTO organizations (name, owner_id) VALUES \n('Tim Monacella Organization', 120052),\n('DR Team Organization', 120053)",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'owner_id' in 'field list'"
+  ]
+}

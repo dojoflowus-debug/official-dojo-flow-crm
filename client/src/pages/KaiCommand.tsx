@@ -3859,15 +3859,6 @@ export default function KaiCommand() {
               ) : (
                 /* Messages - z-index: 30 to ensure above environment */
                 <div className="space-y-6 relative" style={{ zIndex: 30 }}>
-                  {/* Kai Thinking Indicator during PDF parsing */}
-                  {isParsingStudents && (
-                    <KaiThinkingIndicator
-                      isVisible={isParsingStudents}
-                      messages={studentThinkingMessages}
-                      isDark={isDark}
-                    />
-                  )}
-                  
                   {messages.map((message) => (
                     <div key={message.id} className="flex gap-3 relative" style={{ zIndex: 30 }}>
                       {message.role === 'user' ? (
@@ -4499,6 +4490,15 @@ export default function KaiCommand() {
                   )}
 
                   <div ref={messagesEndRef} />
+                  
+                  {/* Kai Thinking Indicator during PDF parsing - at bottom before composer */}
+                  {isParsingStudents && (
+                    <KaiThinkingIndicator
+                      isVisible={isParsingStudents}
+                      messages={studentThinkingMessages}
+                      isDark={isDark}
+                    />
+                  )}
                 </div>
               )}
             </div>

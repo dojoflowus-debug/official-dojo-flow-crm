@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE users SET resetToken = 'b703934f5febbc2765f73ff74259ac41b1fb155a1fc56a0c9acff4661653d642', resetTokenExpiry = DATE_ADD(NOW(), INTERVAL 24 HOUR) WHERE email = 'tim.monacella@pcbancard.com'; UPDATE users SET resetToken = '265cb81b6aef498288417b058366a1d97cbe76e4032dcc0e2d6c58c7fa2ee272', resetTokenExpiry = DATE_ADD(NOW(), INTERVAL 24 HOUR) WHERE email = 'drteam@pcbancard.com'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute UPDATE users SET resetToken = 'b703934f5febbc2765f73ff74259ac41b1fb155a1fc56a0c9acff4661653d642', resetTokenExpiry = DATE_ADD(NOW(), INTERVAL 24 HOUR) WHERE email = 'tim.monacella@pcbancard.com'; UPDATE users SET resetToken = '265cb81b6aef498288417b058366a1d97cbe76e4032dcc0e2d6c58c7fa2ee272', resetTokenExpiry = DATE_ADD(NOW(), INTERVAL 24 HOUR) WHERE email = 'drteam@pcbancard.com'",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 99
+}

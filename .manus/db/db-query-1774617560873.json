@@ -1,0 +1,210 @@
+{
+  "query": "DESCRIBE organizations",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute DESCRIBE organizations",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "name",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "address",
+      "Type": "varchar(500)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "city",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "state",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "zipCode",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "timezone",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "America/New_York",
+      "Extra": ""
+    },
+    {
+      "Field": "programs",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "estimatedStudents",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "launchDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "logoUrl",
+      "Type": "varchar(500)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "planId",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "subscriptionStatus",
+      "Type": "enum('trial','active','past_due','cancelled','inactive')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "trial",
+      "Extra": ""
+    },
+    {
+      "Field": "trialEndsAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Field": "lastActivity",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "settings",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "onboardingStatus",
+      "Type": "enum('not_started','in_progress','completed','skipped')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "not_started",
+      "Extra": ""
+    },
+    {
+      "Field": "onboardingStep",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "bagsOnHand",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "onboarding_profile",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "brandColor",
+      "Type": "varchar(7)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "#EF4444",
+      "Extra": ""
+    },
+    {
+      "Field": "onboarding_status",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "onboarding_step",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\t\tNULL\tauto_increment\nname\tvarchar(255)\tNO\t\tNULL\t\naddress\tvarchar(500)\tYES\t\tNULL\t\ncity\tvarchar(100)\tYES\t\tNULL\t\nstate\tvarchar(50)\tYES\t\tNULL\t\nzipCode\tvarchar(20)\tYES\t\tNULL\t\ntimezone\tvarchar(100)\tNO\t\tAmerica/New_York\t\nprograms\ttext\tYES\t\tNULL\t\nestimatedStudents\tint\tYES\t\tNULL\t\nlaunchDate\ttimestamp\tYES\t\tNULL\t\nlogoUrl\tvarchar(500)\tYES\t\tNULL\t\nplanId\tint\tYES\t\tNULL\t\nsubscriptionStatus\tenum('trial','active','past_due','cancelled','inactive')\tNO\t\ttrial\t\ntrialEndsAt\ttimestamp\tYES\t\tNULL\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\nlastActivity\ttimestamp\tYES\t\tNULL\t\nsettings\ttext\tYES\t\tNULL\t\nonboardingStatus\tenum('not_started','in_progress','completed','skipped')\tNO\t\tnot_started\t\nonboardingStep\tint\tNO\t\t1\t\nbagsOnHand\tint\tNO\t\t0\t\nonboarding_profile\ttext\tYES\t\tNULL\t\nbrandColor\tvarchar(7)\tYES\t\t#EF4444\t\nonboarding_status\tvarchar(50)\tYES\t\tNULL\t\nonboarding_step\tint\tYES\t\t1\t\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

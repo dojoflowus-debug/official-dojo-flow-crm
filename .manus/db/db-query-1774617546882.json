@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO users (name, email, role, authProvider, emailVerified, password, globalRole) VALUES \n('Tim Monacella', 'tim.monacella@pcbancard.com', 'owner', 'password', 1, '$2b$10$abcdefghijklmnopqrstuvwxyz', 'none'),\n('DR Team', 'drteam@pcbancard.com', 'owner', 'password', 1, '$2b$10$abcdefghijklmnopqrstuvwxyz', 'none')",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute INSERT INTO users (name, email, role, authProvider, emailVerified, password, globalRole) VALUES \n('Tim Monacella', 'tim.monacella@pcbancard.com', 'owner', 'password', 1, '$2b$10$abcdefghijklmnopqrstuvwxyz', 'none'),\n('DR Team', 'drteam@pcbancard.com', 'owner', 'password', 1, '$2b$10$abcdefghijklmnopqrstuvwxyz', 'none')",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 65
+}
