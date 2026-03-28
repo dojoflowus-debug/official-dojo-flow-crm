@@ -9035,3 +9035,16 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Add error handling and retry logic
 - [ ] Test Fluid Pay integration end-to-end
 - [ ] Save checkpoint with Fluid Pay integration
+
+
+## Phase 20: Credit Consumption Tracking (Session 14)
+- [x] Analyze current architecture for AI chats, SMS, emails, and calls
+- [x] Create enhanced credit consumption service with deduction logic (creditConsumptionService.ts)
+- [x] Integrate credit deduction into AI chat operations (already integrated in routers.ts)
+- [x] Create SMS/Email/Call integration module (conversationsIntegration.ts)
+- [x] Create credit balance monitoring component (CreditBalanceMonitor.tsx)
+- [x] Implement low-balance alerts and real-time monitoring
+- [x] Write comprehensive vitest tests for credit consumption (creditConsumption.test.ts)
+- [x] Write vitest tests for CreditBalanceMonitor component
+- [ ] Test end-to-end credit tracking flow
+- [ ] Save checkpoint with credit consumption tracking
