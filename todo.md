@@ -9004,3 +9004,34 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Apply fix globally to all pages
 - [ ] Test on Classes, Staff, Programs, Merchandise, Students, Leads pages
 - [ ] Save checkpoint with black strip fix
+
+
+## Phase 19: Fluid Pay Integration for Subscriptions & Credits
+- [ ] Set up Fluid Pay API wrapper and configuration
+- [ ] Create TRPC routes for payment operations
+- [ ] Implement location-based payment provider setup
+- [ ] Build payment credential management UI
+- [ ] Create subscription payment flow
+- [ ] Implement credit purchase flow
+- [ ] Add Fluid Pay webhook handling
+- [ ] Create payment confirmation and status tracking
+- [ ] Build payment history and receipts
+- [ ] Add error handling and retry logic
+- [ ] Test Fluid Pay integration end-to-end
+- [ ] Save checkpoint with Fluid Pay integration
+
+
+## Phase 19: Fluid Pay Integration for Subscriptions & Credits (Session 13)
+- [x] Set up Fluid Pay API wrapper service (fluidPayService.ts)
+- [x] Create TRPC routes for payment operations (fluidPayRouter.ts)
+- [x] Integrate fluidPayRouter into main TRPC router
+- [x] Build payment credential management UI (PaymentSettings.tsx)
+- [x] Create subscription plan selection component (SubscriptionPlans.tsx)
+- [x] Create credit purchase modal component (CreditPurchaseModal.tsx)
+- [x] Build payment history and receipts page (PaymentHistory.tsx)
+- [x] Add Fluid Pay webhook endpoint (fluidPayWebhook.ts)
+- [x] Create comprehensive vitest tests for all components
+- [ ] Implement credit consumption tracking
+- [ ] Add error handling and retry logic
+- [ ] Test Fluid Pay integration end-to-end
+- [ ] Save checkpoint with Fluid Pay integration

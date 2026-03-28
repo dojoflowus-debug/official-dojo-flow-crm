@@ -1,0 +1,22 @@
+{
+  "query": "\n-- Generate reset tokens for both test accounts\nUPDATE users \nSET resetToken = HEX(RANDOM_BYTES(32)), \n    resetTokenExpiry = DATE_ADD(NOW(), INTERVAL 24 HOUR)\nWHERE email IN ('tim.monacella@pcbancard.com', 'drteam@pcbancard.com');\n\n-- Retrieve the reset tokens\nSELECT id, email, resetToken, resetTokenExpiry \nFROM users \nWHERE email IN ('tim.monacella@pcbancard.com', 'drteam@pcbancard.com');\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute \n-- Generate reset tokens for both test accounts\nUPDATE users \nSET resetToken = HEX(RANDOM_BYTES(32)), \n    resetTokenExpiry = DATE_ADD(NOW(), INTERVAL 24 HOUR)\nWHERE email IN ('tim.monacella@pcbancard.com', 'drteam@pcbancard.com');\n\n-- Retrieve the reset tokens\nSELECT id, email, resetToken, resetTokenExpiry \nFROM users \nWHERE email IN ('tim.monacella@pcbancard.com', 'drteam@pcbancard.com');\n",
+  "rows": [
+    {
+      "id": "120052",
+      "email": "tim.monacella@pcbancard.com",
+      "resetToken": "D065B82ED446DA386501FB13229386C3C7DBE1FD40443971A312F10CB6A081E8",
+      "resetTokenExpiry": "2026-03-29 18:28:39"
+    },
+    {
+      "id": "120053",
+      "email": "drteam@pcbancard.com",
+      "resetToken": "D065B82ED446DA386501FB13229386C3C7DBE1FD40443971A312F10CB6A081E8",
+      "resetTokenExpiry": "2026-03-29 18:28:39"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tresetToken\tresetTokenExpiry\n120052\ttim.monacella@pcbancard.com\tD065B82ED446DA386501FB13229386C3C7DBE1FD40443971A312F10CB6A081E8\t2026-03-29 18:28:39\n120053\tdrteam@pcbancard.com\tD065B82ED446DA386501FB13229386C3C7DBE1FD40443971A312F10CB6A081E8\t2026-03-29 18:28:39\n",
+  "stderr": "",
+  "execution_time_ms": 149
+}
