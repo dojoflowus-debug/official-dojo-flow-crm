@@ -98,6 +98,17 @@ export function GoogleSignInButton({
 
   // Load Google Identity Services library
   useEffect(() => {
+    // Suppress GSI popup errors that occur on dev/preview environments
+    const originalError = console.error;
+    const gsiErrorFilter = (...args: any[]) => {
+      const message = args[0];
+      if (typeof message === 'string' && message.includes('[GSI_LOGGER]')) {
+        return; // Silently suppress GSI popup errors
+      }
+      originalError.apply(console, args);
+    };
+    console.error = gsiErrorFilter as any;
+
     const loadGoogleScript = () => {
       if (window.google) {
         initializeGoogle();
@@ -117,12 +128,23 @@ export function GoogleSignInButton({
     };
 
     loadGoogleScript();
+
+    return () => {
+      console.error = originalError; // Restore original console.error
+    };
   }, []);
 
   const initializeGoogle = () => {
     if (!window.google || isInitialized) return;
 
     try {
+      // Check if client ID is configured
+      if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+        console.warn("Google Client ID not configured");
+        setIsInitialized(true);
+        return;
+      }
+
       window.google.accounts.id.initialize({
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         callback: handleGoogleSignIn,
@@ -143,8 +165,14 @@ export function GoogleSignInButton({
 
       setIsInitialized(true);
     } catch (error) {
-      console.error("Failed to initialize Google Sign-In:", error);
-      onError?.("Failed to initialize Google Sign-In");
+      // Silently fail on dev environments where Google OAuth isn't configured
+      if (error instanceof Error && error.message.includes('popup')) {
+        console.warn("Google Sign-In popup blocked (likely dev environment)");
+      } else {
+        console.error("Failed to initialize Google Sign-In:", error);
+        onError?.("Failed to initialize Google Sign-In");
+      }
+      setIsInitialized(true);
     }
   };
 
