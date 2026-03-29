@@ -115,16 +115,42 @@ export const conversationsRouter = router({
       return { id: conversation.insertId, isNew: true };
     }),
 
-  // Send message
+  // Send message (SMS with credit deduction)
   sendMessage: protectedProcedure
     .input(z.object({
       conversationId: z.number(),
       content: z.string(),
       senderType: z.enum(["system", "staff", "automation"]).default("staff"),
+      organizationId: z.number().optional(), // For credit consumption
     }))
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+      
+      // Get conversation details
+      const [conversation] = await db.select()
+        .from(conversations)
+        .where(eq(conversations.id, input.conversationId))
+        .limit(1);
+      
+      if (!conversation) {
+        throw new Error("Conversation not found");
+      }
+      
+      // Check credit balance before sending SMS (if organizationId provided)
+      if (input.organizationId) {
+        const { checkSufficientBalance, CREDIT_COSTS } = await import("./services/creditConsumptionService");
+        const balanceCheck = await checkSufficientBalance(input.organizationId, CREDIT_COSTS.SMS);
+        
+        if (!balanceCheck.sufficient) {
+          throw new Error(balanceCheck.message || "Insufficient credits for SMS");
+        }
+        
+        // Log warning if balance is low
+        if (balanceCheck.message) {
+          console.warn('[SMS] Credit warning:', balanceCheck.message);
+        }
+      }
       
       // Create message
       const [message] = await db.insert(messages).values({
@@ -152,6 +178,31 @@ export const conversationsRouter = router({
           lastMessageAt:new Date().toISOString(),
         })
         .where(eq(conversations.id, input.conversationId));
+      
+      // Deduct credits after successful send (if organizationId provided)
+      if (input.organizationId) {
+        const { deductCredits, CREDIT_COSTS } = await import("./services/creditConsumptionService");
+        const deductResult = await deductCredits({
+          organizationId: input.organizationId,
+          amount: CREDIT_COSTS.SMS,
+          taskType: 'ai_sms',
+          description: `SMS to ${conversation.participantPhone}: "${input.content.substring(0, 50)}${input.content.length > 50 ? '...' : ''}"`,
+          metadata: {
+            recipientPhone: conversation.participantPhone,
+            messageLength: input.content.length,
+            conversationId: input.conversationId,
+            messageId: message.insertId,
+          },
+        });
+        
+        if (!deductResult.success) {
+          console.error('[SMS] Failed to deduct credits:', deductResult.error);
+          // Note: Message was already sent, but credit deduction failed
+          // In production, this should trigger a refund or manual review
+        } else {
+          console.log('[SMS] Credits deducted. New balance:', deductResult.newBalance, 'Alert level:', deductResult.alertLevel);
+        }
+      }
       
       return { id: message.insertId };
     }),

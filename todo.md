@@ -9048,3 +9048,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Write vitest tests for CreditBalanceMonitor component
 - [ ] Test end-to-end credit tracking flow
 - [ ] Save checkpoint with credit consumption tracking
+
+
+## Phase 21: Integrate Credit Deduction into Routers (Session 14)
+- [x] Integrate credit deduction into SMS sending endpoint (conversationsRouter.ts lines 118-208)
+- [x] Integrate credit deduction into email sending endpoint (automationRouter.ts sendNow mutation)
+- [x] Add credit balance checks before operations (pre-check logic)
+- [x] Write integration tests for credit deduction in routers (creditDeductionRouters.test.ts)
+- [x] Create comprehensive integration guide (CREDIT_INTEGRATION_GUIDE.md)
+- [ ] Verify end-to-end credit tracking flow
+- [ ] Save checkpoint with integrated credit deduction

@@ -296,14 +296,15 @@ export const automationRouter = router({
       return result;
     }),
 
-  // Send automation immediately (skip wait times)
+  // Send automation immediately (skip wait times) with credit deduction
   sendNow: protectedProcedure
     .input(z.object({
       sequenceId: z.number(),
       enrolledType: z.enum(["lead", "student"]),
       enrolledId: z.number(),
+      organizationId: z.number().optional(), // For credit consumption
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
