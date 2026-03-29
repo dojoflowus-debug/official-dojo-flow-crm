@@ -1,2 +1,264 @@
 /**
- * Call Analytics Dashboard Page\n * \n * Main dashboard page for viewing call history, statistics, and trends.\n * Provides comprehensive analytics and reporting for call operations.\n */\n\nimport React, { useState, useEffect } from 'react';\nimport { useQuery } from '@tanstack/react-query';\nimport { Phone, RefreshCw, Download, Filter } from 'lucide-react';\nimport { CallHistoryTable } from '../components/CallHistoryTable';\nimport { CallStatisticsCards } from '../components/CallStatisticsCards';\nimport { CallCostTrendChart } from '../components/CallCostTrendChart';\nimport { useOrganization } from '../hooks/useOrganization';\n\ninterface FilterState {\n  dateFrom?: string;\n  dateTo?: string;\n  sortBy: 'date' | 'duration' | 'cost';\n  sortOrder: 'asc' | 'desc';\n  limit: number;\n}\n\nexport const CallAnalyticsDashboard: React.FC = () => {\n  const { organization } = useOrganization();\n  const [filters, setFilters] = useState<FilterState>({\n    sortBy: 'date',\n    sortOrder: 'desc',\n    limit: 50,\n  });\n  const [period, setPeriod] = useState<'7d' | '30d' | '90d' | 'all'>('30d');\n  const [isExporting, setIsExporting] = useState(false);\n\n  // Calculate date range\n  const getDateRange = () => {\n    const now = new Date();\n    let from: Date | undefined;\n\n    switch (period) {\n      case '7d':\n        from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);\n        break;\n      case '30d':\n        from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);\n        break;\n      case '90d':\n        from = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);\n        break;\n      case 'all':\n        from = undefined;\n        break;\n    }\n\n    return {\n      dateFrom: from?.toISOString(),\n      dateTo: now.toISOString(),\n    };\n  };\n\n  // Fetch call history\n  const { data: historyData, isLoading: historyLoading, refetch: refetchHistory } = useQuery({\n    queryKey: ['callHistory', organization?.id, filters, period],\n    queryFn: async () => {\n      if (!organization?.id) return null;\n\n      const dateRange = getDateRange();\n      // TODO: Replace with actual TRPC call\n      // const result = await trpc.callAnalytics.getCallHistory.query({\n      //   organizationId: organization.id,\n      //   ...dateRange,\n      //   ...filters,\n      // });\n      return {\n        calls: [],\n        total: 0,\n      };\n    },\n    enabled: !!organization?.id,\n  });\n\n  // Fetch statistics\n  const { data: statsData, isLoading: statsLoading } = useQuery({\n    queryKey: ['callStats', organization?.id, period],\n    queryFn: async () => {\n      if (!organization?.id) return null;\n\n      const dateRange = getDateRange();\n      // TODO: Replace with actual TRPC call\n      // const result = await trpc.callAnalytics.getCallStatistics.query({\n      //   organizationId: organization.id,\n      //   ...dateRange,\n      // });\n      return {\n        totalCalls: 0,\n        totalCreditsSpent: 0,\n        totalDurationSeconds: 0,\n        totalDurationMinutes: 0,\n        averageCallDuration: 0,\n        averageCreditsPerCall: 0,\n        longestCall: 0,\n        shortestCall: 0,\n        uniqueRecipients: 0,\n      };\n    },\n    enabled: !!organization?.id,\n  });\n\n  // Fetch daily trends\n  const { data: trendsData, isLoading: trendsLoading } = useQuery({\n    queryKey: ['callTrends', organization?.id, period],\n    queryFn: async () => {\n      if (!organization?.id) return [];\n\n      const days = period === '7d' ? 7 : period === '30d' ? 30 : period === '90d' ? 90 : 365;\n      // TODO: Replace with actual TRPC call\n      // const result = await trpc.callAnalytics.getDailyCallTrends.query({\n      //   organizationId: organization.id,\n      //   days,\n      // });\n      return [];\n    },\n    enabled: !!organization?.id,\n  });\n\n  // Fetch hourly distribution\n  const { data: hourlyData, isLoading: hourlyLoading } = useQuery({\n    queryKey: ['callHourly', organization?.id],\n    queryFn: async () => {\n      if (!organization?.id) return [];\n\n      // TODO: Replace with actual TRPC call\n      // const result = await trpc.callAnalytics.getHourlyDistribution.query({\n      //   organizationId: organization.id,\n      //   days: 7,\n      // });\n      return [];\n    },\n    enabled: !!organization?.id,\n  });\n\n  // Fetch cost breakdown\n  const { data: costBreakdown, isLoading: costLoading } = useQuery({\n    queryKey: ['callCostBreakdown', organization?.id, period],\n    queryFn: async () => {\n      if (!organization?.id) return { setupCosts: 0, durationCosts: 0, totalCosts: 0 };\n\n      // TODO: Replace with actual TRPC call\n      // const result = await trpc.callAnalytics.getCostBreakdown.query({\n      //   organizationId: organization.id,\n      //   period: period === 'all' ? 'month' : period === '7d' ? 'day' : 'month',\n      // });\n      return { setupCosts: 0, durationCosts: 0, totalCosts: 0 };\n    },\n    enabled: !!organization?.id,\n  });\n\n  const handleExport = async () => {\n    setIsExporting(true);\n    try {\n      // TODO: Implement CSV export\n      const csv = generateCSV();\n      downloadCSV(csv, `call-analytics-${new Date().toISOString().split('T')[0]}.csv`);\n    } finally {\n      setIsExporting(false);\n    }\n  };\n\n  const generateCSV = (): string => {\n    const headers = ['Date', 'Recipient', 'Duration (min)', 'Credits', 'Description'];\n    const rows = (historyData?.calls || []).map(call => [\n      new Date(call.createdAt).toLocaleDateString(),\n      call.recipientPhone,\n      call.roundedMinutes,\n      call.creditsDeducted,\n      call.description,\n    ]);\n\n    return [\n      headers.join(','),\n      ...rows.map(row => row.map(cell => `\"${cell}\"`).join(',')),\n    ].join('\\n');\n  };\n\n  const downloadCSV = (csv: string, filename: string) => {\n    const blob = new Blob([csv], { type: 'text/csv' });\n    const url = window.URL.createObjectURL(blob);\n    const a = document.createElement('a');\n    a.href = url;\n    a.download = filename;\n    document.body.appendChild(a);\n    a.click();\n    window.URL.revokeObjectURL(url);\n    document.body.removeChild(a);\n  };\n\n  const isLoading = historyLoading || statsLoading || trendsLoading || hourlyLoading || costLoading;\n\n  return (\n    <div className=\"min-h-screen bg-gray-50 dark:bg-gray-950 py-8\">\n      <div className=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8\">\n        {/* Header */}\n        <div className=\"flex items-center justify-between\">\n          <div className=\"flex items-center gap-3\">\n            <div className=\"p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg\">\n              <Phone className=\"w-6 h-6 text-blue-600 dark:text-blue-400\" />\n            </div>\n            <div>\n              <h1 className=\"text-3xl font-bold text-gray-900 dark:text-white\">Call Analytics</h1>\n              <p className=\"text-gray-600 dark:text-gray-400\">Track calls, duration, and credit usage</p>\n            </div>\n          </div>\n          <div className=\"flex gap-2\">\n            <button\n              onClick={() => refetchHistory()}\n              disabled={isLoading}\n              className=\"flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors\"\n            >\n              <RefreshCw className=\"w-4 h-4\" />\n              Refresh\n            </button>\n            <button\n              onClick={handleExport}\n              disabled={isExporting || !historyData?.calls?.length}\n              className=\"flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors\"\n            >\n              <Download className=\"w-4 h-4\" />\n              Export CSV\n            </button>\n          </div>\n        </div>\n\n        {/* Period Filter */}\n        <div className=\"bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4\">\n          <div className=\"flex items-center gap-2 mb-4\">\n            <Filter className=\"w-5 h-5 text-gray-600 dark:text-gray-400\" />\n            <h3 className=\"font-semibold text-gray-900 dark:text-white\">Time Period</h3>\n          </div>\n          <div className=\"flex gap-2 flex-wrap\">\n            {(['7d', '30d', '90d', 'all'] as const).map(p => (\n              <button\n                key={p}\n                onClick={() => setPeriod(p)}\n                className={`px-4 py-2 rounded-lg font-medium transition-colors ${\n                  period === p\n                    ? 'bg-blue-600 text-white'\n                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'\n                }`}\n              >\n                {p === '7d' ? 'Last 7 Days' : p === '30d' ? 'Last 30 Days' : p === '90d' ? 'Last 90 Days' : 'All Time'}\n              </button>\n            ))}\n          </div>\n        </div>\n\n        {/* Statistics Cards */}\n        <CallStatisticsCards\n          stats={statsData || {\n            totalCalls: 0,\n            totalCreditsSpent: 0,\n            totalDurationSeconds: 0,\n            totalDurationMinutes: 0,\n            averageCallDuration: 0,\n            averageCreditsPerCall: 0,\n            longestCall: 0,\n            shortestCall: 0,\n            uniqueRecipients: 0,\n          }}\n          isLoading={statsLoading}\n          period={period === 'all' ? 'All Time' : period === '7d' ? 'Last 7 Days' : period === '30d' ? 'Last 30 Days' : 'Last 90 Days'}\n        />\n\n        {/* Charts */}\n        <CallCostTrendChart\n          dailyTrends={trendsData || []}\n          hourlyData={hourlyData || []}\n          setupCosts={costBreakdown?.setupCosts || 0}\n          durationCosts={costBreakdown?.durationCosts || 0}\n          isLoading={trendsLoading || hourlyLoading || costLoading}\n        />\n\n        {/* Call History Table */}\n        <div className=\"bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6\">\n          <h3 className=\"text-lg font-semibold text-gray-900 dark:text-white mb-4\">Call History</h3>\n          <CallHistoryTable\n            calls={historyData?.calls || []}\n            isLoading={historyLoading}\n            onRefresh={() => refetchHistory()}\n          />\n        </div>\n      </div>\n    </div>\n  );\n};\n\nexport default CallAnalyticsDashboard;\n
+ * Call Analytics Dashboard Page
+ * 
+ * Main dashboard page for viewing call history, statistics, and trends.
+ * Provides comprehensive analytics and reporting for call operations.
+ */
+
+import React, { useState } from 'react';
+import { Phone, RefreshCw, Download, Filter } from 'lucide-react';
+import { CallHistoryTable } from '../components/CallHistoryTable';
+import { CallStatisticsCards } from '../components/CallStatisticsCards';
+import { CallCostTrendChart } from '../components/CallCostTrendChart';
+import { trpc } from '@/lib/trpc';
+
+interface FilterState {
+  dateFrom?: string;
+  dateTo?: string;
+  sortBy: 'date' | 'duration' | 'cost';
+  sortOrder: 'asc' | 'desc';
+  limit: number;
+}
+
+export const CallAnalyticsDashboard: React.FC = () => {
+  const { data: user } = trpc.auth.me.useQuery();
+  const organizationId = (user as any)?.activeOrgId || (user as any)?.organizationId;
+  const [filters, setFilters] = useState<FilterState>({
+    sortBy: 'date',
+    sortOrder: 'desc',
+    limit: 50,
+  });
+  const [period, setPeriod] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Calculate date range
+  const getDateRange = () => {
+    const now = new Date();
+    let from: Date | undefined;
+
+    switch (period) {
+      case '7d':
+        from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case '30d':
+        from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case '90d':
+        from = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        break;
+      case 'all':
+        from = undefined;
+        break;
+    }
+
+    return {
+      dateFrom: from?.toISOString() || '',
+      dateTo: now.toISOString(),
+    };
+  };
+
+  // Fetch call history using TRPC
+  const dateRange = getDateRange();
+  const { data: historyData, isLoading: historyLoading, refetch: refetchHistory } = trpc.callAnalytics.getCallHistory.useQuery(
+    organizationId
+      ? {
+          organizationId: String(organizationId),
+          ...dateRange,
+          ...filters,
+        }
+      : { organizationId: '', dateFrom: '', dateTo: '', sortBy: 'date', sortOrder: 'desc', limit: 50 },
+    {
+      enabled: !!organizationId,
+    }
+  );
+
+  // Fetch statistics using TRPC
+  const { data: statsData, isLoading: statsLoading } = trpc.callAnalytics.getCallStatistics.useQuery(
+    organizationId
+      ? {
+          organizationId: String(organizationId),
+          ...dateRange,
+        }
+      : { organizationId: '', dateFrom: '', dateTo: '' },
+    {
+      enabled: !!organizationId,
+    }
+  );
+
+  // Fetch daily trends using TRPC
+  const { data: trendsData, isLoading: trendsLoading } = trpc.callAnalytics.getDailyCallTrends.useQuery(
+    organizationId
+      ? {
+          organizationId: String(organizationId),
+          days: period === '7d' ? 7 : period === '30d' ? 30 : period === '90d' ? 90 : 365,
+        }
+      : { organizationId: '', days: 30 },
+    {
+      enabled: !!organizationId,
+    }
+  );
+
+  // Fetch hourly distribution using TRPC
+  const { data: hourlyData, isLoading: hourlyLoading } = trpc.callAnalytics.getHourlyDistribution.useQuery(
+    organizationId
+      ? {
+          organizationId: String(organizationId),
+          days: 7,
+        }
+      : { organizationId: '', days: 7 },
+    {
+      enabled: !!organizationId,
+    }
+  );
+
+  // Fetch cost breakdown using TRPC
+  const { data: costBreakdown, isLoading: costLoading } = trpc.callAnalytics.getCostBreakdown.useQuery(
+    organizationId
+      ? {
+          organizationId: String(organizationId),
+          period: period === 'all' ? 'month' : period === '7d' ? 'day' : 'month',
+        }
+      : { organizationId: '', period: 'month' },
+    {
+      enabled: !!organizationId,
+    }
+  );
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const csv = generateCSV();
+      downloadCSV(csv, `call-analytics-${new Date().toISOString().split('T')[0]}.csv`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const generateCSV = (): string => {
+    const headers = ['Date', 'Recipient', 'Duration (min)', 'Credits', 'Description'];
+    const rows = (historyData?.calls || []).map(call => [
+      new Date(call.createdAt).toLocaleDateString(),
+      call.recipientPhone,
+      call.roundedMinutes,
+      call.creditsDeducted,
+      call.description,
+    ]);
+
+    return [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(',')),
+    ].join('\n');
+  };
+
+  const downloadCSV = (csv: string, filename: string) => {
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  };
+
+  const isLoading = historyLoading || statsLoading || trendsLoading || hourlyLoading || costLoading;
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <Phone className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Call Analytics</h1>
+              <p className="text-gray-600 dark:text-gray-400">Track calls, duration, and credit usage</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => refetchHistory()}
+              disabled={isLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
+            <button
+              onClick={handleExport}
+              disabled={isExporting || !historyData?.calls?.length}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Export CSV
+            </button>
+          </div>
+        </div>
+
+        {/* Period Filter */}
+        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <h3 className="font-semibold text-gray-900 dark:text-white">Time Period</h3>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {(['7d', '30d', '90d', 'all'] as const).map(p => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  period === p
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                {p === '7d' ? 'Last 7 Days' : p === '30d' ? 'Last 30 Days' : p === '90d' ? 'Last 90 Days' : 'All Time'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Statistics Cards */}
+        <CallStatisticsCards
+          stats={statsData || {
+            totalCalls: 0,
+            totalCreditsSpent: 0,
+            totalDurationSeconds: 0,
+            totalDurationMinutes: 0,
+            averageCallDuration: 0,
+            averageCreditsPerCall: 0,
+            longestCall: 0,
+            shortestCall: 0,
+            uniqueRecipients: 0,
+          }}
+          isLoading={statsLoading}
+          period={period === 'all' ? 'All Time' : period === '7d' ? 'Last 7 Days' : period === '30d' ? 'Last 30 Days' : 'Last 90 Days'}
+        />
+
+        {/* Charts */}
+        <CallCostTrendChart
+          dailyTrends={trendsData || []}
+          hourlyData={hourlyData || []}
+          setupCosts={costBreakdown?.setupCosts || 0}
+          durationCosts={costBreakdown?.durationCosts || 0}
+          isLoading={trendsLoading || hourlyLoading || costLoading}
+        />
+
+        {/* Call History Table */}
+        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Call History</h3>
+          <CallHistoryTable
+            calls={historyData?.calls || []}
+            isLoading={historyLoading}
+            onRefresh={() => refetchHistory()}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CallAnalyticsDashboard;

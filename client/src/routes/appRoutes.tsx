@@ -98,6 +98,7 @@ const Automation = lazy(() => import("../pages/Automation"));
 const AutomationCreate = lazy(() => import("../pages/AutomationCreate"));
 const AutomationBuilder = lazy(() => import("../pages/AutomationBuilder"));
 const Conversations = lazy(() => import("../pages/Conversations"));
+const CallAnalyticsDashboard = lazy(() => import("../pages/CallAnalyticsDashboard"));
 const FloorPlanBuilder = lazy(() => import("../pages/FloorPlanBuilder"));
 const FloorPlans = lazy(() => import("../pages/FloorPlans"));
 const FloorPlansCinematic = lazy(() => import("../pages/FloorPlansCinematic"));
@@ -311,6 +312,7 @@ export const appRoutes: RouteConfig[] = [
   { path: "/automation/create", element: <AutomationCreate />, label: "Create Automation" },
   { path: "/automation/:id", element: <AutomationBuilder />, label: "Automation Builder" },
   { path: "/conversations", element: <Conversations />, label: "Conversations" },
+  { path: "/call-analytics", element: <AppShell><ProtectedRoute><CallAnalyticsDashboard /></ProtectedRoute></AppShell>, label: "Call Analytics" },
   { path: "/setup-wizard", element: <ProtectedRoute requireSetup={false}><SetupWizard /></ProtectedRoute>, label: "Setup Wizard" },
   { path: "/kai-setup", element: <ProtectedRoute><KaiSetupMode /></ProtectedRoute>, label: "Kai Setup" },
   { path: "/ai-setup", element: <AISetup />, label: "AI Setup" },
