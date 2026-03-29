@@ -9058,3 +9058,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Create comprehensive integration guide (CREDIT_INTEGRATION_GUIDE.md)
 - [ ] Verify end-to-end credit tracking flow
 - [ ] Save checkpoint with integrated credit deduction
+
+
+## Phase 22: Phone Call Credit Integration (Session 15)
+- [x] Examine call recording endpoints and current implementation
+- [x] Create call credit deduction service with duration tracking (callCreditService.ts)
+- [x] Create call tracking router with credit integration (callTrackingRouter.ts)
+- [x] Add call duration calculation and billing logic (calculateCallDuration, estimateCallCredits)
+- [x] Create call credit tracking component for UI (CallCreditTracker.tsx)
+- [x] Write comprehensive tests for call credit integration (callCreditIntegration.test.ts)
+- [x] Write component tests for CallCreditTracker (CallCreditTracker.test.tsx)
+- [ ] Save checkpoint with call credit integration
