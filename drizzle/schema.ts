@@ -1984,3 +1984,24 @@ export const creativeMemory = mysqlTable("creative_memory", {
   index("idx_creative_memory_user").on(table.userId),
   index("idx_creative_memory_style").on(table.orgId, table.preferredStyle),
 ]);
+
+
+export const emailVerificationTokens = mysqlTable("email_verification_tokens", {
+	id: int().autoincrement().notNull().primaryKey(),
+	userId: int().notNull(),
+	email: varchar({ length: 320 }).notNull(),
+	token: varchar({ length: 255 }).notNull().unique(),
+	tokenHash: varchar({ length: 255 }).notNull(),
+	expiresAt: timestamp({ mode: 'string' }).notNull(),
+	verifiedAt: timestamp({ mode: 'string' }),
+	attempts: int().default(0).notNull(),
+	maxAttempts: int().default(5).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_verification_user").on(table.userId),
+	index("idx_verification_email").on(table.email),
+	index("idx_verification_token").on(table.token),
+	index("idx_verification_expires").on(table.expiresAt),
+]);
