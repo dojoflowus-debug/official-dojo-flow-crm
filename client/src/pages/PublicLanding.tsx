@@ -162,7 +162,8 @@ export default function PublicLanding() {
   const navOpaque = scrollY > 60;
 
   return (
-    <MainLayout transparentHeader hideFooter>
+    <MainLayout
+      hideNavigation={showKaiOnboarding} transparentHeader hideFooter>
       <style>{`
         .df-landing { background: #050505; color: #fff; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
         .scroll-reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }

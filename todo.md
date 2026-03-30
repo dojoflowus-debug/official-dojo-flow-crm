@@ -9100,3 +9100,20 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Create trial status dashboard component
 - [x] Write comprehensive tests for trial system (trialManagement.test.ts - 40+ tests)
 - [ ] Save checkpoint with trial account creation
+
+
+## Phase 29: Update Onboarding Modal Text (Session 22)
+- [x] Locate MyDojo text in KaiOnboardingFlow component (line 1000 - placeholder)
+- [x] Determine what text represents (school/studio name input field)
+- [x] Update text to better placeholder (changed to "e.g., Elite Martial Arts Academy")
+- [x] Update label from "School name" to "Studio name" for consistency
+- [ ] Test change in browser
+- [ ] Save checkpoint with updated onboarding modal
+
+
+## Phase 30: Hide Menu Bar During Onboarding (Session 23)
+- [ ] Identify menu bar component and its location
+- [ ] Find where onboarding modal state is managed
+- [ ] Add logic to hide menu bar when onboarding is active
+- [ ] Test change in browser
+- [ ] Save checkpoint with hidden menu bar during onboarding
