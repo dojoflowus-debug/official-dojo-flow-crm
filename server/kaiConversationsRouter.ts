@@ -136,7 +136,15 @@ export const kaiConversationsRouter = router({
         .orderBy(kaiMessages.createdAt)
         .limit(input.limit);
 
-      return conversationMessages;
+      // Parse metadata to extract quickReplies
+      return conversationMessages.map(msg => {
+        const parsedMetadata = msg.metadata ? JSON.parse(msg.metadata) : {};
+        return {
+          ...msg,
+          quickReplies: parsedMetadata.quickReplies || undefined,
+          metadata: parsedMetadata,
+        };
+      });
     }),
 
   /**
@@ -151,6 +159,10 @@ export const kaiConversationsRouter = router({
         role: z.enum(["user", "assistant", "system"]),
         content: z.string(),
         metadata: z.record(z.string(), z.any()).optional(),
+        quickReplies: z.array(z.object({
+          label: z.string(),
+          action: z.string(),
+        })).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -174,12 +186,17 @@ export const kaiConversationsRouter = router({
       }
 
       // Insert message
+      const metadata = {
+        ...input.metadata,
+        ...(input.quickReplies && { quickReplies: input.quickReplies }),
+      };
+      
       const result = await db.insert(kaiMessages).values({
         conversationId: input.conversationId,
         organizationId: ctx.user.organizationId,
         role: input.role,
         content: input.content,
-        metadata: input.metadata ? JSON.stringify(input.metadata) : null,
+        metadata: Object.keys(metadata).length > 0 ? JSON.stringify(metadata) : null,
         createdAt:new Date().toISOString(),
       });
 

@@ -9140,18 +9140,18 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Bug #4: Focus mode can't be disabled on Android (CRITICAL) - FIXED: Increased button size to 48x48px (mobile standard), added touch-manipulation class, and improved accessibility
 
 ### Phase 3: UI/UX Bugs
-- [ ] Bug #5: Predefined messages on Kai AI not displaying
-- [ ] Bug #6: Image generation inaccurate with branding DNA/spellings
-- [ ] Bug #7: Theme change not displaying for light/cinema modes
-- [ ] Bug #8: Report page has predefined values
+- [x] Bug #5: Predefined messages on Kai AI not displaying - FIXED: Updated addMessage to accept quickReplies and store in metadata, updated getMessages to parse and return quickReplies
+- [ ] Bug #6: Image generation inaccurate with branding DNA/spellings - TODO: Review image generation prompts
+- [ ] Bug #7: Theme change not displaying for light/cinema modes - TODO: Check theme context updates
+- [ ] Bug #8: Report page has predefined values - TODO: Clear default values on load
 
 ### Phase 4: Data Handling Bugs
-- [ ] Bug #9: Credits remain at 1,000 (consumption not working)
-- [ ] Bug #10: Staff creation without required information
-- [ ] Bug #11: Equipment setup adds zero before values
-- [ ] Bug #12: Profile region selection needs dropdown
+- [ ] Bug #9: Credits remain at 1,000 (consumption not working) - TODO: Debug credit deduction logic
+- [ ] Bug #10: Staff creation without required information - TODO: Add form validation
+- [ ] Bug #11: Equipment setup adds zero before values - TODO: Fix number formatting
+- [ ] Bug #12: Profile region selection needs dropdown - TODO: Add region dropdown component
 
 ### Phase 5: Remaining Issues
-- [ ] Bug #13: 20 steps required for AI
-- [ ] Bug #14: AI greeting adds "New User" to names
-- [ ] Bug #15: Need admin issue tracking system
+- [x] Bug #13: 20 steps required for AI - FIXED: Reduced from 23 to 9 core steps, moved optional steps to separate array
+- [ ] Bug #14: AI greeting adds "New User" to names - TODO: Fix greeting name parsing
+- [ ] Bug #15: Need admin issue tracking system - TODO: Create admin dashboard for tracking issues

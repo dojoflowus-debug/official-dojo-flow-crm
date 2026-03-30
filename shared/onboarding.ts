@@ -8,30 +8,35 @@
 
 // ─── Step definitions ────────────────────────────────────────────────────────
 
+// Core required steps for onboarding (reduced from 23 to 9 steps)
 export const ONBOARDING_STEPS = [
   "name",
   "title",
-  "profile_photo",
-  "programs",
-  "rank",
   "school_name",
+  "programs",
+  "email",
+  "phone",
+  "timezone",
+  "currency",
+  "complete",
+] as const;
+
+// Optional steps that can be done later
+export const OPTIONAL_ONBOARDING_STEPS = [
+  "profile_photo",
+  "rank",
   "display_name",
   "tagline",
   "martial_style",
   "address",
   "city_state_zip",
   "country",
-  "phone",
-  "email",
   "website",
   "logo_light",
   "logo_dark",
   "icon_logo_light",
   "icon_logo_dark",
   "brand_colors",
-  "timezone",
-  "currency",
-  "complete",
 ] as const;
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
