@@ -19,7 +19,7 @@ import { addOnsRouter } from "./addOnsRouter";
 import { merchandiseRouter } from "./merchandiseRouter";
 import { kaiDataRouter } from "./kaiDataRouter";
 import { navBadgesRouter } from "./navBadgesRouter";
-import { floorPlansRouter } from "./floorPlansRouter";
+
 import { ownerAuthRouter } from "./ownerAuthRouter";
 import { onboardingRouter } from "./onboardingRouter";
 import { staffAuthRouter } from "./staffAuthRouter";
@@ -776,7 +776,7 @@ export const appRouter = router({
   merchandise: merchandiseRouter,
   kaiData: kaiDataRouter,
   navBadges: navBadgesRouter,
-  floorPlans: floorPlansRouter,
+
   webhook: webhookRouter,
   campaigns: campaignsRouter,
   automation: automationRouter,

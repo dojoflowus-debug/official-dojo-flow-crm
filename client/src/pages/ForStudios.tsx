@@ -76,42 +76,42 @@ export default function ForStudios() {
       title: "Elegant Class Booking",
       description: "A booking experience as refined as your studio. Clients browse schedules, book classes, and manage their packs from any device with a clean, intuitive interface.",
       benefits: ["Mobile-first design", "Real-time availability", "Waitlist management", "Easy rescheduling"],
-      image: "/yoga-studio-interior.jpg"
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/CaitGcU2dUvj49bXGJVNcB/studio-elegant-booking-jwwMbM6S4tZDrrEXVwLpdf.webp"
     },
     {
       icon: CreditCard,
       title: "Flexible Memberships & Packs",
       description: "Unlimited memberships, 10-class packs, drop-in rates, private sessions—DojoFlow handles any pricing model with automatic renewals and expiration tracking.",
       benefits: ["Class pack tracking", "Auto-renewals", "Expiration alerts", "Family accounts"],
-      image: "/yoga-studio-modern.jpg"
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/CaitGcU2dUvj49bXGJVNcB/studio-flexible-memberships-TjijgYxFn9YGdNRNVbnvmd.webp"
     },
     {
       icon: Users,
       title: "Instructor Management",
       description: "Track instructor availability, handle sub requests, manage payroll hours, and keep your schedule running smoothly even when life happens.",
       benefits: ["Availability calendars", "Sub request system", "Hour tracking", "Performance insights"],
-      image: "/ballet-class.jpg"
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/CaitGcU2dUvj49bXGJVNcB/studio-instructor-management-kbkMEWPCK3FdW4GKxZ9Bkn.webp"
     },
     {
       icon: MessageSquare,
       title: "Kai AI Concierge",
       description: "Your always-on studio assistant answers questions, recommends classes, sends reminders, and keeps clients engaged with personalized communication.",
       benefits: ["Instant responses", "Class recommendations", "Reminder sequences", "Re-engagement campaigns"],
-      image: "/pilates-reformer-class.jpg"
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/CaitGcU2dUvj49bXGJVNcB/studio-kai-concierge-Rhkss9VbjyEhRczF9f34ZW.webp"
     },
     {
       icon: Heart,
       title: "Client Relationship Tools",
       description: "Track client preferences, celebrate milestones, send birthday messages, and build the kind of relationships that keep clients coming back for years.",
       benefits: ["Preference tracking", "Milestone celebrations", "Birthday automation", "Attendance history"],
-      image: "/dance-class-kids.jpg"
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/CaitGcU2dUvj49bXGJVNcB/studio-client-relationships-JJgjxhWmzhR8y4aum8D5pm.webp"
     },
     {
       icon: BarChart3,
       title: "Studio Analytics",
       description: "Understand your business with clear insights: class popularity, instructor performance, revenue trends, and client retention—all in one dashboard.",
       benefits: ["Class popularity", "Revenue tracking", "Retention metrics", "Instructor analytics"],
-      image: "/barre-class.jpg"
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/CaitGcU2dUvj49bXGJVNcB/studio-analytics-dashboard-8Dr7n897wRAGC9YcAWLe3V.webp"
     }
   ];
 

@@ -9089,3 +9089,19 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix button click handler and component integration (added all required props)
 - [x] Verify fix works end-to-end (button now displays and is clickable)
 - [ ] Save checkpoint with working trial button
+
+
+## Phase 32: Remove Floor Plans Feature (Session 25)
+- [x] Identify all Floor Plans related files and components
+- [x] Remove Floor Plans page and routes (deleted 8 files)
+- [x] Remove Floor Plans from navigation and sidebar (AppShell.tsx, AppShellGuard.tsx)
+- [x] Remove Floor Plans from routers (routers.ts, appRoutes.tsx)
+- [x] Test application to verify removal (dev server running)
+- [ ] Save checkpoint with Floor Plans feature removed
+
+
+## Phase 33: Fix Missing Images on Studios Page (Session 26)
+- [x] Locate missing image references in ForStudios.tsx (6 feature images with local paths)
+- [x] Generate AI replacement images for studio features (6 AI-generated images created)
+- [x] Update image references with CDN URLs (all 6 images updated in ForStudios.tsx)
+- [ ] Test studios page to verify images display

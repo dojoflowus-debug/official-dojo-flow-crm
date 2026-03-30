@@ -98,9 +98,7 @@ const Automation = lazy(() => import("../pages/Automation"));
 const AutomationCreate = lazy(() => import("../pages/AutomationCreate"));
 const AutomationBuilder = lazy(() => import("../pages/AutomationBuilder"));
 const Conversations = lazy(() => import("../pages/Conversations"));
-const FloorPlanBuilder = lazy(() => import("../pages/FloorPlanBuilder"));
-const FloorPlans = lazy(() => import("../pages/FloorPlans"));
-const FloorPlansCinematic = lazy(() => import("../pages/FloorPlansCinematic"));
+
 const Merchandise = lazy(() => import("../pages/Merchandise"));
 const Operations = lazy(() => import("../pages/Operations"));
 const PrintFulfillmentSheet = lazy(() => import("../pages/PrintFulfillmentSheet"));
@@ -260,8 +258,7 @@ export const appRoutes: RouteConfig[] = [
   { path: "/leads", element: <AppShell><Leads /></AppShell>, label: "Leads" },
   { path: "/test-data", element: <TestData />, label: "Test Data" },
   { path: "/classes", element: <AppShell><Classes /></AppShell>, label: "Classes" },
-  { path: "/floor-plans", element: <AppShell><FloorPlansCinematic /></AppShell>, label: "Floor Plans" },
-  { path: "/floor-plans-old", element: <AppShell><FloorPlans /></AppShell>, label: "Floor Plans Old" },
+
   { path: "/programs", element: <AppShell><Programs /></AppShell>, label: "Programs" },
   { path: "/staff", element: <AppShell><Staff /></AppShell>, label: "Staff" },
   { path: "/billing", element: <AppShell><Billing /></AppShell>, label: "Billing" },
@@ -300,7 +297,7 @@ export const appRoutes: RouteConfig[] = [
   { path: "/settings/kiosk", element: <KioskSettings />, label: "Kiosk Settings" },
   { path: "/settings/kiosk/studio", element: <ProtectedRoute><KioskStudioBuilder2 /></ProtectedRoute>, label: "Kiosk Studio" },
   { path: "/kiosk-studio-builder/:locationId", element: <ProtectedRoute><KioskStudioBuilder2 /></ProtectedRoute>, label: "Kiosk Studio Builder" },
-  { path: "/settings/floor-plans", element: <FloorPlanBuilder />, label: "Floor Plan Builder" },
+
   { path: "/settings/profile", element: <ProfileSettings />, label: "Profile Settings" },
   { path: "/settings/owner-profile", element: <OwnerProfile />, label: "Owner Profile" },
 

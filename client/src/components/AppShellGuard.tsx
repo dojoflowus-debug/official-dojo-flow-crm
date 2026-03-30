@@ -20,7 +20,6 @@ export function AppShellGuard({ children }: { children: React.ReactNode }) {
       '/leads',
       '/kai',
       '/classes',
-      '/floor-plans',
       '/operations',
       '/kiosk-studio',
       '/staff',
