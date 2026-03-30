@@ -17,7 +17,7 @@ export const callAnalyticsRouter = router({
   getCallHistory: protectedProcedure
     .input(z.object({
       organizationId: z.number(),
-      limit: z.number().max(500).default(50),
+      limit: z.number().default(50).max(500),
       offset: z.number().default(0),
       dateFrom: z.string().datetime().optional(),
       dateTo: z.string().datetime().optional(),

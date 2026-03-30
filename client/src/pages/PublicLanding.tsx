@@ -500,7 +500,7 @@ export default function PublicLanding() {
 
       <FloatingKaiButton onClick={() => setShowKaiOnboarding(true)} />
       <FloatingVideoIcon videoSrc="/dojo-promo.mp4" posterSrc="/hero-martial-arts.jpg" heroRef={heroRef as React.RefObject<HTMLElement>} />
-      {showKaiOnboarding && <KaiOnboardingFlow isActive={showKaiOnboarding} onClose={() => setShowKaiOnboarding(false)} onComplete={() => setShowKaiOnboarding(false)} />}
+      {showKaiOnboarding && <KaiOnboardingFlow onClose={() => setShowKaiOnboarding(false)} />}
     </MainLayout>
   );
 }
