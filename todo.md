@@ -9091,3 +9091,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Write integration tests for router connection (callAnalyticsRouterIntegration.test.ts)
 - [x] Test end-to-end data flow from database to dashboard (integration tests)
 - [ ] Save checkpoint with integrated call analytics router
+
+
+## Phase 25: Fix 7-Day Trial Button Bug (Session 18)
+- [x] Locate and examine the home page component (PublicLanding.tsx)
+- [x] Find the 7-day trial button and identify the issue (missing props in KaiOnboardingFlow)
+- [x] Check the button click handler and navigation logic (fixed props: isActive, onClose, onComplete)
+- [x] Test the fix in the browser (verified component receives all required props)
+- [ ] Save checkpoint with the fix
