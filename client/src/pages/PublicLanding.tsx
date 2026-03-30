@@ -500,7 +500,17 @@ export default function PublicLanding() {
 
       <FloatingKaiButton onClick={() => setShowKaiOnboarding(true)} />
       <FloatingVideoIcon videoSrc="/dojo-promo.mp4" posterSrc="/hero-martial-arts.jpg" heroRef={heroRef as React.RefObject<HTMLElement>} />
-      {showKaiOnboarding && <KaiOnboardingFlow onClose={() => setShowKaiOnboarding(false)} />}
+      {showKaiOnboarding && (
+        <KaiOnboardingFlow
+          isActive={showKaiOnboarding}
+          onClose={() => setShowKaiOnboarding(false)}
+          onComplete={(data) => {
+            console.log('Onboarding completed:', data);
+            setShowKaiOnboarding(false);
+            // TODO: Handle onboarding completion (create trial account, etc.)
+          }}
+        />
+      )}
     </MainLayout>
   );
 }
