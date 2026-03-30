@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { FloatingVideoIcon } from "@/components/FloatingVideoIcon";
 import { KaiOnboardingFlow } from "@/components/KaiOnboardingFlow";
 import { FloatingKaiButton } from "@/components/FloatingKaiButton";
+import { trpc } from "@/lib/trpc";
+import { useNavigate } from "react-router-dom";
 
 const MOSAIC_TILES = [
   { src: "/industry-martial-arts.jpg", label: "Martial Arts" },
@@ -101,6 +103,22 @@ export default function PublicLanding() {
   const heroRef = useRef<HTMLDivElement>(null);
   const [scrollY, setScrollY] = useState(0);
   const [showKaiOnboarding, setShowKaiOnboarding] = useState(false);
+  const createTrialMutation = trpc.trial.createTrialAccount.useMutation({
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success('Trial account created! Redirecting to dashboard...');
+        // Redirect to dashboard after short delay
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
+      } else {
+        toast.error(result.message || 'Failed to create trial account');
+      }
+    },
+    onError: (error) => {
+      toast.error('Error creating trial account: ' + error.message);
+    },
+  });
   const [activeIndustry, setActiveIndustry] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [hoveredTile, setHoveredTile] = useState<number | null>(null);
@@ -507,7 +525,17 @@ export default function PublicLanding() {
           onComplete={(data) => {
             console.log('Onboarding completed:', data);
             setShowKaiOnboarding(false);
-            // TODO: Handle onboarding completion (create trial account, etc.)
+            
+            // Create trial account with onboarding data
+            createTrialMutation.mutate({
+              organizationName: data.organizationName,
+              ownerEmail: data.ownerEmail,
+              ownerName: data.ownerName,
+              businessType: data.businessType,
+              studentCount: data.studentCount,
+              locationCount: data.locationCount,
+              timezone: data.timezone,
+            });
           }}
         />
       )}

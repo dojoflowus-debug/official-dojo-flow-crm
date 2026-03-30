@@ -9089,3 +9089,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix button click handler and component integration (added all required props)
 - [x] Verify fix works end-to-end (button now displays and is clickable)
 - [ ] Save checkpoint with working trial button
+
+
+## Phase 28: Trial Account Creation with 7-Day Expiration (Session 21)
+- [x] Examine database schema for trial-related fields (organizations table has trialEndsAt, subscriptionStatus)
+- [x] Create trial management service with expiration logic (trialManagementService.ts)
+- [x] Create TRPC routes for trial account creation (trialRouter.ts)
+- [x] Integrate trial creation into KaiOnboardingFlow onComplete handler (PublicLanding.tsx)
+- [ ] Add trial expiration check middleware to protected routes
+- [ ] Create trial status dashboard component
+- [x] Write comprehensive tests for trial system (trialManagement.test.ts - 40+ tests)
+- [ ] Save checkpoint with trial account creation
