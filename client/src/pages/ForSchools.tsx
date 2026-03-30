@@ -67,42 +67,42 @@ export default function ForSchools() {
       title: "Complete Student Profiles",
       description: "Track belt ranks, attendance history, achievements, emergency contacts, and custom notes. Every student's journey documented in one place.",
       benefits: ["Belt progression tracking", "Photo ID management", "Emergency contact access", "Custom notes & tags"],
-      image: "/schools/student-profiles.jpg"
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/CaitGcU2dUvj49bXGJVNcB/schools-student-profiles-76Ku2TsFmtGkisPJkJRsyA.webp"
     },
     {
       icon: Calendar,
       title: "Smart Class Scheduling",
       description: "Create recurring class schedules, manage belt testing events, and handle private lessons. Students can self-book available slots.",
       benefits: ["Drag-and-drop scheduling", "Capacity management", "Waitlist automation", "Google Calendar sync"],
-      image: "/schools/class-scheduling.jpg"
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/CaitGcU2dUvj49bXGJVNcB/schools-class-scheduling-WsfPbzGJB2kUx5kdMSNAM6.webp"
     },
     {
       icon: GraduationCap,
       title: "Belt Testing & Promotions",
       description: "Organize belt tests, track eligibility requirements, and celebrate promotions. Automated notifications keep families informed.",
       benefits: ["Eligibility tracking", "Test scheduling", "Parent notifications", "Achievement certificates"],
-      image: "/schools/belt-ceremony.jpg"
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/CaitGcU2dUvj49bXGJVNcB/schools-belt-ceremony-QJ3M92UGHXVEF3xBmGqGdd.webp"
     },
     {
       icon: CreditCard,
       title: "Automated Billing",
       description: "Set up monthly memberships, class packs, or drop-in rates. Stripe integration handles payments, failed card recovery, and invoicing.",
       benefits: ["Recurring payments", "Failed payment recovery", "Family discounts", "Instant invoicing"],
-      image: "/schools/automated-billing.jpg"
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/CaitGcU2dUvj49bXGJVNcB/schools-automated-billing-F78vXA3iegQNfhzSmdSBkH.webp"
     },
     {
       icon: MessageSquare,
       title: "Kai AI Assistant",
       description: "Your 24/7 front desk assistant answers parent questions, schedules trial classes, sends reminders, and handles routine communication.",
       benefits: ["Instant responses", "Trial class booking", "Absence follow-up", "FAQ handling"],
-      image: "/schools/kai-ai-assistant.jpg"
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/CaitGcU2dUvj49bXGJVNcB/schools-kai-ai-assistant-Nhw4k4KHscQJ3DQmVgLX85.webp"
     },
     {
       icon: BarChart3,
       title: "School Health Dashboard",
       description: "See your school's vital signs at a glance: retention rates, revenue trends, attendance patterns, and student progress metrics.",
       benefits: ["Retention analytics", "Revenue forecasting", "Attendance reports", "Growth tracking"],
-      image: "/schools/analytics-dashboard.jpg"
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/CaitGcU2dUvj49bXGJVNcB/schools-analytics-dashboard-AABJ5S4icVF9RxBwAiJr5t.webp"
     }
   ];
 
