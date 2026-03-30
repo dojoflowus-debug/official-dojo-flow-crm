@@ -20,11 +20,35 @@ function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Helper: Send verification code via email (mock for now)
+// Helper: Send verification code via email
 async function sendVerificationEmail(email: string, code: string): Promise<void> {
-  // TODO: Integrate with email service (SendGrid, AWS SES, etc.)
-  console.log(`📧 Verification code for ${email}: ${code}`);
-  // In production, send actual email here
+  try {
+    const { sendEmail } = await import("./_core/sendgrid");
+    
+    const result = await sendEmail({
+      to: { email },
+      subject: "Your DojoFlow Verification Code",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Verify Your Email</h2>
+          <p>Your verification code is:</p>
+          <div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px; text-align: center;">
+            <h1 style="margin: 0; letter-spacing: 5px;">${code}</h1>
+          </div>
+          <p>This code will expire in 24 hours.</p>
+          <p>If you didn't request this code, please ignore this email.</p>
+        </div>
+      `,
+    });
+    
+    if (!result.success) {
+      console.error(`[OwnerAuth] Failed to send verification email to ${email}:`, result.error);
+    } else {
+      console.log(`[OwnerAuth] Verification code sent to ${email}`);
+    }
+  } catch (error) {
+    console.error(`[OwnerAuth] Error sending verification email to ${email}:`, error);
+  }
 }
 
 // Helper: Send verification code via SMS (mock for now)

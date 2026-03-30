@@ -491,16 +491,14 @@ async function startServer() {
       
       // Get organization ID from session cookie
       let organizationId: number | null = null;
-      const cookieHeader = req.headers.cookie;
-      if (cookieHeader) {
-        const cookies = parseCookieHeader(cookieHeader);
-        if (cookies.session) {
-          try {
-            const sessionData = JSON.parse(cookies.session);
-            organizationId = sessionData.currentOrganizationId || null;
-          } catch (e) {
-            // Invalid session data, ignore
-          }
+      const sessionCookie = req.cookies?.session;
+      if (sessionCookie) {
+        try {
+          const sessionData = JSON.parse(sessionCookie);
+          organizationId = sessionData.currentOrganizationId || null;
+        } catch (e) {
+          console.log('[API] Error parsing session cookie:', e);
+          // Invalid session data, ignore
         }
       }
       
@@ -552,16 +550,14 @@ async function startServer() {
       
       // Get organization ID from session cookie
       let organizationId: number | null = null;
-      const cookieHeader = req.headers.cookie;
-      if (cookieHeader) {
-        const cookies = parseCookieHeader(cookieHeader);
-        if (cookies.session) {
-          try {
-            const sessionData = JSON.parse(cookies.session);
-            organizationId = sessionData.currentOrganizationId || null;
-          } catch (e) {
-            // Invalid session data, ignore
-          }
+      const sessionCookie = req.cookies?.session;
+      if (sessionCookie) {
+        try {
+          const sessionData = JSON.parse(sessionCookie);
+          organizationId = sessionData.currentOrganizationId || null;
+        } catch (e) {
+          console.log('[API] Error parsing session cookie:', e);
+          // Invalid session data, ignore
         }
       }
       
@@ -764,17 +760,14 @@ async function startServer() {
       
       // Get organization ID from session cookie for multi-tenancy
       let organizationId: number | null = null;
-      const cookieHeader = req.headers.cookie;
-      if (cookieHeader) {
-        const { parse: parseCookieHeader } = await import('cookie');
-        const cookies = parseCookieHeader(cookieHeader);
-        if (cookies.session) {
-          try {
-            const sessionData = JSON.parse(cookies.session);
-            organizationId = sessionData.currentOrganizationId || null;
-          } catch (e) {
-            // Invalid session data, ignore
-          }
+      const sessionCookie = req.cookies?.session;
+      if (sessionCookie) {
+        try {
+          const sessionData = JSON.parse(sessionCookie);
+          organizationId = sessionData.currentOrganizationId || null;
+        } catch (e) {
+          console.log('[Classes API] Error parsing session cookie:', e);
+          // Invalid session data, ignore
         }
       }
       
@@ -914,16 +907,14 @@ async function startServer() {
       
       // Get organization ID from session cookie
       let organizationId: number | null = null;
-      const cookieHeader = req.headers.cookie;
-      if (cookieHeader) {
-        const cookies = parseCookieHeader(cookieHeader);
-        if (cookies.session) {
-          try {
-            const sessionData = JSON.parse(cookies.session);
-            organizationId = sessionData.currentOrganizationId || null;
-          } catch (e) {
-            // Invalid session data, ignore
-          }
+      const sessionCookie = req.cookies?.session;
+      if (sessionCookie) {
+        try {
+          const sessionData = JSON.parse(sessionCookie);
+          organizationId = sessionData.currentOrganizationId || null;
+        } catch (e) {
+          console.log('[API] Error parsing session cookie:', e);
+          // Invalid session data, ignore
         }
       }
       
@@ -1099,16 +1090,14 @@ async function startServer() {
       
       // Get organization ID from session cookie
       let organizationId: number | null = null;
-      const cookieHeader = req.headers.cookie;
-      if (cookieHeader) {
-        const cookies = parseCookieHeader(cookieHeader);
-        if (cookies.session) {
-          try {
-            const sessionData = JSON.parse(cookies.session);
-            organizationId = sessionData.currentOrganizationId || null;
-          } catch (e) {
-            // Invalid session data, ignore
-          }
+      const sessionCookie = req.cookies?.session;
+      if (sessionCookie) {
+        try {
+          const sessionData = JSON.parse(sessionCookie);
+          organizationId = sessionData.currentOrganizationId || null;
+        } catch (e) {
+          console.log('[API] Error parsing session cookie:', e);
+          // Invalid session data, ignore
         }
       }
       

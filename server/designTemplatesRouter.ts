@@ -1,4 +1,4 @@
-import { router, orgScopedProcedure } from './trpc';
+import { router, orgScopedProcedure } from './_core/trpc';
 import { z } from 'zod';
 import { KioskConfig } from '../shared/kioskConfig';
 

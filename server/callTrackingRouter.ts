@@ -5,7 +5,7 @@
  * Handles call initiation, duration tracking, and billing.
  */
 
-import { router, protectedProcedure } from './trpc';
+import { router, protectedProcedure } from './_core/trpc';
 import { z } from 'zod';
 import { getDb } from './db';
 import { eq } from 'drizzle-orm';

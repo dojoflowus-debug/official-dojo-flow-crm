@@ -263,10 +263,10 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
             })}
           </ScrollableNav>
 
-          {/* Focus Mode Toggle Button - Always visible */}
+          {/* Focus Mode Toggle Button - Always visible, improved for mobile */}
           <button
             onClick={toggleFocusMode}
-            className={`absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${
+            className={`absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 touch-manipulation ${
               isFocusMode 
                 ? 'bg-[#E53935]/20 text-[#E53935]' 
                 : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
@@ -275,9 +275,13 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
               boxShadow: isFocusMode 
                 ? '0 0 20px rgba(229,57,53,0.4), 0 0 40px rgba(229,57,53,0.2)' 
                 : 'none',
-              animation: isFocusMode ? 'focusPulse 2s ease-in-out infinite' : 'none'
+              animation: isFocusMode ? 'focusPulse 2s ease-in-out infinite' : 'none',
+              minWidth: '48px',
+              minHeight: '48px',
+              WebkitTouchCallout: 'none',
+              WebkitUserSelect: 'none'
             }}
-            title={isFocusMode ? 'Exit Focus Mode' : 'Enter Focus Mode'}
+            title={isFocusMode ? 'Exit Focus Mode (Tap to disable)' : 'Enter Focus Mode'}
           >
             {isFocusMode ? (
               <EyeOff className="w-5 h-5" />

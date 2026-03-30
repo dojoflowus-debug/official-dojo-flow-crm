@@ -9105,3 +9105,53 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Generate AI replacement images for studio features (6 AI-generated images created)
 - [x] Update image references with CDN URLs (all 6 images updated in ForStudios.tsx)
 - [ ] Test studios page to verify images display
+
+
+## Phase 34: Fix 15 Critical Bugs and Features (Session 27)
+
+### Critical Issues (Breaking Functionality)
+- [ ] #8: Unable to create new classes
+- [ ] #12: Verification code not working for non-Google emails
+- [ ] #3: Leads page doesn't scroll vertically
+- [ ] #4: Focus mode can't be disabled on Android
+
+### High Priority Issues (Core Features)
+- [ ] #1: Predefined messages on Kai AI not displaying properly
+- [ ] #2: Image generation inaccurate with generation, branding DNA and spellings
+- [ ] #14: Credits on AI remain at 1,000 (not consuming)
+- [ ] #7: Staff member creation allows without staff information
+
+### Medium Priority Issues (UX/Features)
+- [ ] #5: Theme change not displaying properly for light mode and cinema
+- [ ] #6: Report and analysis page having predefined values
+- [ ] #9: Equipment setup adds zero before all values added
+- [ ] #10: Profile region selection needs dropdown for country/state/city
+- [ ] #11: 20 steps required for AI forces AI not to work properly
+- [ ] #13: AI greeting adds "New User" to names (e.g., "Nice to meet you Chidi New User")
+- [ ] #15: Admin issue tracking system for users to report problems
+
+
+## 15 Critical Bugs to Fix (Priority Order)
+
+### Phase 2: Critical Bugs
+- [x] Bug #1: Unable to create new classes (CRITICAL) - FIXED: Changed REST API endpoints to use req.cookies instead of manual cookie parsing
+- [x] Bug #2: Verification code not working for non-Google emails (CRITICAL) - FIXED: Integrated SendGrid email service for verification code delivery
+- [x] Bug #3: Leads page doesn't scroll vertically (CRITICAL) - FIXED: Added overflow-y-auto to main container
+- [x] Bug #4: Focus mode can't be disabled on Android (CRITICAL) - FIXED: Increased button size to 48x48px (mobile standard), added touch-manipulation class, and improved accessibility
+
+### Phase 3: UI/UX Bugs
+- [ ] Bug #5: Predefined messages on Kai AI not displaying
+- [ ] Bug #6: Image generation inaccurate with branding DNA/spellings
+- [ ] Bug #7: Theme change not displaying for light/cinema modes
+- [ ] Bug #8: Report page has predefined values
+
+### Phase 4: Data Handling Bugs
+- [ ] Bug #9: Credits remain at 1,000 (consumption not working)
+- [ ] Bug #10: Staff creation without required information
+- [ ] Bug #11: Equipment setup adds zero before values
+- [ ] Bug #12: Profile region selection needs dropdown
+
+### Phase 5: Remaining Issues
+- [ ] Bug #13: 20 steps required for AI
+- [ ] Bug #14: AI greeting adds "New User" to names
+- [ ] Bug #15: Need admin issue tracking system
