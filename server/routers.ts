@@ -57,7 +57,6 @@ import { tutorialRouter } from './tutorialRouter';
 import { kaiCreativeRouter } from './kaiCreativeRouter';
 import { brandDnaRouter } from './brandDnaRouter';
 import { fluidPayRouter } from './fluidPayRouter';
-import { callAnalyticsRouter } from './callAnalyticsRouter';
 import { publicProcedure, protectedProcedure, orgScopedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -673,7 +672,6 @@ export const appRouter = router({
   user: userRouter,
   paymentProvider: paymentProviderRouter,
   fluidPay: fluidPayRouter,
-  callAnalytics: callAnalyticsRouter,
   schoolProfile: schoolProfileRouter,
   pcBankCard: pcBankCardRouter,
   dojoFlowMessaging: messagingRouter,

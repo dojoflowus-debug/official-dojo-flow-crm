@@ -5,7 +5,7 @@
  * Provides aggregated statistics, trend analysis, and detailed call records.
  */
 
-import { router, protectedProcedure } from './_core/trpc';
+import { router, protectedProcedure } from './trpc';
 import { z } from 'zod';
 import { getDb } from './db';
 import { eq, and, gte, lte, desc } from 'drizzle-orm';
