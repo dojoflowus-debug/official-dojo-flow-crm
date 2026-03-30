@@ -991,13 +991,13 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
                         </div>
                         
                         <div>
-                          <Label htmlFor="schoolName" className="text-white/70">Studio name (optional)</Label>
+                          <Label htmlFor="schoolName" className="text-white/70">School name (optional)</Label>
                           <Input
                             id="schoolName"
                             type="text"
                             value={schoolName}
                             onChange={(e) => setSchoolName(e.target.value)}
-                            placeholder="e.g., Elite Martial Arts Academy"
+                            placeholder="My Dojo"
                             className="mt-1 bg-white/5 border-white/10 text-white placeholder:text-white/40"
                           />
                         </div>

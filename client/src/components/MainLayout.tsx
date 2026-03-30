@@ -10,14 +10,12 @@ interface MainLayoutProps {
   children: ReactNode;
   hideFooter?: boolean;
   transparentHeader?: boolean;
-  hideNavigation?: boolean;
 }
 
 export default function MainLayout({ 
   children, 
   hideFooter = false,
-  transparentHeader = false,
-  hideNavigation = false 
+  transparentHeader = false 
 }: MainLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -84,7 +82,6 @@ export default function MainLayout({
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Navigation */}
-      {!hideNavigation && (
       <nav 
         style={{ top: `${cookieBarHeight}px`, transition: 'top 600ms ease' }}
         className={`fixed left-0 right-0 z-50 transition-all duration-300 ${
@@ -156,7 +153,6 @@ export default function MainLayout({
           </div>
         </div>
       </nav>
-      )}
 
       {/* Mobile Menu Overlay */}
       <div
