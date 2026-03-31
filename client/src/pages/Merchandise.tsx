@@ -114,7 +114,7 @@ export default function Merchandise() {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8 min-h-[calc(100vh-300px)]">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <p className={isDark ? "text-gray-400" : "text-gray-600"}>Loading merchandise...</p>
