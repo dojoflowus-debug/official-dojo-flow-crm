@@ -202,7 +202,7 @@ export default function KioskMemberLogin() {
   }
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6 relative overflow-hidden">
       {/* Subtle background image */}
       <div className="absolute inset-0 opacity-5">
         <div 

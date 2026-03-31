@@ -51,10 +51,10 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-full flex bg-[#0a0a0b]">
+    <div className="fixed inset-0 flex bg-[#0a0a0b]">
       {/* Left Panel - Form (40%) */}
       <div 
-        className={`w-full lg:w-[40%] min-h-full flex flex-col justify-center px-6 sm:px-12 lg:px-16 py-12 transition-all duration-700 ease-out ${
+        className={`w-full lg:w-[40%] h-full flex flex-col justify-center px-6 sm:px-12 lg:px-16 py-12 transition-all duration-700 ease-out overflow-y-auto ${
           mounted ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
         }`}
       >
@@ -144,7 +144,7 @@ export default function ForgotPassword() {
 
       {/* Right Panel - Visual Brand (60%) */}
       <div 
-        className={`hidden lg:flex lg:w-[60%] relative overflow-hidden transition-all duration-700 ease-out delay-200 ${
+        className={`hidden lg:flex lg:w-[60%] h-full relative overflow-hidden transition-all duration-700 ease-out delay-200 ${
           mounted ? "opacity-100" : "opacity-0"
         }`}
       >

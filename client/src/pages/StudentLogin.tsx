@@ -264,9 +264,9 @@ export default function StudentLogin() {
   };
 
   return (
-    <div className="min-h-full flex bg-slate-950">
+    <div className="fixed inset-0 flex bg-slate-950">
       {/* LEFT PANEL - Command Login */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 lg:px-16 xl:px-20 py-12 relative">
+      <div className="w-full lg:w-1/2 h-full flex flex-col justify-center px-6 sm:px-12 lg:px-16 xl:px-20 py-12 relative overflow-y-auto">
         {/* Subtle gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-black" />
         
@@ -443,7 +443,7 @@ export default function StudentLogin() {
       </div>
 
       {/* RIGHT PANEL - Visual Storytelling */}
-      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
+      <div className="hidden lg:block lg:w-1/2 h-full relative overflow-hidden">
         {/* Static Dojo Background */}
         <div 
           className="absolute inset-0 bg-cover bg-center"

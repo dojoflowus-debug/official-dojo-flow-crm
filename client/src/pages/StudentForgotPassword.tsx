@@ -46,9 +46,9 @@ export default function StudentForgotPassword() {
   };
 
   return (
-    <div className="min-h-full flex">
+    <div className="fixed inset-0 flex">
       {/* Left Panel - Form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-24 bg-white">
+      <div className="w-full lg:w-1/2 h-full flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-24 bg-white overflow-y-auto">
         <div className="max-w-md w-full mx-auto">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-16">
@@ -180,7 +180,7 @@ export default function StudentForgotPassword() {
       </div>
 
       {/* Right Panel - Image */}
-      <div className="hidden lg:block lg:w-1/2 relative bg-gradient-to-br from-slate-100 to-slate-200">
+      <div className="hidden lg:block lg:w-1/2 h-full relative bg-gradient-to-br from-slate-100 to-slate-200">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{

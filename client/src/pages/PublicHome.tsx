@@ -17,7 +17,7 @@ export default function PublicHome() {
   }, []);
 
   return (
-    <div className="min-h-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white">
+    <div className="w-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white min-h-screen">
       {/* Header */}
       <header className="border-b border-white/10 bg-black/20 backdrop-blur-md sticky top-0 z-50">
         <div className="container flex items-center justify-between h-16">

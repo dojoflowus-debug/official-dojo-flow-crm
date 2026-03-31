@@ -63,7 +63,7 @@ export default function KaiHeroOnboarding() {
   };
 
   return (
-    <div className="relative min-h-full overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="fixed inset-0 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Animated background with storm clouds effect */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-700/30 via-slate-800/50 to-slate-900/80 animate-pulse-slow" />
       
@@ -74,7 +74,7 @@ export default function KaiHeroOnboarding() {
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-red-500/10 to-orange-500/10 rounded-full blur-3xl" />
 
       {/* Main content */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-full px-4 py-12">
+      <div className="relative z-10 flex flex-col items-center justify-center h-full px-4 py-12 overflow-y-auto">
         {/* Kai Avatar with pulse animation */}
         <div className="mb-8 relative">
           <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 rounded-full blur-xl opacity-50 animate-pulse" />
