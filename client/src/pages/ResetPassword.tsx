@@ -76,7 +76,7 @@ export default function ResetPassword() {
       {/* Background Image */}
       <div
         className="absolute inset-0 bg-cover bg-center opacity-50"
-        style={{ backgroundImage: "url('/martial-arts-class.jpg')" }}
+        style={{ backgroundImage: "url('https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/CaitGcU2dUvj49bXGJVNcB/password-reset-bg-CyJxgK2jcoXY3qn63oknSL.webp')" }}
       />
       
       {/* Dark Overlay */}
@@ -88,7 +88,7 @@ export default function ResetPassword() {
           {/* Logo */}
           <div className="flex justify-center mb-8">
             <img 
-              src="/dojoflow-logo.png" 
+              src="/dojoflow-logo-light.png" 
               alt="DojoFlow" 
               className="w-32 h-auto"
             />

@@ -9155,3 +9155,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Bug #13: 20 steps required for AI - FIXED: Reduced from 23 to 9 core steps, moved optional steps to separate array
 - [ ] Bug #14: AI greeting adds "New User" to names - TODO: Fix greeting name parsing
 - [ ] Bug #15: Need admin issue tracking system - TODO: Create admin dashboard for tracking issues
+
+
+## Test Account Setup
+- [ ] Create test account: drteam@pcbancard.com with password: debbie1953
+- [ ] Assign appropriate role/permissions to test account
+- [ ] Verify account can login and access all features

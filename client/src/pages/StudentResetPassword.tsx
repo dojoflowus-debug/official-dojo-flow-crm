@@ -280,7 +280,7 @@ export default function StudentResetPassword() {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=2000&auto=format&fit=crop')`,
+            backgroundImage: `url('https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/CaitGcU2dUvj49bXGJVNcB/password-reset-bg-CyJxgK2jcoXY3qn63oknSL.webp')`,
           }}
         >
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 via-transparent to-transparent" />
