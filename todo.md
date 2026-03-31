@@ -9161,3 +9161,7 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Create test account: drteam@pcbancard.com with password: debbie1953
 - [ ] Assign appropriate role/permissions to test account
 - [ ] Verify account can login and access all features
+
+
+## UI/UX Issues to Fix
+- [x] Leads page: Add horizontal scrollbar or arrow navigation to see full "Lost / Winback" column in Kanban board - FIXED: Changed from scrollbar-hide to scrollbar-thin with proper styling

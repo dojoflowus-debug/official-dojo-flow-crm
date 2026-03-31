@@ -205,7 +205,7 @@ export default function KanbanBoard({
     >
       <div className="w-full px-4 md:px-6 pb-8">
         {/* Horizontal Scroll Container */}
-        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-slate-400 scrollbar-track-slate-100 dark:scrollbar-thumb-slate-600 dark:scrollbar-track-slate-800">
           {stages.map((stage) => {
             const Icon = stage.icon;
             const stageLeads = getLeadsForStage(stage.id);
