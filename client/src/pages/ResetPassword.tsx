@@ -72,11 +72,16 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-full flex items-center justify-center bg-black relative overflow-hidden">
-      {/* Background Image */}
+    <div className="fixed inset-0 flex items-center justify-center bg-black overflow-hidden">
+      {/* Background Image - Full Screen Coverage */}
       <div
-        className="absolute inset-0 bg-cover bg-center opacity-50"
-        style={{ backgroundImage: "url('https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/CaitGcU2dUvj49bXGJVNcB/password-reset-bg-CyJxgK2jcoXY3qn63oknSL.webp')" }}
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-50"
+        style={{ 
+          backgroundImage: "url('https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/CaitGcU2dUvj49bXGJVNcB/password-reset-bg-CyJxgK2jcoXY3qn63oknSL.webp')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed'
+        }}
       />
       
       {/* Dark Overlay */}

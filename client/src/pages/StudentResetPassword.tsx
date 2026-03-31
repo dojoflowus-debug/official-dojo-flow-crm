@@ -107,7 +107,7 @@ export default function StudentResetPassword() {
   }
 
   return (
-    <div className="min-h-full flex">
+    <div className="fixed inset-0 flex">
       {/* Left Panel - Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-24 bg-white">
         <div className="max-w-md w-full mx-auto">
