@@ -9173,3 +9173,12 @@ Transform kiosk from admin dashboard to premium location experience
 ## Reports Page Issues
 - [x] Reports page: Dark styling persists in Light mode - FIXED: Added useDarkMode() hook and theme-aware CSS classes
 - [x] Reports page: Data is hardcoded/incorrect - FIXED: Integrated TRPC queries to fetch real data from database (classes, students, payments)
+
+
+## Billing Implementation
+- [x] Fix build error: Create missing useDarkMode hook - FIXED: Created useDarkMode hook that returns true for dark/cinematic themes
+- [ ] Set up Stripe integration for trial and subscription
+- [ ] Create trial tracking system (7-day countdown)
+- [ ] Implement automatic upgrade to $49/month after trial
+- [ ] Update sign-up flow to collect payment information
+- [ ] Create billing management page for users

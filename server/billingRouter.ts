@@ -1002,4 +1002,264 @@ export const billingRouter = router({
 
       return transaction;
     }),
+
+  // ========== TRIAL & SUBSCRIPTION MANAGEMENT ==========
+
+  // Create a $1 trial charge and set up subscription
+  createTrial: publicProcedure
+    .input(
+      z.object({
+        organizationId: z.number(),
+        email: z.string().email(),
+        paymentMethodId: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        const { organizations, platformSubscriptions } = await import("../drizzle/schema");
+
+        // Get organization
+        const org = await db
+          .select()
+          .from(organizations)
+          .where(eq(organizations.id, input.organizationId))
+          .limit(1);
+
+        if (!org || org.length === 0) {
+          throw new Error("Organization not found");
+        }
+
+        const organization = org[0];
+
+        // Create or get Stripe customer
+        let stripeCustomerId = null;
+        const existingSub = await db
+          .select()
+          .from(platformSubscriptions)
+          .where(eq(platformSubscriptions.organizationId, input.organizationId))
+          .limit(1);
+
+        if (existingSub && existingSub.length > 0 && existingSub[0].stripeCustomerId) {
+          stripeCustomerId = existingSub[0].stripeCustomerId;
+        } else {
+          const stripe = require("stripe")(process.env.DOJO_STRIPE_SECRET_KEY);
+          const customer = await stripe.customers.create({
+            email: input.email,
+            metadata: {
+              organizationId: input.organizationId,
+              organizationName: organization.name,
+            },
+          });
+          stripeCustomerId = customer.id;
+        }
+
+        // Create $1 trial charge
+        const stripe = require("stripe")(process.env.DOJO_STRIPE_SECRET_KEY);
+        const charge = await stripe.charges.create({
+          amount: 100, // $1.00 in cents
+          currency: "usd",
+          customer: stripeCustomerId,
+          payment_method: input.paymentMethodId,
+          off_session: true,
+          description: `DojoFlow 7-day trial for ${organization.name}`,
+        });
+
+        // Calculate trial end date (7 days from now)
+        const trialEndsAt = new Date();
+        trialEndsAt.setDate(trialEndsAt.getDate() + 7);
+
+        // Update organization with trial info
+        await db
+          .update(organizations)
+          .set({
+            subscriptionStatus: "trial",
+            trialEndsAt: trialEndsAt.toISOString(),
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(organizations.id, input.organizationId));
+
+        // Create or update platform subscription
+        const existingSubRecord = await db
+          .select()
+          .from(platformSubscriptions)
+          .where(eq(platformSubscriptions.organizationId, input.organizationId))
+          .limit(1);
+
+        if (existingSubRecord && existingSubRecord.length > 0) {
+          await db
+            .update(platformSubscriptions)
+            .set({
+              stripeCustomerId,
+              billingStatus: "trialing",
+              currentPeriodStart: new Date().toISOString(),
+              currentPeriodEnd: trialEndsAt.toISOString(),
+              updatedAt: new Date().toISOString(),
+            })
+            .where(eq(platformSubscriptions.organizationId, input.organizationId));
+        } else {
+          await db.insert(platformSubscriptions).values({
+            organizationId: input.organizationId,
+            plan: "starter",
+            billingStatus: "trialing",
+            stripeCustomerId,
+            currentPeriodStart: new Date().toISOString(),
+            currentPeriodEnd: trialEndsAt.toISOString(),
+          });
+        }
+
+        return {
+          success: true,
+          message: "Trial started successfully",
+          trialEndsAt: trialEndsAt.toISOString(),
+          chargeId: charge.id,
+        };
+      } catch (error: any) {
+        console.error("Trial creation error:", error);
+        throw new Error(`Failed to create trial: ${error.message}`);
+      }
+    }),
+
+  // Upgrade trial to paid subscription ($49/month)
+  upgradeToPaid: publicProcedure
+    .input(
+      z.object({
+        organizationId: z.number(),
+        paymentMethodId: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        const { organizations, platformSubscriptions } = await import("../drizzle/schema");
+
+        // Get subscription
+        const sub = await db
+          .select()
+          .from(platformSubscriptions)
+          .where(eq(platformSubscriptions.organizationId, input.organizationId))
+          .limit(1);
+
+        if (!sub || sub.length === 0) {
+          throw new Error("Subscription not found");
+        }
+
+        const subscription = sub[0];
+        const stripeCustomerId = subscription.stripeCustomerId;
+
+        if (!stripeCustomerId) {
+          throw new Error("Stripe customer not found");
+        }
+
+        // Create monthly subscription ($49/month)
+        const stripe = require("stripe")(process.env.DOJO_STRIPE_SECRET_KEY);
+        const stripeSubscription = await stripe.subscriptions.create({
+          customer: stripeCustomerId,
+          items: [
+            {
+              price_data: {
+                currency: "usd",
+                product_data: {
+                  name: "DojoFlow Pro",
+                  description: "Professional dojo management software",
+                },
+                unit_amount: 4900, // $49.00 in cents
+                recurring: {
+                  interval: "month",
+                  interval_count: 1,
+                },
+              },
+            },
+          ],
+          payment_method: input.paymentMethodId,
+          off_session: true,
+          default_payment_method: input.paymentMethodId,
+        });
+
+        // Update organization subscription status
+        await db
+          .update(organizations)
+          .set({
+            subscriptionStatus: "active",
+            trialEndsAt: null,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(organizations.id, input.organizationId));
+
+        // Update platform subscription
+        await db
+          .update(platformSubscriptions)
+          .set({
+            plan: "pro",
+            billingStatus: "active",
+            stripeSubscriptionId: stripeSubscription.id,
+            currentPeriodStart: new Date(
+              stripeSubscription.current_period_start * 1000
+            ).toISOString(),
+            currentPeriodEnd: new Date(
+              stripeSubscription.current_period_end * 1000
+            ).toISOString(),
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(platformSubscriptions.organizationId, input.organizationId));
+
+        return {
+          success: true,
+          message: "Upgraded to paid subscription",
+          subscriptionId: stripeSubscription.id,
+        };
+      } catch (error: any) {
+        console.error("Upgrade error:", error);
+        throw new Error(`Failed to upgrade subscription: ${error.message}`);
+      }
+    }),
+
+  // Get subscription status
+  getSubscriptionStatus: publicProcedure
+    .input(z.object({ organizationId: z.number() }))
+    .query(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        const { organizations, platformSubscriptions } = await import("../drizzle/schema");
+
+        const org = await db
+          .select()
+          .from(organizations)
+          .where(eq(organizations.id, input.organizationId))
+          .limit(1);
+
+        if (!org || org.length === 0) {
+          throw new Error("Organization not found");
+        }
+
+        const organization = org[0];
+
+        const sub = await db
+          .select()
+          .from(platformSubscriptions)
+          .where(eq(platformSubscriptions.organizationId, input.organizationId))
+          .limit(1);
+
+        const subscription = sub && sub.length > 0 ? sub[0] : null;
+
+        return {
+          organizationId: input.organizationId,
+          subscriptionStatus: organization.subscriptionStatus,
+          trialEndsAt: organization.trialEndsAt,
+          plan: subscription?.plan || "free",
+          billingStatus: subscription?.billingStatus || "none",
+          currentPeriodEnd: subscription?.currentPeriodEnd,
+        };
+      } catch (error: any) {
+        console.error("Get subscription status error:", error);
+        throw new Error(`Failed to get subscription status: ${error.message}`);
+      }
+    }),
+
 });
