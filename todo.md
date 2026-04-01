@@ -9168,3 +9168,8 @@ Transform kiosk from admin dashboard to premium location experience
 
 - [x] Classes (Schedule) page: Fix black cutoff area at bottom - FIXED: Added min-h-[calc(100vh-120px)] to main container
 - [x] Merchandise page: Fix black cutoff area at bottom - FIXED: Added min-h-[calc(100vh-300px)] to content container
+
+
+## Reports Page Issues
+- [x] Reports page: Dark styling persists in Light mode - FIXED: Added useDarkMode() hook and theme-aware CSS classes
+- [x] Reports page: Data is hardcoded/incorrect - FIXED: Integrated TRPC queries to fetch real data from database (classes, students, payments)
