@@ -326,9 +326,54 @@ export default function Dashboard({ onLogout, theme, toggleTheme }: { onLogout: 
   }
 
   // Handle fullscreen toggle
-  const handleFullScreen = () => {
-    setIsFullScreen(!isFullScreen)
-    toast.success(isFullScreen ? 'Exited full screen' : 'Entered full screen mode')
+  const handleFullScreen = async () => {
+    try {
+      if (!isFullScreen) {
+        // Enter fullscreen
+        const element = document.documentElement
+        if (element.requestFullscreen) {
+          await element.requestFullscreen()
+          setIsFullScreen(true)
+          toast.success('Entered full screen mode')
+        } else if ((element as any).webkitRequestFullscreen) {
+          await (element as any).webkitRequestFullscreen()
+          setIsFullScreen(true)
+          toast.success('Entered full screen mode')
+        } else if ((element as any).mozRequestFullScreen) {
+          await (element as any).mozRequestFullScreen()
+          setIsFullScreen(true)
+          toast.success('Entered full screen mode')
+        } else if ((element as any).msRequestFullscreen) {
+          await (element as any).msRequestFullscreen()
+          setIsFullScreen(true)
+          toast.success('Entered full screen mode')
+        } else {
+          toast.error('Full screen not supported in your browser')
+        }
+      } else {
+        // Exit fullscreen
+        if (document.fullscreenElement) {
+          await document.exitFullscreen()
+          setIsFullScreen(false)
+          toast.success('Exited full screen')
+        } else if ((document as any).webkitFullscreenElement) {
+          await (document as any).webkitExitFullscreen()
+          setIsFullScreen(false)
+          toast.success('Exited full screen')
+        } else if ((document as any).mozFullScreenElement) {
+          await (document as any).mozCancelFullScreen()
+          setIsFullScreen(false)
+          toast.success('Exited full screen')
+        } else if ((document as any).msFullscreenElement) {
+          await (document as any).msExitFullscreen()
+          setIsFullScreen(false)
+          toast.success('Exited full screen')
+        }
+      }
+    } catch (error) {
+      console.error('Fullscreen error:', error)
+      toast.error('Could not enter full screen mode')
+    }
   }
 
   // Auto-scroll to bottom of messages
