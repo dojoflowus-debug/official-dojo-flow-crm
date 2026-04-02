@@ -241,7 +241,7 @@ router.post("/forgot-password", async (req, res) => {
 
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString("hex");
-    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+    const resetTokenExpiry = new Date(Date.now() + 86400000); // 24 hours from now
 
     // Save reset token to database
     await db
@@ -275,7 +275,7 @@ router.post("/forgot-password", async (req, res) => {
             <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background-color: #dc2626; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Reset Password</a>
             <p>Or copy and paste this link into your browser:</p>
             <p style="color: #666; word-break: break-all;">${resetUrl}</p>
-            <p style="color: #666; font-size: 14px; margin-top: 30px;">This link will expire in 1 hour.</p>
+            <p style="color: #666; font-size: 14px; margin-top: 30px;">This link will expire in 24 hours.</p>
             <p style="color: #666; font-size: 14px;">If you didn't request this, please ignore this email.</p>
           </div>
         `,
