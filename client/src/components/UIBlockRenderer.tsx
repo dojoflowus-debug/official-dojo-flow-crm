@@ -2,15 +2,17 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Users, User } from 'lucide-react';
 import { KaiStudentCard, KaiStudentCardData } from './KaiStudentCard';
+import { FlyerCreationPanel } from './kai/FlyerCreationPanel';
 
 interface UIBlock {
-  type: 'student_card' | 'student_list' | 'lead_card' | 'lead_list';
+  type: 'student_card' | 'student_list' | 'lead_card' | 'lead_list' | 'flyer_creation';
   studentId?: number;
   studentIds?: number[];
   leadId?: number;
   leadIds?: number[];
   student?: KaiStudentCardData; // Full student data for inline rendering
   label: string;
+  initialPrompt?: string; // For flyer_creation blocks
 }
 
 interface UIBlockRendererProps {
@@ -32,6 +34,16 @@ export function UIBlockRenderer({ blocks, onBlockClick, theme = 'light' }: UIBlo
   return (
     <div className="flex flex-col gap-3 mt-3">
       {blocks.map((block, index) => {
+        // Render flyer creation panel
+        if (block.type === 'flyer_creation') {
+          return (
+            <FlyerCreationPanel
+              key={index}
+              initialPrompt={block.initialPrompt || ''}
+            />
+          );
+        }
+        
         // Render inline student card if full data is provided
         if (block.type === 'student_card' && block.student) {
           console.log('[UIBlockRenderer] Rendering KaiStudentCard:', block.student);

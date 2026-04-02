@@ -386,10 +386,14 @@ export const kaiConversationsRouter = router({
         createdAt: new Date().toISOString(),
       });
 
-      // Step 2: Classify intent (rule-based NLP + OpenAI fallback for low-confidence cases)
+      // Step 2: Detect if user wants to create a flyer
+      const isFlyerRequest = detectFlyerRequest(input.query);
+      
+      // Step 3: Classify intent (rule-based NLP + OpenAI fallback for low-confidence cases)
       const classification = classifyIntent(input.query);
       let aiResponse = "";
       let metricData = null;
+      let uiBlocks = null;
       // OpenAI intent enrichment when rule-based confidence is low (non-blocking)
       if (!classification || classification.confidence < 0.6) {
         try {
@@ -400,7 +404,7 @@ export const kaiConversationsRouter = router({
         }
       }
 
-      // Step 3: Route to metric handler or LLM
+      // Step 4: Route to metric handler or LLM
       if (classification && classification.confidence > 0.5) {
         // This is likely a metric query
         const metricResult = await processMetricQuery(
@@ -414,6 +418,16 @@ export const kaiConversationsRouter = router({
         } else {
           aiResponse = metricResult.message;
         }
+      } else if (isFlyerRequest) {
+        // Handle flyer creation request
+        aiResponse = "I'll help you create a flyer! Let me open the flyer creation tool for you.";
+        uiBlocks = [
+          {
+            type: "flyer_creation",
+            label: "Create Flyer",
+            initialPrompt: input.query.replace(/create|flyer|design|make|generate|build|poster|ad/gi, '').trim(),
+          }
+        ];
       } else {
         // Fall back to LLM for general conversation with tool calling
         try {
@@ -540,14 +554,16 @@ TONE RULES:
         }
       }
 
-      // Step 4: Store AI response
+      // Step 5: Store AI response
       const responseMetadata = metricData
         ? {
             type: "metric",
             procedure: classification?.procedure,
             data: metricData,
           }
-        : { type: "chat" };
+        : uiBlocks
+          ? { type: "chat", ui_blocks: uiBlocks }
+          : { type: "chat" };
 
       await db.insert(kaiMessages).values({
         conversationId: input.conversationId,
@@ -558,7 +574,7 @@ TONE RULES:
         createdAt: new Date().toISOString(),
       });
 
-      // Step 5: Update conversation timestamp
+      // Step 6: Update conversation timestamp
       await db
         .update(kaiConversations)
         .set({
@@ -613,3 +629,35 @@ TONE RULES:
       return { success: true };
     }),
 });
+
+/**
+ * Detect if user is asking to create a flyer
+ * Looks for keywords like "create", "design", "make", "flyer", "poster", etc.
+ */
+function detectFlyerRequest(query: string): boolean {
+  const flyerKeywords = [
+    'flyer',
+    'poster',
+    'create',
+    'design',
+    'make',
+    'generate',
+    'build',
+    'marketing',
+    'promotional',
+    'advertisement',
+    'ad',
+    'graphic',
+    'image',
+    'visual',
+  ];
+
+  const queryLower = query.toLowerCase();
+  const hasFlyerKeyword = flyerKeywords.some(keyword => queryLower.includes(keyword));
+  
+  // Check if it's specifically about creating marketing materials
+  const isCreativeRequest = /create|design|make|generate|build/.test(queryLower) &&
+    /flyer|poster|ad|graphic|marketing|promotional|visual|image|banner/.test(queryLower);
+  
+  return hasFlyerKeyword && isCreativeRequest;
+}
