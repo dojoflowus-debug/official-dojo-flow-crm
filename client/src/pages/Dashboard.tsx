@@ -19,8 +19,10 @@ import {
   VolumeX,
   Tablet,
   UserCheck,
-  FileCheck
+  FileCheck,
+  Maximize2
 } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function Dashboard({ onLogout, theme, toggleTheme }: { onLogout: () => void; theme: string; toggleTheme: () => void }) {
   const { theme: currentTheme } = useTheme()
@@ -37,6 +39,8 @@ export default function Dashboard({ onLogout, theme, toggleTheme }: { onLogout: 
   const messagesEndRef = useRef(null)
   const synthRef = useRef(null)
   const hasGreetedRef = useRef(false)  // Prevent duplicate greetings
+
+  const [isFullScreen, setIsFullScreen] = useState(false)
 
   // Kiosk stats
   const [kioskStats, setKioskStats] = useState({
@@ -321,6 +325,12 @@ export default function Dashboard({ onLogout, theme, toggleTheme }: { onLogout: 
     }
   }
 
+  // Handle fullscreen toggle
+  const handleFullScreen = () => {
+    setIsFullScreen(!isFullScreen)
+    toast.success(isFullScreen ? 'Exited full screen' : 'Entered full screen mode')
+  }
+
   // Auto-scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -457,15 +467,26 @@ export default function Dashboard({ onLogout, theme, toggleTheme }: { onLogout: 
                     </CardDescription>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleVoice}
-                  className={`gap-2 ${voiceEnabled ? 'text-green-500 border-green-500/50' : 'text-muted-foreground'}`}
-                >
-                  {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-                  {voiceEnabled ? 'Voice On' : 'Voice Off'}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleVoice}
+                    className={`gap-2 ${voiceEnabled ? 'text-green-500 border-green-500/50' : 'text-muted-foreground'}`}
+                  >
+                    {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                    {voiceEnabled ? 'Voice On' : 'Voice Off'}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleFullScreen}
+                    className={`h-8 w-8 ${isFullScreen ? (isDarkMode ? 'bg-[rgba(255,255,255,0.15)]' : 'bg-slate-200') : ''} ${isDarkMode ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`}
+                    title={isFullScreen ? 'Exit Full Screen' : 'Enter Full Screen'}
+                  >
+                    <Maximize2 className={`w-4 h-4 ${isDarkMode ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
+                  </Button>
+                </div>
               </div>
             </CardHeader>
 
