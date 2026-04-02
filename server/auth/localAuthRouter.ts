@@ -236,10 +236,8 @@ router.post("/forgot-password", async (req, res) => {
 
     const user = userResult[0];
 
-    // Check if user uses local auth
-    if (!user.password) {
-      return res.json({ success: true, message: "If an account exists with this email, a password reset link has been sent." });
-    }
+    // Allow password reset for both local auth users and OAuth users
+    // OAuth users can use this to set a local password as backup authentication
 
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString("hex");
@@ -253,6 +251,8 @@ router.post("/forgot-password", async (req, res) => {
         resetTokenExpiry,
       })
       .where(eq(users.id, user.id));
+    
+    console.log(`[Password Reset] Token generated for user ${email}: ${resetToken.substring(0, 10)}...`)
 
     // Send reset email
     const sendEmail = async () => {
@@ -314,8 +314,11 @@ router.post("/forgot-password", async (req, res) => {
 router.post("/reset-password", async (req, res) => {
   try {
     const { token, newPassword } = req.body;
+    
+    console.log(`[Password Reset] Attempting reset with token: ${token?.substring(0, 10)}...`);
 
     if (!token || !newPassword) {
+      console.log("[Password Reset] Missing token or password");
       return res.status(400).json({ error: "Token and new password are required" });
     }
 
@@ -334,17 +337,23 @@ router.post("/reset-password", async (req, res) => {
       .from(users)
       .where(eq(users.resetToken, token))
       .limit(1);
+    
+    console.log(`[Password Reset] Found ${userResult.length} user(s) with token`);
 
     if (userResult.length === 0) {
+      console.log("[Password Reset] No user found with this token");
       return res.status(400).json({ error: "Invalid or expired reset token" });
     }
 
     const user = userResult[0];
 
     // Check if token is expired
+    console.log(`[Password Reset] Token expiry: ${user.resetTokenExpiry}, Current time: ${new Date()}`);
     if (!user.resetTokenExpiry || new Date() > user.resetTokenExpiry) {
+      console.log("[Password Reset] Token is expired");
       return res.status(400).json({ error: "Invalid or expired reset token" });
     }
+    console.log("[Password Reset] Token is valid")
 
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);

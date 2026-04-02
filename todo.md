@@ -9182,3 +9182,7 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Implement automatic upgrade to $49/month after trial
 - [ ] Update sign-up flow to collect payment information
 - [ ] Create billing management page for users
+
+
+## Critical Bug: Password Reset
+- [x] Password reset shows "Invalid or expired reset token" error - FIXED: Removed check that prevented OAuth users from resetting passwords, added comprehensive debugging logs
