@@ -160,7 +160,8 @@ export default function Login() {
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-12 bg-[#1a1a1c] border-[#2a2a2c] text-white placeholder:text-gray-500 focus:border-red-500 focus:ring-red-500/20 rounded-xl"
+                    className="h-12 bg-[#1a1a1c] border-[#2a2a2c] text-white !text-white placeholder:text-gray-400 placeholder:!text-gray-400 focus:border-red-500 focus:ring-red-500/20 rounded-xl"
+                    style={{ color: '#ffffff' }}
                     required
                   />
                 </div>
@@ -176,7 +177,8 @@ export default function Login() {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-12 bg-[#1a1a1c] border-[#2a2a2c] text-white placeholder:text-gray-500 focus:border-red-500 focus:ring-red-500/20 rounded-xl pr-12"
+                      className="h-12 bg-[#1a1a1c] border-[#2a2a2c] text-white !text-white placeholder:text-gray-400 placeholder:!text-gray-400 focus:border-red-500 focus:ring-red-500/20 rounded-xl pr-12"
+                      style={{ color: '#ffffff' }}
                       required
                     />
                     <button

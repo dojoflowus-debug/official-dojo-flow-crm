@@ -9186,3 +9186,7 @@ Transform kiosk from admin dashboard to premium location experience
 
 ## Critical Bug: Password Reset
 - [x] Password reset shows "Invalid or expired reset token" error - FIXED: Removed check that prevented OAuth users from resetting passwords, added comprehensive debugging logs
+
+
+## Critical Accessibility Issue
+- [x] Login page: Dark text on dark background - FIXED: Added explicit white text color with !important flag and inline style to ensure visibility
