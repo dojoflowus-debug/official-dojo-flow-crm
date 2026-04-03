@@ -9191,3 +9191,6 @@ Transform kiosk from admin dashboard to premium location experience
 
 ## Critical Accessibility Issue
 - [x] Login page: Dark text on dark background - FIXED: Added explicit white text color with !important flag and inline style to ensure visibility
+
+## Bug Reports
+- [x] Student count showing 35 but only 20 students exist - FIXED: Created /api/stats/dashboard endpoint that counts only ACTIVE students

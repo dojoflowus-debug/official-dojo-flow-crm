@@ -1077,6 +1077,73 @@ async function startServer() {
     }
   });
   
+  // Dashboard stats endpoint - returns accurate student count and other metrics
+  app.get("/api/stats/dashboard", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { students, classes, leads } = await import("../../drizzle/schema");
+      const { eq, and, count } = await import("drizzle-orm");
+      const { parse: parseCookieHeader } = await import("cookie");
+      
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+      
+      // Get organization ID from session cookie for multi-tenancy
+      let organizationId: number | null = null;
+      const cookieHeader = req.headers.cookie;
+      if (cookieHeader) {
+        const cookies = parseCookieHeader(cookieHeader);
+        if (cookies.session) {
+          try {
+            const sessionData = JSON.parse(cookies.session);
+            organizationId = sessionData.currentOrganizationId || null;
+          } catch (e) {
+            // Invalid session data, ignore
+          }
+        }
+      }
+      
+      // SECURITY: Require organization ID for multi-tenancy - no org = zero counts
+      if (!organizationId) {
+        console.log('[/api/stats/dashboard] No organization ID found, returning zeros for data isolation');
+        return res.json({
+          total_students: 0,
+          monthly_revenue: 0,
+          total_leads: 0,
+          todays_classes: []
+        });
+      }
+      
+      // Count only ACTIVE students for the organization
+      const totalStudentsResult = await db.select({ count: count() }).from(students).where(and(eq(students.organizationId, organizationId), eq(students.status, 'Active')));
+      
+      // Count total leads
+      const totalLeadsResult = await db.select({ count: count() }).from(leads).where(eq(leads.organizationId, organizationId));
+      
+      // Get today's classes
+      const today = new Date();
+      const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][today.getDay()];
+      
+      const todaysClassesResult = await db.select().from(classes).where(and(
+        eq(classes.organizationId, organizationId),
+        eq(classes.dayOfWeek, dayOfWeek),
+        eq(classes.isActive, true)
+      ));
+      
+      res.json({
+        total_students: totalStudentsResult[0]?.count || 0,
+        monthly_revenue: 0, // TODO: Calculate from payments
+        total_leads: totalLeadsResult[0]?.count || 0,
+        todays_classes: todaysClassesResult || []
+      });
+    } catch (error) {
+      console.error("Dashboard stats endpoint error:", error);
+      res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
+  
   app.post("/api/students", async (req, res) => {
     try {
       const { getDb } = await import("../db");
