@@ -9251,3 +9251,13 @@ Transform kiosk from admin dashboard to premium location experience
 - Personalized recommendations based on history
 - Automatic engagement scoring and conversion tracking
 - Nightly intelligence updates and memory compression
+
+
+## Payment Processing - PCBancard Fluid Pay Only
+- [x] Update Kai system prompts to only recommend PCBancard Fluid Pay
+  - Added explicit constraint to Kai system prompt in kaiConversationsRouter
+  - Kai now states: "We use PCBancard Fluid Pay for all payment processing"
+  - Kai will NOT mention, suggest, or compare other payment processors
+- [ ] Remove all references to other payment processors from backend code
+- [ ] Update payment knowledge base in Kai to reflect PCBancard Fluid Pay exclusively
+- [ ] Test Kai responses to ensure only PCBancard Fluid Pay is mentioned
