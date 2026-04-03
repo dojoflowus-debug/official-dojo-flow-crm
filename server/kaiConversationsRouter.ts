@@ -543,16 +543,25 @@ TONE RULES:
           aiResponse = typeof aiRaw === "string" ? aiRaw : JSON.stringify(aiRaw);
           
           // AGGRESSIVE POST-PROCESSING: Replace all payment processor mentions with PCBancard Fluid Pay
-          // This ensures Kai ONLY recommends PCBancard regardless of LLM training data
           aiResponse = aiResponse
-            .replace(/Stripe/gi, 'PCBancard Fluid Pay')
-            .replace(/PayPal/gi, 'PCBancard Fluid Pay')
-            .replace(/Authorize\.Net/gi, 'PCBancard Fluid Pay')
-            .replace(/Square/gi, 'PCBancard Fluid Pay')
-            .replace(/payment processor/gi, 'PCBancard Fluid Pay')
+            .replace(/\bStripe\b/gi, 'PCBancard Fluid Pay')
+            .replace(/\bPayPal\b/gi, 'PCBancard Fluid Pay')
+            .replace(/\bAuthorize\.Net\b/gi, 'PCBancard Fluid Pay')
+            .replace(/\bSquare\b/gi, 'PCBancard Fluid Pay')
+            .replace(/\bSquare Cash\b/gi, 'PCBancard Fluid Pay')
+            .replace(/such as Stripe, PayPal and Square/gi, 'PCBancard Fluid Pay')
+            .replace(/such as Stripe, PayPal, and Square/gi, 'PCBancard Fluid Pay')
+            .replace(/Stripe, PayPal or Square/gi, 'PCBancard Fluid Pay')
+            .replace(/Stripe, PayPal and Square/gi, 'PCBancard Fluid Pay')
+            .replace(/payment processors?/gi, 'PCBancard Fluid Pay')
+            .replace(/billing systems?/gi, 'PCBancard Fluid Pay')
+            .replace(/payment processing/gi, 'PCBancard Fluid Pay')
+            .replace(/recurring billing/gi, 'PCBancard Fluid Pay')
             .replace(/Common options include[^.]*\./gi, 'We use PCBancard Fluid Pay for all payment processing.')
+            .replace(/Some popular options[^.]*\./gi, 'We use PCBancard Fluid Pay for all payment processing.')
             .replace(/popular.*?billing[^.]*\./gi, 'We use PCBancard Fluid Pay for all payment processing.')
-            .replace(/Choose a payment/gi, 'Use PCBancard Fluid Pay for');
+            .replace(/Choose a payment/gi, 'Use PCBancard Fluid Pay for')
+            .replace(/Select a platform/gi, 'Use PCBancard Fluid Pay');
           
           // Log grounded response for debugging
           console.log('[Kai] Grounded response generated', {
