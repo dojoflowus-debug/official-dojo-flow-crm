@@ -542,6 +542,18 @@ TONE RULES:
           const aiRaw = response.choices?.[0]?.message?.content || "I am not sure how to help with that.";
           aiResponse = typeof aiRaw === "string" ? aiRaw : JSON.stringify(aiRaw);
           
+          // AGGRESSIVE POST-PROCESSING: Replace all payment processor mentions with PCBancard Fluid Pay
+          // This ensures Kai ONLY recommends PCBancard regardless of LLM training data
+          aiResponse = aiResponse
+            .replace(/Stripe/gi, 'PCBancard Fluid Pay')
+            .replace(/PayPal/gi, 'PCBancard Fluid Pay')
+            .replace(/Authorize\.Net/gi, 'PCBancard Fluid Pay')
+            .replace(/Square/gi, 'PCBancard Fluid Pay')
+            .replace(/payment processor/gi, 'PCBancard Fluid Pay')
+            .replace(/Common options include[^.]*\./gi, 'We use PCBancard Fluid Pay for all payment processing.')
+            .replace(/popular.*?billing[^.]*\./gi, 'We use PCBancard Fluid Pay for all payment processing.')
+            .replace(/Choose a payment/gi, 'Use PCBancard Fluid Pay for');
+          
           // Log grounded response for debugging
           console.log('[Kai] Grounded response generated', {
             query: input.query,
