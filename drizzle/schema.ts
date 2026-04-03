@@ -1,5 +1,57 @@
 import { mysqlTable, mysqlSchema, AnyMySqlColumn, index, uniqueIndex, int, mysqlEnum, text, mediumtext, timestamp, varchar, datetime, json, tinyint, decimal, boolean, date } from "drizzle-orm/mysql-core"
 import { sql } from "drizzle-orm"
+import { json } from "drizzle-orm/mysql-core"
+
+// ─── Kai Memory System ────────────────────────────────────────────────────────
+// Persistent memory for Kai AI to maintain context and human-like continuity
+export const memoryLogs = mysqlTable("memory_logs", {
+	id: int().autoincrement().notNull().primaryKey(),
+	organizationId: int("organization_id").notNull(),
+	userId: int("user_id").notNull(), // lead_id, student_id, parent_id, or staff_id
+	userRole: mysqlEnum(["lead", "student", "parent", "staff"]).notNull(),
+	content: text().notNull(), // The actual memory content
+	memoryType: mysqlEnum(["short_term", "mid_term", "long_term"]).notNull(),
+	tags: json("tags"), // {emotions: [], intent: [], flags: [], behaviors: []}
+	embedding: text(), // Vector embedding (stringified for storage)
+	confidenceScore: int("confidence_score").default(100), // 0-100 confidence
+	emotionalSignals: varchar("emotional_signals", { length: 255 }), // comma-separated: frustrated, excited, hesitant, etc.
+	interactionContext: varchar("interaction_context", { length: 100 }), // booking, question, support, enrollment, etc.
+	isArchived: int("is_archived").default(0).notNull(),
+	createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_memory_user").on(table.organizationId, table.userId),
+	index("idx_memory_type").on(table.organizationId, table.memoryType),
+	index("idx_memory_created").on(table.organizationId, table.createdAt),
+]);
+
+export const userProfiles = mysqlTable("user_profiles", {
+	id: int().autoincrement().notNull().primaryKey(),
+	organizationId: int("organization_id").notNull(),
+	userId: int("user_id").notNull(), // lead_id, student_id, parent_id, or staff_id
+	userRole: mysqlEnum(["lead", "student", "parent", "staff"]).notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	age: int(),
+	program: varchar({ length: 100 }),
+	goals: text(), // JSON: {confidence, fitness, discipline, etc.}
+	painPoints: text(), // JSON array of pain points
+	preferences: text(), // JSON: {classTime, programInterest, etc.}
+	lastInteractionAt: timestamp("last_interaction_at", { mode: "string" }),
+	engagementScore: int("engagement_score").default(0), // 0-100
+	aiSummary: text(), // AI-generated profile summary
+	emotionalProfile: varchar("emotional_profile", { length: 255 }), // dominant emotions: excited, hesitant, frustrated
+	behavioralTags: text(), // JSON: ["high_intent", "price_sensitive", "no_show", etc.]
+	interactionCount: int("interaction_count").default(0),
+	conversionStatus: mysqlEnum(["cold", "warm", "hot", "converted", "inactive"]).default("cold"),
+	createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_user_profiles_org").on(table.organizationId, table.userId),
+	index("idx_user_profiles_engagement").on(table.organizationId, table.engagementScore),
+	index("idx_user_profiles_conversion").on(table.organizationId, table.conversionStatus),
+]);
 
 export const accountFlags = mysqlTable("account_flags", {
 	id: int().autoincrement().notNull(),
