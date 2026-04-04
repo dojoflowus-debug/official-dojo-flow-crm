@@ -884,9 +884,15 @@ h3 {
   color: oklch(0.45 0 0) !important;
 }
 
-/* Light mode: Modal and overlay backgrounds */
-.light .fixed.inset-0 {
-  background-color: oklch(0 0 0 / 0.15) !important;
+/* Light mode: Modal and overlay backgrounds - only target the dialog overlay, NOT dialog content */
+.light [data-slot="dialog-overlay"] {
+  background-color: oklch(0 0 0 / 0.5) !important;
+}
+/* Ensure dialog content is always fully opaque in light mode */
+.light [data-slot="dialog-content"],
+.light [data-slot="dialog-portal"] > [data-slot="dialog-content"] {
+  background: rgb(255, 255, 255) !important;
+  opacity: 1 !important;
 }
 
 
