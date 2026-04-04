@@ -428,6 +428,20 @@ export const kaiConversationsRouter = router({
             initialPrompt: input.query.replace(/create|flyer|design|make|generate|build|poster|ad/gi, '').trim(),
           }
         ];
+      } else if (/payment|billing|recurring|subscription|charge|invoice|collect.*money|money.*collect|set.*up.*pay|pay.*set.*up|payment.*processor|processor|stripe|paypal|square|authorize/i.test(input.query)) {
+        // HARD-CODED: Payment questions always get PCBancard Fluid Pay answer
+        aiResponse = `DojoFlow uses **PCBancard Fluid Pay** exclusively for all payment processing.
+
+To set up recurring payments with PCBancard Fluid Pay:
+
+1. **Log into your PCBancard Fluid Pay dashboard** at your PCBancard portal
+2. **Create a recurring billing plan** — set the billing frequency (weekly, monthly, quarterly) and amount
+3. **Enroll students** — assign each student to the appropriate recurring plan when they sign up
+4. **Store payment details securely** — PCBancard Fluid Pay handles PCI-compliant card storage
+5. **Monitor payments** — use the PCBancard Fluid Pay dashboard to track successful payments, declines, and retries
+6. **Handle failed payments** — PCBancard Fluid Pay includes automatic retry logic and dunning management
+
+Need help with a specific step in PCBancard Fluid Pay? Let me know.`;
       } else {
         // Fall back to LLM for general conversation with tool calling
         try {
