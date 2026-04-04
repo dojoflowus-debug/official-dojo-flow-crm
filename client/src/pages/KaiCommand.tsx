@@ -1486,6 +1486,30 @@ export default function KaiCommand() {
 
   // Document analysis mutation — intelligently classify any uploaded document
   const analyzeDocumentMutation = trpc.kai.documentAnalysis.analyzeDocument.useMutation();
+  // Programs extraction mutation
+  const extractProgramsMutation = trpc.kai.documentAnalysis.extractPrograms.useMutation();
+  // Programs create mutation (called once per program during bulk import)
+  const createProgramMutation = trpc.programs.create.useMutation();
+
+  // Programs import state
+  const [programImportPreview, setProgramImportPreview] = useState<{
+    programs: Array<{
+      name: string;
+      type: string;
+      ageRange?: string | null;
+      price?: number | null;
+      billing?: string | null;
+      description?: string | null;
+      maxSize?: number | null;
+    }>;
+    fileName: string;
+    fileUrl: string;
+    fileType: string;
+    storageKey?: string;
+    extractedText?: string;
+  } | null>(null);
+  const [selectedProgramRows, setSelectedProgramRows] = useState<Set<number>>(new Set());
+  const [isImportingPrograms, setIsImportingPrograms] = useState(false);
 
   // Student import state
   const [studentImportPreview, setStudentImportPreview] = useState<{
@@ -1877,13 +1901,15 @@ export default function KaiCommand() {
         fileName
       });
 
-      // Build quick reply buttons from the AI’s suggested actions
+      // Build quick reply buttons from the AI's suggested actions
+      // Encode extractedText so programs import can reuse it without re-fetching
+      const encodedText = encodeURIComponent((result.extractedText || '').substring(0, 2000));
       const quickReplies = (result.suggestedActions || []).map((action: { label: string; action: string }) => ({
         label: action.label,
         action: action.action === 'import_students'
           ? `import_students_from_pdf:${fileUrl}|${fileType}|${fileName}|${storageKey || ''}`
           : action.action === 'import_programs'
-          ? `import_programs_from_pdf:${fileUrl}|${fileType}|${fileName}|${storageKey || ''}`
+          ? `import_programs_from_pdf:${fileUrl}|${fileType}|${fileName}|${storageKey || ''}|${encodedText}`
           : action.action === 'import_schedule'
           ? `import_schedule_from_pdf:${fileUrl}|${fileType}|${fileName}|${storageKey || ''}`
           : action.action === 'ask_kai'
@@ -4403,38 +4429,57 @@ export default function KaiCommand() {
                                   ));
                                   handleStudentDocumentImport(fileUrl, fileType, fileName, storageKey);
                                 } else if (qr.action.startsWith('import_programs_from_pdf:')) {
-                                  // Import programs from a PDF — use schedule extractor as a proxy for now,
-                                  // or send as a chat message asking Kai to import programs
+                                  // Real programs import flow — extract structured data then show preview card
                                   const pdfData = qr.action.replace('import_programs_from_pdf:', '');
-                                  const [fileUrl, fileType, fileName, storageKey] = pdfData.split('|');
+                                  const parts = pdfData.split('|');
+                                  const [fileUrl, fileType, fileName, storageKey, encodedText] = parts;
+                                  const extractedText = encodedText ? decodeURIComponent(encodedText) : undefined;
                                   setMessages(prev => prev.map(m =>
                                     m.id === message.id ? { ...m, quickReplies: [] } : m
                                   ));
-                                  // Send a chat message to Kai with the file context to import programs
-                                  const userMsg: Message = {
-                                    id: `user-import-prog-${Date.now()}`,
-                                    role: 'user',
-                                    content: `Please import the programs from this file: ${fileName}`,
+                                  const extractingMsgId = `prog-extracting-${Date.now()}`;
+                                  setMessages(prev => [...prev, {
+                                    id: extractingMsgId,
+                                    role: 'assistant',
+                                    content: `Extracting program data from **${fileName}**…`,
                                     timestamp: new Date()
-                                  };
-                                  setMessages(prev => [...prev, userMsg]);
-                                  setIsLoading(true);
+                                  }]);
                                   try {
-                                    const chatResult = await kaiChatMutation.mutateAsync({
-                                      message: `The user has uploaded a programs document (${fileName}). Please help them import these programs into the Programs section of DojoFlow. The document has already been analyzed and contains program data. Guide them through the import process or confirm what programs you found.`,
-                                      conversationId: selectedConversationId && !selectedConversationId.startsWith('new-') ? parseInt(selectedConversationId) : undefined,
+                                    const extractResult = await extractProgramsMutation.mutateAsync({
+                                      fileUrl: fileUrl || undefined,
+                                      storageKey: storageKey || undefined,
+                                      fileType,
+                                      fileName,
+                                      extractedText
                                     });
-                                    const kaiResponse: Message = {
-                                      id: `kai-prog-${Date.now()}`,
-                                      role: 'assistant',
-                                      content: chatResult.response || 'I can help you import these programs. Please navigate to the **Programs** page and use the import feature, or describe the programs you\'d like to add.',
-                                      timestamp: new Date()
-                                    };
-                                    setMessages(prev => [...prev, kaiResponse]);
-                                  } catch (e) {
-                                    // ignore
-                                  } finally {
-                                    setIsLoading(false);
+                                    if (extractResult.success && extractResult.programs.length > 0) {
+                                      setMessages(prev => prev.filter(m => m.id !== extractingMsgId));
+                                      setMessages(prev => [...prev, {
+                                        id: `prog-preview-ready-${Date.now()}`,
+                                        role: 'assistant',
+                                        content: `Found **${extractResult.programs.length} program${extractResult.programs.length !== 1 ? 's' : ''}** in **${fileName}**. Review the list below and confirm which ones to import.`,
+                                        timestamp: new Date()
+                                      }]);
+                                      setProgramImportPreview({
+                                        programs: extractResult.programs,
+                                        fileName,
+                                        fileUrl,
+                                        fileType,
+                                        storageKey: storageKey || undefined,
+                                        extractedText
+                                      });
+                                      setSelectedProgramRows(new Set(extractResult.programs.map((_: any, i: number) => i)));
+                                    } else {
+                                      setMessages(prev => prev.map(m => m.id === extractingMsgId ? {
+                                        ...m,
+                                        content: `I couldn't find any program data in **${fileName}**. ${extractResult.error || 'The document may not contain structured program information.'}`
+                                      } : m));
+                                    }
+                                  } catch (e: any) {
+                                    setMessages(prev => prev.map(m => m.id === extractingMsgId ? {
+                                      ...m,
+                                      content: `There was an error extracting programs from **${fileName}**: ${e.message}`
+                                    } : m));
                                   }
                                 } else if (qr.action.startsWith('import_schedule_from_pdf:')) {
                                   // Import schedule from PDF — use the existing schedule extraction handler
@@ -4636,6 +4681,142 @@ export default function KaiCommand() {
                               <><Loader2 className="w-3 h-3 animate-spin" /> Importing...</>
                             ) : (
                               <><Upload className="w-3 h-3" /> Import {selectedStudentRows.size} Student{selectedStudentRows.size !== 1 ? 's' : ''}</>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Programs Import Preview Card */}
+                  {programImportPreview && (
+                    <div className="mx-4 mb-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden">
+                      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">📋</span>
+                          <span className="text-sm font-semibold text-white">
+                            {selectedProgramRows.size} of {programImportPreview.programs.length} programs selected
+                          </span>
+                          <span className="text-xs text-white/40">from {programImportPreview.fileName}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (selectedProgramRows.size === programImportPreview.programs.length) {
+                                setSelectedProgramRows(new Set());
+                              } else {
+                                setSelectedProgramRows(new Set(programImportPreview.programs.map((_, i) => i)));
+                              }
+                            }}
+                            className="text-xs text-white/50 hover:text-white/80 transition-colors"
+                          >
+                            {selectedProgramRows.size === programImportPreview.programs.length ? 'Deselect all' : 'Select all'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setProgramImportPreview(null); setSelectedProgramRows(new Set()); }}
+                            className="text-white/40 hover:text-white/70 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="overflow-x-auto max-h-64 overflow-y-auto">
+                        <table className="w-full text-xs">
+                          <thead className="sticky top-0 bg-black/40">
+                            <tr>
+                              <th className="w-8 px-3 py-2"></th>
+                              <th className="px-3 py-2 text-left text-white/50 font-medium">Program Name</th>
+                              <th className="px-3 py-2 text-left text-white/50 font-medium">Type</th>
+                              <th className="px-3 py-2 text-left text-white/50 font-medium">Age Range</th>
+                              <th className="px-3 py-2 text-left text-white/50 font-medium">Price</th>
+                              <th className="px-3 py-2 text-left text-white/50 font-medium">Billing</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {programImportPreview.programs.map((p, i) => (
+                              <tr
+                                key={i}
+                                className={`border-t border-white/5 cursor-pointer transition-colors ${
+                                  selectedProgramRows.has(i) ? 'bg-red-500/10' : 'opacity-40'
+                                }`}
+                                onClick={() => {
+                                  setSelectedProgramRows(prev => {
+                                    const next = new Set(prev);
+                                    if (next.has(i)) next.delete(i); else next.add(i);
+                                    return next;
+                                  });
+                                }}
+                              >
+                                <td className="px-3 py-2">
+                                  <input type="checkbox" checked={selectedProgramRows.has(i)} onChange={() => {}} className="accent-red-500" />
+                                </td>
+                                <td className="px-3 py-2 text-white font-medium">{p.name}</td>
+                                <td className="px-3 py-2 text-white/60 capitalize">{p.type || '—'}</td>
+                                <td className="px-3 py-2 text-white/60">{p.ageRange || '—'}</td>
+                                <td className="px-3 py-2 text-white/60">{p.price != null ? `$${(p.price / 100).toFixed(2)}` : '—'}</td>
+                                <td className="px-3 py-2 text-white/60 capitalize">{p.billing ? p.billing.replace('_', ' ') : '—'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="px-4 py-3 border-t border-white/10 flex items-center justify-between">
+                        <span className="text-xs text-white/40">
+                          {isImportingPrograms ? 'Importing...' : `${selectedProgramRows.size} program${selectedProgramRows.size !== 1 ? 's' : ''} will be added to Programs`}
+                        </span>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => { setProgramImportPreview(null); setSelectedProgramRows(new Set()); }}
+                            className="px-3 py-1.5 text-xs rounded-lg border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            disabled={selectedProgramRows.size === 0 || isImportingPrograms}
+                            onClick={async () => {
+                              if (!programImportPreview) return;
+                              setIsImportingPrograms(true);
+                              const toImport = programImportPreview.programs.filter((_, i) => selectedProgramRows.has(i));
+                              let imported = 0;
+                              let failed = 0;
+                              for (const prog of toImport) {
+                                try {
+                                  await createProgramMutation.mutateAsync({
+                                    name: prog.name,
+                                    type: (prog.type as any) || 'membership',
+                                    ageRange: prog.ageRange || undefined,
+                                    price: prog.price || undefined,
+                                    billing: (prog.billing as any) || undefined,
+                                    description: prog.description || undefined,
+                                    maxSize: prog.maxSize || undefined,
+                                  });
+                                  imported++;
+                                } catch {
+                                  failed++;
+                                }
+                              }
+                              setIsImportingPrograms(false);
+                              setProgramImportPreview(null);
+                              setSelectedProgramRows(new Set());
+                              setMessages(prev => [...prev, {
+                                id: `prog-import-done-${Date.now()}`,
+                                role: 'assistant',
+                                content: failed === 0
+                                  ? `✅ Successfully imported **${imported} program${imported !== 1 ? 's' : ''}** to your Programs page!`
+                                  : `Imported **${imported}** program${imported !== 1 ? 's' : ''} with **${failed}** error${failed !== 1 ? 's' : ''}. Check the Programs page for details.`,
+                                timestamp: new Date()
+                              }]);
+                            }}
+                            className="px-4 py-1.5 text-xs rounded-lg bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium transition-colors flex items-center gap-1.5"
+                          >
+                            {isImportingPrograms ? (
+                              <><Loader2 className="w-3 h-3 animate-spin" /> Importing...</>
+                            ) : (
+                              <><Upload className="w-3 h-3" /> Import {selectedProgramRows.size} Program{selectedProgramRows.size !== 1 ? 's' : ''}</>
                             )}
                           </button>
                         </div>

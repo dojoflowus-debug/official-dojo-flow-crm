@@ -6290,15 +6290,15 @@ Analyze the provided document content and determine:
 2. A brief 1-2 sentence SUMMARY of what the document contains
 3. What ACTIONS should be suggested to the user
 
-Document types and their actions:
-- students: "Import students to roster", "Review student list"
-- programs: "Import programs to Programs page", "Review program list"
-- schedule: "Import class schedule", "Review schedule"
-- invoice: "View invoice details", "Save to billing records"
-- waiver: "Process waiver", "Save to student records"
-- leads: "Import leads", "Review prospect list"
-- staff: "Import staff records", "Review staff list"
-- unknown: "Ask Kai a question about this document"
+Document types and their EXACT action strings (use these EXACT values in the action field):
+- students: [{"label": "👥 Import students to roster", "action": "import_students"}, {"label": "💬 Review student list", "action": "ask_kai"}]
+- programs: [{"label": "📋 Import programs to Programs page", "action": "import_programs"}, {"label": "🔍 Review program list", "action": "ask_kai"}]
+- schedule: [{"label": "📅 Import class schedule", "action": "import_schedule"}, {"label": "💬 Review schedule", "action": "ask_kai"}]
+- invoice: [{"label": "💬 Ask Kai about this document", "action": "ask_kai"}]
+- waiver: [{"label": "💬 Ask Kai about this document", "action": "ask_kai"}]
+- leads: [{"label": "👥 Import leads", "action": "import_students"}, {"label": "💬 Review prospect list", "action": "ask_kai"}]
+- staff: [{"label": "💬 Ask Kai about this document", "action": "ask_kai"}]
+- unknown: [{"label": "💬 Ask Kai about this document", "action": "ask_kai"}]
 
 Respond ONLY with valid JSON in this exact format:
 {
@@ -6350,6 +6350,124 @@ Respond ONLY with valid JSON in this exact format:
             suggestedActions: [{ label: '💬 Ask Kai about this document', action: 'ask_kai' }],
             extractedText: ''
           };
+        }
+      }),
+
+    /**
+     * Extract structured program data from a document and return it for preview before import.
+     */
+    extractPrograms: orgScopedProcedure
+      .input(z.object({
+        fileUrl: z.string().optional(),
+        storageKey: z.string().optional(),
+        fileType: z.string(),
+        fileName: z.string(),
+        extractedText: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { invokeLLM } = await import('./_core/llm');
+        const { storageGetBuffer } = await import('./storage');
+
+        try {
+          let documentText = input.extractedText || '';
+
+          if (!documentText) {
+            const lowerName = input.fileName.toLowerCase();
+            const lowerType = input.fileType.toLowerCase();
+            const isPdf = lowerName.endsWith('.pdf') || lowerType.includes('pdf');
+            const isSpreadsheet = lowerName.endsWith('.xlsx') || lowerName.endsWith('.xls') ||
+              lowerName.endsWith('.csv') || lowerType.includes('spreadsheet') || lowerType.includes('csv');
+
+            if (isPdf) {
+              let fileBytes: Buffer;
+              if (input.storageKey) {
+                const ab = await storageGetBuffer(input.storageKey);
+                fileBytes = Buffer.from(ab);
+              } else if (input.fileUrl) {
+                const resp = await fetch(input.fileUrl);
+                if (!resp.ok) throw new Error(`Failed to fetch file: ${resp.status}`);
+                fileBytes = Buffer.from(await resp.arrayBuffer());
+              } else {
+                throw new Error('No file URL or storage key provided');
+              }
+              const { pdfToText } = await import('./pdfToText');
+              documentText = await pdfToText(new Uint8Array(fileBytes));
+            } else if (isSpreadsheet) {
+              const xlsx = await import('xlsx');
+              let arrayBuffer: ArrayBuffer;
+              if (input.storageKey) {
+                arrayBuffer = await storageGetBuffer(input.storageKey);
+              } else if (input.fileUrl) {
+                const resp = await fetch(input.fileUrl);
+                if (!resp.ok) throw new Error(`Failed to fetch file: ${resp.status}`);
+                arrayBuffer = await resp.arrayBuffer();
+              } else {
+                throw new Error('No file URL or storage key provided');
+              }
+              const workbook = xlsx.read(arrayBuffer, { type: 'array' });
+              const sheetName = workbook.SheetNames[0];
+              const worksheet = workbook.Sheets[sheetName];
+              const rows = xlsx.utils.sheet_to_json(worksheet, { header: 1, raw: false }) as any[][];
+              documentText = rows.map((r: any[]) => r.join('\t')).join('\n');
+            }
+          }
+
+          if (!documentText.trim()) {
+            return { success: false, programs: [], error: 'Could not extract text from document.' };
+          }
+
+          const extractionResponse = await invokeLLM({
+            maxTokens: 4096,
+            messages: [
+              {
+                role: 'system',
+                content: `You are a data extraction assistant for a martial arts school management system.
+Extract all programs/classes/memberships from the provided document.
+For each program, extract as much detail as possible.
+
+Return ONLY a valid JSON array (no markdown, no explanation):
+[
+  {
+    "name": "Karate Basics",
+    "type": "membership",
+    "ageRange": "6-12",
+    "price": 9900,
+    "billing": "monthly",
+    "description": "Introduction to fundamental Karate techniques.",
+    "maxSize": 20
+  }
+]
+
+Field rules:
+- name: required string
+- type: one of "membership", "class_pack", "drop_in", "private" (default: "membership")
+- ageRange: string like "6-12", "Adults", "All Ages", or null
+- price: integer in CENTS (e.g. $99 = 9900), or null if not found
+- billing: one of "monthly", "weekly", "per_session", "one_time", or null
+- description: string or null
+- maxSize: integer or null
+
+Do NOT invent data not in the document. If a field is missing, use null.`
+              },
+              {
+                role: 'user',
+                content: `Extract all programs from this document (filename: ${input.fileName}):\n\n${documentText.substring(0, 8000)}`
+              }
+            ]
+          });
+
+          const raw = extractionResponse.choices?.[0]?.message?.content || '';
+          const jsonMatch = raw.match(/\[\s*\{[\s\S]*\}\s*\]/);
+          if (!jsonMatch) {
+            return { success: false, programs: [], error: 'Could not parse program data from document.' };
+          }
+
+          const programs = JSON.parse(jsonMatch[0]);
+          return { success: true, programs, error: null };
+
+        } catch (err: any) {
+          console.error('[documentAnalysis.extractPrograms] Error:', err);
+          return { success: false, programs: [], error: err.message };
         }
       }),
   }),
