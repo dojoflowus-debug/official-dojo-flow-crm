@@ -9288,3 +9288,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Replace "Image URL" text field in Add/Edit Merchandise modal with a file upload widget
 - [x] Support click-to-browse and drag-and-drop photo upload
 - [x] Upload image to S3 and store the CDN URL in the database
+
+## Kai Merchandise Import Flow (Current)
+- [x] Add extractMerchandise server endpoint to parse merchandise catalog PDFs
+- [x] Fix analyzeDocument to return import_merchandise action for merchandise PDFs
+- [x] Build merchandise import preview card in KaiCommand.tsx
+- [x] Wire up import_merchandise action to call extractMerchandise and show preview
+- [x] Save extracted items to merchandise table via trpc.merchandise.createItem

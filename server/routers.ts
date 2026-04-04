@@ -6293,6 +6293,7 @@ Analyze the provided document content and determine:
 Document types and their EXACT action strings (use these EXACT values in the action field):
 - students: [{"label": "👥 Import students to roster", "action": "import_students"}, {"label": "💬 Review student list", "action": "ask_kai"}]
 - programs: [{"label": "📋 Import programs to Programs page", "action": "import_programs"}, {"label": "🔍 Review program list", "action": "ask_kai"}]
+- merchandise: [{"label": "🛍️ Import items to Merchandise", "action": "import_merchandise"}, {"label": "🔍 Review item list", "action": "ask_kai"}]
 - schedule: [{"label": "📅 Import class schedule", "action": "import_schedule"}, {"label": "💬 Review schedule", "action": "ask_kai"}]
 - invoice: [{"label": "💬 Ask Kai about this document", "action": "ask_kai"}]
 - waiver: [{"label": "💬 Ask Kai about this document", "action": "ask_kai"}]
@@ -6468,6 +6469,73 @@ Do NOT invent data not in the document. If a field is missing, use null.`
         } catch (err: any) {
           console.error('[documentAnalysis.extractPrograms] Error:', err);
           return { success: false, programs: [], error: err.message };
+        }
+      }),
+
+    /**
+     * Extract structured merchandise items from a document and return them for preview before import.
+     */
+    extractMerchandise: orgScopedProcedure
+      .input(z.object({
+        fileUrl: z.string(),
+        extractedText: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          const { invokeLLM } = await import('./llm');
+
+          let documentText = input.extractedText || '';
+
+          // If no pre-extracted text, fetch and parse the file
+          if (!documentText && input.fileUrl) {
+            const axios = await import('axios');
+            const response = await axios.default.get(input.fileUrl, { responseType: 'arraybuffer' });
+            const buffer = Buffer.from(response.data);
+            const pdfParse = await import('pdf-parse');
+            const parsed = await pdfParse.default(buffer);
+            documentText = parsed.text;
+          }
+
+          if (!documentText.trim()) {
+            return { success: false, items: [], error: 'Could not extract text from document.' };
+          }
+
+          const extractionResponse = await invokeLLM({
+            maxTokens: 2048,
+            messages: [
+              {
+                role: 'system',
+                content: `You are an AI assistant that extracts merchandise/product data from documents for a martial arts school management system.
+Extract all merchandise items from the provided document text.
+For each item, extract:
+- name: product name (string, required)
+- type: one of "uniform", "gear", "belt", "equipment", "other" (string, required)
+- defaultPrice: price as a number (e.g. 29.99), or null if not found
+- description: brief description (string, optional)
+- stockQuantity: stock quantity as a number, or null if not found
+
+Respond ONLY with a valid JSON array of objects. Example:
+[{"name":"White Gi Uniform","type":"uniform","defaultPrice":59.99,"description":"Traditional white karate gi","stockQuantity":50}]`
+              },
+              {
+                role: 'user',
+                content: `Extract all merchandise items from this document:\n\n${documentText.substring(0, 6000)}`
+              }
+            ]
+          });
+
+          const raw = extractionResponse.choices?.[0]?.message?.content || '';
+          const jsonMatch = raw.match(/\[[\s\S]*\]/);
+          if (!jsonMatch) {
+            return { success: false, items: [], error: 'Could not parse merchandise data from document.' };
+          }
+
+          const items = JSON.parse(jsonMatch[0]);
+          return { success: true, items, error: null };
+
+        } catch (err: any) {
+          console.error('[documentAnalysis.extractMerchandise] Error:', err);
+          return { success: false, items: [], error: err.message };
         }
       }),
   }),

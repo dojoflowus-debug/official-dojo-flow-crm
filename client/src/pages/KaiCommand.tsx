@@ -1511,6 +1511,27 @@ export default function KaiCommand() {
   const [selectedProgramRows, setSelectedProgramRows] = useState<Set<number>>(new Set());
   const [isImportingPrograms, setIsImportingPrograms] = useState(false);
 
+  // Merchandise extraction mutation
+  const extractMerchandiseMutation = trpc.kai.documentAnalysis.extractMerchandise.useMutation();
+  // Merchandise create mutation — trpc.merchandise.createItem (top-level merchandise router)
+  const createMerchandiseMutation = (trpc as any).merchandise.createItem.useMutation();
+
+  // Merchandise import state
+  const [merchandiseImportPreview, setMerchandiseImportPreview] = useState<{
+    items: Array<{
+      name: string;
+      type: string;
+      defaultPrice?: number | null;
+      description?: string | null;
+      stockQuantity?: number | null;
+    }>;
+    fileName: string;
+    fileUrl: string;
+    extractedText?: string;
+  } | null>(null);
+  const [selectedMerchandiseRows, setSelectedMerchandiseRows] = useState<Set<number>>(new Set());
+  const [isImportingMerchandise, setIsImportingMerchandise] = useState(false);
+
   // Student import state
   const [studentImportPreview, setStudentImportPreview] = useState<{
     students: Array<{
@@ -1910,6 +1931,8 @@ export default function KaiCommand() {
           ? `import_students_from_pdf:${fileUrl}|${fileType}|${fileName}|${storageKey || ''}`
           : action.action === 'import_programs'
           ? `import_programs_from_pdf:${fileUrl}|${fileType}|${fileName}|${storageKey || ''}|${encodedText}`
+          : action.action === 'import_merchandise'
+          ? `import_merchandise_from_pdf:${fileUrl}|${fileType}|${fileName}|${storageKey || ''}|${encodedText}`
           : action.action === 'import_schedule'
           ? `import_schedule_from_pdf:${fileUrl}|${fileType}|${fileName}|${storageKey || ''}`
           : action.action === 'ask_kai'
@@ -4481,6 +4504,54 @@ export default function KaiCommand() {
                                       content: `There was an error extracting programs from **${fileName}**: ${e.message}`
                                     } : m));
                                   }
+                                } else if (qr.action.startsWith('import_merchandise_from_pdf:')) {
+                                  // Real merchandise import flow — extract structured data then show preview card
+                                  const pdfData = qr.action.replace('import_merchandise_from_pdf:', '');
+                                  const parts = pdfData.split('|');
+                                  const [fileUrl, fileType, fileName, , encodedText] = parts;
+                                  const extractedText = encodedText ? decodeURIComponent(encodedText) : undefined;
+                                  setMessages(prev => prev.map(m =>
+                                    m.id === message.id ? { ...m, quickReplies: [] } : m
+                                  ));
+                                  const extractingMsgId = `merch-extracting-${Date.now()}`;
+                                  setMessages(prev => [...prev, {
+                                    id: extractingMsgId,
+                                    role: 'assistant',
+                                    content: `Extracting merchandise data from **${fileName}**…`,
+                                    timestamp: new Date()
+                                  }]);
+                                  try {
+                                    const extractResult = await extractMerchandiseMutation.mutateAsync({
+                                      fileUrl: fileUrl || '',
+                                      extractedText
+                                    });
+                                    if (extractResult.success && extractResult.items.length > 0) {
+                                      setMessages(prev => prev.filter(m => m.id !== extractingMsgId));
+                                      setMessages(prev => [...prev, {
+                                        id: `merch-preview-ready-${Date.now()}`,
+                                        role: 'assistant',
+                                        content: `Found **${extractResult.items.length} item${extractResult.items.length !== 1 ? 's' : ''}** in **${fileName}**. Review the list below and confirm which ones to import.`,
+                                        timestamp: new Date()
+                                      }]);
+                                      setMerchandiseImportPreview({
+                                        items: extractResult.items,
+                                        fileName,
+                                        fileUrl,
+                                        extractedText
+                                      });
+                                      setSelectedMerchandiseRows(new Set(extractResult.items.map((_: any, i: number) => i)));
+                                    } else {
+                                      setMessages(prev => prev.map(m => m.id === extractingMsgId ? {
+                                        ...m,
+                                        content: `I couldn't find any merchandise items in **${fileName}**. ${extractResult.error || 'The document may not contain structured product information.'}`
+                                      } : m));
+                                    }
+                                  } catch (e: any) {
+                                    setMessages(prev => prev.map(m => m.id === extractingMsgId ? {
+                                      ...m,
+                                      content: `There was an error extracting merchandise from **${fileName}**: ${e.message}`
+                                    } : m));
+                                  }
                                 } else if (qr.action.startsWith('import_schedule_from_pdf:')) {
                                   // Import schedule from PDF — use the existing schedule extraction handler
                                   const pdfData = qr.action.replace('import_schedule_from_pdf:', '');
@@ -4508,6 +4579,7 @@ export default function KaiCommand() {
                                 qr.action === 'open_schedule_import' || 
                                 qr.action.startsWith('import_students_from_pdf:') ||
                                 qr.action.startsWith('import_programs_from_pdf:') ||
+                                qr.action.startsWith('import_merchandise_from_pdf:') ||
                                 qr.action.startsWith('import_schedule_from_pdf:')
                                   ? 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200'
                                   : isDark || isCinematic
@@ -4822,6 +4894,157 @@ export default function KaiCommand() {
                               <><Loader2 className="w-3 h-3 animate-spin" /> Importing...</>
                             ) : (
                               <><Upload className="w-3 h-3" /> Import {selectedProgramRows.size} Program{selectedProgramRows.size !== 1 ? 's' : ''}</>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Merchandise Import Preview Card */}
+                  {merchandiseImportPreview && (
+                    <div className={`mx-auto w-full max-w-2xl rounded-xl border overflow-hidden ${
+                      isDark || isCinematic ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'
+                    }`}>
+                      <div className={`flex items-center justify-between px-4 py-3 border-b ${
+                        isDark || isCinematic ? 'border-white/10' : 'border-slate-100'
+                      }`}>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs font-semibold uppercase tracking-wide ${
+                            isDark || isCinematic ? 'text-white/60' : 'text-slate-500'
+                          }`}>Merchandise Preview</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            isDark || isCinematic ? 'bg-white/10 text-white/70' : 'bg-slate-100 text-slate-600'
+                          }`}>
+                            {selectedMerchandiseRows.size} of {merchandiseImportPreview.items.length} items selected
+                          </span>
+                          <span className="text-xs text-white/40">from {merchandiseImportPreview.fileName}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              if (selectedMerchandiseRows.size === merchandiseImportPreview.items.length) {
+                                setSelectedMerchandiseRows(new Set());
+                              } else {
+                                setSelectedMerchandiseRows(new Set(merchandiseImportPreview.items.map((_, i) => i)));
+                              }
+                            }}
+                            className={`text-xs px-2 py-1 rounded-md border transition-colors ${
+                              isDark || isCinematic ? 'border-white/15 text-white/60 hover:bg-white/10' : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                            }`}
+                          >
+                            {selectedMerchandiseRows.size === merchandiseImportPreview.items.length ? 'Deselect all' : 'Select all'}
+                          </button>
+                          <button
+                            onClick={() => { setMerchandiseImportPreview(null); setSelectedMerchandiseRows(new Set()); }}
+                            className={`text-xs px-2 py-1 rounded-md border transition-colors ${
+                              isDark || isCinematic ? 'border-white/15 text-white/60 hover:bg-white/10' : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                            }`}
+                          >
+                            Dismiss
+                          </button>
+                        </div>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className={isDark || isCinematic ? 'bg-white/5' : 'bg-slate-50'}>
+                              <th className="w-8 px-3 py-2"></th>
+                              <th className={`text-left px-3 py-2 font-medium ${ isDark || isCinematic ? 'text-white/50' : 'text-slate-500' }`}>Name</th>
+                              <th className={`text-left px-3 py-2 font-medium ${ isDark || isCinematic ? 'text-white/50' : 'text-slate-500' }`}>Type</th>
+                              <th className={`text-left px-3 py-2 font-medium ${ isDark || isCinematic ? 'text-white/50' : 'text-slate-500' }`}>Price</th>
+                              <th className={`text-left px-3 py-2 font-medium ${ isDark || isCinematic ? 'text-white/50' : 'text-slate-500' }`}>Stock</th>
+                              <th className={`text-left px-3 py-2 font-medium ${ isDark || isCinematic ? 'text-white/50' : 'text-slate-500' }`}>Description</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {merchandiseImportPreview.items.map((item, i) => (
+                              <tr
+                                key={i}
+                                onClick={() => {
+                                  const next = new Set(selectedMerchandiseRows);
+                                  if (next.has(i)) next.delete(i); else next.add(i);
+                                  setSelectedMerchandiseRows(next);
+                                }}
+                                className={`cursor-pointer border-t transition-colors ${
+                                  isDark || isCinematic
+                                    ? `border-white/5 ${selectedMerchandiseRows.has(i) ? 'bg-white/8' : 'hover:bg-white/4'}`
+                                    : `border-slate-100 ${selectedMerchandiseRows.has(i) ? 'bg-red-50' : 'hover:bg-slate-50'}`
+                                }`}
+                              >
+                                <td className="px-3 py-2">
+                                  <input type="checkbox" readOnly checked={selectedMerchandiseRows.has(i)} className="accent-red-500" />
+                                </td>
+                                <td className={`px-3 py-2 font-medium ${ isDark || isCinematic ? 'text-white/90' : 'text-slate-800' }`}>{item.name}</td>
+                                <td className={`px-3 py-2 ${ isDark || isCinematic ? 'text-white/60' : 'text-slate-500' }`}>{item.type}</td>
+                                <td className={`px-3 py-2 ${ isDark || isCinematic ? 'text-white/60' : 'text-slate-500' }`}>{item.defaultPrice != null ? `$${item.defaultPrice}` : '—'}</td>
+                                <td className={`px-3 py-2 ${ isDark || isCinematic ? 'text-white/60' : 'text-slate-500' }`}>{item.stockQuantity != null ? item.stockQuantity : '—'}</td>
+                                <td className={`px-3 py-2 ${ isDark || isCinematic ? 'text-white/60' : 'text-slate-500' }`}>{item.description || '—'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className={`flex items-center justify-between px-4 py-3 border-t ${
+                        isDark || isCinematic ? 'border-white/10 bg-white/3' : 'border-slate-100 bg-slate-50'
+                      }`}>
+                        <span className={`text-xs ${ isDark || isCinematic ? 'text-white/50' : 'text-slate-500' }`}>
+                          {isImportingMerchandise ? 'Importing...' : `${selectedMerchandiseRows.size} item${selectedMerchandiseRows.size !== 1 ? 's' : ''} will be added to Merchandise`}
+                        </span>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => { setMerchandiseImportPreview(null); setSelectedMerchandiseRows(new Set()); }}
+                            className={`px-4 py-1.5 text-xs rounded-lg border transition-colors ${
+                              isDark || isCinematic ? 'border-white/15 text-white/60 hover:bg-white/10' : 'border-slate-200 text-slate-600 hover:bg-slate-100'
+                            }`}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            disabled={selectedMerchandiseRows.size === 0 || isImportingMerchandise}
+                            onClick={async () => {
+                              if (!merchandiseImportPreview) return;
+                              setIsImportingMerchandise(true);
+                              const toImport = merchandiseImportPreview.items.filter((_, i) => selectedMerchandiseRows.has(i));
+                              let imported = 0;
+                              let failed = 0;
+                              for (const item of toImport) {
+                                try {
+                                  const typeMap: Record<string, string> = {
+                                    uniform: 'uniform', gear: 'gear', belt: 'belt', equipment: 'equipment', other: 'other'
+                                  };
+                                  await createMerchandiseMutation.mutateAsync({
+                                    name: item.name,
+                                    type: (typeMap[item.type?.toLowerCase()] || 'other') as any,
+                                    defaultPrice: Math.round((item.defaultPrice ?? 0) * 100),
+                                    requiresSize: false,
+                                    description: item.description || undefined,
+                                    stockQuantity: item.stockQuantity ?? undefined,
+                                  });
+                                  imported++;
+                                } catch (e) {
+                                  console.error('Failed to import merchandise item:', item.name, e);
+                                  failed++;
+                                }
+                              }
+                              setIsImportingMerchandise(false);
+                              setMerchandiseImportPreview(null);
+                              setSelectedMerchandiseRows(new Set());
+                              setMessages(prev => [...prev, {
+                                id: `merch-import-done-${Date.now()}`,
+                                role: 'assistant',
+                                content: failed === 0
+                                  ? `Imported **${imported} item${imported !== 1 ? 's' : ''}** to Merchandise successfully.`
+                                  : `Imported **${imported}** item${imported !== 1 ? 's' : ''} with **${failed}** error${failed !== 1 ? 's' : ''}. Check the Merchandise page for details.`,
+                                timestamp: new Date()
+                              }]);
+                            }}
+                            className="px-4 py-1.5 text-xs rounded-lg bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium transition-colors flex items-center gap-1.5"
+                          >
+                            {isImportingMerchandise ? (
+                              <><Loader2 className="w-3 h-3 animate-spin" /> Importing...</>
+                            ) : (
+                              <><Upload className="w-3 h-3" /> Import {selectedMerchandiseRows.size} Item{selectedMerchandiseRows.size !== 1 ? 's' : ''}</>
                             )}
                           </button>
                         </div>
