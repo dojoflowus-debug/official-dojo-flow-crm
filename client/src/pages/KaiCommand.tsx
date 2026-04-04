@@ -4348,7 +4348,7 @@ export default function KaiCommand() {
                       )}
                       {/* Quick-reply action buttons */}
                       {message.quickReplies && message.quickReplies.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-3">
+                        <div className="flex flex-wrap gap-1.5 mt-2.5">
                           {message.quickReplies.map((qr) => (
                             <button
                               key={qr.action}
@@ -4459,15 +4459,15 @@ export default function KaiCommand() {
                                   }]);
                                 }
                               }}
-                              className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${
+                              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium border transition-colors ${
                                 qr.action === 'open_schedule_import' || 
                                 qr.action.startsWith('import_students_from_pdf:') ||
                                 qr.action.startsWith('import_programs_from_pdf:') ||
                                 qr.action.startsWith('import_schedule_from_pdf:')
-                                  ? 'bg-red-600 hover:bg-red-700 text-white border-red-600'
+                                  ? 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200'
                                   : isDark || isCinematic
-                                    ? 'bg-white/10 hover:bg-white/20 text-white/80 border-white/20'
-                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                                    ? 'bg-white/8 hover:bg-white/15 text-white/70 border-white/15'
+                                    : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200 shadow-sm'
                               }`}
                             >
                               {qr.label}
