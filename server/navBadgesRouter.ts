@@ -55,12 +55,17 @@ export const navBadgesRouter = router({
           return {};
         }
 
-        // STUDENTS COUNT: Total students for THIS organization
-        // Shows total count so users always see their student count in navigation
+        // STUDENTS COUNT: Only ACTIVE students for THIS organization
+        // Shows active student count so the badge reflects real enrolled members
         const totalStudents = await db
           .select({ count: count() })
           .from(students)
-          .where(eq(students.organizationId, organizationId));
+          .where(
+            and(
+              eq(students.organizationId, organizationId),
+              eq(students.status, 'Active')
+            )
+          );
         
         counts.students = totalStudents[0]?.count || 0;
 
