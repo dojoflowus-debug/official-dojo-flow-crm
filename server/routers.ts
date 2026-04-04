@@ -6179,6 +6179,181 @@ Return the data as a structured JSON object.`
       }),
   }),
 
+  // Document analysis router — intelligently classify any uploaded document and suggest routing
+  documentAnalysis: router({
+    /**
+     * Analyze any uploaded document (PDF, image, spreadsheet) and determine what type it is.
+     * Returns a classification (students, programs, schedule, invoice, waiver, unknown) plus
+     * a human-readable summary and suggested actions for Kai to present.
+     */
+    analyzeDocument: orgScopedProcedure
+      .input(z.object({
+        fileUrl: z.string().optional(),
+        storageKey: z.string().optional(),
+        fileType: z.string(),
+        fileName: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { invokeLLM } = await import('./_core/llm');
+        const { storageGetBuffer } = await import('./storage');
+
+        const lowerName = input.fileName.toLowerCase();
+        const lowerType = input.fileType.toLowerCase();
+        const isPdf = lowerName.endsWith('.pdf') || lowerType.includes('pdf');
+        const isSpreadsheet = lowerName.endsWith('.xlsx') || lowerName.endsWith('.xls') ||
+          lowerName.endsWith('.csv') || lowerType.includes('spreadsheet') || lowerType.includes('csv');
+        const isImage = lowerType.startsWith('image/');
+
+        try {
+          let documentText = '';
+
+          if (isPdf) {
+            // Extract text from PDF
+            let fileBytes: Buffer;
+            if (input.storageKey) {
+              const ab = await storageGetBuffer(input.storageKey);
+              fileBytes = Buffer.from(ab);
+            } else if (input.fileUrl) {
+              const resp = await fetch(input.fileUrl);
+              if (!resp.ok) throw new Error(`Failed to fetch file: ${resp.status}`);
+              fileBytes = Buffer.from(await resp.arrayBuffer());
+            } else {
+              throw new Error('No file URL or storage key provided');
+            }
+            const { pdfToText } = await import('./pdfToText');
+            documentText = await pdfToText(new Uint8Array(fileBytes));
+          } else if (isSpreadsheet) {
+            // Extract text from spreadsheet
+            const xlsx = await import('xlsx');
+            let arrayBuffer: ArrayBuffer;
+            if (input.storageKey) {
+              arrayBuffer = await storageGetBuffer(input.storageKey);
+            } else if (input.fileUrl) {
+              const resp = await fetch(input.fileUrl);
+              if (!resp.ok) throw new Error(`Failed to fetch file: ${resp.status}`);
+              arrayBuffer = await resp.arrayBuffer();
+            } else {
+              throw new Error('No file URL or storage key provided');
+            }
+            const workbook = xlsx.read(arrayBuffer, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const rows = xlsx.utils.sheet_to_json(worksheet, { header: 1, raw: false }) as any[][];
+            documentText = rows.map((r: any[]) => r.join('\t')).join('\n');
+          } else if (isImage) {
+            // For images, use vision to describe the content
+            let fileBytes: Buffer;
+            if (input.storageKey) {
+              const ab = await storageGetBuffer(input.storageKey);
+              fileBytes = Buffer.from(ab);
+            } else if (input.fileUrl) {
+              const resp = await fetch(input.fileUrl);
+              if (!resp.ok) throw new Error(`Failed to fetch file: ${resp.status}`);
+              fileBytes = Buffer.from(await resp.arrayBuffer());
+            } else {
+              throw new Error('No file URL or storage key provided');
+            }
+            const mimeType = lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg') ? 'image/jpeg'
+              : lowerName.endsWith('.webp') ? 'image/webp' : 'image/png';
+            const visionResponse = await invokeLLM({
+              maxTokens: 2048,
+              messages: [{
+                role: 'user',
+                content: [
+                  { type: 'image_url' as const, image_url: { url: `data:${mimeType};base64,${fileBytes.toString('base64')}`, detail: 'high' as const } },
+                  { type: 'text', text: 'Describe the content of this document in detail. What type of document is it? What information does it contain?' }
+                ]
+              }]
+            });
+            documentText = visionResponse.choices?.[0]?.message?.content || '';
+          }
+
+          if (!documentText.trim()) {
+            return {
+              success: false,
+              documentType: 'unknown',
+              summary: 'Could not extract text from this document.',
+              suggestedActions: [],
+              extractedText: ''
+            };
+          }
+
+          // Ask the AI to classify the document and suggest actions
+          const classificationResponse = await invokeLLM({
+            maxTokens: 1024,
+            messages: [
+              {
+                role: 'system',
+                content: `You are Kai, an AI assistant for a martial arts / fitness school management system (DojoFlow). 
+Analyze the provided document content and determine:
+1. What TYPE of document it is (one of: students, programs, schedule, invoice, waiver, leads, staff, unknown)
+2. A brief 1-2 sentence SUMMARY of what the document contains
+3. What ACTIONS should be suggested to the user
+
+Document types and their actions:
+- students: "Import students to roster", "Review student list"
+- programs: "Import programs to Programs page", "Review program list"
+- schedule: "Import class schedule", "Review schedule"
+- invoice: "View invoice details", "Save to billing records"
+- waiver: "Process waiver", "Save to student records"
+- leads: "Import leads", "Review prospect list"
+- staff: "Import staff records", "Review staff list"
+- unknown: "Ask Kai a question about this document"
+
+Respond ONLY with valid JSON in this exact format:
+{
+  "documentType": "programs",
+  "summary": "This document contains 3 martial arts programs with names, durations, and descriptions.",
+  "suggestedActions": [
+    { "label": "📋 Import programs to Programs page", "action": "import_programs" },
+    { "label": "💬 Ask Kai about this document", "action": "ask_kai" }
+  ]
+}`
+              },
+              {
+                role: 'user',
+                content: `Analyze this document (filename: ${input.fileName}):\n\n${documentText.substring(0, 6000)}`
+              }
+            ]
+          });
+
+          const raw = classificationResponse.choices?.[0]?.message?.content || '';
+          console.log('[documentAnalysis] raw classification:', raw.substring(0, 500));
+
+          // Parse the JSON response
+          const jsonMatch = raw.match(/\{[\s\S]*\}/);
+          if (!jsonMatch) {
+            return {
+              success: true,
+              documentType: 'unknown',
+              summary: 'I\'ve read the document but couldn\'t determine its type. You can ask me questions about it.',
+              suggestedActions: [{ label: '💬 Ask Kai about this document', action: 'ask_kai' }],
+              extractedText: documentText.substring(0, 3000)
+            };
+          }
+
+          const classification = JSON.parse(jsonMatch[0]);
+          return {
+            success: true,
+            documentType: classification.documentType || 'unknown',
+            summary: classification.summary || 'Document analyzed successfully.',
+            suggestedActions: classification.suggestedActions || [{ label: '💬 Ask Kai about this document', action: 'ask_kai' }],
+            extractedText: documentText.substring(0, 3000)
+          };
+
+        } catch (err: any) {
+          console.error('[documentAnalysis.analyzeDocument] Error:', err);
+          return {
+            success: false,
+            documentType: 'unknown',
+            summary: `Error analyzing document: ${err.message}`,
+            suggestedActions: [{ label: '💬 Ask Kai about this document', action: 'ask_kai' }],
+            extractedText: ''
+          };
+        }
+      }),
+  }),
+
   // Programs management router
   programs: router({
     // Get all programs

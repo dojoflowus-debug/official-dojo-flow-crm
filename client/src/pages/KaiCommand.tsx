@@ -1600,24 +1600,8 @@ export default function KaiCommand() {
             // Auto-parse student roster from PDF or image
             handleStudentDocumentImport(result.url, file.type, file.name, result.key);
           } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-            // Generic PDF — let Kai acknowledge and invite questions with action buttons
-            const pdfAckMessage: Message = {
-              id: `pdf-ack-${Date.now()}`,
-              role: 'assistant',
-              content: `I've received **${file.name}**. What would you like me to do with it?`,
-              timestamp: new Date(),
-              quickReplies: [
-                {
-                  label: '📊 Import students from this file',
-                  action: `import_students_from_pdf:${result.url}|${file.type}|${file.name}|${result.key || ''}`
-                },
-                {
-                  label: '💬 Ask Kai about this document',
-                  action: 'dismiss_nudge'
-                }
-              ]
-            };
-            setMessages(prev => [...prev, pdfAckMessage]);
+            // Generic PDF — auto-analyze with AI to determine document type and suggest routing
+            handleDocumentAnalysis(result.url, file.type, file.name, result.key);
           }
         } catch (error: any) {
           console.error('Upload failed:', error);
@@ -1838,24 +1822,8 @@ export default function KaiCommand() {
             // Auto-parse student roster from PDF or image
             handleStudentDocumentImport(result.url, file.type, file.name, result.key);
           } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-            // Generic PDF — let Kai acknowledge and invite questions with action buttons
-            const pdfAckMessage: Message = {
-              id: `pdf-ack-${Date.now()}`,
-              role: 'assistant',
-              content: `I've received **${file.name}**. What would you like me to do with it?`,
-              timestamp: new Date(),
-              quickReplies: [
-                {
-                  label: '📊 Import students from this file',
-                  action: `import_students_from_pdf:${result.url}|${file.type}|${file.name}|${result.key || ''}`
-                },
-                {
-                  label: '💬 Ask Kai about this document',
-                  action: 'dismiss_nudge'
-                }
-              ]
-            };
-            setMessages(prev => [...prev, pdfAckMessage]);
+            // Generic PDF — auto-analyze with AI to determine document type and suggest routing
+            handleDocumentAnalysis(result.url, file.type, file.name, result.key);
           }
         } catch (error: any) {
           console.error('Upload failed:', error);
@@ -1884,6 +1852,68 @@ export default function KaiCommand() {
   // Check if file is an image
   const isImageFile = (type: string): boolean => {
     return type.startsWith('image/');
+  };
+
+  // Handle intelligent document analysis — auto-classify any PDF and suggest routing
+  const handleDocumentAnalysis = async (fileUrl: string, fileType: string, fileName: string, storageKey?: string) => {
+    // Show a "reading document" message while analyzing
+    const readingMsgId = `doc-reading-${Date.now()}`;
+    const readingMessage: Message = {
+      id: readingMsgId,
+      role: 'assistant',
+      content: `Reading **${fileName}**… give me a moment to figure out what’s in here.`,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, readingMessage]);
+
+    try {
+      const result = await analyzeDocumentMutation.mutateAsync({
+        fileUrl,
+        storageKey,
+        fileType,
+        fileName
+      });
+
+      // Build quick reply buttons from the AI’s suggested actions
+      const quickReplies = (result.suggestedActions || []).map((action: { label: string; action: string }) => ({
+        label: action.label,
+        action: action.action === 'import_students'
+          ? `import_students_from_pdf:${fileUrl}|${fileType}|${fileName}|${storageKey || ''}`
+          : action.action === 'import_programs'
+          ? `import_programs_from_pdf:${fileUrl}|${fileType}|${fileName}|${storageKey || ''}`
+          : action.action === 'import_schedule'
+          ? `import_schedule_from_pdf:${fileUrl}|${fileType}|${fileName}|${storageKey || ''}`
+          : action.action === 'ask_kai'
+          ? `ask_kai_about_doc:${fileUrl}|${fileType}|${fileName}|${storageKey || ''}`
+          : action.action
+      }));
+
+      const analysisMessage: Message = {
+        id: `doc-analysis-${Date.now()}`,
+        role: 'assistant',
+        content: result.success
+          ? `I’ve read **${fileName}**. ${result.summary}\n\nWhat would you like me to do with it?`
+          : `I received **${fileName}** but had trouble reading it. ${result.summary}`,
+        timestamp: new Date(),
+        quickReplies: quickReplies.length > 0 ? quickReplies : undefined
+      };
+
+      setMessages(prev => prev.map(m => m.id === readingMsgId ? analysisMessage : m));
+    } catch (err: any) {
+      const errorMessage: Message = {
+        id: `doc-analysis-error-${Date.now()}`,
+        role: 'assistant',
+        content: `I received **${fileName}** but couldn’t analyze it. You can still ask me questions about it or try importing it manually.`,
+        timestamp: new Date(),
+        quickReplies: [
+          {
+            label: '📊 Import students from this file',
+            action: `import_students_from_pdf:${fileUrl}|${fileType}|${fileName}|${storageKey || ''}`
+          }
+        ]
+      };
+      setMessages(prev => prev.map(m => m.id === readingMsgId ? errorMessage : m));
+    }
   };
 
   // Handle schedule extraction from uploaded file
@@ -4361,10 +4391,68 @@ export default function KaiCommand() {
                                     m.id === message.id ? { ...m, quickReplies: [] } : m
                                   ));
                                   handleStudentDocumentImport(fileUrl, fileType, fileName, storageKey);
+                                } else if (qr.action.startsWith('import_programs_from_pdf:')) {
+                                  // Import programs from a PDF — use schedule extractor as a proxy for now,
+                                  // or send as a chat message asking Kai to import programs
+                                  const pdfData = qr.action.replace('import_programs_from_pdf:', '');
+                                  const [fileUrl, fileType, fileName, storageKey] = pdfData.split('|');
+                                  setMessages(prev => prev.map(m =>
+                                    m.id === message.id ? { ...m, quickReplies: [] } : m
+                                  ));
+                                  // Send a chat message to Kai with the file context to import programs
+                                  const userMsg: Message = {
+                                    id: `user-import-prog-${Date.now()}`,
+                                    role: 'user',
+                                    content: `Please import the programs from this file: ${fileName}`,
+                                    timestamp: new Date()
+                                  };
+                                  setMessages(prev => [...prev, userMsg]);
+                                  setIsLoading(true);
+                                  try {
+                                    const chatResult = await kaiChatMutation.mutateAsync({
+                                      message: `The user has uploaded a programs document (${fileName}). Please help them import these programs into the Programs section of DojoFlow. The document has already been analyzed and contains program data. Guide them through the import process or confirm what programs you found.`,
+                                      conversationId: selectedConversationId && !selectedConversationId.startsWith('new-') ? parseInt(selectedConversationId) : undefined,
+                                    });
+                                    const kaiResponse: Message = {
+                                      id: `kai-prog-${Date.now()}`,
+                                      role: 'assistant',
+                                      content: chatResult.response || 'I can help you import these programs. Please navigate to the **Programs** page and use the import feature, or describe the programs you\'d like to add.',
+                                      timestamp: new Date()
+                                    };
+                                    setMessages(prev => [...prev, kaiResponse]);
+                                  } catch (e) {
+                                    // ignore
+                                  } finally {
+                                    setIsLoading(false);
+                                  }
+                                } else if (qr.action.startsWith('import_schedule_from_pdf:')) {
+                                  // Import schedule from PDF — use the existing schedule extraction handler
+                                  const pdfData = qr.action.replace('import_schedule_from_pdf:', '');
+                                  const [fileUrl, fileType, fileName, storageKey] = pdfData.split('|');
+                                  setMessages(prev => prev.map(m =>
+                                    m.id === message.id ? { ...m, quickReplies: [] } : m
+                                  ));
+                                  handleScheduleExtraction(fileUrl, fileType, fileName, storageKey);
+                                } else if (qr.action.startsWith('ask_kai_about_doc:')) {
+                                  // Ask Kai about the document — send a chat message with context
+                                  const pdfData = qr.action.replace('ask_kai_about_doc:', '');
+                                  const [, , fileName] = pdfData.split('|');
+                                  setMessages(prev => prev.map(m =>
+                                    m.id === message.id ? { ...m, quickReplies: [] } : m
+                                  ));
+                                  setMessages(prev => [...prev, {
+                                    id: `ask-kai-ack-${Date.now()}`,
+                                    role: 'assistant',
+                                    content: `Sure! I\'ve read **${fileName}**. What would you like to know about it? You can ask me questions like \'What programs are listed?\' or \'Summarize this document\'.`,
+                                    timestamp: new Date(),
+                                  }]);
                                 }
                               }}
                               className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${
-                                qr.action === 'open_schedule_import' || qr.action.startsWith('import_students_from_pdf:')
+                                qr.action === 'open_schedule_import' || 
+                                qr.action.startsWith('import_students_from_pdf:') ||
+                                qr.action.startsWith('import_programs_from_pdf:') ||
+                                qr.action.startsWith('import_schedule_from_pdf:')
                                   ? 'bg-red-600 hover:bg-red-700 text-white border-red-600'
                                   : isDark || isCinematic
                                     ? 'bg-white/10 hover:bg-white/20 text-white/80 border-white/20'

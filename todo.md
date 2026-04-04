@@ -9272,3 +9272,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix duplicate/contradictory Kai responses when PDF is uploaded (race condition)
 - [x] Let Kai handle non-student PDFs (programs, schedules) as general context documents
 - [x] Add smart filename detection to distinguish student rosters from other PDFs
+
+## AI Assistant Modal Missing (Current)
+- [ ] Investigate which AI assistant modal is missing and where it was rendered
+- [ ] Restore the missing AI assistant modal
+
+## Kai PDF Intelligent Routing (Current)
+- [x] Build server-side PDF text extraction endpoint (using pdf-parse or pdfjs-dist)
+- [x] When PDF is uploaded, automatically extract real PDF text and send to AI for classification
+- [x] AI analyzes content and determines document type (programs, students, schedules, invoices, etc.)
+- [x] Kai presents correct routing options based on actual content (e.g. "This looks like a programs list - import to Programs?")
+- [x] Fix the loop bug where Kai re-shows the upload acknowledgment after re-analysis
