@@ -1484,6 +1484,9 @@ export default function KaiCommand() {
   const parseStudentsMutation = trpc.kai.studentImport.parseStudentsFromDocument.useMutation();
   const bulkImportStudentsMutation = trpc.kai.studentImport.bulkImportStudents.useMutation();
 
+  // Document analysis mutation — intelligently classify any uploaded document
+  const analyzeDocumentMutation = trpc.kai.documentAnalysis.analyzeDocument.useMutation();
+
   // Student import state
   const [studentImportPreview, setStudentImportPreview] = useState<{
     students: Array<{
@@ -1903,12 +1906,20 @@ export default function KaiCommand() {
       const errorMessage: Message = {
         id: `doc-analysis-error-${Date.now()}`,
         role: 'assistant',
-        content: `I received **${fileName}** but couldn’t analyze it. You can still ask me questions about it or try importing it manually.`,
+        content: `I received **${fileName}** but had trouble reading it. What would you like to do with it?`,
         timestamp: new Date(),
         quickReplies: [
           {
-            label: '📊 Import students from this file',
+            label: '💬 Ask Kai about this document',
+            action: `ask_kai_about_doc:${fileUrl}|${fileType}|${fileName}|${storageKey || ''}`
+          },
+          {
+            label: '📊 Import as students',
             action: `import_students_from_pdf:${fileUrl}|${fileType}|${fileName}|${storageKey || ''}`
+          },
+          {
+            label: '📝 Import as programs',
+            action: `import_programs_from_pdf:${fileUrl}|${fileType}|${fileName}|${storageKey || ''}`
           }
         ]
       };
