@@ -15,14 +15,15 @@ export default function Reports({ onLogout, theme, toggleTheme }) {
 
   // Fetch actual data from database
   const { data: allClasses = [] } = trpc.classes.getAll.useQuery();
-  const { data: allStudents = [] } = trpc.students.getAll.useQuery();
+  const { data: allStudents = [] } = trpc.students.getAll.useQuery({ limit: 1000 });
   const { data: allPayments = [] } = trpc.payments.getAll.useQuery();
 
   // Calculate stats from real data
   useEffect(() => {
     if (allClasses.length > 0 || allStudents.length > 0 || allPayments.length > 0) {
       const totalRevenue = allPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-      const totalStudents = allStudents.length;
+      // Only count ACTIVE students - exclude inactive, on-hold, and test accounts
+      const totalStudents = allStudents.filter((s: any) => s.status === 'Active').length;
       
       // Calculate attendance rate from classes
       let totalAttendance = 0;

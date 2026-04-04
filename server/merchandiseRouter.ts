@@ -773,4 +773,44 @@ export const merchandiseRouter = router({
 
       return { success: true, ...result };
     }),
+
+  /**
+   * Delete a merchandise item
+   */
+  deleteItem: protectedProcedure
+    .input(z.object({ id: z.number().int() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not initialized" });
+      // Soft delete by setting isActive to 0
+      await db.update(merchandiseItems).set({ isActive: 0 }).where(eq(merchandiseItems.id, input.id));
+      return { success: true };
+    }),
+
+  /**
+   * Update a merchandise item
+   */
+  updateItem: protectedProcedure
+    .input(z.object({
+      id: z.number().int(),
+      name: z.string().min(1).optional(),
+      type: z.enum(["uniform", "gear", "belt", "equipment", "other"]).optional(),
+      defaultPrice: z.number().int().min(0).optional(),
+      requiresSize: z.boolean().optional(),
+      sizeOptions: z.array(z.string()).optional(),
+      description: z.string().optional(),
+      stockQuantity: z.number().int().min(0).optional(),
+      lowStockThreshold: z.number().int().min(0).optional(),
+      imageUrl: z.string().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not initialized" });
+      const { id, requiresSize, sizeOptions, ...rest } = input;
+      const updateData: any = { ...rest, updatedAt: new Date().toISOString() };
+      if (requiresSize !== undefined) updateData.requiresSize = requiresSize ? 1 : 0;
+      if (sizeOptions !== undefined) updateData.sizeOptions = JSON.stringify(sizeOptions);
+      await db.update(merchandiseItems).set(updateData).where(eq(merchandiseItems.id, id));
+      return { success: true };
+    }),
 });

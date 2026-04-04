@@ -9261,3 +9261,8 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Remove all references to other payment processors from backend code
 - [ ] Update payment knowledge base in Kai to reflect PCBancard Fluid Pay exclusively
 - [ ] Test Kai responses to ensure only PCBancard Fluid Pay is mentioned
+
+## Merchandise Section Fix
+- [ ] Add Merchandise modal shows "coming soon" placeholder - build full form with fields
+- [ ] Merchandise listing page needs to display products from database
+- [ ] Add edit and delete functionality for merchandise items
