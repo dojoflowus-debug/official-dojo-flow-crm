@@ -4341,7 +4341,7 @@ export default function KaiCommand() {
                           {message.quickReplies.map((qr) => (
                             <button
                               key={qr.action}
-                              onClick={() => {
+                              onClick={async () => {
                                 if (qr.action === 'open_schedule_import') {
                                   // Open the file picker pre-filtered to schedule files
                                   const input = document.createElement('input');
