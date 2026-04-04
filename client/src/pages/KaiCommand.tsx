@@ -1489,7 +1489,7 @@ export default function KaiCommand() {
   // Programs extraction mutation
   const extractProgramsMutation = trpc.kai.documentAnalysis.extractPrograms.useMutation();
   // Programs create mutation (called once per program during bulk import)
-  const createProgramMutation = trpc.programs.create.useMutation();
+  const createProgramMutation = trpc.kai.programs.create.useMutation();
 
   // Programs import state
   const [programImportPreview, setProgramImportPreview] = useState<{
@@ -4783,19 +4783,24 @@ export default function KaiCommand() {
                               const toImport = programImportPreview.programs.filter((_, i) => selectedProgramRows.has(i));
                               let imported = 0;
                               let failed = 0;
+                              const validTypes = ['membership', 'class_pack', 'drop_in', 'private'] as const;
+                              const validBillings = ['monthly', 'weekly', 'per_session', 'one_time'] as const;
                               for (const prog of toImport) {
                                 try {
+                                  const safeType = validTypes.includes(prog.type as any) ? (prog.type as typeof validTypes[number]) : 'membership';
+                                  const safeBilling = prog.billing && validBillings.includes(prog.billing as any) ? (prog.billing as typeof validBillings[number]) : undefined;
                                   await createProgramMutation.mutateAsync({
                                     name: prog.name,
-                                    type: (prog.type as any) || 'membership',
+                                    type: safeType,
                                     ageRange: prog.ageRange || undefined,
-                                    price: prog.price || undefined,
-                                    billing: (prog.billing as any) || undefined,
+                                    price: typeof prog.price === 'number' ? prog.price : undefined,
+                                    billing: safeBilling,
                                     description: prog.description || undefined,
-                                    maxSize: prog.maxSize || undefined,
+                                    maxSize: typeof prog.maxSize === 'number' ? prog.maxSize : undefined,
                                   });
                                   imported++;
-                                } catch {
+                                } catch (err: any) {
+                                  console.error('[programs import] Failed to create program:', prog.name, err?.message);
                                   failed++;
                                 }
                               }
