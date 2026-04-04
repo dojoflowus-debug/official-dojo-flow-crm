@@ -1579,15 +1579,19 @@ export default function KaiCommand() {
             file.name.endsWith('.xls') ||
             file.name.endsWith('.csv');
 
-          // Check if this is a student roster file (PDF or image)
+          // Check if this is a student roster file — only trigger auto-import if filename
+          // strongly suggests a student roster (not programs, schedules, or other docs)
+          const fileNameLower = file.name.toLowerCase();
           const isStudentRosterFile =
-            file.type === 'application/pdf' ||
-            file.name.endsWith('.pdf') ||
-            file.type.startsWith('image/') ||
-            file.name.endsWith('.jpg') ||
-            file.name.endsWith('.jpeg') ||
-            file.name.endsWith('.png') ||
-            file.name.endsWith('.webp');
+            (file.type === 'application/pdf' || file.name.endsWith('.pdf') ||
+             file.type.startsWith('image/') || file.name.endsWith('.jpg') ||
+             file.name.endsWith('.jpeg') || file.name.endsWith('.png') ||
+             file.name.endsWith('.webp')) &&
+            // Must have roster-related keywords in the filename
+            (fileNameLower.includes('student') || fileNameLower.includes('roster') ||
+             fileNameLower.includes('member') || fileNameLower.includes('enrollment') ||
+             fileNameLower.includes('enroll') || fileNameLower.includes('pupil') ||
+             fileNameLower.includes('athlete') || fileNameLower.includes('participant'));
           
           if (isScheduleFile) {
             // Auto-extract schedule from the file using storage key for reliable server-side reading
@@ -1595,6 +1599,25 @@ export default function KaiCommand() {
           } else if (isStudentRosterFile) {
             // Auto-parse student roster from PDF or image
             handleStudentDocumentImport(result.url, file.type, file.name, result.key);
+          } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+            // Generic PDF — let Kai acknowledge and invite questions with action buttons
+            const pdfAckMessage: Message = {
+              id: `pdf-ack-${Date.now()}`,
+              role: 'assistant',
+              content: `I've received **${file.name}**. What would you like me to do with it?`,
+              timestamp: new Date(),
+              quickReplies: [
+                {
+                  label: '📊 Import students from this file',
+                  action: `import_students_from_pdf:${result.url}|${file.type}|${file.name}|${result.key || ''}`
+                },
+                {
+                  label: '💬 Ask Kai about this document',
+                  action: 'dismiss_nudge'
+                }
+              ]
+            };
+            setMessages(prev => [...prev, pdfAckMessage]);
           }
         } catch (error: any) {
           console.error('Upload failed:', error);
@@ -1794,15 +1817,19 @@ export default function KaiCommand() {
             file.name.endsWith('.xls') ||
             file.name.endsWith('.csv');
 
-          // Check if this is a student roster file (PDF or image)
+          // Check if this is a student roster file — only trigger auto-import if filename
+          // strongly suggests a student roster (not programs, schedules, or other docs)
+          const fileNameLowerDrop = file.name.toLowerCase();
           const isStudentRosterFile =
-            file.type === 'application/pdf' ||
-            file.name.endsWith('.pdf') ||
-            file.type.startsWith('image/') ||
-            file.name.endsWith('.jpg') ||
-            file.name.endsWith('.jpeg') ||
-            file.name.endsWith('.png') ||
-            file.name.endsWith('.webp');
+            (file.type === 'application/pdf' || file.name.endsWith('.pdf') ||
+             file.type.startsWith('image/') || file.name.endsWith('.jpg') ||
+             file.name.endsWith('.jpeg') || file.name.endsWith('.png') ||
+             file.name.endsWith('.webp')) &&
+            // Must have roster-related keywords in the filename
+            (fileNameLowerDrop.includes('student') || fileNameLowerDrop.includes('roster') ||
+             fileNameLowerDrop.includes('member') || fileNameLowerDrop.includes('enrollment') ||
+             fileNameLowerDrop.includes('enroll') || fileNameLowerDrop.includes('pupil') ||
+             fileNameLowerDrop.includes('athlete') || fileNameLowerDrop.includes('participant'));
           
           if (isScheduleFile) {
             // Auto-extract schedule from the file using storage key for reliable server-side reading
@@ -1810,6 +1837,25 @@ export default function KaiCommand() {
           } else if (isStudentRosterFile) {
             // Auto-parse student roster from PDF or image
             handleStudentDocumentImport(result.url, file.type, file.name, result.key);
+          } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+            // Generic PDF — let Kai acknowledge and invite questions with action buttons
+            const pdfAckMessage: Message = {
+              id: `pdf-ack-${Date.now()}`,
+              role: 'assistant',
+              content: `I've received **${file.name}**. What would you like me to do with it?`,
+              timestamp: new Date(),
+              quickReplies: [
+                {
+                  label: '📊 Import students from this file',
+                  action: `import_students_from_pdf:${result.url}|${file.type}|${file.name}|${result.key || ''}`
+                },
+                {
+                  label: '💬 Ask Kai about this document',
+                  action: 'dismiss_nudge'
+                }
+              ]
+            };
+            setMessages(prev => [...prev, pdfAckMessage]);
           }
         } catch (error: any) {
           console.error('Upload failed:', error);
@@ -4303,13 +4349,22 @@ export default function KaiCommand() {
                                   setMessages(prev => [...prev, {
                                     id: `skip-ack-${Date.now()}`,
                                     role: 'assistant',
-                                    content: 'No problem! You can set up your class schedule anytime by dropping a file into the chat bar or visiting the **Classes** page.',
+                                    content: 'Got it! The file is attached to this conversation. Go ahead and ask me anything about it — I can read it and answer your questions.',
                                     timestamp: new Date(),
                                   }]);
+                                } else if (qr.action.startsWith('import_students_from_pdf:')) {
+                                  // Import students from a specific PDF that was already uploaded
+                                  const pdfData = qr.action.replace('import_students_from_pdf:', '');
+                                  const [fileUrl, fileType, fileName, storageKey] = pdfData.split('|');
+                                  // Remove quick replies from this message
+                                  setMessages(prev => prev.map(m =>
+                                    m.id === message.id ? { ...m, quickReplies: [] } : m
+                                  ));
+                                  handleStudentDocumentImport(fileUrl, fileType, fileName, storageKey);
                                 }
                               }}
                               className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${
-                                qr.action === 'open_schedule_import'
+                                qr.action === 'open_schedule_import' || qr.action.startsWith('import_students_from_pdf:')
                                   ? 'bg-red-600 hover:bg-red-700 text-white border-red-600'
                                   : isDark || isCinematic
                                     ? 'bg-white/10 hover:bg-white/20 text-white/80 border-white/20'

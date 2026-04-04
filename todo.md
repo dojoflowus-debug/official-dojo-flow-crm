@@ -9266,3 +9266,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Add Merchandise modal shows "coming soon" placeholder - build full form with fields
 - [ ] Merchandise listing page needs to display products from database
 - [ ] Add edit and delete functionality for merchandise items
+
+## PDF Upload Bug Fix (Current)
+- [x] Fix auto-triggering student import for ALL PDFs - only trigger for student roster files
+- [x] Fix duplicate/contradictory Kai responses when PDF is uploaded (race condition)
+- [x] Let Kai handle non-student PDFs (programs, schedules) as general context documents
+- [x] Add smart filename detection to distinguish student rosters from other PDFs
