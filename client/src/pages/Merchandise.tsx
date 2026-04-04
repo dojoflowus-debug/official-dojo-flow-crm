@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Edit2, Trash2, Image as ImageIcon, Package, X, ChevronDown } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Image as ImageIcon, Package, X, ChevronDown, Upload, Loader2 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -51,6 +51,10 @@ export default function Merchandise() {
   const [form, setForm] = useState<FormState>(defaultForm);
   const [sizeInput, setSizeInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imageDragOver, setImageDragOver] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const uploadAttachment = trpc.upload.uploadAttachment.useMutation();
 
   const utils = trpc.useUtils();
 
@@ -390,15 +394,106 @@ export default function Merchandise() {
                 </div>
               </div>
 
-              {/* Image URL */}
+              {/* Product Photo Upload */}
               <div>
-                <label className={labelCls}>Image URL</label>
-                <Input
-                  value={form.imageUrl}
-                  onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
-                  placeholder="https://..."
-                  className={inputCls}
+                <label className={labelCls}>Product Photo</label>
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setIsUploadingImage(true);
+                    try {
+                      const reader = new FileReader();
+                      reader.onload = async (ev) => {
+                        const dataUrl = ev.target?.result as string;
+                        const result = await uploadAttachment.mutateAsync({
+                          fileName: file.name,
+                          fileData: dataUrl,
+                          fileType: file.type,
+                          fileSize: file.size,
+                          context: 'general',
+                        });
+                        setForm((f) => ({ ...f, imageUrl: result.url }));
+                        setIsUploadingImage(false);
+                        toast.success('Photo uploaded');
+                      };
+                      reader.readAsDataURL(file);
+                    } catch {
+                      setIsUploadingImage(false);
+                      toast.error('Failed to upload photo');
+                    }
+                  }}
                 />
+                {form.imageUrl ? (
+                  <div className={`relative rounded-lg overflow-hidden border ${isDark ? 'border-white/10' : 'border-gray-200'}`} style={{ height: 140 }}>
+                    <img src={form.imageUrl} alt="Product" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, imageUrl: '' }))}
+                      className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => imageInputRef.current?.click()}
+                      className="absolute bottom-2 right-2 bg-black/60 hover:bg-black/80 text-white text-xs rounded-md px-2 py-1 transition-colors flex items-center gap-1"
+                    >
+                      <Upload className="w-3 h-3" /> Change
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => imageInputRef.current?.click()}
+                    onDragOver={(e) => { e.preventDefault(); setImageDragOver(true); }}
+                    onDragLeave={() => setImageDragOver(false)}
+                    onDrop={async (e) => {
+                      e.preventDefault();
+                      setImageDragOver(false);
+                      const file = e.dataTransfer.files?.[0];
+                      if (!file || !file.type.startsWith('image/')) return;
+                      setIsUploadingImage(true);
+                      try {
+                        const reader = new FileReader();
+                        reader.onload = async (ev) => {
+                          const dataUrl = ev.target?.result as string;
+                          const result = await uploadAttachment.mutateAsync({
+                            fileName: file.name,
+                            fileData: dataUrl,
+                            fileType: file.type,
+                            fileSize: file.size,
+                            context: 'general',
+                          });
+                          setForm((f) => ({ ...f, imageUrl: result.url }));
+                          setIsUploadingImage(false);
+                          toast.success('Photo uploaded');
+                        };
+                        reader.readAsDataURL(file);
+                      } catch {
+                        setIsUploadingImage(false);
+                        toast.error('Failed to upload photo');
+                      }
+                    }}
+                    className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed cursor-pointer transition-colors ${
+                      imageDragOver
+                        ? 'border-red-400 bg-red-50/10'
+                        : isDark ? 'border-white/20 hover:border-white/40 bg-white/5' : 'border-gray-300 hover:border-gray-400 bg-gray-50'
+                    }`}
+                    style={{ height: 110 }}
+                  >
+                    {isUploadingImage ? (
+                      <><Loader2 className="w-6 h-6 animate-spin text-red-500" /><span className="text-xs text-gray-400">Uploading...</span></>
+                    ) : (
+                      <><ImageIcon className={`w-7 h-7 ${isDark ? 'text-white/30' : 'text-gray-400'}`} />
+                      <span className={`text-xs font-medium ${isDark ? 'text-white/50' : 'text-gray-500'}`}>Click to upload or drag &amp; drop</span>
+                      <span className={`text-xs ${isDark ? 'text-white/30' : 'text-gray-400'}`}>PNG, JPG, WEBP up to 10MB</span></>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Requires Size */}

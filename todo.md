@@ -9283,3 +9283,8 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] AI analyzes content and determines document type (programs, students, schedules, invoices, etc.)
 - [x] Kai presents correct routing options based on actual content (e.g. "This looks like a programs list - import to Programs?")
 - [x] Fix the loop bug where Kai re-shows the upload acknowledgment after re-analysis
+
+## Merchandise Photo Upload (Current)
+- [x] Replace "Image URL" text field in Add/Edit Merchandise modal with a file upload widget
+- [x] Support click-to-browse and drag-and-drop photo upload
+- [x] Upload image to S3 and store the CDN URL in the database
