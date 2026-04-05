@@ -2036,3 +2036,22 @@ export const creativeMemory = mysqlTable("creative_memory", {
   index("idx_creative_memory_user").on(table.userId),
   index("idx_creative_memory_style").on(table.orgId, table.preferredStyle),
 ]);
+
+// ─── Payment Reminder History ─────────────────────────────────────────────────
+// Tracks every payment reminder sent to a student for audit and deduplication
+export const paymentReminders = mysqlTable("payment_reminders", {
+  id: int().autoincrement().notNull().primaryKey(),
+  orgId: int("org_id").notNull(),
+  studentId: int("student_id").notNull(),
+  method: mysqlEnum("method", ["sms", "email", "both"]).notNull(),
+  smsStatus: varchar("sms_status", { length: 100 }),
+  emailStatus: varchar("email_status", { length: 100 }),
+  messagePreview: text("message_preview"),
+  sentAt: timestamp("sent_at", { mode: "string" }).defaultNow().notNull(),
+  sentByUserId: int("sent_by_user_id"),
+},
+(table) => [
+  index("idx_payment_reminders_org").on(table.orgId),
+  index("idx_payment_reminders_student").on(table.studentId),
+  index("idx_payment_reminders_sent_at").on(table.orgId, table.sentAt),
+]);

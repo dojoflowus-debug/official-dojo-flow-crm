@@ -7335,7 +7335,52 @@ Membership plans available:
           }
         }
 
+        // ─── Record reminder in history log ──────────────────────────────
+        try {
+          const { paymentReminders } = await import('../drizzle/schema');
+          await dbInner.insert(paymentReminders).values({
+            orgId,
+            studentId: input.studentId,
+            method: input.method,
+            smsStatus: results.sms ?? null,
+            emailStatus: results.email ?? null,
+            messagePreview: message.slice(0, 500),
+            sentByUserId: ctx.userId ?? null,
+          });
+        } catch (_logErr) {
+          // Non-fatal: log failure should not block the response
+        }
         return { success: true, results, studentName, totalOwedCents };
+      }),
+
+    // ─── Get most recent reminder per student ────────────────────────────
+    getReminderHistory: protectedProcedure
+      .input(z.object({
+        studentIds: z.array(z.number()).optional(),
+      }))
+      .query(async ({ ctx, input }) => {
+        const orgId = ctx.currentOrganizationId;
+        const { paymentReminders } = await import('../drizzle/schema');
+        const { getDb: getDbInner } = await import('./db');
+        const { eq: eqInner, and: andInner, inArray, desc } = await import('drizzle-orm');
+        const dbInner = await getDbInner();
+        if (!dbInner) return [];
+        let rows;
+        if (input?.studentIds && input.studentIds.length > 0) {
+          rows = await dbInner.select().from(paymentReminders)
+            .where(andInner(eqInner(paymentReminders.orgId, orgId), inArray(paymentReminders.studentId, input.studentIds)))
+            .orderBy(desc(paymentReminders.sentAt));
+        } else {
+          rows = await dbInner.select().from(paymentReminders)
+            .where(eqInner(paymentReminders.orgId, orgId))
+            .orderBy(desc(paymentReminders.sentAt));
+        }
+        // Return the most recent reminder per student
+        const byStudent: Record<number, typeof rows[0]> = {};
+        for (const row of rows) {
+          if (!byStudent[row.studentId]) byStudent[row.studentId] = row;
+        }
+        return Object.values(byStudent);
       }),
   }),
 });

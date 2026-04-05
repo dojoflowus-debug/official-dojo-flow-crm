@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import ManagementLayout from '@/components/ManagementLayout';
 import { Download, TrendingUp, TrendingDown, Users, DollarSign, Calendar, AlertTriangle, Award, BarChart3, Activity, CheckCircle, XCircle, Minus } from 'lucide-react';
 import { useDarkMode } from '@/hooks/useDarkMode';
@@ -109,6 +109,8 @@ export default function Reports({ onLogout, theme, toggleTheme }: any) {
       if (data.results.sms) parts.push(`SMS: ${data.results.sms}`);
       if (data.results.email) parts.push(`Email: ${data.results.email}`);
       setReminderResult({ success: true, message: `Reminder sent to ${data.studentName}. ${parts.join(' | ')}` });
+      // Refresh history so the badge updates immediately
+      refetchHistory();
     },
     onError: (err) => {
       setReminderResult({ success: false, message: err.message });
@@ -140,6 +142,23 @@ export default function Reports({ onLogout, theme, toggleTheme }: any) {
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000,
   });
+
+  // Reminder history: most recent reminder per student
+  const delinquentIds = (report as any)?.delinquentAccounts?.map((a: any) => a.studentId) ?? [];
+  const { data: reminderHistory, refetch: refetchHistory } = trpc.reports.getReminderHistory.useQuery(
+    { studentIds: delinquentIds },
+    { enabled: delinquentIds.length > 0, refetchOnWindowFocus: false }
+  );
+  // Map studentId -> most recent sentAt string
+  const lastReminderMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    if (reminderHistory) {
+      for (const entry of reminderHistory as any[]) {
+        map[entry.studentId] = entry.sentAt;
+      }
+    }
+    return map;
+  }, [reminderHistory]);
 
   const cardBg = isDark ? 'bg-[#27272A] border-white/10' : 'bg-white border-gray-200';
   const textClass = isDark ? 'text-white' : 'text-gray-900';
@@ -366,7 +385,7 @@ export default function Reports({ onLogout, theme, toggleTheme }: any) {
               <table className="w-full">
                 <thead className={tableHeader}>
                   <tr>
-                    {['Student', 'Email', 'Amount Owed', 'Action'].map(h => (
+                    {['Student', 'Email', 'Amount Owed', 'Last Reminded', 'Action'].map(h => (
                       <th key={h} className={`px-5 py-3 text-left text-xs font-medium uppercase tracking-wide ${subClass}`}>{h}</th>
                     ))}
                   </tr>
@@ -378,6 +397,18 @@ export default function Reports({ onLogout, theme, toggleTheme }: any) {
                       <td className={`px-5 py-3 text-sm ${subClass}`}>{acct.email || '—'}</td>
                       <td className="px-5 py-3">
                         <span className="text-sm font-semibold text-red-500">{fmt$(acct.amountOwed)}</span>
+                      </td>
+                      <td className="px-5 py-3">
+                        {lastReminderMap[acct.studentId] ? (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-xs font-semibold text-amber-500">Reminded</span>
+                            <span className={`text-xs ${subClass}`}>
+                              {new Date(lastReminderMap[acct.studentId]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className={`text-xs ${subClass} italic`}>Never</span>
+                        )}
                       </td>
                       <td className="px-5 py-3">
                         <button
