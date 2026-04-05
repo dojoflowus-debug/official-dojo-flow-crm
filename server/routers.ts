@@ -2590,19 +2590,26 @@ export const appRouter = router({
           throw new Error('Photo is too large. Maximum size is 2MB. Please use a smaller image or reduce quality.');
         }
         
-        // Create data URL from base64 data
         // Use image/jpeg for HEIC/HEIF since the frontend converts them to JPEG
         const effectiveMimeType = input.mimeType.includes('heic') || input.mimeType.includes('heif') 
           ? 'image/jpeg' 
           : input.mimeType;
-        const dataUrl = `data:${effectiveMimeType};base64,${input.base64Data}`;
+        const extension = effectiveMimeType.split('/')[1] || 'jpg';
         
-        // Update student record with data URL
-        await db.update(students).set({ photoUrl: dataUrl }).where(eq(students.id, input.studentId));
+        // Upload to S3 (CDN) instead of storing base64 in DB
+        const { storagePut } = await import('./storage');
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        const fileKey = `student-photos/${orgId}/${input.studentId}-${timestamp}-${randomSuffix}.${extension}`;
+        const buffer = Buffer.from(input.base64Data, 'base64');
+        const { url } = await storagePut(fileKey, buffer, effectiveMimeType);
         
-        console.log(`[Photo Upload] Student ${input.studentId}: Photo saved as data URL (${Math.round(estimatedSize / 1024)}KB)`);
+        // Update student record with CDN URL
+        await db.update(students).set({ photoUrl: url }).where(eq(students.id, input.studentId));
         
-        return { success: true, url: dataUrl, photoUrl: dataUrl };
+        console.log(`[Photo Upload] Student ${input.studentId}: Photo uploaded to S3 (${Math.round(estimatedSize / 1024)}KB) -> ${url}`);
+        
+        return { success: true, url, photoUrl: url };
       }),
     
     // Remove photo from student (revert to initials)

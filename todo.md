@@ -9311,3 +9311,6 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Build client-side reminder modal with SMS/email options and message preview
 - [ ] Wire up Send Reminder button on Delinquent Accounts tab
 - [ ] Show success/failure feedback after sending
+
+- [x] Add real mock portrait photos to test students in the database
+- [x] Fix student photo upload feature - fixed varchar(500) column to TEXT, uploadPhotoToStudent now uses S3
