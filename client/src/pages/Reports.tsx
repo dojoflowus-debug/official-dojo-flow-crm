@@ -97,6 +97,45 @@ export default function Reports({ onLogout, theme, toggleTheme }: any) {
   const isDark = useDarkMode();
   const [activeTab, setActiveTab] = useState<'overview' | 'delinquent' | 'programs' | 'attendance'>('overview');
 
+  // Reminder modal state
+  const [reminderModal, setReminderModal] = useState<{ studentId: number; name: string; email: string | null; phone: string | null; amountOwed: number } | null>(null);
+  const [reminderMethod, setReminderMethod] = useState<'sms' | 'email' | 'both'>('email');
+  const [customMessage, setCustomMessage] = useState('');
+  const [reminderResult, setReminderResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  const sendReminderMutation = trpc.reports.sendPaymentReminder.useMutation({
+    onSuccess: (data) => {
+      const parts: string[] = [];
+      if (data.results.sms) parts.push(`SMS: ${data.results.sms}`);
+      if (data.results.email) parts.push(`Email: ${data.results.email}`);
+      setReminderResult({ success: true, message: `Reminder sent to ${data.studentName}. ${parts.join(' | ')}` });
+    },
+    onError: (err) => {
+      setReminderResult({ success: false, message: err.message });
+    },
+  });
+
+  const openReminderModal = (acct: any) => {
+    setReminderModal({ studentId: acct.studentId, name: acct.name, email: acct.email, phone: acct.phone, amountOwed: acct.amountOwed });
+    setReminderMethod('email');
+    setCustomMessage('');
+    setReminderResult(null);
+  };
+
+  const closeReminderModal = () => {
+    setReminderModal(null);
+    setReminderResult(null);
+  };
+
+  const handleSendReminder = () => {
+    if (!reminderModal) return;
+    sendReminderMutation.mutate({
+      studentId: reminderModal.studentId,
+      method: reminderMethod,
+      customMessage: customMessage.trim() || undefined,
+    });
+  };
+
   const { data: report, isLoading } = trpc.reports.getDashboard.useQuery(undefined, {
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000,
@@ -341,7 +380,12 @@ export default function Reports({ onLogout, theme, toggleTheme }: any) {
                         <span className="text-sm font-semibold text-red-500">{fmt$(acct.amountOwed)}</span>
                       </td>
                       <td className="px-5 py-3">
-                        <button className="text-xs text-[#C8102E] hover:underline font-medium">Send Reminder</button>
+                        <button
+                          onClick={() => openReminderModal(acct)}
+                          className="text-xs bg-[#C8102E] hover:bg-[#a50d26] text-white px-3 py-1.5 rounded-md font-medium transition-colors"
+                        >
+                          Send Reminder
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -493,6 +537,101 @@ export default function Reports({ onLogout, theme, toggleTheme }: any) {
           </div>
         )}
       </div>
+
+      {/* Send Payment Reminder Modal */}
+      {reminderModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
+          <div className={`${isDark ? 'bg-[#1F1F23] border-white/10' : 'bg-white border-gray-200'} border rounded-2xl w-full max-w-md shadow-2xl`}>
+            {/* Modal Header */}
+            <div className={`px-6 py-4 border-b ${isDark ? 'border-white/10' : 'border-gray-100'} flex items-center justify-between`}>
+              <div>
+                <h3 className={`text-base font-semibold ${textClass}`}>Send Payment Reminder</h3>
+                <p className={`text-xs ${subClass} mt-0.5`}>{reminderModal.name} · {fmt$(reminderModal.amountOwed)} owed</p>
+              </div>
+              <button onClick={closeReminderModal} className={`${subClass} hover:${textClass} text-xl leading-none`}>×</button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-6 py-5 space-y-4">
+              {reminderResult ? (
+                <div className={`rounded-lg p-4 flex items-start gap-3 ${reminderResult.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                  <span className="text-lg">{reminderResult.success ? '✅' : '❌'}</span>
+                  <p className="text-sm">{reminderResult.message}</p>
+                </div>
+              ) : (
+                <>
+                  {/* Contact info */}
+                  <div className={`rounded-lg p-3 ${isDark ? 'bg-white/5' : 'bg-gray-50'} space-y-1`}>
+                    <div className="flex justify-between text-xs">
+                      <span className={subClass}>Email</span>
+                      <span className={reminderModal.email ? textClass : 'text-red-400'}>{reminderModal.email || 'Not on file'}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className={subClass}>Phone</span>
+                      <span className={reminderModal.phone ? textClass : 'text-red-400'}>{reminderModal.phone || 'Not on file'}</span>
+                    </div>
+                  </div>
+
+                  {/* Method selector */}
+                  <div>
+                    <label className={`text-xs font-medium ${subClass} block mb-2`}>Send via</label>
+                    <div className="flex gap-2">
+                      {(['email', 'sms', 'both'] as const).map(m => (
+                        <button
+                          key={m}
+                          onClick={() => setReminderMethod(m)}
+                          className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                            reminderMethod === m
+                              ? 'bg-[#C8102E] text-white border-[#C8102E]'
+                              : isDark ? 'border-white/10 text-gray-400 hover:text-white' : 'border-gray-200 text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          {m === 'email' ? '✉️ Email' : m === 'sms' ? '💬 SMS' : '📨 Both'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom message */}
+                  <div>
+                    <label className={`text-xs font-medium ${subClass} block mb-2`}>Message (optional — leave blank for default)</label>
+                    <textarea
+                      value={customMessage}
+                      onChange={e => setCustomMessage(e.target.value)}
+                      placeholder={`Hi ${reminderModal.name}, this is a friendly reminder that you have an outstanding balance of ${fmt$(reminderModal.amountOwed)}...`}
+                      rows={4}
+                      className={`w-full text-sm rounded-lg border px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#C8102E] ${
+                        isDark ? 'bg-white/5 border-white/10 text-white placeholder-gray-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'
+                      }`}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className={`px-6 py-4 border-t ${isDark ? 'border-white/10' : 'border-gray-100'} flex gap-3`}>
+              <button
+                onClick={closeReminderModal}
+                className={`flex-1 py-2 text-sm rounded-lg border font-medium transition-colors ${
+                  isDark ? 'border-white/10 text-gray-400 hover:text-white' : 'border-gray-200 text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {reminderResult ? 'Close' : 'Cancel'}
+              </button>
+              {!reminderResult && (
+                <button
+                  onClick={handleSendReminder}
+                  disabled={sendReminderMutation.isPending}
+                  className="flex-1 py-2 text-sm rounded-lg bg-[#C8102E] hover:bg-[#a50d26] text-white font-medium transition-colors disabled:opacity-50"
+                >
+                  {sendReminderMutation.isPending ? 'Sending...' : 'Send Reminder'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </ManagementLayout>
   );
 }

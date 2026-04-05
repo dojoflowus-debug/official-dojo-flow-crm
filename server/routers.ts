@@ -7268,6 +7268,75 @@ Membership plans available:
           monthlyRevenueTrend,
         };
       }),
+
+    sendPaymentReminder: protectedProcedure
+      .input(z.object({
+        studentId: z.number(),
+        method: z.enum(['sms', 'email', 'both']),
+        customMessage: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const orgId = ctx.currentOrganizationId;
+        const { students: studentsTable, studentTuition } = await import('../drizzle/schema');
+        const { getDb: getDbInner } = await import('./db');
+        const { eq: eqInner, and: andInner, or: orInner } = await import('drizzle-orm');
+        const dbInner = await getDbInner();
+        if (!dbInner) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+
+        // Get student info
+        const studentRows = await dbInner.select().from(studentsTable)
+          .where(andInner(eqInner(studentsTable.id, input.studentId), eqInner(studentsTable.organizationId, orgId)))
+          .limit(1);
+        if (!studentRows[0]) throw new TRPCError({ code: 'NOT_FOUND', message: 'Student not found' });
+        const s = studentRows[0];
+
+        // Get outstanding tuition amount
+        const tuitionRows = await dbInner.select().from(studentTuition)
+          .where(andInner(
+            eqInner(studentTuition.studentId, input.studentId),
+            orInner(eqInner(studentTuition.status, 'pending'), eqInner(studentTuition.status, 'overdue'))
+          ));
+        const totalOwedCents = tuitionRows.reduce((sum, t) => sum + (t.amount || 0), 0);
+        const fmt$ = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+
+        const studentName = [s.firstName, s.lastName].filter(Boolean).join(' ') || 'Student';
+        const defaultMsg = `Hi ${studentName}, this is a friendly reminder that you have an outstanding balance of ${fmt$(totalOwedCents)} with your dojo. Please contact us to arrange payment. Thank you!`;
+        const message = input.customMessage || defaultMsg;
+        const subject = `Payment Reminder — Outstanding Balance of ${fmt$(totalOwedCents)}`;
+
+        const results: { sms?: string; email?: string } = {};
+
+        if (input.method === 'sms' || input.method === 'both') {
+          if (s.phone) {
+            try {
+              const { sendSMS } = await import('./services/twilio.js');
+              await sendSMS(s.phone, message);
+              results.sms = 'sent';
+            } catch (e: any) {
+              results.sms = `failed: ${e.message}`;
+            }
+          } else {
+            results.sms = 'no phone on file';
+          }
+        }
+
+        if (input.method === 'email' || input.method === 'both') {
+          if (s.email) {
+            try {
+              const { sendEmail } = await import('./services/sendgrid.js');
+              const html = `<div style="font-family:sans-serif;max-width:600px;margin:auto;padding:24px"><h2 style="color:#C8102E">Payment Reminder</h2><p>Hi <strong>${studentName}</strong>,</p><p>${message}</p><p style="font-size:12px;color:#888">This message was sent by your dojo via DojoFlow.</p></div>`;
+              await sendEmail(s.email, subject, html, message);
+              results.email = 'sent';
+            } catch (e: any) {
+              results.email = `failed: ${e.message}`;
+            }
+          } else {
+            results.email = 'no email on file';
+          }
+        }
+
+        return { success: true, results, studentName, totalOwedCents };
+      }),
   }),
 });
 

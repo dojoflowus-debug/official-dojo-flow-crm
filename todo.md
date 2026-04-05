@@ -9305,3 +9305,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Add class/program performance section (most popular, underperforming)
 - [ ] Add student attendance chart (last 30 days + since beginning of use)
 - [ ] Add revenue trend chart over time
+
+## Send Payment Reminder - Delinquent Accounts (Current)
+- [ ] Build server-side sendPaymentReminder endpoint (SMS + email)
+- [ ] Build client-side reminder modal with SMS/email options and message preview
+- [ ] Wire up Send Reminder button on Delinquent Accounts tab
+- [ ] Show success/failure feedback after sending
