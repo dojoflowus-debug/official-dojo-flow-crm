@@ -9295,3 +9295,6 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Build merchandise import preview card in KaiCommand.tsx
 - [x] Wire up import_merchandise action to call extractMerchandise and show preview
 - [x] Save extracted items to merchandise table via trpc.merchandise.createItem
+
+## View Merchandise Link After Import (Current)
+- [x] Add "View Merchandise" link to Kai confirmation message after merchandise import completes

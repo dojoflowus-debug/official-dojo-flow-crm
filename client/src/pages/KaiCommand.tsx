@@ -4402,7 +4402,10 @@ export default function KaiCommand() {
                             <button
                               key={qr.action}
                               onClick={async () => {
-                                if (qr.action === 'open_schedule_import') {
+                                if (qr.action.startsWith('navigate:')) {
+                                  const path = qr.action.replace('navigate:', '');
+                                  navigate(path);
+                                } else if (qr.action === 'open_schedule_import') {
                                   // Open the file picker pre-filtered to schedule files
                                   const input = document.createElement('input');
                                   input.type = 'file';
@@ -5034,9 +5037,14 @@ export default function KaiCommand() {
                                 id: `merch-import-done-${Date.now()}`,
                                 role: 'assistant',
                                 content: failed === 0
-                                  ? `Imported **${imported} item${imported !== 1 ? 's' : ''}** to Merchandise successfully.`
+                                  ? `Imported **${imported} item${imported !== 1 ? 's' : ''}** to Merchandise successfully. Head over to the Merchandise page to review them.`
                                   : `Imported **${imported}** item${imported !== 1 ? 's' : ''} with **${failed}** error${failed !== 1 ? 's' : ''}. Check the Merchandise page for details.`,
-                                timestamp: new Date()
+                                timestamp: new Date(),
+                                quickReplies: failed === 0 ? [
+                                  { label: '🛍️ View Merchandise', action: 'navigate:/merchandise' }
+                                ] : [
+                                  { label: '🛍️ View Merchandise', action: 'navigate:/merchandise' }
+                                ]
                               }]);
                             }}
                             className="px-4 py-1.5 text-xs rounded-lg bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium transition-colors flex items-center gap-1.5"
