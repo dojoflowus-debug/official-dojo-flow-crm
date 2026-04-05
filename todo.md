@@ -9298,3 +9298,10 @@ Transform kiosk from admin dashboard to premium location experience
 
 ## View Merchandise Link After Import (Current)
 - [x] Add "View Merchandise" link to Kai confirmation message after merchandise import completes
+
+## Reports Dashboard (Current)
+- [ ] Add server-side endpoints for: money collected, delinquent accounts, most popular class, most popular program, underperforming program, student attendance last 30 days
+- [ ] Build Reports dashboard UI with financial stat cards (money collected, delinquent accounts)
+- [ ] Add class/program performance section (most popular, underperforming)
+- [ ] Add student attendance chart (last 30 days + since beginning of use)
+- [ ] Add revenue trend chart over time

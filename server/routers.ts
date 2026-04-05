@@ -7167,6 +7167,108 @@ Membership plans available:
       }),
   }),
   }),
+  reports: router({
+    getDashboard: protectedProcedure
+      .query(async ({ ctx }) => {
+        const orgId = ctx.currentOrganizationId;
+        const { students: studentsTable, studentTuition, studentAttendance, programEnrollments: programEnrollmentsTable, programs: programsTable, classes: classesTable } = await import('../drizzle/schema');
+        const { getDb } = await import('./db');
+        const { eq, and, gte, lte, lt, sql, desc, count, sum, or } = await import('drizzle-orm');
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+        // Money collected - all time
+        const paidAll = await db.select({ total: sum(studentTuition.amount) }).from(studentTuition).where(eq(studentTuition.status, 'paid'));
+        const moneyCollectedTotal = Number(paidAll[0]?.total || 0);
+
+        // Money collected - this month
+        const paidThisMonth = await db.select({ total: sum(studentTuition.amount) }).from(studentTuition).where(and(eq(studentTuition.status, 'paid'), gte(studentTuition.paidDate, thisMonthStart.toISOString())));
+        const moneyCollectedThisMonth = Number(paidThisMonth[0]?.total || 0);
+
+        // Money collected - last month
+        const paidLastMonth = await db.select({ total: sum(studentTuition.amount) }).from(studentTuition).where(and(eq(studentTuition.status, 'paid'), gte(studentTuition.paidDate, lastMonthStart.toISOString()), lte(studentTuition.paidDate, lastMonthEnd.toISOString())));
+        const moneyCollectedLastMonth = Number(paidLastMonth[0]?.total || 0);
+
+        // Delinquent accounts (overdue or past-due pending)
+        const delinquentRows = await db.select({ studentId: studentTuition.studentId, totalOwed: sum(studentTuition.amount) }).from(studentTuition).where(or(eq(studentTuition.status, 'overdue'), and(eq(studentTuition.status, 'pending'), lt(studentTuition.dueDate, now.toISOString())))).groupBy(studentTuition.studentId);
+        const delinquentWithNames = await Promise.all(delinquentRows.slice(0, 20).map(async (d) => {
+          const s = await db.select({ firstName: studentsTable.firstName, lastName: studentsTable.lastName, email: studentsTable.email }).from(studentsTable).where(eq(studentsTable.id, d.studentId)).limit(1);
+          return { studentId: d.studentId, name: s[0] ? `${s[0].firstName} ${s[0].lastName}` : 'Unknown', email: s[0]?.email || '', amountOwed: Number(d.totalOwed || 0) };
+        }));
+
+        // Attendance last 30 days
+        const attendanceLast30 = await db.select({ date: sql<string>`DATE(${studentAttendance.classDate})`, attended: sql<number>`SUM(CASE WHEN ${studentAttendance.status} = 'attended' THEN 1 ELSE 0 END)`, missed: sql<number>`SUM(CASE WHEN ${studentAttendance.status} = 'missed' THEN 1 ELSE 0 END)` }).from(studentAttendance).where(gte(studentAttendance.classDate, thirtyDaysAgo.toISOString())).groupBy(sql`DATE(${studentAttendance.classDate})`).orderBy(sql`DATE(${studentAttendance.classDate})`);
+        const totalAttended30 = attendanceLast30.reduce((s, r) => s + Number(r.attended || 0), 0);
+        const totalMissed30 = attendanceLast30.reduce((s, r) => s + Number(r.missed || 0), 0);
+        const attendanceRate30 = totalAttended30 + totalMissed30 > 0 ? Math.round((totalAttended30 / (totalAttended30 + totalMissed30)) * 100) : 0;
+
+        // All-time attendance
+        const allTimeAtt = await db.select({ attended: sql<number>`SUM(CASE WHEN ${studentAttendance.status} = 'attended' THEN 1 ELSE 0 END)`, missed: sql<number>`SUM(CASE WHEN ${studentAttendance.status} = 'missed' THEN 1 ELSE 0 END)` }).from(studentAttendance);
+        const attendanceRateAllTime = (Number(allTimeAtt[0]?.attended || 0) + Number(allTimeAtt[0]?.missed || 0)) > 0 ? Math.round((Number(allTimeAtt[0]?.attended || 0) / (Number(allTimeAtt[0]?.attended || 0) + Number(allTimeAtt[0]?.missed || 0))) * 100) : 0;
+
+        // Most/least popular classes
+        const classAtt = await db.select({ classId: studentAttendance.classId, className: studentAttendance.className, attendanceCount: count() }).from(studentAttendance).where(eq(studentAttendance.status, 'attended')).groupBy(studentAttendance.classId, studentAttendance.className).orderBy(desc(count()));
+        const mostPopularClass = classAtt[0] || null;
+        const leastPopularClass = classAtt.length > 1 ? classAtt[classAtt.length - 1] : null;
+
+        // Program enrollments
+        const progEnroll = await db.select({ programId: programEnrollmentsTable.programId, enrollmentCount: count() }).from(programEnrollmentsTable).where(eq(programEnrollmentsTable.status, 'active')).groupBy(programEnrollmentsTable.programId).orderBy(desc(count()));
+        const progWithNames = await Promise.all(progEnroll.map(async (pe) => {
+          const prog = await db.select({ name: programsTable.name, type: programsTable.type, maxSize: programsTable.maxSize }).from(programsTable).where(eq(programsTable.id, pe.programId)).limit(1);
+          const cnt = Number(pe.enrollmentCount);
+          const maxSz = prog[0]?.maxSize || 20;
+          return { programId: pe.programId, name: prog[0]?.name || `Program #${pe.programId}`, type: prog[0]?.type || 'unknown', maxSize: maxSz, enrollmentCount: cnt, fillRate: Math.round((cnt / maxSz) * 100) };
+        }));
+        const mostPopularProgram = progWithNames[0] || null;
+        const underperformingPrograms = progWithNames.filter(p => p.fillRate < 30).slice(0, 5);
+
+        // Active students
+        const activeStudentsRes = await db.select({ count: count() }).from(studentsTable).where(orgId ? and(eq(studentsTable.status, 'Active'), eq(studentsTable.organizationId, orgId)) : eq(studentsTable.status, 'Active'));
+        const activeStudents = Number(activeStudentsRes[0]?.count || 0);
+
+        // New students this month
+        const newStudentsRes = await db.select({ count: count() }).from(studentsTable).where(gte(studentsTable.createdAt, thisMonthStart.toISOString()));
+        const newStudentsCount = Number(newStudentsRes[0]?.count || 0);
+
+        // Monthly revenue trend (last 6 months)
+        const monthlyRevenueTrend: { month: string; revenue: number }[] = [];
+        for (let i = 5; i >= 0; i--) {
+          const mStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const mEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
+          const mRev = await db.select({ total: sum(studentTuition.amount) }).from(studentTuition).where(and(eq(studentTuition.status, 'paid'), gte(studentTuition.paidDate, mStart.toISOString()), lte(studentTuition.paidDate, mEnd.toISOString())));
+          monthlyRevenueTrend.push({ month: mStart.toLocaleString('default', { month: 'short', year: '2-digit' }), revenue: Number(mRev[0]?.total || 0) });
+        }
+
+        return {
+          moneyCollectedTotal,
+          moneyCollectedThisMonth,
+          moneyCollectedLastMonth,
+          delinquentAccounts: delinquentWithNames,
+          delinquentCount: delinquentRows.length,
+          delinquentTotalOwed: delinquentWithNames.reduce((s, d) => s + d.amountOwed, 0),
+          attendanceLast30Days: attendanceLast30,
+          totalAttended30,
+          totalMissed30,
+          attendanceRate30,
+          attendanceRateAllTime,
+          mostPopularClass,
+          leastPopularClass,
+          classAttendanceCounts: classAtt.slice(0, 10),
+          mostPopularProgram,
+          underperformingPrograms,
+          programEnrollments: progWithNames,
+          activeStudents,
+          newStudentsCount,
+          monthlyRevenueTrend,
+        };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
