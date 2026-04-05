@@ -7170,6 +7170,7 @@ Membership plans available:
   reports: router({
     getDashboard: protectedProcedure
       .query(async ({ ctx }) => {
+        try {
         const orgId = ctx.currentOrganizationId;
         const { students: studentsTable, studentTuition, studentAttendance, programEnrollments: programEnrollmentsTable, programs: programsTable, classes: classesTable } = await import('../drizzle/schema');
         const { getDb } = await import('./db');
@@ -7203,7 +7204,7 @@ Membership plans available:
         }));
 
         // Attendance last 30 days
-        const attendanceLast30 = await db.select({ date: sql<string>`DATE(${studentAttendance.classDate})`, attended: sql<number>`SUM(CASE WHEN ${studentAttendance.status} = 'attended' THEN 1 ELSE 0 END)`, missed: sql<number>`SUM(CASE WHEN ${studentAttendance.status} = 'missed' THEN 1 ELSE 0 END)` }).from(studentAttendance).where(gte(studentAttendance.classDate, thirtyDaysAgo.toISOString())).groupBy(sql`DATE(${studentAttendance.classDate})`).orderBy(sql`DATE(${studentAttendance.classDate})`);
+        const attendanceLast30 = await db.select({ date: sql<string>`DATE(${studentAttendance.classDate}) as classDay`, attended: sql<number>`SUM(CASE WHEN ${studentAttendance.status} = 'attended' THEN 1 ELSE 0 END) as attended`, missed: sql<number>`SUM(CASE WHEN ${studentAttendance.status} = 'missed' THEN 1 ELSE 0 END) as missed` }).from(studentAttendance).where(gte(studentAttendance.classDate, thirtyDaysAgo.toISOString())).groupBy(sql`classDay`).orderBy(sql`classDay`);
         const totalAttended30 = attendanceLast30.reduce((s, r) => s + Number(r.attended || 0), 0);
         const totalMissed30 = attendanceLast30.reduce((s, r) => s + Number(r.missed || 0), 0);
         const attendanceRate30 = totalAttended30 + totalMissed30 > 0 ? Math.round((totalAttended30 / (totalAttended30 + totalMissed30)) * 100) : 0;
@@ -7245,6 +7246,7 @@ Membership plans available:
           monthlyRevenueTrend.push({ month: mStart.toLocaleString('default', { month: 'short', year: '2-digit' }), revenue: Number(mRev[0]?.total || 0) });
         }
 
+        console.log('[getDashboard] returning stats:', JSON.stringify({ moneyCollectedTotal, moneyCollectedThisMonth, activeStudents, delinquentCount: delinquentRows.length, orgId }));
         return {
           moneyCollectedTotal,
           moneyCollectedThisMonth,
@@ -7267,6 +7269,10 @@ Membership plans available:
           newStudentsCount,
           monthlyRevenueTrend,
         };
+        } catch (err) {
+          console.error('[getDashboard] Error:', err);
+          throw err;
+        }
       }),
 
     sendPaymentReminder: protectedProcedure
