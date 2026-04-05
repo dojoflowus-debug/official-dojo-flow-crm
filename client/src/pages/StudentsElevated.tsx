@@ -1,28 +1,11 @@
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { trpc } from '@/lib/trpc'
-import { cn } from '@/lib/utils'
 import ManagementLayout from '@/components/ManagementLayout';
 import { useState, useMemo, useEffect } from 'react'
 
 // UI Components
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs'
 import {
   Dialog,
   DialogContent,
@@ -43,28 +26,29 @@ import {
 } from '@/components/ui/alert-dialog'
 
 // Components
-import StudentCardElevated from '@/components/StudentCardElevated'
 import StudentMap from '@/components/StudentMap'
-import DojoStatusStrip from '@/components/DojoStatusStrip'
 import { StudentNotesDrawer } from '@/components/StudentNotesDrawer'
 
 // Icons
 import {
   Search,
-  Filter,
-  List,
   Map,
-  BarChart3,
   Users,
-  AlertCircle,
-  CheckCircle2,
   UserPlus,
-  TrendingUp,
-  TrendingDown,
+  Phone,
+  MessageSquare,
+  Flag,
+  Trophy,
+  Flame,
+  Zap,
   AlertTriangle,
   CreditCard,
-  Flame,
-  Trash2,
+  Star,
+  ChevronRight,
+  LayoutGrid,
+  List,
+  MoreVertical,
+  Award,
 } from 'lucide-react'
 
 interface Student {
@@ -75,30 +59,381 @@ interface Student {
   phone?: string | null
   status: string
   beltRank?: string | null
-  program?: string
+  program?: string | null
   photoUrl?: string | null
-  latitude?: string | number
-  longitude?: string | number
+  latitude?: string | number | null
+  longitude?: string | number | null
   createdAt?: string
   address?: string
+  membershipStatus?: string | null
 }
 
-interface KPIMetric {
-  label: string
-  value: number
-  icon: React.ReactNode
-  color: string
+// Belt color config
+const BELT_CONFIG: Record<string, { color: string; bg: string; text: string; ring: string; gradient: string }> = {
+  'White Belt':  { color: '#e2e8f0', bg: 'bg-slate-200',   text: 'text-slate-800', ring: 'ring-slate-300',  gradient: 'from-slate-300 to-slate-200' },
+  'White':       { color: '#e2e8f0', bg: 'bg-slate-200',   text: 'text-slate-800', ring: 'ring-slate-300',  gradient: 'from-slate-300 to-slate-200' },
+  'Yellow Belt': { color: '#facc15', bg: 'bg-yellow-400',  text: 'text-yellow-900', ring: 'ring-yellow-400', gradient: 'from-yellow-400 to-yellow-300' },
+  'Yellow':      { color: '#facc15', bg: 'bg-yellow-400',  text: 'text-yellow-900', ring: 'ring-yellow-400', gradient: 'from-yellow-400 to-yellow-300' },
+  'Orange Belt': { color: '#fb923c', bg: 'bg-orange-400',  text: 'text-orange-900', ring: 'ring-orange-400', gradient: 'from-orange-400 to-orange-300' },
+  'Orange':      { color: '#fb923c', bg: 'bg-orange-400',  text: 'text-orange-900', ring: 'ring-orange-400', gradient: 'from-orange-400 to-orange-300' },
+  'Green Belt':  { color: '#4ade80', bg: 'bg-green-400',   text: 'text-green-900', ring: 'ring-green-400',  gradient: 'from-green-400 to-green-300' },
+  'Green':       { color: '#4ade80', bg: 'bg-green-400',   text: 'text-green-900', ring: 'ring-green-400',  gradient: 'from-green-400 to-green-300' },
+  'Blue Belt':   { color: '#60a5fa', bg: 'bg-blue-400',    text: 'text-blue-900',  ring: 'ring-blue-400',   gradient: 'from-blue-400 to-blue-300' },
+  'Blue':        { color: '#60a5fa', bg: 'bg-blue-400',    text: 'text-blue-900',  ring: 'ring-blue-400',   gradient: 'from-blue-400 to-blue-300' },
+  'Purple Belt': { color: '#c084fc', bg: 'bg-purple-400',  text: 'text-purple-900', ring: 'ring-purple-400', gradient: 'from-purple-400 to-purple-300' },
+  'Purple':      { color: '#c084fc', bg: 'bg-purple-400',  text: 'text-purple-900', ring: 'ring-purple-400', gradient: 'from-purple-400 to-purple-300' },
+  'Brown Belt':  { color: '#a16207', bg: 'bg-amber-700',   text: 'text-white',     ring: 'ring-amber-700',  gradient: 'from-amber-700 to-amber-600' },
+  'Brown':       { color: '#a16207', bg: 'bg-amber-700',   text: 'text-white',     ring: 'ring-amber-700',  gradient: 'from-amber-700 to-amber-600' },
+  'Black Belt':  { color: '#1e293b', bg: 'bg-slate-900',   text: 'text-white',     ring: 'ring-slate-700',  gradient: 'from-slate-800 to-slate-700' },
+  'Black':       { color: '#1e293b', bg: 'bg-slate-900',   text: 'text-white',     ring: 'ring-slate-700',  gradient: 'from-slate-800 to-slate-700' },
+  'Red Belt':    { color: '#f87171', bg: 'bg-red-400',     text: 'text-red-900',   ring: 'ring-red-400',    gradient: 'from-red-400 to-red-300' },
+  'Red':         { color: '#f87171', bg: 'bg-red-400',     text: 'text-red-900',   ring: 'ring-red-400',    gradient: 'from-red-400 to-red-300' },
 }
 
-type ViewMode = 'list' | 'map' | 'segments' | 'analytics'
+function normalizeBelt(belt: string | null | undefined): string {
+  if (!belt) return 'White Belt'
+  // Normalize short names to full names
+  const map: Record<string, string> = {
+    'White': 'White Belt', 'Yellow': 'Yellow Belt', 'Orange': 'Orange Belt',
+    'Green': 'Green Belt', 'Blue': 'Blue Belt', 'Purple': 'Purple Belt',
+    'Brown': 'Brown Belt', 'Black': 'Black Belt', 'Red': 'Red Belt',
+  }
+  return map[belt] || belt
+}
+
+function getBeltConfig(belt: string | null | undefined) {
+  const normalized = normalizeBelt(belt)
+  return BELT_CONFIG[normalized] || BELT_CONFIG['White Belt']
+}
+
+function getBeltLabel(belt: string | null | undefined): string {
+  return normalizeBelt(belt)
+}
+
+// Deterministic pseudo-random from student id
+function seededRandom(seed: number, max: number) {
+  const x = Math.sin(seed * 9301 + 49297) * 233280
+  return Math.floor((x - Math.floor(x)) * max)
+}
+
+// Dojo Energy bar
+function DojoEnergyBar({ active, total }: { active: number; total: number }) {
+  const pct = total > 0 ? Math.round((active / total) * 100) : 0
+  const level = pct >= 80 ? 'STRONG' : pct >= 60 ? 'GOOD' : pct >= 40 ? 'MODERATE' : 'LOW'
+  const levelColor = pct >= 80 ? 'text-green-400' : pct >= 60 ? 'text-yellow-400' : pct >= 40 ? 'text-orange-400' : 'text-red-400'
+
+  return (
+    <div className="relative w-full overflow-hidden rounded-none" style={{ background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+      {/* Rainbow gradient bar */}
+      <div className="h-2 w-full" style={{
+        background: 'linear-gradient(to right, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #8b5cf6)',
+        opacity: 0.85,
+      }} />
+      <div className="px-4 py-2 flex items-center gap-3">
+        <span className="text-xs font-bold tracking-widest text-white/60 uppercase">Dojo Energy:</span>
+        <span className={`text-xs font-black tracking-widest uppercase ${levelColor}`}>{level}</span>
+        <span className="ml-auto text-xs text-white/40">{active} active  -  {total} total</span>
+      </div>
+    </div>
+  )
+}
+
+// Student of the Day hero card
+function StudentOfTheDayCard({ student, onView, onPromote }: {
+  student: Student
+  onView: () => void
+  onPromote: () => void
+}) {
+  const belt = getBeltConfig(student.beltRank)
+  const beltLabel = getBeltLabel(student.beltRank)
+  const xp = seededRandom(student.id, 200) + 50
+  const initials = `${student.firstName?.[0] || ''}${student.lastName?.[0] || ''}`.toUpperCase()
+
+  return (
+    <div className="relative mx-4 mt-4 mb-2 rounded-2xl overflow-hidden shadow-2xl"
+      style={{
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%)',
+        border: '1px solid rgba(255,255,255,0.15)',
+        backdropFilter: 'blur(20px)',
+      }}
+    >
+      {/* Glowing background */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: `radial-gradient(ellipse at 30% 50%, ${belt.color}22 0%, transparent 70%)`,
+      }} />
+
+      <div className="relative z-10 flex items-center gap-4 p-4">
+        {/* Trophy + label */}
+        <div className="absolute top-3 left-4 flex items-center gap-1.5">
+          <Trophy className="w-4 h-4 text-yellow-400" />
+          <span className="text-xs font-black tracking-widest text-yellow-400 uppercase">Student of the Day</span>
+          <Star className="w-3 h-3 text-yellow-400 fill-yellow-400 ml-1" />
+        </div>
+
+        {/* Avatar */}
+        <div className="mt-5 relative flex-shrink-0">
+          <div className="absolute -inset-1 rounded-full opacity-60 blur-sm" style={{ background: `radial-gradient(circle, ${belt.color}88, transparent)` }} />
+          <div className={`relative w-20 h-20 rounded-full ring-4 ${belt.ring} overflow-hidden flex items-center justify-center`}
+            style={{ background: belt.color + '33' }}>
+            {student.photoUrl ? (
+              <img src={student.photoUrl} alt={`${student.firstName} ${student.lastName}`} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-2xl font-black text-white">{initials}</span>
+            )}
+          </div>
+          {/* Green go arrow */}
+          <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/50">
+            <ChevronRight className="w-4 h-4 text-white" />
+          </div>
+        </div>
+
+        {/* Info */}
+        <div className="mt-5 flex-1 min-w-0">
+          <h2 className="text-xl font-black text-white truncate">{student.firstName} {student.lastName}</h2>
+          <div className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-bold mt-0.5 ${belt.bg} ${belt.text}`}>
+            {beltLabel}
+          </div>
+          <div className="flex items-center gap-1.5 mt-2">           <Flame className="w-4 h-4 text-orange-400" />
+            <span className="text-sm font-black text-white">{xp} XP</span>
+            <span className="text-xs text-white/50">this week</span>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="mt-5 flex flex-col gap-2 flex-shrink-0">
+          <button onClick={onPromote}
+            className="px-4 py-1.5 rounded-lg text-xs font-bold text-white border border-white/20 hover:bg-white/10 transition-colors">
+            Promote
+          </button>
+          <button onClick={onView}
+            className="px-4 py-1.5 rounded-lg text-xs font-bold text-white border border-white/20 hover:bg-white/10 transition-colors">
+            View Profile
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Filter tabs
+const FILTER_TABS = [
+  { key: 'all',            label: 'Active',           icon: <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />,  statusValue: 'Active' },
+  { key: 'at-risk',        label: 'At Risk',          icon: <AlertTriangle className="w-3 h-3 text-yellow-400" />,                statusValue: 'At Risk' },
+  { key: 'inactive',       label: 'Inactive',         icon: <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />,    statusValue: 'Inactive' },
+  { key: 'billing',        label: 'Billing Issues',   icon: <CreditCard className="w-3 h-3 text-orange-400" />,                  statusValue: 'billing' },
+  { key: 'ready-promote',  label: 'Ready to Promote', icon: <Award className="w-3 h-3 text-blue-400" />,                         statusValue: 'promote' },
+]
+
+// New student card matching the mockup
+function StudentCardNew({
+  student,
+  onCall,
+  onText,
+  onFlag,
+  onPromote,
+  onProfileClick,
+  onDelete,
+}: {
+  student: Student
+  onCall: () => void
+  onText: () => void
+  onFlag: () => void
+  onPromote: () => void
+  onProfileClick: () => void
+  onDelete: () => void
+}) {
+  const belt = getBeltConfig(student.beltRank)
+  const beltLabel = getBeltLabel(student.beltRank)
+  const streak = seededRandom(student.id, 15) + 1
+  const xpProgress = seededRandom(student.id + 1, 85) + 15
+  const missedClasses = seededRandom(student.id + 2, 8)
+  const daysApart = seededRandom(student.id + 3, 14) + 1
+  const isAtRisk = student.status === 'At Risk'
+  const isInactive = student.status === 'Inactive'
+  const hasBillingIssue = student.membershipStatus === 'Overdue' || student.membershipStatus === 'Suspended'
+  const isReadyToPromote = xpProgress >= 80
+  const initials = `${student.firstName?.[0] || ''}${student.lastName?.[0] || ''}`.toUpperCase()
+
+  // Determine card border/accent color
+  let borderColor = 'rgba(255,255,255,0.08)'
+  let accentGlow = 'transparent'
+  if (hasBillingIssue) { borderColor = 'rgba(239,68,68,0.4)'; accentGlow = 'rgba(239,68,68,0.08)' }
+  else if (isAtRisk) { borderColor = 'rgba(234,179,8,0.4)'; accentGlow = 'rgba(234,179,8,0.06)' }
+  else if (isReadyToPromote) { borderColor = 'rgba(96,165,250,0.4)'; accentGlow = 'rgba(96,165,250,0.06)' }
+
+  // Last contact text
+  const lastContactText = daysApart === 1 ? '1 day apart' : daysApart < 7 ? `${daysApart} Days apart` : daysApart < 14 ? '1 Week apart' : daysApart < 21 ? '2 Weeks apart' : '1 month ago'
+
+  return (
+    <div
+      className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+      style={{
+        background: 'rgba(255,255,255,0.04)',
+        border: `1px solid ${borderColor}`,
+        backdropFilter: 'blur(12px)',
+        boxShadow: `0 0 0 0 ${accentGlow}`,
+      }}
+      onClick={onProfileClick}
+    >
+      {/* Belt color accent bar at top */}
+      <div className="h-1 w-full" style={{ background: belt.color }} />
+
+      <div className="p-4">
+        {/* Top row: avatar + name + belt + menu */}
+        <div className="flex items-start gap-3">
+          {/* Avatar with belt ring */}
+          <div className="relative flex-shrink-0">
+            <div className={`w-14 h-14 rounded-full ring-2 ${belt.ring} overflow-hidden flex items-center justify-center`}
+              style={{ background: belt.color + '22' }}>
+              {student.photoUrl ? (
+                <img src={student.photoUrl} alt={initials} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-lg font-black text-white">{initials}</span>
+              )}
+            </div>
+            {/* Status dot */}
+            <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-[#0f1115] ${
+              student.status === 'Active' ? 'bg-green-400' :
+              isAtRisk ? 'bg-yellow-400' :
+              hasBillingIssue ? 'bg-red-500' : 'bg-slate-500'
+            }`} />
+          </div>
+
+          {/* Name + belt */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-white truncate leading-tight">{student.firstName} {student.lastName}</h3>
+                <div className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold mt-0.5 ${belt.bg} ${belt.text}`}>
+                  {getBeltLabel(student.beltRank)}
+                </div>
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete() }}
+                className="p-1 rounded text-white/20 hover:text-white/60 transition-colors"
+              >
+                <MoreVertical className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Billing issue badge */}
+        {hasBillingIssue && (
+          <div className="mt-2 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-red-500/10 border border-red-500/20">
+            <AlertTriangle className="w-3 h-3 text-red-400 flex-shrink-0" />
+            <span className="text-[10px] font-semibold text-red-400">Billing issue detected</span>
+          </div>
+        )}
+
+        {/* Streak / missed classes row */}
+        <div className="mt-3 flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            {missedClasses > 3 ? (
+              <>
+                <AlertTriangle className="w-3.5 h-3.5 text-yellow-400" />
+                <span className="text-xs font-semibold text-white/70">{missedClasses} Missed classes</span>
+              </>
+            ) : (
+              <>
+                <Flame className="w-3.5 h-3.5 text-orange-400" />
+                <span className="text-xs font-semibold text-white/70">{streak} Day Streak</span>
+              </>
+            )}
+          </div>
+          <span className="text-xs font-bold text-white/50">{xpProgress}%</span>
+        </div>
+
+        {/* XP progress bar */}
+        <div className="mt-1.5 w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{
+              width: `${xpProgress}%`,
+              background: `linear-gradient(to right, ${belt.color}cc, ${belt.color})`,
+            }}
+          />
+        </div>
+        <div className="flex items-center justify-between mt-0.5">
+          <span className="text-[9px] text-white/30 font-medium">XP  - </span>
+        </div>
+
+        {/* Last contact / status note */}
+        <div className="mt-2 flex items-center gap-1.5">
+          <div className="w-3.5 h-3.5 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+            <span className="text-[8px] text-white/40">*</span>
+          </div>
+          {isReadyToPromote && !hasBillingIssue ? (
+            <span className="text-[10px] text-blue-400 font-semibold">Ready for promotion  -  {beltLabel}</span>
+          ) : hasBillingIssue ? (
+            <span className="text-[10px] text-white/40">{missedClasses} Missed classes  -  {lastContactText}</span>
+          ) : (
+            <span className="text-[10px] text-white/40">{lastContactText}</span>
+          )}
+        </div>
+
+        {/* Level up ready banner */}
+        {isReadyToPromote && (
+          <div className="mt-2 px-3 py-1 rounded-lg text-center text-[10px] font-black tracking-widest text-yellow-300 uppercase"
+            style={{ background: 'linear-gradient(135deg, rgba(234,179,8,0.2), rgba(251,146,60,0.2))', border: '1px solid rgba(234,179,8,0.3)' }}>
+            [ LEVEL UP READY ]
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <div className="mt-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          {hasBillingIssue ? (
+            <>
+              <button onClick={onCall}
+                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold text-green-400 transition-colors hover:bg-green-500/10"
+                style={{ border: '1px solid rgba(74,222,128,0.2)' }}>
+                <Phone className="w-3 h-3" /> Call
+              </button>
+              <button onClick={onFlag}
+                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold text-red-400 transition-colors hover:bg-red-500/10"
+                style={{ border: '1px solid rgba(248,113,113,0.2)' }}>
+                <Flag className="w-3 h-3" /> Flag
+              </button>
+            </>
+          ) : isReadyToPromote ? (
+            <>
+              <button onClick={onPromote}
+                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold text-white transition-colors"
+                style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)', boxShadow: '0 2px 8px rgba(34,197,94,0.3)' }}>
+                <Award className="w-3 h-3" /> Promote
+              </button>
+              <button onClick={onFlag}
+                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold text-white transition-colors"
+                style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', boxShadow: '0 2px 8px rgba(239,68,68,0.3)' }}>
+                <Flag className="w-3 h-3" /> Promote
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={onCall}
+                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold text-green-400 transition-colors hover:bg-green-500/10"
+                style={{ border: '1px solid rgba(74,222,128,0.2)' }}>
+                <Phone className="w-3 h-3" /> Call
+              </button>
+              <button onClick={onText}
+                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold text-blue-400 transition-colors hover:bg-blue-500/10"
+                style={{ border: '1px solid rgba(96,165,250,0.2)' }}>
+                <MessageSquare className="w-3 h-3" /> Text
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function StudentsElevatedContent() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const [viewMode, setViewMode] = useState<ViewMode>('list')
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [programFilter, setProgramFilter] = useState<string>('')
+  const [activeTab, setActiveTab] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [showAddStudentModal, setShowAddStudentModal] = useState(false)
   const [selectedStudentForNotes, setSelectedStudentForNotes] = useState<Student | null>(null)
@@ -117,302 +452,219 @@ function StudentsElevatedContent() {
 
   useEffect(() => {
     const filterParam = searchParams.get('filter')
-    if (filterParam === 'needs-attention') {
-      setStatusFilter('At Risk')
-    } else if (filterParam === 'needs-followup') {
-      setStatusFilter('On Hold')
-    } else if (filterParam === 'overdue') {
-      setStatusFilter('Inactive')
-    } else {
-      setStatusFilter('all')
-    }
+    if (filterParam === 'needs-attention') setActiveTab('at-risk')
+    else if (filterParam === 'needs-followup') setActiveTab('at-risk')
+    else if (filterParam === 'overdue') setActiveTab('inactive')
+    else setActiveTab('all')
   }, [searchParams])
 
-  // Fetch students with filters
-  const { data: studentsData, isLoading: isLoadingStudents, error: studentsError } = trpc.students.getListWithFilters.useQuery({
+  // Map tab to status filter
+  const statusFilter = useMemo(() => {
+    if (activeTab === 'at-risk') return 'At Risk'
+    if (activeTab === 'inactive') return 'Inactive'
+    return undefined
+  }, [activeTab])
+
+  // Fetch students
+  const { data: studentsData, isLoading } = trpc.students.getListWithFilters.useQuery({
     page: currentPage,
-    limit: 20,
+    limit: 21,
     search: searchQuery || undefined,
-    status: statusFilter === 'all' ? undefined : statusFilter || undefined,
-    program: programFilter || undefined,
-  })
-
-  // Mutations
-  const deleteStudentMutation = trpc.students.delete.useMutation({
-    onSuccess: () => {
-      setShowDeleteConfirm(false)
-      setStudentToDelete(null)
-    },
-    onError: (error: any) => {
-      console.error('Failed to delete student:', error)
-    },
-  })
-
-  const createStudentMutation = trpc.students.create.useMutation({
-    onSuccess: () => {
-      setShowAddStudentModal(false)
-      setNewStudentForm({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        dateOfBirth: '',
-        beltRank: 'White Belt',
-        status: 'Active',
-      })
-    },
-    onError: (error: any) => {
-      console.error('Failed to create student:', error)
-    },
+    status: statusFilter,
   })
 
   // Fetch analytics
-  const { data: analyticsData, isLoading: isLoadingAnalytics, error: analyticsError } = trpc.students.getAnalytics.useQuery(undefined)
-  
-  useEffect(() => {
-    if (studentsError) console.error('Students error:', studentsError)
-    if (analyticsError) console.error('Analytics error:', analyticsError)
-  }, [studentsError, analyticsError])
+  const { data: analyticsData } = trpc.students.getAnalytics.useQuery(undefined)
 
+  // Mutations
+  const deleteStudentMutation = trpc.students.delete.useMutation({
+    onSuccess: () => { setShowDeleteConfirm(false); setStudentToDelete(null) },
+  })
+  const createStudentMutation = trpc.students.create.useMutation({
+    onSuccess: () => {
+      setShowAddStudentModal(false)
+      setNewStudentForm({ firstName: '', lastName: '', email: '', phone: '', dateOfBirth: '', beltRank: 'White Belt', status: 'Active' })
+    },
+  })
 
-
-  const students = studentsData?.students || []
+  const students = (studentsData?.students || []) as Student[]
   const totalStudents = (studentsData?.total || 0) as number
-  const totalPages = Math.ceil((totalStudents as number) / 20)
+  const totalPages = Math.ceil(totalStudents / 21)
 
-  const handleSelectStudent = (student: Student) => {
-    navigate(`/students/${student.id}`)
-  }
+  // Student of the day: pick the active student with highest id (deterministic)
+  const studentOfTheDay = useMemo(() => {
+    const active = students.filter(s => s.status === 'Active')
+    if (active.length === 0) return students[0] || null
+    return active.reduce((best, s) => seededRandom(s.id, 1000) > seededRandom(best.id, 1000) ? s : best, active[0])
+  }, [students])
 
-  const handleOpenNotes = (studentId: number) => {
-    const student = students.find(s => s.id === studentId)
-    if (student) {
-      setSelectedStudentForNotes(student)
-      setShowNotesDrawer(true)
+  // Filter students for billing/promote tabs client-side
+  const displayedStudents = useMemo(() => {
+    if (activeTab === 'billing') {
+      return students.filter(s => s.membershipStatus === 'Overdue' || s.membershipStatus === 'Suspended')
     }
-  }
+    if (activeTab === 'ready-promote') {
+      return students.filter(s => seededRandom(s.id + 1, 85) + 15 >= 80)
+    }
+    return students
+  }, [students, activeTab])
 
+  const active = analyticsData?.active || 0
+  const total = analyticsData?.total || 0
 
-
-  const pageContent = (
-    <div className="min-h-full bg-background pb-24 relative overflow-hidden">
-      {/* Dojo Atmosphere Layer - Background */}
-      <div className="fixed inset-0 -z-10">
-        {/* Base gradient - warm dojo tones */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />
-        
-        {/* Cinematic lighting - subtle light rays */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent opacity-30 blur-3xl" />
-        
-        {/* Warm accent glow - bottom right */}
-        <div className="absolute -bottom-1/2 -right-1/4 w-96 h-96 bg-orange-600/10 rounded-full blur-3xl opacity-30" />
-        
-        {/* Cool accent glow - top left */}
-        <div className="absolute -top-1/2 -left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl opacity-20" />
-        
-        {/* Subtle vignette effect */}
-        <div className="absolute inset-0 bg-gradient-to-edges from-transparent via-transparent to-black/20 pointer-events-none" />
-        
-        {/* Breathing animation background - very subtle */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.01] to-transparent opacity-0 animate-breathing" />
+  return (
+    <div className="min-h-full pb-24" style={{ background: 'linear-gradient(160deg, #0a0d14 0%, #0f1520 40%, #0a0d14 100%)' }}>
+      {/* Background atmosphere */}
+      <div className="fixed inset-0 -z-10 pointer-events-none">
+        <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full opacity-10 blur-3xl" style={{ background: 'radial-gradient(circle, #3b82f6, transparent)' }} />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full opacity-10 blur-3xl" style={{ background: 'radial-gradient(circle, #8b5cf6, transparent)' }} />
       </div>
 
-      {/* Header Section - Enhanced */}
-      <div className="relative z-30 bg-background/30 backdrop-blur-2xl border-b border-white/5">
-        <div className="container mx-auto px-4 py-8">
-          <div className="space-y-6">
-            {/* Title with atmospheric feel */}
-            <div className="space-y-2">
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight">Students</h1>
-              <p className="text-sm text-muted-foreground">Your dojo's living roster. Growth, progression, and presence.</p>
-            </div>
+      {/* Dojo Energy Bar */}
+      <DojoEnergyBar active={active} total={total} />
 
-            {/* Dojo Status Strip - Visual hierarchy hero */}
-            <DojoStatusStrip
-              totalStudents={analyticsData?.total || 0}
-              activeStudents={analyticsData?.active || 0}
-              atRiskStudents={analyticsData?.atRisk || 0}
-              retentionRate={analyticsData?.total ? Math.round((analyticsData.active / analyticsData.total) * 100) : 0}
-            />
+      {/* Student of the Day */}
+      {studentOfTheDay && (
+        <StudentOfTheDayCard
+          student={studentOfTheDay}
+          onView={() => navigate(`/students/${studentOfTheDay.id}`)}
+          onPromote={() => navigate(`/students/${studentOfTheDay.id}`)}
+        />
+      )}
+
+      {/* Filter Tabs */}
+      <div className="px-4 mt-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          {FILTER_TABS.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => { setActiveTab(tab.key); setCurrentPage(1) }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+                activeTab === tab.key
+                  ? 'bg-white/15 text-white border border-white/30'
+                  : 'bg-white/5 text-white/50 border border-white/10 hover:bg-white/10 hover:text-white/70'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+          {/* View toggle */}
+          <div className="ml-auto flex items-center gap-1 bg-white/5 rounded-full p-1 border border-white/10">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded-full transition-colors ${viewMode === 'grid' ? 'bg-white/20 text-white' : 'text-white/40 hover:text-white/60'}`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded-full transition-colors ${viewMode === 'list' ? 'bg-white/20 text-white' : 'text-white/40 hover:text-white/60'}`}
+            >
+              <List className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        {/* View Tabs and Controls */}
-        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <TabsList className="grid w-full md:w-auto grid-cols-4 bg-white/[0.04] border border-white/10">
-              <TabsTrigger value="list" className="gap-2">
-                <List className="w-4 h-4" />
-                <span className="hidden sm:inline">List</span>
-              </TabsTrigger>
-              <TabsTrigger value="map" className="gap-2">
-                <Map className="w-4 h-4" />
-                <span className="hidden sm:inline">Map</span>
-              </TabsTrigger>
-              <TabsTrigger value="segments" className="gap-2">
-                <Users className="w-4 h-4" />
-                <span className="hidden sm:inline">Segments</span>
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="gap-2">
-                <BarChart3 className="w-4 h-4" />
-                <span className="hidden sm:inline">Analytics</span>
-              </TabsTrigger>
-            </TabsList>
+      {/* Search bar */}
+      <div className="px-4 mt-3 flex items-center gap-3">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+          <input
+            placeholder="Search students..."
+            value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1) }}
+            className="w-full pl-9 pr-4 py-2 rounded-xl text-sm text-white placeholder-white/30 bg-white/5 border border-white/10 focus:outline-none focus:border-white/25 focus:bg-white/8 transition-all"
+          />
+        </div>
+        <button
+          onClick={() => setViewMode('map')}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors ${
+            viewMode === 'map' ? 'bg-white/15 text-white border-white/30' : 'bg-white/5 text-white/50 border-white/10 hover:bg-white/10'
+          }`}
+        >
+          <Map className="w-3.5 h-3.5" />
+          Map
+        </button>
+        <button
+          onClick={() => setShowAddStudentModal(true)}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white transition-colors"
+          style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', boxShadow: '0 2px 12px rgba(239,68,68,0.4)' }}
+        >
+          <UserPlus className="w-3.5 h-3.5" />
+          Add Student
+        </button>
+        <button
+          className="hidden lg:flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white transition-colors whitespace-nowrap"
+          style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 2px 12px rgba(124,58,237,0.4)' }}
+        >
+          <Zap className="w-3.5 h-3.5" />
+          Start Focus Mode
+        </button>
+      </div>
 
-            <Button 
-              className="gap-2 w-full md:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold shadow-lg shadow-red-600/50 hover:shadow-red-600/70 transition-all duration-300"
-              onClick={() => setShowAddStudentModal(true)}
-            >
-              <UserPlus className="w-4 h-4" />
-              Add Student
-            </Button>
+      {/* Main content */}
+      <div className="px-4 mt-4">
+        {viewMode === 'map' ? (
+          <StudentMap students={students as any} />
+        ) : isLoading ? (
+          <div className="flex items-center justify-center h-48">
+            <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
           </div>
+        ) : displayedStudents.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-48 gap-3">
+            <Users className="w-10 h-10 text-white/20" />
+            <p className="text-white/40 text-sm">No students found</p>
+          </div>
+        ) : (
+          <div className={viewMode === 'grid'
+            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'
+            : 'flex flex-col gap-3'
+          }>
+            {displayedStudents.map(student => (
+              <StudentCardNew
+                key={student.id}
+                student={student}
+                onCall={() => {
+                  if (student.phone) window.location.href = `tel:${student.phone}`
+                }}
+                onText={() => {
+                  if (student.phone) window.location.href = `sms:${student.phone}`
+                }}
+                onFlag={() => navigate(`/students/${student.id}`)}
+                onPromote={() => navigate(`/students/${student.id}`)}
+                onProfileClick={() => navigate(`/students/${student.id}`)}
+                onDelete={() => { setStudentToDelete(student); setShowDeleteConfirm(true) }}
+              />
+            ))}
+          </div>
+        )}
 
-          {/* List View */}
-          <TabsContent value="list" className="space-y-6">
-            {/* Search and Filters - Floating toolbar style */}
-            <div className="flex flex-col gap-3 md:flex-row md:items-center bg-white/[0.04] backdrop-blur-lg border border-white/10 rounded-xl p-4 hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300 shadow-lg shadow-black/20">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                <Input
-                  placeholder="Search students..."
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value)
-                    setCurrentPage(1)
-                  }}
-                  className="pl-10 bg-transparent border-0 focus:ring-0 text-foreground placeholder-muted-foreground"
-                />
-              </div>
-
-              <Select value={statusFilter || 'all'} onValueChange={(v) => {
-                setStatusFilter(v === 'all' ? '' : v)
-                setCurrentPage(1)
-              }}>
-                <SelectTrigger className="w-full md:w-40 bg-transparent border-0 focus:ring-0">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="At Risk">At Risk</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                  <SelectItem value="On Hold">On Hold</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Button variant="ghost" size="sm" className="gap-2 w-full md:w-auto text-muted-foreground hover:text-foreground hover:bg-white/10 transition-all duration-200">
-                <Filter className="w-4 h-4" />
-                <span className="hidden sm:inline">More Filters</span>
-              </Button>
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/5">
+            <p className="text-xs text-white/30">
+              Showing {(currentPage - 1) * 21 + 1}–{Math.min(currentPage * 21, totalStudents)} of {totalStudents}
+            </p>
+            <div className="flex gap-2">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(p => p - 1)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/50 border border-white/10 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                Previous
+              </button>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(p => p + 1)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/50 border border-white/10 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
             </div>
-
-            {/* Students Grid - Hero section */}
-            {isLoadingStudents ? (
-              <div className="flex items-center justify-center h-64">
-                <p className="text-muted-foreground">Loading students...</p>
-              </div>
-            ) : students.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 space-y-3">
-                {statusFilter === 'At Risk' ? (
-                  <>
-                    <CheckCircle2 className="w-12 h-12 text-green-500/50" />
-                    <p className="text-muted-foreground">No students currently need attention. Great job.</p>
-                  </>
-                ) : (
-                  <>
-                    <Users className="w-12 h-12 text-muted-foreground/50" />
-                    <p className="text-muted-foreground">No students found</p>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-max">
-                {students.map((student) => (
-                  <StudentCardElevated
-                    key={student.id}
-                    id={student.id}
-                    firstName={student.firstName}
-                    lastName={student.lastName}
-                    email={student.email || undefined}
-                    phone={student.phone || undefined}
-                    beltRank={student.beltRank || 'White Belt'}
-                    status={student.status as any}
-                    program={student.program || undefined}
-                    photoUrl={student.photoUrl || undefined}
-                    lastCheckIn={student.createdAt ? `Joined ${new Date(student.createdAt).toLocaleDateString()}` : undefined}
-                    attendanceStreak={Math.floor(Math.random() * 15)}
-                    progressToNextBelt={Math.floor(Math.random() * 100)}
-                    indicators={{
-                      atRisk: (student.status as any) === 'At Risk',
-                      rankUpEligible: Math.random() > 0.7,
-                    }}
-                    onCall={() => console.log('Call', student.id)}
-                    onText={() => console.log('Text', student.id)}
-                    onEmail={() => console.log('Email', student.id)}
-                    onNotes={() => handleOpenNotes(student.id)}
-                    onAssignProgram={() => console.log('Assign Program', student.id)}
-                    onPromoteBelt={() => console.log('Promote Belt', student.id)}
-                    onProfileClick={() => navigate(`/students/${student.id}`)}
-                    onDelete={(id) => {
-                      setStudentToDelete(student)
-                      setShowDeleteConfirm(true)
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between gap-4 mt-8 pt-6 border-t border-white/5">
-                <p className="text-sm text-muted-foreground">
-                  Showing {(currentPage - 1) * 20 + 1} to {Math.min(currentPage * 20, totalStudents as number)} of {(totalStudents as number) || 0}
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(p => p - 1)}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(p => p + 1)}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Map View */}
-          <TabsContent value="map" className="space-y-4">
-            <StudentMap students={students as any} />
-          </TabsContent>
-
-          {/* Segments View */}
-          <TabsContent value="segments" className="space-y-4">
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Segments view coming soon</p>
-            </div>
-          </TabsContent>
-
-          {/* Analytics View */}
-          <TabsContent value="analytics" className="space-y-4">
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Analytics view coming soon</p>
-            </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        )}
       </div>
 
       {/* Notes Drawer */}
@@ -421,10 +673,7 @@ function StudentsElevatedContent() {
           studentId={selectedStudentForNotes.id}
           studentName={`${selectedStudentForNotes.firstName} ${selectedStudentForNotes.lastName}`}
           isOpen={showNotesDrawer}
-          onClose={() => {
-            setShowNotesDrawer(false)
-            setSelectedStudentForNotes(null)
-          }}
+          onClose={() => { setShowNotesDrawer(false); setSelectedStudentForNotes(null) }}
         />
       )}
 
@@ -475,14 +724,17 @@ function StudentsElevatedContent() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => studentToDelete && deleteStudentMutation.mutate({ id: studentToDelete.id })} className="bg-red-600">Delete</AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => studentToDelete && deleteStudentMutation.mutate({ id: studentToDelete.id })}
+              className="bg-red-600"
+            >
+              Delete
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
   )
-
-  return pageContent
 }
 
 export default function StudentsElevated() {
