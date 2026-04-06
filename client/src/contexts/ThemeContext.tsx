@@ -27,6 +27,13 @@ function isMarketingRoute(pathname: string): boolean {
   return MARKETING_ROUTES.includes(pathname);
 }
 
+// App routes that should always render in light mode regardless of user preference
+const FORCED_LIGHT_ROUTES = ["/students"];
+
+function isForcedLightRoute(pathname: string): boolean {
+  return FORCED_LIGHT_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'));
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = "dark",
@@ -35,10 +42,16 @@ export function ThemeProvider({
   const [theme, setThemeState] = useState<Theme>(() => {
     // Check if on marketing page using window.location
     const isMarketing = isMarketingRoute(window.location.pathname);
+    const isForcedLight = isForcedLightRoute(window.location.pathname);
     
     // Marketing pages always use dark theme
     if (isMarketing) {
       return "dark";
+    }
+
+    // Forced-light pages always use light theme
+    if (isForcedLight) {
+      return "light";
     }
     
     // Migration: Force dark theme once
@@ -64,9 +77,12 @@ export function ThemeProvider({
   useEffect(() => {
     const handleRouteChange = () => {
       const isMarketing = isMarketingRoute(window.location.pathname);
+      const isForcedLight = isForcedLightRoute(window.location.pathname);
       
       if (isMarketing) {
         setThemeState("dark");
+      } else if (isForcedLight) {
+        setThemeState("light");
       } else if (switchable) {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored === "light" || stored === "dark" || stored === "cinematic") {

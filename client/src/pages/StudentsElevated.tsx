@@ -120,19 +120,19 @@ function seededRandom(seed: number, max: number) {
 function DojoEnergyBar({ active, total }: { active: number; total: number }) {
   const pct = total > 0 ? Math.round((active / total) * 100) : 0
   const level = pct >= 80 ? 'STRONG' : pct >= 60 ? 'GOOD' : pct >= 40 ? 'MODERATE' : 'LOW'
-  const levelColor = pct >= 80 ? 'text-green-400' : pct >= 60 ? 'text-yellow-400' : pct >= 40 ? 'text-orange-400' : 'text-red-400'
+  const levelColor = pct >= 80 ? 'text-green-600' : pct >= 60 ? 'text-yellow-600' : pct >= 40 ? 'text-orange-500' : 'text-red-500'
 
   return (
-    <div className="relative w-full overflow-hidden rounded-none" style={{ background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+    <div className="relative w-full overflow-hidden rounded-none" style={{ background: 'rgba(255,255,255,0.9)', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
       {/* Rainbow gradient bar */}
       <div className="h-2 w-full" style={{
         background: 'linear-gradient(to right, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #8b5cf6)',
         opacity: 0.85,
       }} />
       <div className="px-4 py-2 flex items-center gap-3">
-        <span className="text-xs font-bold tracking-widest text-white/60 uppercase">Dojo Energy:</span>
+        <span className="text-xs font-bold tracking-widest text-gray-500 uppercase">Dojo Energy:</span>
         <span className={`text-xs font-black tracking-widest uppercase ${levelColor}`}>{level}</span>
-        <span className="ml-auto text-xs text-white/40">{active} active  -  {total} total</span>
+        <span className="ml-auto text-xs text-gray-400">{active} active  -  {total} total</span>
       </div>
     </div>
   )
@@ -150,35 +150,34 @@ function StudentOfTheDayCard({ student, onView, onPromote }: {
   const initials = `${student.firstName?.[0] || ''}${student.lastName?.[0] || ''}`.toUpperCase()
 
   return (
-    <div className="relative mx-4 mt-4 mb-2 rounded-2xl overflow-hidden shadow-2xl"
+    <div className="relative mx-4 mt-4 mb-2 rounded-2xl overflow-hidden shadow-lg"
       style={{
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%)',
-        border: '1px solid rgba(255,255,255,0.15)',
-        backdropFilter: 'blur(20px)',
+        background: `linear-gradient(135deg, ${belt.color}18 0%, white 60%)`,
+        border: `1.5px solid ${belt.color}40`,
       }}
     >
       {/* Glowing background */}
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: `radial-gradient(ellipse at 30% 50%, ${belt.color}22 0%, transparent 70%)`,
+        background: `radial-gradient(ellipse at 30% 50%, ${belt.color}15 0%, transparent 70%)`,
       }} />
 
       <div className="relative z-10 flex items-center gap-4 p-4">
         {/* Trophy + label */}
         <div className="absolute top-3 left-4 flex items-center gap-1.5">
-          <Trophy className="w-4 h-4 text-yellow-400" />
-          <span className="text-xs font-black tracking-widest text-yellow-400 uppercase">Student of the Day</span>
-          <Star className="w-3 h-3 text-yellow-400 fill-yellow-400 ml-1" />
+          <Trophy className="w-4 h-4 text-yellow-500" />
+          <span className="text-xs font-black tracking-widest text-yellow-600 uppercase">Student of the Day</span>
+          <Star className="w-3 h-3 text-yellow-500 fill-yellow-500 ml-1" />
         </div>
 
         {/* Avatar */}
         <div className="mt-5 relative flex-shrink-0">
-          <div className="absolute -inset-1 rounded-full opacity-60 blur-sm" style={{ background: `radial-gradient(circle, ${belt.color}88, transparent)` }} />
+          <div className="absolute -inset-1 rounded-full opacity-40 blur-sm" style={{ background: `radial-gradient(circle, ${belt.color}88, transparent)` }} />
           <div className={`relative w-20 h-20 rounded-full ring-4 ${belt.ring} overflow-hidden flex items-center justify-center`}
             style={{ background: belt.color + '33' }}>
             {student.photoUrl ? (
               <img src={student.photoUrl} alt={`${student.firstName} ${student.lastName}`} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-2xl font-black text-white">{initials}</span>
+              <span className="text-2xl font-black text-gray-700">{initials}</span>
             )}
           </div>
           {/* Green go arrow */}
@@ -189,24 +188,25 @@ function StudentOfTheDayCard({ student, onView, onPromote }: {
 
         {/* Info */}
         <div className="mt-5 flex-1 min-w-0">
-          <h2 className="text-xl font-black text-white truncate">{student.firstName} {student.lastName}</h2>
+          <h2 className="text-xl font-black text-gray-900 truncate">{student.firstName} {student.lastName}</h2>
           <div className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-bold mt-0.5 ${belt.bg} ${belt.text}`}>
             {beltLabel}
           </div>
-          <div className="flex items-center gap-1.5 mt-2">           <Flame className="w-4 h-4 text-orange-400" />
-            <span className="text-sm font-black text-white">{xp} XP</span>
-            <span className="text-xs text-white/50">this week</span>
+          <div className="flex items-center gap-1.5 mt-2">
+            <Flame className="w-4 h-4 text-orange-500" />
+            <span className="text-sm font-black text-gray-800">{xp} XP</span>
+            <span className="text-xs text-gray-400">this week</span>
           </div>
         </div>
 
         {/* Actions */}
         <div className="mt-5 flex flex-col gap-2 flex-shrink-0">
           <button onClick={onPromote}
-            className="px-4 py-1.5 rounded-lg text-xs font-bold text-white border border-white/20 hover:bg-white/10 transition-colors">
+            className="px-4 py-1.5 rounded-lg text-xs font-bold text-gray-700 border border-gray-300 hover:bg-gray-50 transition-colors">
             Promote
           </button>
           <button onClick={onView}
-            className="px-4 py-1.5 rounded-lg text-xs font-bold text-white border border-white/20 hover:bg-white/10 transition-colors">
+            className="px-4 py-1.5 rounded-lg text-xs font-bold text-gray-700 border border-gray-300 hover:bg-gray-50 transition-colors">
             View Profile
           </button>
         </div>
@@ -255,7 +255,7 @@ function StudentCardNew({
   const initials = `${student.firstName?.[0] || ''}${student.lastName?.[0] || ''}`.toUpperCase()
 
   // Determine card border/accent color
-  let borderColor = 'rgba(255,255,255,0.08)'
+  let borderColor = 'rgba(0,0,0,0.08)'
   let accentGlow = 'transparent'
   if (hasBillingIssue) { borderColor = 'rgba(239,68,68,0.4)'; accentGlow = 'rgba(239,68,68,0.08)' }
   else if (isAtRisk) { borderColor = 'rgba(234,179,8,0.4)'; accentGlow = 'rgba(234,179,8,0.06)' }
@@ -268,8 +268,8 @@ function StudentCardNew({
     <div
       className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
       style={{
-        background: 'rgba(255,255,255,0.04)',
-        border: `1px solid ${borderColor}`,
+        background: 'rgba(255,255,255,0.95)',
+        border: `1.5px solid ${borderColor}`,
         backdropFilter: 'blur(12px)',
         boxShadow: `0 0 0 0 ${accentGlow}`,
       }}
@@ -288,11 +288,11 @@ function StudentCardNew({
               {student.photoUrl ? (
                 <img src={student.photoUrl} alt={initials} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-lg font-black text-white">{initials}</span>
+                <span className="text-lg font-black text-gray-700">{initials}</span>
               )}
             </div>
             {/* Status dot */}
-            <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-[#0f1115] ${
+            <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white ${
               student.status === 'Active' ? 'bg-green-400' :
               isAtRisk ? 'bg-yellow-400' :
               hasBillingIssue ? 'bg-red-500' : 'bg-slate-500'
@@ -303,14 +303,14 @@ function StudentCardNew({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-sm font-bold text-white truncate leading-tight">{student.firstName} {student.lastName}</h3>
+                <h3 className="text-sm font-bold text-gray-900 truncate leading-tight">{student.firstName} {student.lastName}</h3>
                 <div className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold mt-0.5 ${belt.bg} ${belt.text}`}>
                   {getBeltLabel(student.beltRank)}
                 </div>
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); onDelete() }}
-                className="p-1 rounded text-white/20 hover:text-white/60 transition-colors"
+                className="p-1 rounded text-gray-300 hover:text-gray-600 transition-colors"
               >
                 <MoreVertical className="w-3.5 h-3.5" />
               </button>
@@ -320,9 +320,9 @@ function StudentCardNew({
 
         {/* Billing issue badge */}
         {hasBillingIssue && (
-          <div className="mt-2 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-red-500/10 border border-red-500/20">
-            <AlertTriangle className="w-3 h-3 text-red-400 flex-shrink-0" />
-            <span className="text-[10px] font-semibold text-red-400">Billing issue detected</span>
+          <div className="mt-2 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-red-50 border border-red-200">
+            <AlertTriangle className="w-3 h-3 text-red-500 flex-shrink-0" />
+            <span className="text-[10px] font-semibold text-red-600">Billing issue detected</span>
           </div>
         )}
 
@@ -332,20 +332,20 @@ function StudentCardNew({
             {missedClasses > 3 ? (
               <>
                 <AlertTriangle className="w-3.5 h-3.5 text-yellow-400" />
-                <span className="text-xs font-semibold text-white/70">{missedClasses} Missed classes</span>
+                <span className="text-xs font-semibold text-gray-600">{missedClasses} Missed classes</span>
               </>
             ) : (
               <>
                 <Flame className="w-3.5 h-3.5 text-orange-400" />
-                <span className="text-xs font-semibold text-white/70">{streak} Day Streak</span>
+                <span className="text-xs font-semibold text-gray-600">{streak} Day Streak</span>
               </>
             )}
           </div>
-          <span className="text-xs font-bold text-white/50">{xpProgress}%</span>
+          <span className="text-xs font-bold text-gray-500">{xpProgress}%</span>
         </div>
 
         {/* XP progress bar */}
-        <div className="mt-1.5 w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+        <div className="mt-1.5 w-full h-1.5 rounded-full bg-gray-200 overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-700"
             style={{
@@ -355,27 +355,27 @@ function StudentCardNew({
           />
         </div>
         <div className="flex items-center justify-between mt-0.5">
-          <span className="text-[9px] text-white/30 font-medium">XP  - </span>
+          <span className="text-[9px] text-gray-400 font-medium">XP</span>
         </div>
 
         {/* Last contact / status note */}
         <div className="mt-2 flex items-center gap-1.5">
-          <div className="w-3.5 h-3.5 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
-            <span className="text-[8px] text-white/40">*</span>
+          <div className="w-3.5 h-3.5 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+            <span className="text-[8px] text-gray-400">*</span>
           </div>
           {isReadyToPromote && !hasBillingIssue ? (
-            <span className="text-[10px] text-blue-400 font-semibold">Ready for promotion  -  {beltLabel}</span>
+            <span className="text-[10px] text-blue-600 font-semibold">Ready for promotion  -  {beltLabel}</span>
           ) : hasBillingIssue ? (
-            <span className="text-[10px] text-white/40">{missedClasses} Missed classes  -  {lastContactText}</span>
+            <span className="text-[10px] text-gray-400">{missedClasses} Missed classes  -  {lastContactText}</span>
           ) : (
-            <span className="text-[10px] text-white/40">{lastContactText}</span>
+            <span className="text-[10px] text-gray-400">{lastContactText}</span>
           )}
         </div>
 
         {/* Level up ready banner */}
         {isReadyToPromote && (
-          <div className="mt-2 px-3 py-1 rounded-lg text-center text-[10px] font-black tracking-widest text-yellow-300 uppercase"
-            style={{ background: 'linear-gradient(135deg, rgba(234,179,8,0.2), rgba(251,146,60,0.2))', border: '1px solid rgba(234,179,8,0.3)' }}>
+          <div className="mt-2 px-3 py-1 rounded-lg text-center text-[10px] font-black tracking-widest text-yellow-700 uppercase"
+            style={{ background: 'linear-gradient(135deg, rgba(234,179,8,0.15), rgba(251,146,60,0.15))', border: '1px solid rgba(234,179,8,0.4)' }}>
             [ LEVEL UP READY ]
           </div>
         )}
@@ -386,12 +386,12 @@ function StudentCardNew({
             <>
               <button onClick={onCall}
                 className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold text-green-400 transition-colors hover:bg-green-500/10"
-                style={{ border: '1px solid rgba(74,222,128,0.2)' }}>
+                style={{ border: '1px solid rgba(34,197,94,0.3)', background: 'rgba(34,197,94,0.05)' }}>
                 <Phone className="w-3 h-3" /> Call
               </button>
               <button onClick={onFlag}
                 className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold text-red-400 transition-colors hover:bg-red-500/10"
-                style={{ border: '1px solid rgba(248,113,113,0.2)' }}>
+                style={{ border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.05)' }}>
                 <Flag className="w-3 h-3" /> Flag
               </button>
             </>
@@ -412,12 +412,12 @@ function StudentCardNew({
             <>
               <button onClick={onCall}
                 className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold text-green-400 transition-colors hover:bg-green-500/10"
-                style={{ border: '1px solid rgba(74,222,128,0.2)' }}>
+                style={{ border: '1px solid rgba(34,197,94,0.3)', background: 'rgba(34,197,94,0.05)' }}>
                 <Phone className="w-3 h-3" /> Call
               </button>
               <button onClick={onText}
                 className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold text-blue-400 transition-colors hover:bg-blue-500/10"
-                style={{ border: '1px solid rgba(96,165,250,0.2)' }}>
+                style={{ border: '1px solid rgba(59,130,246,0.3)', background: 'rgba(59,130,246,0.05)' }}>
                 <MessageSquare className="w-3 h-3" /> Text
               </button>
             </>
@@ -449,6 +449,23 @@ function StudentsElevatedContent() {
     beltRank: 'White Belt',
     status: 'Active',
   })
+
+  // Force light mode on this page regardless of global theme setting
+  useEffect(() => {
+    const root = document.documentElement
+    const prevClasses = Array.from(root.classList).filter(c =>
+      ['dark', 'light', 'cinematic', 'dark-mode', 'light-mode', 'cinematic-mode'].includes(c)
+    )
+    const prevDataTheme = root.getAttribute('data-theme')
+    root.classList.remove('dark', 'cinematic', 'dark-mode', 'cinematic-mode')
+    root.classList.add('light', 'light-mode')
+    root.setAttribute('data-theme', 'light')
+    return () => {
+      root.classList.remove('light', 'light-mode')
+      prevClasses.forEach(c => root.classList.add(c))
+      if (prevDataTheme) root.setAttribute('data-theme', prevDataTheme)
+    }
+  }, [])
 
   useEffect(() => {
     const filterParam = searchParams.get('filter')
@@ -513,11 +530,11 @@ function StudentsElevatedContent() {
   const total = analyticsData?.total || 0
 
   return (
-    <div className="min-h-full pb-24" style={{ background: 'linear-gradient(160deg, #0a0d14 0%, #0f1520 40%, #0a0d14 100%)' }}>
+    <div className="min-h-full pb-24" style={{ background: 'linear-gradient(160deg, #f8fafc 0%, #f1f5f9 40%, #f8fafc 100%)' }}>
       {/* Background atmosphere */}
       <div className="fixed inset-0 -z-10 pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full opacity-10 blur-3xl" style={{ background: 'radial-gradient(circle, #3b82f6, transparent)' }} />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full opacity-10 blur-3xl" style={{ background: 'radial-gradient(circle, #8b5cf6, transparent)' }} />
+        <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full opacity-10 blur-3xl" style={{ background: 'radial-gradient(circle, #bfdbfe, transparent)' }} />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full opacity-10 blur-3xl" style={{ background: 'radial-gradient(circle, #ddd6fe, transparent)' }} />
       </div>
 
       {/* Dojo Energy Bar */}
@@ -541,8 +558,8 @@ function StudentsElevatedContent() {
               onClick={() => { setActiveTab(tab.key); setCurrentPage(1) }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
                 activeTab === tab.key
-                  ? 'bg-white/15 text-white border border-white/30'
-                  : 'bg-white/5 text-white/50 border border-white/10 hover:bg-white/10 hover:text-white/70'
+                  ? 'bg-gray-900 text-white border border-gray-900'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:text-gray-900'
               }`}
             >
               {tab.icon}
@@ -550,16 +567,16 @@ function StudentsElevatedContent() {
             </button>
           ))}
           {/* View toggle */}
-          <div className="ml-auto flex items-center gap-1 bg-white/5 rounded-full p-1 border border-white/10">
+          <div className="ml-auto flex items-center gap-1 bg-gray-100 rounded-full p-1 border border-gray-200">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-full transition-colors ${viewMode === 'grid' ? 'bg-white/20 text-white' : 'text-white/40 hover:text-white/60'}`}
+              className={`p-1.5 rounded-full transition-colors ${viewMode === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded-full transition-colors ${viewMode === 'list' ? 'bg-white/20 text-white' : 'text-white/40 hover:text-white/60'}`}
+              className={`p-1.5 rounded-full transition-colors ${viewMode === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
             >
               <List className="w-3.5 h-3.5" />
             </button>
@@ -570,18 +587,18 @@ function StudentsElevatedContent() {
       {/* Search bar */}
       <div className="px-4 mt-3 flex items-center gap-3">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           <input
             placeholder="Search students..."
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1) }}
-            className="w-full pl-9 pr-4 py-2 rounded-xl text-sm text-white placeholder-white/30 bg-white/5 border border-white/10 focus:outline-none focus:border-white/25 focus:bg-white/8 transition-all"
+            className="w-full pl-9 pr-4 py-2 rounded-xl text-sm text-gray-900 placeholder-gray-400 bg-white border border-gray-200 focus:outline-none focus:border-gray-400 transition-all shadow-sm"
           />
         </div>
         <button
           onClick={() => setViewMode('map')}
           className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors ${
-            viewMode === 'map' ? 'bg-white/15 text-white border-white/30' : 'bg-white/5 text-white/50 border-white/10 hover:bg-white/10'
+            viewMode === 'map' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
           }`}
         >
           <Map className="w-3.5 h-3.5" />
@@ -614,8 +631,8 @@ function StudentsElevatedContent() {
           </div>
         ) : displayedStudents.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 gap-3">
-            <Users className="w-10 h-10 text-white/20" />
-            <p className="text-white/40 text-sm">No students found</p>
+            <Users className="w-10 h-10 text-gray-300" />
+            <p className="text-gray-400 text-sm">No students found</p>
           </div>
         ) : (
           <div className={viewMode === 'grid'
@@ -643,22 +660,22 @@ function StudentsElevatedContent() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/5">
-            <p className="text-xs text-white/30">
+          <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+            <p className="text-xs text-gray-400">
               Showing {(currentPage - 1) * 21 + 1}–{Math.min(currentPage * 21, totalStudents)} of {totalStudents}
             </p>
             <div className="flex gap-2">
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(p => p - 1)}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/50 border border-white/10 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
               </button>
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage(p => p + 1)}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/50 border border-white/10 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </button>
