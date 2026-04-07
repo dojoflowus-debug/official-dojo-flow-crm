@@ -217,11 +217,11 @@ function StudentOfTheDayCard({ student, onView, onPromote }: {
 
 // Filter tabs
 const FILTER_TABS = [
-  { key: 'all',            label: 'Active',           icon: <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />,  statusValue: 'Active' },
-  { key: 'at-risk',        label: 'At Risk',          icon: <AlertTriangle className="w-3 h-3 text-yellow-400" />,                statusValue: 'At Risk' },
-  { key: 'inactive',       label: 'Inactive',         icon: <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />,    statusValue: 'Inactive' },
-  { key: 'billing',        label: 'Billing Issues',   icon: <CreditCard className="w-3 h-3 text-orange-400" />,                  statusValue: 'billing' },
-  { key: 'ready-promote',  label: 'Ready to Promote', icon: <Award className="w-3 h-3 text-blue-400" />,                         statusValue: 'promote' },
+  { key: 'all',           label: 'Active',           icon: <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />,   statusValue: 'Active',  activeClass: 'bg-green-500 text-white border-green-500',         activeIcon: <span className="w-2 h-2 rounded-full bg-white inline-block" /> },
+  { key: 'at-risk',       label: 'At Risk',          icon: <AlertTriangle className="w-3 h-3 text-yellow-500" />,                 statusValue: 'At Risk', activeClass: 'bg-yellow-400 text-yellow-900 border-yellow-400',  activeIcon: <AlertTriangle className="w-3 h-3 text-yellow-900" /> },
+  { key: 'inactive',      label: 'Inactive',         icon: <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />,     statusValue: 'Inactive',activeClass: 'bg-red-500 text-white border-red-500',             activeIcon: <span className="w-2 h-2 rounded-full bg-white inline-block" /> },
+  { key: 'billing',       label: 'Billing Issues',   icon: <CreditCard className="w-3 h-3 text-orange-400" />,                   statusValue: 'billing', activeClass: 'bg-orange-500 text-white border-orange-500',       activeIcon: <CreditCard className="w-3 h-3 text-white" /> },
+  { key: 'ready-promote', label: 'Ready to Promote', icon: <Award className="w-3 h-3 text-blue-400" />,                          statusValue: 'promote', activeClass: 'bg-blue-500 text-white border-blue-500',           activeIcon: <Award className="w-3 h-3 text-white" /> },
 ]
 
 // New student card matching the mockup
@@ -556,13 +556,13 @@ function StudentsElevatedContent() {
             <button
               key={tab.key}
               onClick={() => { setActiveTab(tab.key); setCurrentPage(1) }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 border ${
                 activeTab === tab.key
-                  ? 'bg-gray-900 text-white border border-gray-900'
-                  : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:text-gray-900'
+                  ? tab.activeClass
+                  : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:text-gray-900'
               }`}
             >
-              {tab.icon}
+              {activeTab === tab.key ? tab.activeIcon : tab.icon}
               {tab.label}
             </button>
           ))}
@@ -598,7 +598,7 @@ function StudentsElevatedContent() {
         <button
           onClick={() => setViewMode('map')}
           className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors ${
-            viewMode === 'map' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+            viewMode === 'map' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
           }`}
         >
           <Map className="w-3.5 h-3.5" />
