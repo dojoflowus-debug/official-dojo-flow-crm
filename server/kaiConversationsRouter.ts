@@ -525,6 +525,17 @@ TONE RULES:
               });
             }
             
+            // Extract any structured UI blocks from tool results (e.g. sms_blast_result)
+            for (const tr of toolResults) {
+              try {
+                const parsed = JSON.parse(tr.result);
+                if (parsed?.data?.type === 'sms_blast_result') {
+                  if (!uiBlocks) uiBlocks = [];
+                  (uiBlocks as any[]).push(parsed.data);
+                }
+              } catch (_) {}
+            }
+
             // Second call: Send tool results back to LLM for final response
             const messagesWithTools = [
               {
@@ -629,6 +640,7 @@ TONE RULES:
         type: metricData ? "metric" : "chat",
         procedure: classification?.procedure,
         data: metricData,
+        ui_blocks: uiBlocks || [],
       };
     }),
 

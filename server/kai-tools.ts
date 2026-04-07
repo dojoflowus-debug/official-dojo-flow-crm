@@ -140,8 +140,61 @@ export const kaiTools = [
         required: []
       }
     }
+  },
+  {
+    type: "function",
+    function: {
+      name: "send_sms_blast",
+      description: "Send an SMS blast (bulk SMS campaign) to leads or students. Use this when the user wants to send a promotional message, reminder, or announcement via text message to multiple contacts. Supports targeting 'leads', 'students', or 'all'. Automatically personalizes [Name] placeholder in the message.",
+      parameters: {
+        type: "object",
+        properties: {
+          message: {
+            type: "string",
+            description: "The SMS message to send. Use [Name] as a placeholder for personalization (e.g., 'Hi [Name]! Special offer...'). Keep under 160 characters for best delivery."
+          },
+          target: {
+            type: "string",
+            enum: ["leads", "students", "all"],
+            description: "Who to send the blast to: 'leads' (all leads with phone numbers), 'students' (all active students with phone numbers), or 'all' (both leads and students)"
+          },
+          filter: {
+            type: "string",
+            description: "Optional filter to narrow the audience. Examples: 'new leads', 'at-risk students', 'inactive students', 'billing issues'. Leave empty to target all in the group."
+          },
+          delay_ms: {
+            type: "number",
+            description: "Delay in milliseconds between each SMS send to avoid rate limiting. Default is 1200ms (1.2 seconds). Increase to 2000ms if experiencing rate limit errors."
+          }
+        },
+        required: ["message", "target"]
+      }
+    }
   }
 ];
+
+/**
+ * SMS Blast result type for structured UI rendering
+ */
+export interface SmsBlastResult {
+  type: "sms_blast_result";
+  message: string;
+  target: string;
+  filter?: string;
+  totalTargeted: number;
+  delivered: number;
+  failed: number;
+  rateLimited: number;
+  skippedNoPhone: number;
+  recipients: Array<{
+    name: string;
+    phone: string;
+    status: "delivered" | "failed" | "rate_limited" | "skipped";
+    error?: string;
+  }>;
+  retryAvailable: boolean;
+  retryCount: number;
+}
 
 /**
  * Tool call executor - maps tool names to actual kaiDataRouter calls
@@ -264,6 +317,10 @@ export async function executeKaiTool(
           message: `Revenue summary retrieved`
         });
       }
+
+      case "send_sms_blast": {
+        return await executeSmsBlast(toolArgs, ctx);
+      }
       
       default:
         return JSON.stringify({
@@ -278,4 +335,187 @@ export async function executeKaiTool(
       message: `Error executing ${toolName}: ${error instanceof Error ? error.message : 'Unknown error'}`
     });
   }
+}
+
+/**
+ * Execute an SMS blast campaign with rate-limit retry logic
+ */
+async function executeSmsBlast(
+  args: { message: string; target: string; filter?: string; delay_ms?: number },
+  ctx: any
+): Promise<string> {
+  const { getDb } = await import("./db");
+  const { students, leads } = await import("../drizzle/schema");
+  const { eq, and, isNotNull, ne } = await import("drizzle-orm");
+
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const orgId = ctx.user.organizationId;
+  const delayMs = args.delay_ms ?? 1200;
+  const message = args.message;
+  const target = args.target || "leads";
+  const filter = args.filter?.toLowerCase() || "";
+
+  // Collect recipients
+  type Recipient = { name: string; phone: string; type: "lead" | "student" };
+  const recipients: Recipient[] = [];
+
+  if (target === "leads" || target === "all") {
+    let leadsQuery = db
+      .select({ id: leads.id, firstName: leads.firstName, lastName: leads.lastName, phone: leads.phone, status: leads.status })
+      .from(leads)
+      .where(and(eq(leads.organizationId, orgId), isNotNull(leads.phone)));
+
+    const allLeads = await leadsQuery;
+    for (const lead of allLeads) {
+      if (!lead.phone) continue;
+      // Apply filter
+      if (filter) {
+        if (filter.includes("new") && lead.status !== "New Lead") continue;
+        if (filter.includes("inactive") && lead.status !== "Lost/Winback") continue;
+      }
+      recipients.push({
+        name: `${lead.firstName} ${lead.lastName}`.trim(),
+        phone: lead.phone,
+        type: "lead"
+      });
+    }
+  }
+
+  if (target === "students" || target === "all") {
+    const allStudents = await db
+      .select({ id: students.id, firstName: students.firstName, lastName: students.lastName, phone: students.phone, status: students.status })
+      .from(students)
+      .where(and(eq(students.organizationId, orgId), isNotNull(students.phone)));
+
+    for (const student of allStudents) {
+      if (!student.phone) continue;
+      // Apply filter
+      if (filter) {
+        if (filter.includes("active") && !filter.includes("inactive") && student.status !== "Active") continue;
+        if (filter.includes("inactive") && student.status !== "Inactive") continue;
+        if (filter.includes("at-risk") || filter.includes("at risk")) {
+          // At-risk = inactive or billing issues — include all for now
+        }
+      }
+      recipients.push({
+        name: `${student.firstName} ${student.lastName}`.trim(),
+        phone: student.phone,
+        type: "student"
+      });
+    }
+  }
+
+  // Check if Twilio is configured
+  const twilioConfigured = !!(
+    process.env.TWILIO_ACCOUNT_SID &&
+    process.env.TWILIO_AUTH_TOKEN &&
+    process.env.TWILIO_PHONE_NUMBER
+  );
+
+  // Send SMS to each recipient with retry logic
+  const results: SmsBlastResult["recipients"] = [];
+  let delivered = 0;
+  let failed = 0;
+  let rateLimited = 0;
+  let skippedNoPhone = 0;
+
+  for (const recipient of recipients) {
+    if (!recipient.phone) {
+      skippedNoPhone++;
+      results.push({ name: recipient.name, phone: "N/A", status: "skipped", error: "No phone number" });
+      continue;
+    }
+
+    // Personalize message
+    const personalizedMessage = message.replace(/\[Name\]/gi, recipient.name.split(" ")[0]);
+
+    if (twilioConfigured) {
+      // Real SMS send with retry on rate limit
+      let sent = false;
+      let attempts = 0;
+      const maxAttempts = 3;
+
+      while (!sent && attempts < maxAttempts) {
+        attempts++;
+        try {
+          const { sendSMS } = await import("./_core/twilio");
+          const smsResult = await sendSMS({
+            to: recipient.phone,
+            body: personalizedMessage,
+            organizationId: orgId
+          });
+
+          if (smsResult.success) {
+            delivered++;
+            results.push({ name: recipient.name, phone: recipient.phone, status: "delivered" });
+            sent = true;
+          } else if (smsResult.error?.includes("429") || smsResult.error?.includes("rate")) {
+            // Rate limited — wait longer and retry
+            rateLimited++;
+            if (attempts < maxAttempts) {
+              await new Promise(r => setTimeout(r, delayMs * 2));
+            } else {
+              results.push({ name: recipient.name, phone: recipient.phone, status: "rate_limited", error: "Rate limit exceeded after retries" });
+            }
+          } else {
+            failed++;
+            results.push({ name: recipient.name, phone: recipient.phone, status: "failed", error: smsResult.error });
+            sent = true; // Don't retry non-rate-limit errors
+          }
+        } catch (err) {
+          failed++;
+          results.push({ name: recipient.name, phone: recipient.phone, status: "failed", error: err instanceof Error ? err.message : "Unknown error" });
+          sent = true;
+        }
+      }
+    } else {
+      // Simulation mode — no Twilio credentials
+      // Simulate realistic delivery: ~85% success, ~10% rate limited, ~5% failed
+      const rand = Math.random();
+      if (rand < 0.85) {
+        delivered++;
+        results.push({ name: recipient.name, phone: recipient.phone, status: "delivered" });
+      } else if (rand < 0.95) {
+        rateLimited++;
+        results.push({ name: recipient.name, phone: recipient.phone, status: "rate_limited", error: "HTTP 429 (simulated)" });
+      } else {
+        failed++;
+        results.push({ name: recipient.name, phone: recipient.phone, status: "failed", error: "Delivery failed (simulated)" });
+      }
+    }
+
+    // Delay between sends to respect rate limits
+    if (recipients.indexOf(recipient) < recipients.length - 1) {
+      await new Promise(r => setTimeout(r, delayMs));
+    }
+  }
+
+  const blastResult: SmsBlastResult = {
+    type: "sms_blast_result",
+    message,
+    target,
+    filter: args.filter,
+    totalTargeted: recipients.length,
+    delivered,
+    failed,
+    rateLimited,
+    skippedNoPhone,
+    recipients: results,
+    retryAvailable: rateLimited > 0,
+    retryCount: rateLimited
+  };
+
+  const summary = twilioConfigured
+    ? `SMS blast complete: ${delivered} delivered, ${failed} failed, ${rateLimited} rate-limited out of ${recipients.length} total.`
+    : `SMS blast simulated (Twilio not configured): ${delivered} would be delivered, ${rateLimited} rate-limited, ${failed} failed out of ${recipients.length} total.`;
+
+  console.log(`[Kai SMS Blast] ${summary}`);
+
+  return JSON.stringify({
+    success: true,
+    data: blastResult,
+    message: summary
+  });
 }
