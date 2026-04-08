@@ -213,7 +213,7 @@ export default function KaiCommand() {
   const { currentEnvironment, isTransitioning, isPresentationMode, presentationProgress, togglePresentationMode } = useEnvironment();
   
   // Get auth first (before using user in other hooks)
-  const { user } = useAuth();
+  const { user, refresh: refreshAuth } = useAuth();
   
   // Get subscription status - use 0 as fallback to ensure hook is always called with a number
   const { canAccessFeature, shouldShowPaywall, getTrialDaysRemaining, isLoading: subscriptionStatusLoading } = useSubscriptionStatus(user?.activeOrgId || 0);
@@ -2908,6 +2908,11 @@ export default function KaiCommand() {
         if (infoPanelContent) {
           setInfoPanelData(infoPanelContent);
           setInfoPanelOpen(true);
+        }
+
+        // If a tool updated the user's name, refresh auth so the UI reflects the change
+        if ((response as any).refresh_user) {
+          refreshAuth();
         }
         
         // Set current speech message ID for voice controls

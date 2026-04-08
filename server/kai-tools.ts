@@ -144,6 +144,23 @@ export const kaiTools = [
   {
     type: "function",
     function: {
+      name: "update_user_name",
+      description: "Update the user's display name. Use this immediately when the user says they want to be called something (e.g., 'call me Master Holmes', 'my name is...', 'I'd like to be called...'). This changes their name in the system right away.",
+      parameters: {
+        type: "object",
+        properties: {
+          name: {
+            type: "string",
+            description: "The new display name for the user (e.g., 'Master Holmes', 'Sensei Rodriguez')"
+          }
+        },
+        required: ["name"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
       name: "send_sms_blast",
       description: "Send an SMS blast (bulk SMS campaign) to leads or students. Use this when the user wants to send a promotional message, reminder, or announcement via text message to multiple contacts. Supports targeting 'leads', 'students', or 'all'. Automatically personalizes [Name] placeholder in the message.",
       parameters: {
@@ -316,6 +333,10 @@ export async function executeKaiTool(
           data: result,
           message: `Revenue summary retrieved`
         });
+      }
+
+      case "update_user_name": {
+        return await executeUpdateUserName(toolArgs, ctx);
       }
 
       case "send_sms_blast": {
@@ -517,5 +538,42 @@ async function executeSmsBlast(
     success: true,
     data: blastResult,
     message: summary
+  });
+}
+
+/**
+ * Update the user's display name in the database
+ */
+async function executeUpdateUserName(
+  args: { name: string },
+  ctx: any
+): Promise<string> {
+  const { getDb } = await import("./db");
+  const { users } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const newName = args.name?.trim();
+  if (!newName) {
+    return JSON.stringify({ success: false, message: "Name cannot be empty" });
+  }
+
+  const userId = ctx.user?.id;
+  if (!userId) {
+    return JSON.stringify({ success: false, message: "User not authenticated" });
+  }
+
+  await db
+    .update(users)
+    .set({ name: newName })
+    .where(eq(users.id, userId));
+
+  return JSON.stringify({
+    success: true,
+    data: { name: newName },
+    message: `Your display name has been updated to "${newName}". The change is reflected throughout the app.`,
+    action: "refresh_user"
   });
 }

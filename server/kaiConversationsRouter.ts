@@ -526,12 +526,17 @@ TONE RULES:
             }
             
             // Extract any structured UI blocks from tool results (e.g. sms_blast_result)
+            // Also detect refresh_user action from update_user_name tool
+            let refreshUser = false;
             for (const tr of toolResults) {
               try {
                 const parsed = JSON.parse(tr.result);
                 if (parsed?.data?.type === 'sms_blast_result') {
                   if (!uiBlocks) uiBlocks = [];
                   (uiBlocks as any[]).push(parsed.data);
+                }
+                if (parsed?.action === 'refresh_user') {
+                  refreshUser = true;
                 }
               } catch (_) {}
             }
@@ -641,6 +646,7 @@ TONE RULES:
         procedure: classification?.procedure,
         data: metricData,
         ui_blocks: uiBlocks || [],
+        refresh_user: refreshUser ?? false,
       };
     }),
 
