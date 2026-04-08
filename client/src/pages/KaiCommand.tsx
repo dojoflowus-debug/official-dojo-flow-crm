@@ -1556,9 +1556,30 @@ export default function KaiCommand() {
   const instructors = instructorsQuery.data || [];
 
   // Handle file selection
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+
+    // ── Onboarding photo intercept (paperclip button) ───────────────────────
+    if (isOnboardingActive) {
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg?.showPhotoUpload) {
+        const imageFile = Array.from(files).find(f => f.type.startsWith('image/'));
+        if (imageFile) {
+          setMessages(prev => [...prev, {
+            id: `onboarding-user-photo-${Date.now()}`,
+            role: 'user',
+            content: `📎 Uploading photo: ${imageFile.name}`,
+            timestamp: new Date(),
+            isOnboarding: true,
+          } as any]);
+          await handleOnboardingPhotoUpload(imageFile);
+          e.target.value = '';
+          return;
+        }
+      }
+    }
+    // ───────────────────────────────────────────────────────────────────────
 
     const maxSize = 10 * 1024 * 1024; // 10MB
     const allowedTypes = [
@@ -1776,6 +1797,29 @@ export default function KaiCommand() {
 
     const files = e.dataTransfer.files;
     if (!files || files.length === 0) return;
+
+    // ── Onboarding photo intercept ──────────────────────────────────────────
+    // If the user is on the "Upload Photo" onboarding step, route any dropped
+    // image directly to the profile photo upload handler instead of the
+    // general attachment flow.
+    if (isOnboardingActive) {
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg?.showPhotoUpload) {
+        const imageFile = Array.from(files).find(f => f.type.startsWith('image/'));
+        if (imageFile) {
+          setMessages(prev => [...prev, {
+            id: `onboarding-user-photo-${Date.now()}`,
+            role: 'user',
+            content: `📎 Uploading photo: ${imageFile.name}`,
+            timestamp: new Date(),
+            isOnboarding: true,
+          } as any]);
+          await handleOnboardingPhotoUpload(imageFile);
+          return;
+        }
+      }
+    }
+    // ───────────────────────────────────────────────────────────────────────
 
     const maxSize = 10 * 1024 * 1024; // 10MB
     const allowedTypes = [
