@@ -131,6 +131,7 @@ interface StepProps {
 function VerificationStep({ userId, onNext }: StepProps) {
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   // Get email from progress
   const { data: progress } = trpc.onboarding.getProgress.useQuery({ userId });
@@ -140,6 +141,13 @@ function VerificationStep({ userId, onNext }: StepProps) {
       setEmail(progress.accountData.email);
     }
   }, [progress]);
+
+  // Countdown timer for resend cooldown
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
 
   const verifyMutation = trpc.ownerAuth.verifyCode.useMutation({
     onSuccess: () => {
@@ -151,12 +159,31 @@ function VerificationStep({ userId, onNext }: StepProps) {
     },
   });
 
+  const resendMutation = trpc.ownerAuth.resendCode.useMutation({
+    onSuccess: () => {
+      toast.success("A new verification code has been sent to your email!");
+      setResendCooldown(60);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to resend code. Please try again.");
+    },
+  });
+
   const handleVerify = () => {
     if (!code || code.length !== 6) {
       toast.error("Please enter the 6-digit code");
       return;
     }
     verifyMutation.mutate({ identifier: email, code });
+  };
+
+  const handleResend = () => {
+    if (resendCooldown > 0 || resendMutation.isPending) return;
+    if (!email) {
+      toast.error("Email address not found. Please go back and try again.");
+      return;
+    }
+    resendMutation.mutate({ email });
   };
 
   return (
@@ -203,8 +230,16 @@ function VerificationStep({ userId, onNext }: StepProps) {
 
         <p className="text-sm text-slate-500 text-center">
           Didn't receive the code?{" "}
-          <button className="text-blue-600 hover:underline">
-            Resend code
+          <button
+            className={`text-blue-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed`}
+            onClick={handleResend}
+            disabled={resendCooldown > 0 || resendMutation.isPending}
+          >
+            {resendMutation.isPending
+              ? "Sending..."
+              : resendCooldown > 0
+              ? `Resend in ${resendCooldown}s`
+              : "Resend code"}
           </button>
         </p>
       </CardContent>

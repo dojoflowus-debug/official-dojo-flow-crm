@@ -228,6 +228,50 @@ export const ownerAuthRouter = router({
     }),
 
   /**
+   * Resend verification code to email
+   */
+  resendCode: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+      // Invalidate any existing unused codes for this email
+      await db
+        .update(verificationCodes)
+        .set({ isUsed: 1 })
+        .where(
+          and(
+            eq(verificationCodes.identifier, input.email),
+            eq(verificationCodes.isUsed, 0)
+          )
+        );
+
+      // Generate a new 6-digit code
+      const code = generateOTP();
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+      await db.insert(verificationCodes).values({
+        identifier: input.email,
+        code,
+        type: "email",
+        expiresAt,
+      });
+
+      // Send new verification email
+      await sendVerificationEmail(input.email, code);
+
+      return {
+        success: true,
+        message: "A new verification code has been sent to your email",
+      };
+    }),
+
+  /**
    * Owner Login - Email + Password
    */
   login: publicProcedure
