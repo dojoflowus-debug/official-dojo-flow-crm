@@ -5,6 +5,7 @@ export interface AuthUser {
   id: number;
   openId: string;
   name: string | null;
+  preferredName?: string | null;
   email: string | null;
   role: "user" | "admin" | "owner" | "staff";
   setupCompleted: boolean;
@@ -66,6 +67,7 @@ export function useAuth() {
         id: currentUser.id,
         openId: currentUser.openId,
         name: currentUser.name,
+        preferredName: (currentUser as any).preferredName ?? null,
         email: currentUser.email,
         role: currentUser.role,
         setupCompleted: dojoSettings?.setupCompleted === 1,
@@ -100,10 +102,18 @@ export function useAuth() {
     }
   };
 
+  const utils = trpc.useUtils();
+  const refresh = () => {
+    // Invalidate getCurrentUser query to force a re-fetch from the server
+    // This is called after KAI updates the user's preferred name
+    utils.auth.getCurrentUser.invalidate();
+  };
+
   return {
     user,
     isLoading,
     isAuthenticated: !!user,
     logout,
+    refresh,
   };
 }

@@ -445,7 +445,24 @@ Need help with a specific step in PCBancard Fluid Pay? Let me know.`;
       } else {
         // Fall back to LLM for general conversation with tool calling
         try {
-          const groundedSystemPrompt = `You are Kai, an AI operations assistant for martial arts schools. You operate as a technical operator — not a chatbot. Your communication style is clear, direct, and specific.
+          // Fetch the user's preferred name to personalise the system prompt
+          let ownerPreferredName: string | null = null;
+          try {
+            const { users } = await import("../drizzle/schema");
+            const { eq } = await import("drizzle-orm");
+            const [ownerRow] = await db
+              .select({ preferredName: users.preferredName, name: users.name })
+              .from(users)
+              .where(eq(users.id, ctx.user.id))
+              .limit(1);
+            ownerPreferredName = ownerRow?.preferredName || ownerRow?.name || null;
+          } catch (_) {}
+
+          const ownerGreeting = ownerPreferredName
+            ? `\n\nUSER IDENTITY:\nThe owner's preferred name is "${ownerPreferredName}". Always address them by this name in your responses.`
+            : '';
+
+          const groundedSystemPrompt = `You are Kai, an AI operations assistant for martial arts schools. You operate as a technical operator — not a chatbot. Your communication style is clear, direct, and specific.${ownerGreeting}
 
 DATA GROUNDING RULES:
 1. NEVER invent or guess metrics. If you don't have data, state: "No data available for [specific metric]." Do not apologize.

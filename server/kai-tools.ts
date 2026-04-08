@@ -567,13 +567,13 @@ async function executeUpdateUserName(
 
   await db
     .update(users)
-    .set({ name: newName })
+    .set({ preferredName: newName })
     .where(eq(users.id, userId));
 
   return JSON.stringify({
     success: true,
-    data: { name: newName },
-    message: `Your display name has been updated to "${newName}". The change is reflected throughout the app.`,
+    data: { preferredName: newName },
+    message: `Got it! I'll call you ${newName} from now on. Your legal name remains unchanged for billing purposes.`,
     action: "refresh_user"
   });
 }

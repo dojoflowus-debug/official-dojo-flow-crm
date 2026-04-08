@@ -65,6 +65,7 @@ export const authRouter = router({
       id: user.id,
       openId: user.openId,
       name: user.name,
+      preferredName: user.preferredName ?? null,
       email: user.email,
       role: user.role,
       photoUrl: user.photoUrl,

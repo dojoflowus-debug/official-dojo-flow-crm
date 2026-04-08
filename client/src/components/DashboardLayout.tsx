@@ -68,13 +68,14 @@ export default function DashboardLayout({
   // Get user initials for avatar
   const getUserInitials = () => {
     if (loading) return '';
-    const displayName = user?.name || user?.email?.split('@')[0];
+    const displayName = (user as any)?.preferredName || user?.name || user?.email?.split('@')[0];
     if (!displayName) return '';
     return displayName.charAt(0).toUpperCase();
   };
 
-  // Get display name with fallback
+  // Get display name with fallback — prefer preferredName over legal name
   const getDisplayName = () => {
+    if ((user as any)?.preferredName) return (user as any).preferredName;
     if (user?.name) return user.name;
     if (user?.email) return user.email.split('@')[0];
     return 'User';

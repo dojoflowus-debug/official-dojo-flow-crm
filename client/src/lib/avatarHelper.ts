@@ -6,6 +6,7 @@
 export interface User {
   id?: number
   name?: string
+  preferredName?: string | null
   email?: string
   photoUrl?: string
   photoUrlSmall?: string
@@ -37,8 +38,8 @@ export function getUserAvatarUrl(user: User | null | undefined, cacheBust = fals
 export function getUserInitials(user: User | null | undefined): string {
   if (!user) return 'U'
   
-  // Try name first, then email prefix
-  const displayName = user.name || user.email?.split('@')[0]
+  // Prefer preferredName, then legal name, then email prefix
+  const displayName = user.preferredName || user.name || user.email?.split('@')[0]
   if (!displayName) return 'U'
   
   const names = displayName.split(' ')
@@ -56,6 +57,8 @@ export function getUserInitials(user: User | null | undefined): string {
  */
 export function getDisplayName(user: User | null | undefined): string {
   if (!user) return 'User'
+  // Prefer preferredName over legal name
+  if (user.preferredName) return user.preferredName
   if (user.name) return user.name
   if (user.email) return user.email.split('@')[0]
   return 'User'
