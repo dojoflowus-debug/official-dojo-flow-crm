@@ -126,7 +126,8 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
         <main 
           className={`flex-1 ${isDark ? '' : 'bg-background'}`}
           style={{
-            paddingBottom: showBottomNav ? 'calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom, 0px) + 16px)' : '0px'
+            // KAI route manages its own height/padding internally; skip AppShell padding-bottom
+            paddingBottom: (showBottomNav && !isKaiRoute) ? 'calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom, 0px) + 16px)' : '0px'
           }}
         >
           {children}

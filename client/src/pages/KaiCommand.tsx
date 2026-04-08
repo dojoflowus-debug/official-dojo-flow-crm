@@ -3269,8 +3269,8 @@ export default function KaiCommand() {
       
       <div ref={containerRef} className={`kai-command-page w-full overflow-hidden ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`} style={{
         display: 'grid',
-        height: 'calc(100vh - var(--topbar-h, 56px))',
-        maxHeight: 'calc(100vh - var(--topbar-h, 56px))',
+        height: 'calc(100vh - var(--topbar-h, 56px) - var(--bottomnav-h, 72px))',
+        maxHeight: 'calc(100vh - var(--topbar-h, 56px) - var(--bottomnav-h, 72px))',
         gridTemplateColumns: managementPanelOpen 
           ? `${isFocusMode ? 0 : effectiveCommandWidth}px ${effectiveCommandWidth === 0 ? '0px' : '8px'} minmax(${isMobile ? '100%' : '520px'}, 1fr) ${isMobile ? '0px' : 'clamp(360px, 30vw, 520px)'}`
           : `${isFocusMode ? 0 : effectiveCommandWidth}px ${effectiveCommandWidth === 0 ? '0px' : '8px'} 1fr`,
@@ -3500,7 +3500,7 @@ export default function KaiCommand() {
           style={{ 
             zIndex: LAYOUT_CONSTANTS.chatZIndex, 
             position: 'relative', 
-            height: 'calc(100vh - var(--topbar-h) - var(--bottomnav-h))',
+            height: '100%',
             paddingBottom: '0px'
           }}
           onDragEnter={handleDragEnter}
