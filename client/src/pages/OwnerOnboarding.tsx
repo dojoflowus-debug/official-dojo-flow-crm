@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useNavigate } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Sparkles, Check, Loader2, ArrowRight } from "lucide-react";
+import { Check, Loader2, ArrowRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -64,11 +64,20 @@ export default function OwnerOnboarding() {
     <div className="w-full bg-gradient-to-b from-slate-50 to-white py-12 px-4 min-h-screen">
       <div className="max-w-3xl mx-auto">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-white" />
-          </div>
-          <span className="font-bold text-2xl">DojoFlow</span>
+        <div className="flex items-center justify-center mb-8">
+          <img
+            src="/dojoflow-logo-light.png"
+            alt="DojoFlow"
+            className="h-10 object-contain"
+            onError={(e) => {
+              // Fallback to VITE_APP_LOGO if local file not found
+              const target = e.currentTarget;
+              const appLogo = import.meta.env.VITE_APP_LOGO;
+              if (appLogo && target.src !== appLogo) {
+                target.src = appLogo;
+              }
+            }}
+          />
         </div>
 
         {/* Stepper */}
