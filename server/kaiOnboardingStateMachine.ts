@@ -1920,7 +1920,7 @@ export const kaiOnboardingStateMachineRouter = router({
     .input(
       z.object({
         currentStep: z.enum(ONBOARDING_STEPS),
-        userInput: z.string().min(1).max(2000),
+        userInput: z.string().min(1).max(10_000_000), // large enough for base64 data-URL fallback on profile_photo step
         currentProfile: profileSchema,
         hasMartialArts: z.boolean(),
         completedSteps: z.array(z.enum(ONBOARDING_STEPS)).optional(),
