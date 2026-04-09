@@ -905,6 +905,7 @@ export const organizations = mysqlTable("organizations", {
 	onboardingStep: int().default(1).notNull(),
 	onboardingProfile: text("onboarding_profile"),
 	bagsOnHand: int().default(0).notNull(),
+	widgetApiKey: varchar({ length: 64 }),
 });
 
 export const ownerProfiles = mysqlTable("owner_profiles", {

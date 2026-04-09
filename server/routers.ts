@@ -4599,6 +4599,36 @@ Return the data as a structured JSON object.`
         
         return { completed: result[0].setupCompleted === 1 };
       }),
+
+    // Widget API Key management
+    getWidgetKey: protectedProcedure
+      .query(async ({ ctx }) => {
+        const { getDb } = await import("./db");
+        const { organizations } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) throw new Error('No organization found');
+        const rows = await db.select({ widgetApiKey: organizations.widgetApiKey })
+          .from(organizations).where(eq(organizations.id, orgId)).limit(1);
+        return { widgetApiKey: rows[0]?.widgetApiKey ?? null, organizationId: orgId };
+      }),
+
+    regenerateWidgetKey: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        const { getDb } = await import("./db");
+        const { organizations } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const crypto = await import("crypto");
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) throw new Error('No organization found');
+        const newKey = 'djf_' + crypto.randomBytes(24).toString('hex');
+        await db.update(organizations).set({ widgetApiKey: newKey }).where(eq(organizations.id, orgId));
+        return { widgetApiKey: newKey };
+      }),
   }),
 
   // Student Portal Router

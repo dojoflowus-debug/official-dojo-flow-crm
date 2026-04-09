@@ -1,7 +1,79 @@
-import React, { useState, useEffect } from 'react'
-import { X, User, Building2, BarChart3, CreditCard, Calendar, Database, Palette, Puzzle, ChevronRight, ChevronDown } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, User, Building2, BarChart3, CreditCard, Calendar, Database, Palette, Puzzle, ChevronRight, ChevronDown, Copy, RefreshCw, CheckCircle, Key, Code } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
+import { trpc } from '@/lib/trpc'
+
+function ConnectorsSection() {
+  const { data, refetch } = trpc.kai.settings.getWidgetKey.useQuery()
+  const regenerate = trpc.kai.settings.regenerateWidgetKey.useMutation({ onSuccess: () => refetch() })
+  const [copied, setCopied] = useState<'key' | 'snippet' | null>(null)
+
+  const orgId = data?.organizationId
+  const apiKey = data?.widgetApiKey
+
+  const embedSnippet = apiKey && orgId ? `<iframe\n  src="https://dojo-flow.ai/lead-capture?org=${orgId}"\n  data-api-key="${apiKey}"\n  width="100%"\n  height="700"\n  frameborder="0"\n  style="border-radius:12px;"\n></iframe>` : ''
+
+  const copy = (text: string, type: 'key' | 'snippet') => {
+    navigator.clipboard.writeText(text)
+    setCopied(type)
+    setTimeout(() => setCopied(null), 2000)
+  }
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-zinc-100 mb-2">Connectors</h2>
+      <p className="text-zinc-400 mb-8">Connect third-party services and embed the KAI lead capture widget on your website.</p>
+
+      {/* Widget API Key */}
+      <div className="rounded-xl bg-zinc-800/50 border border-zinc-700 p-6 mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Key className="w-5 h-5 text-red-400" />
+          <h3 className="text-lg font-semibold text-zinc-100">Widget API Key</h3>
+        </div>
+        <p className="text-sm text-zinc-400 mb-4">This key authenticates lead submissions from your website. Keep it private — only share it in server-side code or trusted embed configurations.</p>
+        <div className="flex items-center gap-2">
+          <code className="flex-1 bg-zinc-900 border border-zinc-600 rounded-lg px-4 py-3 text-sm text-zinc-200 font-mono truncate">
+            {apiKey ?? 'Loading...'}
+          </code>
+          <button
+            onClick={() => apiKey && copy(apiKey, 'key')}
+            className="flex items-center gap-1.5 px-3 py-3 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-sm transition-colors"
+            title="Copy API key"
+          >
+            {copied === 'key' ? <CheckCircle className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+          </button>
+          <button
+            onClick={() => { if (confirm('Regenerate API key? The old key will stop working immediately.')) regenerate.mutate() }}
+            className="flex items-center gap-1.5 px-3 py-3 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-sm transition-colors"
+            title="Regenerate key"
+          >
+            <RefreshCw className={cn('w-4 h-4', regenerate.isPending && 'animate-spin')} />
+          </button>
+        </div>
+      </div>
+
+      {/* Embed Snippet */}
+      <div className="rounded-xl bg-zinc-800/50 border border-zinc-700 p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Code className="w-5 h-5 text-red-400" />
+          <h3 className="text-lg font-semibold text-zinc-100">Website Embed Snippet</h3>
+        </div>
+        <p className="text-sm text-zinc-400 mb-4">Paste this into your website to embed the KAI lead capture chat. Leads will appear instantly in your DojoFlow Leads page.</p>
+        <div className="relative">
+          <pre className="bg-zinc-900 border border-zinc-600 rounded-lg p-4 text-xs text-zinc-300 font-mono whitespace-pre overflow-x-auto">{embedSnippet || 'Loading...'}</pre>
+          <button
+            onClick={() => embedSnippet && copy(embedSnippet, 'snippet')}
+            className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-xs transition-colors"
+          >
+            {copied === 'snippet' ? <CheckCircle className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied === 'snippet' ? 'Copied!' : 'Copy'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 interface DojoFlowSettingsModalProps {
   isOpen: boolean
@@ -223,12 +295,7 @@ export default function DojoFlowSettingsModal({ isOpen, onClose, initialSection 
         )
       
       case 'connectors':
-        return (
-          <div>
-            <h2 className="text-2xl font-bold text-zinc-100 mb-6">Connectors</h2>
-            <p className="text-zinc-400">Connect third-party services and integrations.</p>
-          </div>
-        )
+        return <ConnectorsSection />
       
       default:
         return (

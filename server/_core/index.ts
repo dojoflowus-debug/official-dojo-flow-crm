@@ -225,6 +225,7 @@ async function startServer() {
 
   // Public lead capture endpoint used by KaiChatStateful widget on external websites
   // POST /api/leads/capture — saves a completed lead into the leads table for the given organizationId
+  // Requires x-api-key header matching the organization's widgetApiKey
   app.post("/api/leads/capture", async (req: any, res: any) => {
     try {
       const {
@@ -244,6 +245,22 @@ async function startServer() {
       const db = await getDb();
       if (!db) {
         return res.status(500).json({ error: 'Database unavailable' });
+      }
+
+      // Validate API key — must match the organization's widgetApiKey
+      const apiKey = req.headers['x-api-key'] || req.body.apiKey;
+      if (!apiKey) {
+        return res.status(401).json({ error: 'API key required. Include x-api-key header.' });
+      }
+      const { organizations } = await import('../../drizzle/schema');
+      const { eq } = await import('drizzle-orm');
+      const orgRows = await db.select({ widgetApiKey: organizations.widgetApiKey })
+        .from(organizations)
+        .where(eq(organizations.id, parseInt(organizationId)))
+        .limit(1);
+      const org = orgRows[0];
+      if (!org || org.widgetApiKey !== apiKey) {
+        return res.status(403).json({ error: 'Invalid API key for this organization.' });
       }
 
       const { leads } = await import('../../drizzle/schema');
