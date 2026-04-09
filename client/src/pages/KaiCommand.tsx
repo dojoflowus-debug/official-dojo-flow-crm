@@ -4091,12 +4091,12 @@ export default function KaiCommand() {
                     <div key={message.id} className="flex gap-3 relative" style={{ zIndex: 30 }}>
                       {message.role === 'user' ? (
                         <>
-                          <UserAvatar photoUrl={user?.photoUrl} name={user?.name} size="sm" />
+                          <UserAvatar photoUrl={user?.photoUrl} name={user?.preferredName || user?.name} size="sm" />
                           <div className="flex-1">
                             <div 
                               className={`font-medium mb-1`}
                               style={(isCinematic || isFocusMode) ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isDark ? { color: 'white' } : { color: '#0f172a' }}
-                            >{user?.name || 'You'}</div>
+                            >{user?.preferredName || user?.name || 'You'}</div>
                             {message.content && (
                               <p 
                                 className="relative"

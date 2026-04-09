@@ -564,9 +564,17 @@ function evaluateUserClaim(
     return { verdict: "unknown", field: null };
   }
 
-  const displayName = profile.title && profile.name
-    ? `${profile.title} ${profile.name}`
-    : profile.name || "there";
+  const displayName = (() => {
+    if (profile.title && profile.name) {
+      const nameLower = profile.name.toLowerCase();
+      const titleLower = profile.title.toLowerCase();
+      if (nameLower.startsWith(titleLower) || titleLower.startsWith(nameLower)) {
+        return profile.name;
+      }
+      return `${profile.title} ${profile.name}`;
+    }
+    return profile.name || "there";
+  })();
 
   let targetStep: OnboardingStep | null = null;
 
@@ -730,9 +738,18 @@ export async function processOnboardingStep(
   hasMartialArts: boolean
 ): Promise<ProcessStepResult> {
   const input = userInput.trim().replace(/^[^a-zA-Z0-9#]+/, '');
-  const titleName = currentProfile.title && currentProfile.name
-    ? `${currentProfile.title} ${currentProfile.name}`
-    : currentProfile.name || "there";
+  // Deduplicate title+name: if name already starts with the title, don't prepend it again
+  const titleName = (() => {
+    if (currentProfile.title && currentProfile.name) {
+      const nameLower = currentProfile.name.toLowerCase();
+      const titleLower = currentProfile.title.toLowerCase();
+      if (nameLower.startsWith(titleLower) || titleLower.startsWith(nameLower)) {
+        return currentProfile.name; // name already includes the title (or vice versa)
+      }
+      return `${currentProfile.title} ${currentProfile.name}`;
+    }
+    return currentProfile.name || "there";
+  })();
 
   const hasPrev = getPrevStep(currentStep, hasMartialArts) !== null;
 
@@ -990,24 +1007,19 @@ export async function processOnboardingStep(
       const title = toTitleCase(normalisedInput.trim());
       const updatedProfile = { ...currentProfile, title };
       await persistProfileField(orgId, "title", title);
+      // Store the title as the user's preferredName so the UI shows it without
+      // touching the legal name column (which is used for billing/records).
       try {
         const db = await getDb();
         if (db) {
-          // Strip any previously-prepended title from the stored name to avoid duplication
-          // e.g. if name is already "Sensei Demo" and new title is "Sensei", result should be "Sensei Demo" not "Sensei Sensei Demo"
-          const previousTitle = currentProfile.title;
-          let baseName = updatedProfile.name || '';
-          if (previousTitle && baseName.toLowerCase().startsWith(previousTitle.toLowerCase() + ' ')) {
-            baseName = baseName.slice(previousTitle.length + 1).trim();
-          }
-          const fullName = baseName ? `${title} ${baseName}` : title;
-          await db.update(users).set({ name: fullName, updatedAt: new Date().toISOString() }).where(eq(users.id, userId));
+          await db.update(users).set({ preferredName: title, updatedAt: new Date().toISOString() }).where(eq(users.id, userId));
         }
       } catch (e) {
-        console.error('[OnboardingSM] Failed to update users.name with title:', e);
+        console.error('[OnboardingSM] Failed to update users.preferredName with title:', e);
       }
       const next = getNextStep("title", updatedProfile, hasMartialArts);
-      const displayName = updatedProfile.name ? `${title} ${updatedProfile.name}` : title;
+      // Display name for KAI's acknowledgment message: just the title is enough
+      const displayName = title;
       return {
         kaiMessage: `${displayName} — I like it.\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
