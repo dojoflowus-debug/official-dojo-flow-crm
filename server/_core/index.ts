@@ -222,6 +222,60 @@ async function startServer() {
   
   // Mount lead capture routes
   app.use("/api/kai", leadCaptureRouter);
+
+  // Public lead capture endpoint used by KaiChatStateful widget on external websites
+  // POST /api/leads/capture — saves a completed lead into the leads table for the given organizationId
+  app.post("/api/leads/capture", async (req: any, res: any) => {
+    try {
+      const {
+        firstName, lastName, phone, email, ageGroup,
+        interestedProgram, locationId, organizationId,
+        source, message, utmSource, utmMedium, utmCampaign,
+      } = req.body;
+
+      if (!organizationId) {
+        return res.status(400).json({ error: 'organizationId is required' });
+      }
+      if (!firstName) {
+        return res.status(400).json({ error: 'firstName is required' });
+      }
+
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: 'Database unavailable' });
+      }
+
+      const { leads } = await import('../../drizzle/schema');
+      const result = await db.insert(leads).values({
+        firstName: firstName || '',
+        lastName: lastName || '',
+        email: email || null,
+        phone: phone || null,
+        interestedProgram: interestedProgram || null,
+        locationId: locationId || null,
+        organizationId: parseInt(organizationId),
+        source: source || 'website_chat',
+        status: 'New Lead',
+        stage: 'new',
+        leadScore: 75,
+        message: message || null,
+        utmSource: utmSource || null,
+        utmMedium: utmMedium || null,
+        utmCampaign: utmCampaign || null,
+        createdAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        updatedAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
+      });
+
+      const insertId = Array.isArray(result) ? (result[0] as any)?.insertId : (result as any)?.insertId;
+      console.log(`[LeadCapture] Lead saved: id=${insertId} org=${organizationId} name=${firstName} ${lastName}`);
+
+      return res.status(201).json({ success: true, leadId: insertId });
+    } catch (err: any) {
+      console.error('[LeadCapture] Error saving lead:', err.message);
+      return res.status(500).json({ error: 'Failed to save lead' });
+    }
+  });
   
   // Mount location config routes
   app.use("/api/location", locationConfigRouter);
