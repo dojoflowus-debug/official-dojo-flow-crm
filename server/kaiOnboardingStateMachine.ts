@@ -13,6 +13,7 @@ export type { OnboardingStep, OnboardingProfile, OnboardingState } from "../shar
 import type { OnboardingStep, OnboardingProfile, OnboardingState } from "../shared/onboarding";
 import {
   ONBOARDING_STEPS,
+  ALL_ONBOARDING_STEPS,
   getStepQuestion,
   detectIntent,
   buildCorrectionAck,
@@ -1931,11 +1932,11 @@ export const kaiOnboardingStateMachineRouter = router({
   processStep: orgScopedProcedure
     .input(
       z.object({
-        currentStep: z.enum(ONBOARDING_STEPS),
+        currentStep: z.enum(ALL_ONBOARDING_STEPS),
         userInput: z.string().min(1).max(10_000_000), // large enough for base64 data-URL fallback on profile_photo step
         currentProfile: profileSchema,
         hasMartialArts: z.boolean(),
-        completedSteps: z.array(z.enum(ONBOARDING_STEPS)).optional(),
+        completedSteps: z.array(z.enum(ALL_ONBOARDING_STEPS)).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -2017,10 +2018,10 @@ export const kaiOnboardingStateMachineRouter = router({
   goBack: orgScopedProcedure
     .input(
       z.object({
-        currentStep: z.enum(ONBOARDING_STEPS),
+        currentStep: z.enum(ALL_ONBOARDING_STEPS),
         currentProfile: profileSchema,
         hasMartialArts: z.boolean(),
-        completedSteps: z.array(z.enum(ONBOARDING_STEPS)).optional(),
+        completedSteps: z.array(z.enum(ALL_ONBOARDING_STEPS)).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -2106,7 +2107,7 @@ export const kaiOnboardingStateMachineRouter = router({
         fileName: z.string().optional(),
         currentProfile: profileSchema,
         hasMartialArts: z.boolean(),
-        completedSteps: z.array(z.enum(ONBOARDING_STEPS)).optional(),
+        completedSteps: z.array(z.enum(ALL_ONBOARDING_STEPS)).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {

@@ -144,6 +144,29 @@ async function runStartupMigrations() {
       }
     }
 
+    // Ensure dojo_settings has owner profile columns (SHOW COLUMNS for TiDB compatibility)
+    try {
+      const [dsExistingCols] = await conn.execute(
+        `SHOW COLUMNS FROM \`dojo_settings\` WHERE Field IN ('ownerRank','programsTaught')`
+      ) as any;
+      const dsExistingNames = new Set((dsExistingCols as any[]).map((c: any) => c.Field));
+      const dsColsToAdd: [string, string][] = [
+        ['ownerRank', 'VARCHAR(100) NULL'],
+        ['programsTaught', 'TEXT NULL'],
+      ];
+      for (const [col, def] of dsColsToAdd) {
+        if (!dsExistingNames.has(col)) {
+          await conn.execute(`ALTER TABLE \`dojo_settings\` ADD COLUMN \`${col}\` ${def}`);
+          console.log(`[Migration] ✓ dojo_settings.${col} column added`);
+        } else {
+          console.log(`[Migration] dojo_settings.${col} already exists, no change needed`);
+        }
+      }
+      console.log('[Migration] ✓ dojo_settings owner profile columns ensured');
+    } catch (dsErr: any) {
+      console.warn('[Migration] dojo_settings columns warning:', (dsErr as any).message);
+    }
+
     await conn.end();
   } catch (err: any) {
     console.warn('[Migration] Startup migration warning (non-fatal):', err.message);

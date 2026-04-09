@@ -83,20 +83,27 @@ async function runStartupMigrations() {
       }
     }
 
-    // Ensure dojo_settings has owner profile columns
-    const dsColsToAdd = [
-      ['ownerRank', 'VARCHAR(100) NULL'],
-      ['programsTaught', 'TEXT NULL'],
-    ];
+    // Ensure dojo_settings has owner profile columns (use SHOW COLUMNS for TiDB compatibility)
     try {
+      const [dsExistingCols] = await conn.execute(
+        `SHOW COLUMNS FROM \`dojo_settings\` WHERE Field IN ('ownerRank','programsTaught')`
+      ) as any;
+      const dsExistingNames = new Set((dsExistingCols as any[]).map((c: any) => c.Field));
+      const dsColsToAdd: [string, string][] = [
+        ['ownerRank', 'VARCHAR(100) NULL'],
+        ['programsTaught', 'TEXT NULL'],
+      ];
       for (const [col, def] of dsColsToAdd) {
-        await conn.execute(`ALTER TABLE \`dojo_settings\` ADD COLUMN IF NOT EXISTS \`${col}\` ${def}`);
+        if (!dsExistingNames.has(col)) {
+          await conn.execute(`ALTER TABLE \`dojo_settings\` ADD COLUMN \`${col}\` ${def}`);
+          console.log(`[Migration] ✓ dojo_settings.${col} column added`);
+        } else {
+          console.log(`[Migration] dojo_settings.${col} already exists, no change needed`);
+        }
       }
       console.log('[Migration] ✓ dojo_settings owner profile columns ensured');
     } catch (dsErr: any) {
-      if (!dsErr.message?.includes('Duplicate column') && !dsErr.message?.includes("doesn't exist")) {
-        console.warn('[Migration] dojo_settings columns warning:', dsErr.message);
-      }
+      console.warn('[Migration] dojo_settings columns warning:', (dsErr as any).message);
     }
 
     // Upgrade logo URL columns from varchar to mediumtext to support base64 data URLs

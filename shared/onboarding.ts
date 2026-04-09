@@ -41,6 +41,13 @@ export const OPTIONAL_ONBOARDING_STEPS = [
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
+// Combined array of all steps (core + optional) for use in tRPC enums
+export const ALL_ONBOARDING_STEPS = [
+  ...ONBOARDING_STEPS,
+  ...OPTIONAL_ONBOARDING_STEPS,
+] as const;
+export type AnyOnboardingStep = (typeof ALL_ONBOARDING_STEPS)[number];
+
 // ─── Section grouping ─────────────────────────────────────────────────────────
 
 export type OnboardingSection =
