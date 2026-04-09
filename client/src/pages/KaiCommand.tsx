@@ -3552,27 +3552,70 @@ export default function KaiCommand() {
           onDragOver={handleDragOver}
           onDrop={handleDrop}
         >
-          {/* Drag-and-drop overlay */}
-          {isDragging && (
-            <div 
-              className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
-              style={{ background: isDark || isCinematic ? 'rgba(10,10,11,0.95)' : 'rgba(250,251,252,0.95)' }}
-            >
-              <div className={`flex flex-col items-center gap-4 p-8 rounded-sm border border-dashed ${isDark || isCinematic ? 'border-white/30 bg-white/5' : 'border-slate-300 bg-white'}`}>
-                <div className={`w-16 h-16 rounded-sm flex items-center justify-center ${isDark || isCinematic ? 'bg-white/10' : 'bg-slate-100'}`}>
-                  <Upload className={`w-8 h-8 ${getTextClass('secondary')}`} />
-                </div>
-                <div className="text-center">
-                  <p className={`text-sm font-bold uppercase tracking-wider ${getTextClass('primary')}`}>
-                    DROP FILES TO UPLOAD
-                  </p>
-                  <p className={`text-[10px] mt-1 ${getTextClass('muted')} uppercase tracking-wider`}>
-                    Spreadsheets, images, PDFs, documents
-                  </p>
-                </div>
+          {/* Drag-and-drop overlay — context-aware */}
+          {isDragging && (() => {
+            const lastMsg = messages[messages.length - 1];
+            const isPhotoStep = isOnboardingActive && lastMsg?.showPhotoUpload;
+            return (
+              <div
+                className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
+                style={{
+                  background: isPhotoStep
+                    ? (isDark || isCinematic ? 'rgba(10,10,11,0.93)' : 'rgba(255,255,255,0.93)')
+                    : (isDark || isCinematic ? 'rgba(10,10,11,0.95)' : 'rgba(250,251,252,0.95)')
+                }}
+              >
+                {isPhotoStep ? (
+                  <div className={`flex flex-col items-center gap-5 p-10 rounded-2xl border-2 border-dashed ${
+                    isDark || isCinematic ? 'border-[#FF4C4C]/60 bg-[#FF4C4C]/5' : 'border-[#FF4C4C]/50 bg-[#FF4C4C]/5'
+                  }`}>
+                    <div className="relative">
+                      <div className={`w-24 h-24 rounded-full border-2 border-dashed flex items-center justify-center ${
+                        isDark || isCinematic ? 'border-[#FF4C4C]/70 bg-[#FF4C4C]/10' : 'border-[#FF4C4C]/60 bg-[#FF4C4C]/8'
+                      }`}>
+                        <svg className="w-10 h-10 text-[#FF4C4C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                            d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                            d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <p className={`text-base font-bold tracking-wide ${
+                        isDark || isCinematic ? 'text-white' : 'text-slate-800'
+                      }`}>
+                        Drop your photo here
+                      </p>
+                      <p className={`text-xs mt-1 ${
+                        isDark || isCinematic ? 'text-white/50' : 'text-slate-400'
+                      } uppercase tracking-wider`}>
+                        JPG · PNG · WEBP · GIF
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={`flex flex-col items-center gap-4 p-8 rounded-sm border border-dashed ${
+                    isDark || isCinematic ? 'border-white/30 bg-white/5' : 'border-slate-300 bg-white'
+                  }`}>
+                    <div className={`w-16 h-16 rounded-sm flex items-center justify-center ${
+                      isDark || isCinematic ? 'bg-white/10' : 'bg-slate-100'
+                    }`}>
+                      <Upload className={`w-8 h-8 ${getTextClass('secondary')}`} />
+                    </div>
+                    <div className="text-center">
+                      <p className={`text-sm font-bold uppercase tracking-wider ${getTextClass('primary')}`}>
+                        DROP FILES TO UPLOAD
+                      </p>
+                      <p className={`text-[10px] mt-1 ${getTextClass('muted')} uppercase tracking-wider`}>
+                        Spreadsheets, images, PDFs, documents
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            );
+          })()}
           {/* ENVIRONMENT LAYER - Single clean backdrop for Cinematic mode */}
           {isCinematic && (
             <div 
