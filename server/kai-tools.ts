@@ -1147,7 +1147,10 @@ export async function executeInviteStaff(
       const { organizations } = await import("../drizzle/schema");
       const orgRows = await db.select().from(organizations).where(eq(organizations.id, orgId)).limit(1);
       const orgName = orgRows[0]?.name || "your dojo";
-      const loginUrl = `${process.env.VITE_FRONTEND_FORGE_API_URL ? process.env.VITE_FRONTEND_FORGE_API_URL.replace('/api', '') : 'https://dojo-flow.ai'}/staff/login`;
+      // Use VITE_APP_URL if set, otherwise fall back to the deployed domain
+      // VITE_FRONTEND_FORGE_API_URL is the AI API endpoint, NOT the app URL — do not use it here
+      const appBaseUrl = process.env.VITE_APP_URL || 'https://dojo-flow.ai';
+      const loginUrl = `${appBaseUrl}/staff/login`;
 
       const emailResult = await sendEmail({
         to: { email, name: fullName },

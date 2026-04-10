@@ -20,6 +20,7 @@ export default function ResetPassword() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [redirectTo, setRedirectTo] = useState('/login');
 
   useEffect(() => {
     if (!token) {
@@ -61,9 +62,11 @@ export default function ResetPassword() {
       setSuccess(true);
       setLoading(false);
       
-      // Redirect to login after 3 seconds
+      // Redirect to appropriate login page based on user role
+      const loginRedirect = data.role === 'staff' ? '/staff/login' : '/login';
+      setRedirectTo(loginRedirect);
       setTimeout(() => {
-        navigate('/login');
+        navigate(loginRedirect);
       }, 3000);
     } catch (err) {
       setError('Network error. Please try again.');
@@ -180,14 +183,14 @@ export default function ResetPassword() {
               </div>
 
               <div className="pt-4">
-                <Link to="/login">
-                  <Button
-                    variant="outline"
-                    className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
-                  >
-                    Go to Login Now
-                  </Button>
-                </Link>
+              <Link to={redirectTo}>
+                <Button
+                  variant="outline"
+                  className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  Go to Login Now
+                </Button>
+              </Link>
               </div>
             </div>
           )}

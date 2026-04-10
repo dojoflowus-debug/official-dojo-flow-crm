@@ -368,7 +368,7 @@ router.post("/reset-password", async (req, res) => {
       })
       .where(eq(users.id, user.id));
 
-    res.json({ success: true, message: "Password has been reset successfully" });
+    res.json({ success: true, message: "Password has been reset successfully", role: user.role });
   } catch (error) {
     console.error("Reset password error:", error);
     res.status(500).json({ error: "Failed to reset password" });

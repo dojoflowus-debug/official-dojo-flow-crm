@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Loader2, Users } from "lucide-react";
@@ -99,6 +99,14 @@ export default function StaffAuth() {
               )}
             </Button>
 
+            <div className="text-center">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-blue-500 hover:text-blue-400 transition-colors"
+              >
+                Forgot your password?
+              </Link>
+            </div>
 
           </CardContent>
         </Card>
