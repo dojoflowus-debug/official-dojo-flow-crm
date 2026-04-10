@@ -18,7 +18,15 @@ async function ensureInitialized() {
   _getDocument = pdfjs.getDocument;
   _GlobalWorkerOptions = pdfjs.GlobalWorkerOptions;
 
-  const canvasModule = await import('canvas');
+  let canvasModule: any;
+  try {
+    canvasModule = await import('canvas');
+  } catch {
+    throw new Error(
+      'PDF-to-image conversion requires the canvas native module, which is not available in this environment. ' +
+      'Please upload a CSV or Excel file instead.'
+    );
+  }
   _createCanvas = canvasModule.createCanvas;
   const { DOMMatrix } = canvasModule;
 

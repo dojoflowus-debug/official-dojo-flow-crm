@@ -4017,6 +4017,28 @@ Return the data as a structured JSON object.`
           // If GPT-4 wants to call functions, execute them
           if (aiResponse.functionCalls && aiResponse.functionCalls.length > 0) {
             console.log('[Kai Chat] Function calls detected:', aiResponse.functionCalls.length);
+
+            // ── CONFIRMATION GATE: Intercept destructive actions ────────────────
+            const DESTRUCTIVE_FUNCS = ['remove_student', 'archive_student'];
+            const destructiveCall = aiResponse.functionCalls.find((c: any) => DESTRUCTIVE_FUNCS.includes(c.name));
+            if (destructiveCall) {
+              const studentName = destructiveCall.arguments?.studentName || 'this student';
+              const confirmMsg = `⚠️ **Confirm Archive**\n\nAre you sure you want to archive **${studentName}**? They will be moved to Inactive status and removed from the active roster. Their records will be preserved.\n\nReply **"Yes, archive"** to confirm or **"Cancel"** to abort.`;
+              return {
+                response: confirmMsg,
+                pendingAction: {
+                  toolName: destructiveCall.name,
+                  toolArgs: destructiveCall.arguments,
+                },
+                quickReplies: [
+                  { label: `✅ Yes, archive ${studentName}`, action: `confirm_archive:${JSON.stringify(destructiveCall.arguments)}` },
+                  { label: '❌ Cancel', action: 'cancel_action' },
+                ],
+                ui_blocks: [],
+              };
+            }
+            // ── END CONFIRMATION GATE ──────────────────────────────────────────
+
             const functionResults: any[] = [];
             
             for (const call of aiResponse.functionCalls) {

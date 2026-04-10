@@ -9340,3 +9340,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Create RoleBadge component with color-coded levels (Owner=gold, Admin=red, Manager=blue, Instructor=green, Front Desk=gray)
 - [x] Add permission summary tooltip/popover to each badge showing what the role can/cannot do
 - [x] Display role badge next to each staff member's name on the Staff page
+
+## Kai Confirmation Step for Destructive Actions
+- [x] Fix canvas package deployment error (canvas@3.2.2 fails to build on deploy server)
+- [x] Kai asks "Are you sure you want to archive [Name]?" before executing remove_student
+- [x] Kai waits for user to click Yes/No quick reply buttons before proceeding
+- [x] Kai cancels the action if user clicks Cancel

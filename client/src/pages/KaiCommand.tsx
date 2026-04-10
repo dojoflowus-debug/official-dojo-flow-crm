@@ -147,6 +147,11 @@ interface Message {
     label: string;
     action: string; // identifier for the action to trigger
   }>;
+  /** Pending destructive action awaiting user confirmation */
+  pendingAction?: {
+    toolName: string;
+    toolArgs: Record<string, any>;
+  };
 }
 
 // Attachment type
@@ -2943,7 +2948,9 @@ export default function KaiCommand() {
           attachments: response.attachments || [],
           audioUrl,
           audioDuration,
-          ui_blocks: response.ui_blocks || [] // Include UI blocks from backend
+          ui_blocks: response.ui_blocks || [],
+          pendingAction: (response as any).pendingAction,
+          quickReplies: (response as any).quickReplies,
         };
         setMessages(prev => [...prev, aiMessage]);
         
@@ -4668,6 +4675,55 @@ export default function KaiCommand() {
                                     content: `Sure! I\'ve read **${fileName}**. What would you like to know about it? You can ask me questions like \'What programs are listed?\' or \'Summarize this document\'.`,
                                     timestamp: new Date(),
                                   }]);
+                                } else if (qr.action.startsWith('confirm_archive:')) {
+                                  // User confirmed a destructive action — execute it now
+                                  setMessages(prev => prev.map(m =>
+                                    m.id === message.id ? { ...m, quickReplies: [], pendingAction: undefined } : m
+                                  ));
+                                  const argsJson = qr.action.replace('confirm_archive:', '');
+                                  let toolArgs: Record<string, any> = {};
+                                  try { toolArgs = JSON.parse(argsJson); } catch {}
+                                  const pendingAction = message.pendingAction || { toolName: 'remove_student', toolArgs };
+                                  // Add user confirmation message
+                                  setMessages(prev => [...prev, {
+                                    id: `confirm-user-${Date.now()}`,
+                                    role: 'user',
+                                    content: qr.label,
+                                    timestamp: new Date(),
+                                  }]);
+                                  setIsLoading(true);
+                                  try {
+                                    const confirmResult = await kaiChatMutation.mutateAsync({
+                                      message: `CONFIRMED: Execute ${pendingAction.toolName} with args: ${JSON.stringify(pendingAction.toolArgs)}`,
+                                      conversationHistory: [],
+                                    });
+                                    setMessages(prev => [...prev, {
+                                      id: `confirm-result-${Date.now()}`,
+                                      role: 'assistant',
+                                      content: confirmResult.response,
+                                      timestamp: new Date(),
+                                    }]);
+                                  } catch (e: any) {
+                                    setMessages(prev => [...prev, {
+                                      id: `confirm-error-${Date.now()}`,
+                                      role: 'assistant',
+                                      content: `❌ Failed to execute action: ${e.message}`,
+                                      timestamp: new Date(),
+                                    }]);
+                                  } finally {
+                                    setIsLoading(false);
+                                  }
+                                } else if (qr.action === 'cancel_action') {
+                                  // User cancelled the destructive action
+                                  setMessages(prev => prev.map(m =>
+                                    m.id === message.id ? { ...m, quickReplies: [], pendingAction: undefined } : m
+                                  ));
+                                  setMessages(prev => [...prev, {
+                                    id: `cancel-ack-${Date.now()}`,
+                                    role: 'assistant',
+                                    content: '✅ Action cancelled. No changes were made.',
+                                    timestamp: new Date(),
+                                  }]);
                                 }
                               }}
                               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium border transition-colors ${
@@ -4675,7 +4731,8 @@ export default function KaiCommand() {
                                 qr.action.startsWith('import_students_from_pdf:') ||
                                 qr.action.startsWith('import_programs_from_pdf:') ||
                                 qr.action.startsWith('import_merchandise_from_pdf:') ||
-                                qr.action.startsWith('import_schedule_from_pdf:')
+                                qr.action.startsWith('import_schedule_from_pdf:') ||
+                                qr.action.startsWith('confirm_archive:')
                                   ? 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200'
                                   : isDark || isCinematic
                                     ? 'bg-white/8 hover:bg-white/15 text-white/70 border-white/15'

@@ -355,6 +355,10 @@ export const kaiConversationsRouter = router({
       z.object({
         conversationId: z.number(),
         query: z.string(),
+        confirmedAction: z.object({
+          toolName: z.string(),
+          toolArgs: z.record(z.string(), z.any()),
+        }).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -375,6 +379,42 @@ export const kaiConversationsRouter = router({
 
       if (!conversation) {
         throw new Error("Conversation not found");
+      }
+
+      // ── Confirmed destructive action (user clicked "Yes, archive") ──────────
+      if (input.confirmedAction) {
+        const { toolName, toolArgs } = input.confirmedAction;
+        // Store the user confirmation message
+        await db.insert(kaiMessages).values({
+          conversationId: input.conversationId,
+          organizationId: ctx.user.organizationId,
+          role: "user",
+          content: input.query,
+          createdAt: new Date().toISOString(),
+        });
+        // Execute the confirmed action directly
+        const toolResult = await executeKaiTool(toolName, toolArgs, ctx);
+        let parsed: any = {};
+        try { parsed = JSON.parse(toolResult); } catch {}
+        const confirmResponse = parsed.message || (parsed.success ? "✅ Action completed." : "❌ Action failed.");
+        // Store Kai's response
+        await db.insert(kaiMessages).values({
+          conversationId: input.conversationId,
+          organizationId: ctx.user.organizationId,
+          role: "assistant",
+          content: confirmResponse,
+          createdAt: new Date().toISOString(),
+        });
+        await db.update(kaiConversations)
+          .set({ lastMessageAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
+          .where(eq(kaiConversations.id, input.conversationId));
+        return {
+          response: confirmResponse,
+          type: "chat" as const,
+          metricData: null,
+          uiBlocks: null,
+          refreshUser: false,
+        };
       }
 
       // Step 1: Store user message
@@ -526,6 +566,52 @@ TONE RULES:
           const toolCalls = response.choices?.[0]?.message?.tool_calls;
           if (toolCalls && toolCalls.length > 0) {
             console.log('[Kai] Tool calls detected:', toolCalls.map(t => t.function.name));
+
+            // ── CONFIRMATION GATE: Intercept destructive actions ────────────────
+            const DESTRUCTIVE_TOOLS = ['remove_student', 'archive_student'];
+            const destructiveCall = toolCalls.find(tc => DESTRUCTIVE_TOOLS.includes(tc.function.name));
+            if (destructiveCall) {
+              const destructiveArgs = JSON.parse(destructiveCall.function.arguments);
+              const studentName = destructiveArgs.studentName || 'this student';
+              const confirmMsg = `⚠️ **Confirm Archive**\n\nAre you sure you want to archive **${studentName}**? They will be moved to Inactive status and removed from the active roster. Their records will be preserved.\n\nReply **\"Yes, archive\"** to confirm or **\"Cancel\"** to abort.`;
+              // Store Kai's confirmation request as an assistant message
+              await db.insert(kaiMessages).values({
+                conversationId: input.conversationId,
+                organizationId: ctx.user.organizationId,
+                role: "assistant",
+                content: confirmMsg,
+                metadata: JSON.stringify({
+                  pendingAction: {
+                    toolName: destructiveCall.function.name,
+                    toolArgs: destructiveArgs,
+                  },
+                  quickReplies: [
+                    { label: `✅ Yes, archive ${studentName}`, action: `confirm_archive:${JSON.stringify(destructiveArgs)}` },
+                    { label: '❌ Cancel', action: 'cancel_action' },
+                  ],
+                }),
+                createdAt: new Date().toISOString(),
+              });
+              await db.update(kaiConversations)
+                .set({ lastMessageAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
+                .where(eq(kaiConversations.id, input.conversationId));
+              return {
+                response: confirmMsg,
+                type: "chat" as const,
+                metricData: null,
+                uiBlocks: null,
+                refreshUser: false,
+                pendingAction: {
+                  toolName: destructiveCall.function.name,
+                  toolArgs: destructiveArgs,
+                },
+                quickReplies: [
+                  { label: `✅ Yes, archive ${studentName}`, action: `confirm_archive:${JSON.stringify(destructiveArgs)}` },
+                  { label: '❌ Cancel', action: 'cancel_action' },
+                ],
+              };
+            }
+            // ── END CONFIRMATION GATE ──────────────────────────────────────────
             
             // Execute tool calls and build tool results
             const toolResults = [];
