@@ -1174,20 +1174,31 @@ export async function executeInviteStaff(
         to: { email, name: fullName },
         subject: `You've been invited to join ${orgName} on DojoFlow`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #1a1a2e;">Welcome to DojoFlow, ${firstName}!</h2>
-            <p>You've been added as a <strong>${role.replace(/_/g, ' ')}</strong> at <strong>${orgName}</strong>.</p>
-            <p>Here are your login credentials:</p>
-            <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
-              <p><strong>Login URL:</strong> <a href="${loginUrl}">${loginUrl}</a></p>
-              <p><strong>Email:</strong> ${email}</p>
-              <p><strong>Temporary Password:</strong> <code style="background:#e0e0e0;padding:2px 6px;border-radius:4px;">${tempPassword}</code></p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+            <div style="background: #1a1a2e; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 24px;">DojoFlow</h1>
+              <p style="color: #aaa; margin: 4px 0 0;">Staff Invitation</p>
             </div>
-            <p style="color: #666;">Please log in and change your password as soon as possible.</p>
-            <p>If you have any questions, contact your dojo administrator.</p>
+            <div style="padding: 32px;">
+              <h2 style="color: #1a1a2e; margin-top: 0;">Welcome, ${firstName}!</h2>
+              <p style="color: #444;">You've been added as a <strong>${role.replace(/_/g, ' ')}</strong> at <strong>${orgName}</strong>. Your account is ready.</p>
+              <div style="background: #f8f9fa; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; margin: 24px 0;">
+                <p style="margin: 0 0 8px; color: #666; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Your Login Credentials</p>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr><td style="padding: 6px 0; color: #666; width: 140px;">Email:</td><td style="padding: 6px 0; font-weight: bold; color: #1a1a2e;">${email}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #666;">Temporary Password:</td><td style="padding: 6px 0;"><code style="background:#e8e8e8; padding: 3px 8px; border-radius: 4px; font-size: 15px; letter-spacing: 1px;">${tempPassword}</code></td></tr>
+                </table>
+              </div>
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="${loginUrl}" style="background: #e63946; color: #ffffff; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: bold; display: inline-block;">Log In to DojoFlow →</a>
+              </div>
+              <p style="color: #888; font-size: 13px; text-align: center;">Or copy this link: <a href="${loginUrl}" style="color: #e63946;">${loginUrl}</a></p>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
+              <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">Please log in and change your password as soon as possible. If you have questions, contact your dojo administrator.</p>
+            </div>
           </div>
         `,
-        text: `Welcome to DojoFlow!\n\nYou've been added as a ${role} at ${orgName}.\n\nLogin URL: ${loginUrl}\nEmail: ${email}\nTemporary Password: ${tempPassword}\n\nPlease log in and change your password.`,
+        text: `Welcome to DojoFlow!\n\nYou've been added as a ${role.replace(/_/g, ' ')} at ${orgName}.\n\nLogin URL: ${loginUrl}\nEmail: ${email}\nTemporary Password: ${tempPassword}\n\nPlease log in and change your password as soon as possible.`,
         organizationId: orgId,
       });
       emailStatus = emailResult.success
