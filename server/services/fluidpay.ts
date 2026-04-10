@@ -67,7 +67,7 @@ export async function validateFluidPayKey(apiKey: string): Promise<{ valid: bool
         },
         body: JSON.stringify({ limit: 1 }),
       });
-    } catch {
+    } catch (_e) {
       continue; // Network error — try next URL
     }
     if (response.ok) {
@@ -187,4 +187,85 @@ export async function getRecentTransactions(
 
   const result = await searchTransactions(apiKey, startDate, endDate, limit, baseUrl);
   return result.data || [];
+}
+
+/**
+ * Get revenue history for the last N months (for chart display)
+ */
+export async function getRevenueHistory(
+  apiKey: string,
+  months = 6,
+  baseUrl = FLUIDPAY_PROD_URL
+): Promise<Array<{
+  month: string;
+  monthShort: string;
+  year: number;
+  monthNum: number;
+  totalDollars: number;
+  settledDollars: number;
+  refundDollars: number;
+  transactionCount: number;
+}>> {
+  const now = new Date();
+  const results = [];
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const monthShortNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+    const targetYear = d.getUTCFullYear();
+    const targetMonth = d.getUTCMonth() + 1;
+    const startDate = `${targetYear}-${String(targetMonth).padStart(2, '0')}-01T00:00:00Z`;
+    const lastDay = new Date(Date.UTC(targetYear, targetMonth, 0)).getUTCDate();
+    const endDate = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}T23:59:59Z`;
+
+    try {
+      const result = await searchTransactions(apiKey, startDate, endDate, 500, baseUrl);
+      const transactions = result.data || [];
+      const sales = transactions.filter(t => t.type === 'sale' && t.status !== 'voided' && t.status !== 'declined');
+      const refunds = transactions.filter(t => t.type === 'refund');
+      const totalCents = sales.reduce((sum, t) => sum + (t.amount || 0), 0);
+      const settledCents = sales.filter(t => t.status === 'settled' || t.status === 'partially_refunded').reduce((sum, t) => sum + (t.amount_settled || t.amount || 0), 0);
+      const refundCents = refunds.reduce((sum, t) => sum + (t.amount || 0), 0);
+      results.push({
+        month: monthNames[targetMonth - 1],
+        monthShort: monthShortNames[targetMonth - 1],
+        year: targetYear,
+        monthNum: targetMonth,
+        totalDollars: totalCents / 100,
+        settledDollars: settledCents / 100,
+        refundDollars: refundCents / 100,
+        transactionCount: transactions.length,
+      });
+    } catch (_e) {
+      results.push({
+        month: monthNames[targetMonth - 1],
+        monthShort: monthShortNames[targetMonth - 1],
+        year: targetYear,
+        monthNum: targetMonth,
+        totalDollars: 0,
+        settledDollars: 0,
+        refundDollars: 0,
+        transactionCount: 0,
+      });
+    }
+  }
+  return results;
+}
+
+/**
+ * Get all transactions for a date range (for full transaction history table)
+ */
+export async function getAllTransactions(
+  apiKey: string,
+  startDate: string,
+  endDate: string,
+  limit = 100,
+  baseUrl = FLUIDPAY_PROD_URL
+): Promise<{ transactions: FluidPayTransaction[]; totalCount: number }> {
+  const result = await searchTransactions(apiKey, startDate, endDate, limit, baseUrl);
+  return {
+    transactions: result.data || [],
+    totalCount: result.total_count || 0,
+  };
 }

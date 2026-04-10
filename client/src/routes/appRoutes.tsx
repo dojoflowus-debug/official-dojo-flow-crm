@@ -27,6 +27,7 @@ const StudentDashboard = lazy(() => import("../pages/StudentDashboard"));
 const StudentSchedule = lazy(() => import("../pages/StudentSchedule"));
 const StudentBeltTests = lazy(() => import("../pages/StudentBeltTests"));
 const StudentPayments = lazy(() => import("../pages/StudentPayments"));
+const PaymentsDashboard = lazy(() => import("../pages/Payments"));
 const StudentMessages = lazy(() => import("../pages/StudentMessages"));
 const StudentProfile = lazy(() => import("../pages/StudentProfile"));
 const StudentSettings = lazy(() => import("../pages/StudentSettings"));
@@ -261,6 +262,7 @@ export const appRoutes: RouteConfig[] = [
 
   { path: "/programs", element: <AppShell><Programs /></AppShell>, label: "Programs" },
   { path: "/staff", element: <AppShell><Staff /></AppShell>, label: "Staff" },
+  { path: "/payments", element: <AppShell><PaymentsDashboard /></AppShell>, label: "Payments" },
   { path: "/billing", element: <AppShell><Billing /></AppShell>, label: "Billing" },
   { path: "/pricing", element: <Pricing />, label: "Pricing" },
   { path: "/billing/success", element: <BillingSuccess />, label: "Billing Success" },

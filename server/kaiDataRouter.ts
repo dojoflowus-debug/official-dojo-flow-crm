@@ -9,7 +9,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getDb } from "./db";
 import { students, leads, classes, classSessions, classEnrollments, studentAttendance, signedWaivers, kiosks, kioskLocations, studentTuition, dojoSettings } from "../drizzle/schema";
 import { eq, like, and, or, sql, desc, asc, gte, lte } from "drizzle-orm";
-import { validateFluidPayKey, getMonthlyRevenue, getRecentTransactions } from "./services/fluidpay";
+import { validateFluidPayKey, getMonthlyRevenue, getRecentTransactions, getRevenueHistory, getAllTransactions } from "./services/fluidpay";
 
 /**
  * Student card payload shape - matches existing Student Card UI
@@ -1475,6 +1475,68 @@ export const kaiDataRouter = router({
         return { connected: true, transactions };
       } catch (err: any) {
         return { connected: true, transactions: [], error: err.message };
+      }
+    }),
+
+  /**
+   * Get FluidPay revenue history for the last N months (for chart display)
+   */
+  getFluidPayRevenueHistory: protectedProcedure
+    .input(z.object({ months: z.number().default(6) }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not initialized");
+      const orgId = ctx.currentOrganizationId;
+      if (!orgId) return { connected: false, history: [], error: 'No organization found' };
+
+      const settings = await db.select()
+        .from(dojoSettings)
+        .where(eq(dojoSettings.organizationId, orgId))
+        .limit(1);
+
+      const apiKey = (settings[0] as any)?.fluidpayApiKey;
+      if (!apiKey) {
+        return { connected: false, history: [], error: 'FluidPay not connected.' };
+      }
+
+      try {
+        const history = await getRevenueHistory(apiKey, input.months);
+        return { connected: true, history };
+      } catch (err: any) {
+        return { connected: true, history: [], error: err.message };
+      }
+    }),
+
+  /**
+   * Get all FluidPay transactions for a date range (for full history table)
+   */
+  getFluidPayAllTransactions: protectedProcedure
+    .input(z.object({
+      startDate: z.string(),
+      endDate: z.string(),
+      limit: z.number().default(100),
+    }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not initialized");
+      const orgId = ctx.currentOrganizationId;
+      if (!orgId) return { connected: false, transactions: [], totalCount: 0, error: 'No organization found' };
+
+      const settings = await db.select()
+        .from(dojoSettings)
+        .where(eq(dojoSettings.organizationId, orgId))
+        .limit(1);
+
+      const apiKey = (settings[0] as any)?.fluidpayApiKey;
+      if (!apiKey) {
+        return { connected: false, transactions: [], totalCount: 0, error: 'FluidPay not connected.' };
+      }
+
+      try {
+        const result = await getAllTransactions(apiKey, input.startDate, input.endDate, input.limit);
+        return { connected: true, ...result };
+      } catch (err: any) {
+        return { connected: true, transactions: [], totalCount: 0, error: err.message };
       }
     }),
 });
