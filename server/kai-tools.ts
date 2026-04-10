@@ -321,6 +321,43 @@ export const kaiTools = [
         required: []
       }
     }
+  },
+  {
+    type: "function",
+    function: {
+      name: "invite_staff",
+      description: "Add a new staff member to the dojo and send them an invitation email with login credentials. Use this when the user asks to invite, add, or onboard a new staff member, instructor, coach, or employee. Collects their name, email, and role, creates their account, and emails them login instructions.",
+      parameters: {
+        type: "object",
+        properties: {
+          firstName: { type: "string", description: "Staff member's first name" },
+          lastName: { type: "string", description: "Staff member's last name (optional)" },
+          email: { type: "string", description: "Staff member's email address — required to send the invitation" },
+          role: {
+            type: "string",
+            enum: ["instructor", "coach", "trainer", "assistant", "manager", "front_desk", "owner"],
+            description: "Staff role. Default: instructor"
+          },
+          phone: { type: "string", description: "Staff member's phone number (optional)" },
+          sendEmail: { type: "boolean", description: "Whether to send an invitation email. Default: true" }
+        },
+        required: ["firstName", "email"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_staff",
+      description: "List all staff members for this dojo. Use when the user asks who is on staff, how many instructors they have, or wants to see their team.",
+      parameters: {
+        type: "object",
+        properties: {
+          role: { type: "string", description: "Filter by role (optional). E.g. 'instructor', 'manager'" }
+        },
+        required: []
+      }
+    }
   }
 ];
 
@@ -549,6 +586,14 @@ export async function executeKaiTool(
           card: t.card?.masked_card || '',
         }));
         return JSON.stringify({ success: true, data: txList, message: `Recent FluidPay transactions retrieved.` });
+      }
+
+      case "invite_staff": {
+        return await executeInviteStaff(toolArgs, ctx);
+      }
+
+      case "list_staff": {
+        return await executeListStaff(toolArgs, ctx);
       }
 
       default:
@@ -995,5 +1040,194 @@ async function executeMarkAttendance(
     success: true,
     action: "attendance_marked",
     message: `${statusEmoji} **${fullName}** marked as **${args.status}** for ${attendanceDate}.`,
+  });
+}
+
+/**
+ * Invite a new staff member: create their account, add to teamMembers, send invitation email
+ */
+export async function executeInviteStaff(
+  args: {
+    firstName: string;
+    lastName?: string;
+    email: string;
+    role?: string;
+    phone?: string;
+    sendEmail?: boolean;
+  },
+  ctx: any
+): Promise<string> {
+  const { getDb } = await import("./db");
+  const { users, teamMembers, organizationUsers } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  const bcrypt = await import("bcryptjs");
+
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const orgId = ctx.user?.organizationId || ctx?.currentOrganizationId;
+  if (!orgId) return JSON.stringify({ success: false, message: "No organization found." });
+
+  const email = args.email?.trim().toLowerCase();
+  if (!email) return JSON.stringify({ success: false, message: "Email is required to send an invitation." });
+
+  const firstName = args.firstName?.trim();
+  const lastName = args.lastName?.trim() || "";
+  const fullName = `${firstName} ${lastName}`.trim();
+  const role = args.role || "instructor";
+
+  // Check if user already exists
+  const existing = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  if (existing.length > 0) {
+    return JSON.stringify({
+      success: false,
+      message: `⚠️ A user with email **${email}** already exists in the system. They can log in at /staff/login.`,
+    });
+  }
+
+  // Generate a temporary password
+  const tempPassword = `Dojo${Math.floor(1000 + Math.random() * 9000)}!`;
+  const hashedPassword = await bcrypt.hash(tempPassword, 10);
+  const openId = `staff_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+
+  // Create user account
+  await db.insert(users).values({
+    email,
+    password: hashedPassword,
+    name: fullName,
+    preferredName: firstName,
+    provider: "local",
+    role: "staff",
+    openId,
+    organizationId: orgId,
+  } as any);
+
+  // Fetch the new user
+  const newUserRows = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const newUser = newUserRows[0];
+
+  if (newUser) {
+    // Link user to organization
+    try {
+      await db.insert(organizationUsers).values({
+        userId: newUser.id,
+        organizationId: orgId,
+        role: role as any,
+      } as any);
+    } catch (_e) {
+      // Ignore duplicate link errors
+    }
+
+    // Add to teamMembers for display in Staff page
+    const roleMap: Record<string, string> = {
+      instructor: "instructor", coach: "coach", trainer: "trainer",
+      assistant: "assistant", manager: "manager", front_desk: "front_desk", owner: "owner",
+    };
+    try {
+      await db.insert(teamMembers).values({
+        name: fullName,
+        role: (roleMap[role] || "instructor") as any,
+        email,
+        phone: args.phone || null,
+        organizationId: orgId,
+        isActive: 1,
+      } as any);
+    } catch (_e) {
+      // Non-fatal if teamMembers insert fails
+    }
+  }
+
+  // Send invitation email
+  const shouldSendEmail = args.sendEmail !== false;
+  let emailStatus = "Email not sent (sendEmail=false).";
+  if (shouldSendEmail) {
+    try {
+      const { sendEmail } = await import("./_core/sendgrid");
+      // Get org name for the email
+      const { organizations } = await import("../drizzle/schema");
+      const orgRows = await db.select().from(organizations).where(eq(organizations.id, orgId)).limit(1);
+      const orgName = orgRows[0]?.name || "your dojo";
+      const loginUrl = `${process.env.VITE_FRONTEND_FORGE_API_URL ? process.env.VITE_FRONTEND_FORGE_API_URL.replace('/api', '') : 'https://dojo-flow.ai'}/staff/login`;
+
+      const emailResult = await sendEmail({
+        to: { email, name: fullName },
+        subject: `You've been invited to join ${orgName} on DojoFlow`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #1a1a2e;">Welcome to DojoFlow, ${firstName}!</h2>
+            <p>You've been added as a <strong>${role.replace(/_/g, ' ')}</strong> at <strong>${orgName}</strong>.</p>
+            <p>Here are your login credentials:</p>
+            <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+              <p><strong>Login URL:</strong> <a href="${loginUrl}">${loginUrl}</a></p>
+              <p><strong>Email:</strong> ${email}</p>
+              <p><strong>Temporary Password:</strong> <code style="background:#e0e0e0;padding:2px 6px;border-radius:4px;">${tempPassword}</code></p>
+            </div>
+            <p style="color: #666;">Please log in and change your password as soon as possible.</p>
+            <p>If you have any questions, contact your dojo administrator.</p>
+          </div>
+        `,
+        text: `Welcome to DojoFlow!\n\nYou've been added as a ${role} at ${orgName}.\n\nLogin URL: ${loginUrl}\nEmail: ${email}\nTemporary Password: ${tempPassword}\n\nPlease log in and change your password.`,
+        organizationId: orgId,
+      });
+      emailStatus = emailResult.success
+        ? `✅ Invitation email sent to **${email}**.`
+        : `⚠️ Account created but email failed: ${emailResult.error}`;
+    } catch (err: any) {
+      emailStatus = `⚠️ Account created but email failed: ${err.message}`;
+    }
+  }
+
+  return JSON.stringify({
+    success: true,
+    action: "staff_invited",
+    message: `✅ **${fullName}** has been added as a **${role.replace(/_/g, ' ')}**.\n\n${emailStatus}\n\nThey can log in at /staff/login using their email and temporary password.`,
+    data: { name: fullName, email, role, tempPassword: shouldSendEmail ? "(sent via email)" : tempPassword },
+  });
+}
+
+/**
+ * List all staff members for this organization
+ */
+export async function executeListStaff(
+  args: { role?: string },
+  ctx: any
+): Promise<string> {
+  const { getDb } = await import("./db");
+  const { teamMembers } = await import("../drizzle/schema");
+  const { eq, and } = await import("drizzle-orm");
+
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const orgId = ctx.user?.organizationId || ctx?.currentOrganizationId;
+  if (!orgId) return JSON.stringify({ success: false, message: "No organization found." });
+
+  const rows = await db.select().from(teamMembers).where(eq(teamMembers.organizationId, orgId));
+  const filtered = args.role
+    ? rows.filter((r: any) => r.role?.toLowerCase() === args.role?.toLowerCase())
+    : rows;
+
+  if (filtered.length === 0) {
+    return JSON.stringify({
+      success: true,
+      data: [],
+      message: args.role
+        ? `No staff members with role "${args.role}" found.`
+        : "No staff members found. You can add staff by saying \"invite [name] as instructor\".",
+    });
+  }
+
+  const list = filtered.map((s: any) => ({
+    name: s.name,
+    role: s.role,
+    email: s.email || "—",
+    phone: s.phone || "—",
+    active: s.isActive ? "Active" : "Inactive",
+  }));
+
+  return JSON.stringify({
+    success: true,
+    data: list,
+    message: `**${filtered.length} staff member${filtered.length !== 1 ? "s" : ""}** found:\n${list.map((s: any) => `• **${s.name}** — ${s.role} (${s.email})`).join("\n")}`,
   });
 }

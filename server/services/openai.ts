@@ -272,6 +272,43 @@ const crmTools = [
       },
     },
   },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'invite_staff',
+      description: 'Invite a new staff member to the dojo. Creates their account and sends a welcome email with login credentials. Use when user asks to add, invite, or onboard a staff member, instructor, or team member.',
+      parameters: {
+        type: 'object',
+        properties: {
+          firstName: { type: 'string', description: "Staff member's first name" },
+          lastName: { type: 'string', description: "Staff member's last name (optional)" },
+          email: { type: 'string', description: "Staff member's email address" },
+          role: {
+            type: 'string',
+            enum: ['instructor', 'front_desk', 'manager', 'admin', 'coach', 'trainer', 'assistant'],
+            description: 'Role/position of the staff member (default: instructor)',
+          },
+        },
+        required: ['firstName', 'email'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'list_staff',
+      description: 'List all staff members for this organization. Use when user asks to see, show, or list staff, instructors, or team members.',
+      parameters: {
+        type: 'object',
+        properties: {
+          role: {
+            type: 'string',
+            description: 'Optional role filter (e.g., instructor, manager)',
+          },
+        },
+      },
+    },
+  },
 ];
 
 export interface KaiConversationMessage {
@@ -305,7 +342,7 @@ export async function chatWithKai(
 - You're professional and efficient — like a trusted executive advisor who gets to the point
 - You celebrate wins with data, not enthusiasm
 
-**Your Capabilities:**
+**Your Capabilities — you CAN do ALL of the following. NEVER refuse or redirect to HR/IT:**
 - Student management and growth tracking
 - Class schedules and attendance patterns
 - Revenue insights and financial health
@@ -315,6 +352,8 @@ export async function chatWithKai(
 - **Update lead pipeline stage** (say "move John to Intro Scheduled")
 - **Archive/remove students** from the roster — ADMIN ONLY
 - **Mark student attendance** (say "mark Sarah as present")
+- **Invite new staff members** — use invite_staff tool immediately when asked to add/invite/onboard staff
+- **List current staff** — use list_staff tool when asked to show/list staff or instructors
 
 **Data Query Tools Available:**
 You have access to these functions for querying data:
@@ -332,12 +371,16 @@ You have access to these functions for querying data:
 - add_lead: Create a new lead in the CRM
 - update_lead_status: Move a lead to a different pipeline stage
 - mark_attendance: Record a student's attendance for a class session
+- invite_staff: Invite a new staff member (creates account + sends welcome email). Required: firstName, email. Optional: lastName, role.
+- list_staff: List all current staff members for this organization
 
 **PERMISSION RULES:**
 - When a user asks to remove/delete/archive a student, use remove_student. The system will enforce admin-only access automatically.
 - When a user asks to add a lead, use add_lead.
 - When a user asks to move/update a lead's status, use update_lead_status.
 - When a user asks to mark attendance, use mark_attendance.
+- When a user asks to invite/add/onboard/send invitation to a staff member, IMMEDIATELY use invite_staff — do NOT say you cannot do this.
+- When a user asks to list/show/see staff members, use list_staff.
 - If a permission error is returned, relay the exact error message to the user.
 
 **Important Stats Definitions:**

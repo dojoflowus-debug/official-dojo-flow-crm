@@ -2458,23 +2458,32 @@ export default function KaiCommand() {
       hasAttachment = false
     ): 'creative_generation' | 'creative_edit' | 'data_query' | 'tutorial_help' | 'greeting' | 'unknown' => {
       const t = text.toLowerCase();
-      // Creative generation keywords — any single match triggers the pipeline
-      const creativeKeywords = [
-        'create', 'design', 'make', 'generate',
-        'flyer', 'poster', 'ad', 'graphic', 'banner',
+      // Creative generation keywords — use word-boundary matching for short/ambiguous words
+      // to avoid false positives (e.g. 'ad' matching 'add', 'make' matching 'make a reservation')
+      const creativeSubstring = [
+        'flyer', 'poster', 'graphic', 'banner',
         'rack card', 'postcard', 'brochure',
         'instagram post', 'instagram story', 'facebook ad',
         'social media', 'promo image', 'promotional image',
         'marketing image', 'marketing flyer', 'marketing graphic',
-        'image', 'photo', 'picture', 'visual', 'artwork', 'illustration',
-        'advertisement', 'logo',
+        'artwork', 'illustration', 'advertisement',
       ];
+      // Whole-word-only keywords — must be surrounded by word boundaries
+      const creativeWholeWord = [
+        'create', 'design', 'generate',
+        'ad', 'logo', 'image', 'photo', 'picture', 'visual',
+      ];
+      // 'make' only triggers creative if followed by a creative noun
+      const makesCreative = /\bmake\s+(a\s+)?(flyer|poster|graphic|banner|image|photo|logo|ad\b|advertisement)/i.test(t);
       const editKeywords = [
         'edit', 'change', 'remove background', 'add logo',
         'resize', 'improve', 'make this premium', 'put my logo',
         'add my logo', 'fix this', 'update this', 'enhance',
       ];
-      if (creativeKeywords.some(k => t.includes(k))) return 'creative_generation';
+      const isCreative = creativeSubstring.some(k => t.includes(k)) ||
+        creativeWholeWord.some(k => new RegExp(`\\b${k}\\b`).test(t)) ||
+        makesCreative;
+      if (isCreative) return 'creative_generation';
       if (hasAttachment || editKeywords.some(k => t.includes(k))) return 'creative_edit';
       if (t.includes('how many') || t.includes('count') || t.includes('show me') || t.includes('list')) return 'data_query';
       if (t.includes('how do i') || t.includes('show me how') || t.includes('tutorial')) return 'tutorial_help';

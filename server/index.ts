@@ -1,4 +1,5 @@
 import express from "express";
+import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -138,6 +139,8 @@ async function startServer() {
   // Body parsing middleware
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+  // Cookie parser — required for req.cookies to be populated (used by auth context)
+  app.use(cookieParser());
 
   // Session configuration
   app.use(

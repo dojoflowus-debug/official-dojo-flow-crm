@@ -504,6 +504,16 @@ Need help with a specific step in PCBancard Fluid Pay? Let me know.`;
 
           const groundedSystemPrompt = `You are Kai, an AI operations assistant for martial arts schools. You operate as a technical operator — not a chatbot. Your communication style is clear, direct, and specific.${ownerGreeting}
 
+CAPABILITIES — you CAN perform ALL of the following directly. NEVER refuse or redirect to HR/IT:
+- Students: search students, get counts, view at-risk students, remove students
+- Leads: add leads, search leads, update lead pipeline status
+- Staff: invite new staff members (use invite_staff tool), list current staff (use list_staff tool)
+- Classes: list classes, get rosters, mark attendance
+- Payments: view FluidPay revenue and transactions, connect FluidPay
+- Communications: send SMS blasts to students or leads
+- Profile: update display name
+When asked to invite or add a staff member, ALWAYS use the invite_staff tool immediately — do not ask the user to contact HR or IT.
+
 DATA GROUNDING RULES:
 1. NEVER invent or guess metrics. If you don't have data, state: "No data available for [specific metric]." Do not apologize.
 2. ALWAYS use available tools to query the database for factual information:
@@ -511,6 +521,8 @@ DATA GROUNDING RULES:
    - Student details → use search_students
    - Lead information → use get_new_leads
    - Class schedules → use list_classes
+   - Staff list → use list_staff
+   - Invite staff → use invite_staff
 3. If a query asks for data you haven't queried, state: "I haven't queried [specific data source] yet." Then query it immediately.
 4. Always cite data sources inline: (Source: Students module), (Source: Leads module).
 5. When you have data from a tool call, use it directly — no hedging.
@@ -544,7 +556,13 @@ TONE RULES:
 - Never apologize for errors — describe them and fix them
 - Never use vague phrases like "there might be an issue" — be specific
 - Separate what is true now from what was wrong from what was changed from what still needs verification
-- Sound like a capable operator, not a customer service bot`;
+- Sound like a capable operator, not a customer service bot
+
+TOOL RESULT HANDLING:
+- When a tool returns a JSON object with a "message" field, relay that message text directly to the user — do NOT echo the raw JSON.
+- If the tool result has success: true, confirm the action was completed using the message text.
+- If the tool result has success: false, report the error using the error field.
+- Never output raw JSON to the user.`;
 
           // First attempt: Call LLM with tools
           let response = await invokeLLM({
@@ -674,6 +692,23 @@ TONE RULES:
 
           const aiRaw = response.choices?.[0]?.message?.content || "I am not sure how to help with that.";
           aiResponse = typeof aiRaw === "string" ? aiRaw : JSON.stringify(aiRaw);
+          
+          // Post-process: if the LLM echoed raw JSON tool result, extract the message field
+          if (aiResponse.trim().startsWith('{') || aiResponse.trim().startsWith('"{\'')) {
+            try {
+              // Handle double-escaped JSON (e.g. "{\"success\":true,...}")
+              let jsonStr = aiResponse.trim();
+              if (jsonStr.startsWith('"') && jsonStr.endsWith('"')) {
+                jsonStr = JSON.parse(jsonStr); // unescape the outer string
+              }
+              const parsed = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
+              if (parsed && typeof parsed === 'object' && parsed.message) {
+                aiResponse = parsed.message;
+              }
+            } catch (_) {
+              // Not valid JSON, keep as-is
+            }
+          }
           
           // AGGRESSIVE POST-PROCESSING: Replace all payment processor mentions with PCBancard Fluid Pay
           aiResponse = aiResponse

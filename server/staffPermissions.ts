@@ -58,6 +58,7 @@ export const KAI_ACTION_PERMISSIONS: Record<
   archive_student:       { minRole: "admin",      description: "archive a student" },
   delete_lead:           { minRole: "admin",      description: "delete a lead" },
   manage_staff:          { minRole: "admin",      description: "manage staff members" },
+  invite_staff:          { minRole: "admin",      description: "invite a new staff member" },
 
   // ── Write ────────────────────────────────────────────────────────────────
   edit_student:          { minRole: "manager",    description: "edit a student profile" },
@@ -78,6 +79,7 @@ export const KAI_ACTION_PERMISSIONS: Record<
   get_attendance_summary:{ minRole: "instructor", description: "view attendance summary" },
   get_revenue_summary:   { minRole: "manager",    description: "view revenue summary" },
   update_user_name:      { minRole: "front_desk", description: "update display name" },
+  list_staff:            { minRole: "front_desk", description: "list staff members" },
 };
 
 /**
@@ -121,8 +123,16 @@ export async function getUserRole(ctx: any): Promise<StaffRole> {
     if (!db) return "staff";
 
     const userId = ctx?.user?.id;
-    const orgId = ctx?.user?.organizationId;
-    if (!userId || !orgId) return "staff";
+    // ctx.user.organizationId may be undefined; fall back to ctx.currentOrganizationId
+    const orgId = ctx?.user?.organizationId || ctx?.currentOrganizationId;
+    if (!userId) return "staff";
+    // If no orgId, fall back to users.role directly
+    if (!orgId) {
+      const { users: usersNoOrg } = await import('../drizzle/schema');
+      const { eq: eqNoOrg } = await import('drizzle-orm');
+      const [uRowNoOrg] = await db.select({ role: usersNoOrg.role }).from(usersNoOrg).where(eqNoOrg(usersNoOrg.id, userId)).limit(1);
+      return (uRowNoOrg?.role as StaffRole) || 'staff';
+    }
 
     // Check organization_users for this user+org combo
     const { organizationUsers } = await import("../drizzle/schema");

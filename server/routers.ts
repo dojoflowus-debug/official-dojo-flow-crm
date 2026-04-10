@@ -566,6 +566,26 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       return { success: true, action: 'attendance_marked', message: `${emojiD} **${existingD.firstName} ${existingD.lastName || ''}** marked **${args.status}** for ${attendanceDateD}.` };
     }
     
+    case 'invite_staff': {
+      const { checkKaiPermission, getUserRole } = await import('./staffPermissions');
+      const userRole = await getUserRole(ctx);
+      const perm = checkKaiPermission(userRole, 'invite_staff');
+      if (!perm.allowed) return { error: perm.reason, permissionDenied: true };
+      const { executeInviteStaff } = await import('./kai-tools');
+      const inviteResult = await executeInviteStaff(args, ctx);
+      // executeInviteStaff returns a JSON string; parse it so formatFunctionResults can handle it
+      try { return typeof inviteResult === 'string' ? JSON.parse(inviteResult) : inviteResult; } catch { return inviteResult; }
+    }
+
+    case 'list_staff': {
+      const { checkKaiPermission, getUserRole } = await import('./staffPermissions');
+      const userRole = await getUserRole(ctx);
+      const perm = checkKaiPermission(userRole, 'list_staff');
+      if (!perm.allowed) return { error: perm.reason, permissionDenied: true };
+      const { executeListStaff } = await import('./kai-tools');
+      return await executeListStaff(args, ctx);
+    }
+
     default:
       return { error: 'Unknown function' };
   }
