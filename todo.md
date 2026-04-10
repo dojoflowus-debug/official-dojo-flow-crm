@@ -9314,3 +9314,11 @@ Transform kiosk from admin dashboard to premium location experience
 
 - [x] Add real mock portrait photos to test students in the database
 - [x] Fix student photo upload feature - fixed varchar(500) column to TEXT, uploadPhotoToStudent now uses S3
+
+## MyDojo Website Integration
+- [x] Create myDojoSyncRouter.ts - backend tRPC router with preview, sync, getStatus procedures
+- [x] Register myDojoSyncRouter in routers.ts as myDojoSync
+- [x] Add lastMyDojoSync column migration to dojo_settings table in index.ts
+- [x] Create MyDojoSyncModal.tsx - frontend modal with preview counts and import controls
+- [x] Add "MyDojo Sync" button to Leads page toolbar
+- [x] Wire MyDojoSyncModal into Leads.tsx with onSyncComplete handler

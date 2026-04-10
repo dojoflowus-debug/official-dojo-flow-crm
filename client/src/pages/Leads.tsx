@@ -17,10 +17,12 @@ import {
   Plus,
   Settings,
   Focus,
-  Sparkles
+  Sparkles,
+  RefreshCw
 } from 'lucide-react'
 import LeadSourceSettings from '@/components/LeadSourceSettings'
 import { KaiLeadCaptureSection } from '@/components/KaiLeadCaptureSection'
+import MyDojoSyncModal from '@/components/MyDojoSyncModal'
 
 // Stage mapping from old to new
 const stageMapping: Record<string, string> = {
@@ -63,6 +65,7 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
   const [selectedStage, setSelectedStage] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showMyDojoSync, setShowMyDojoSync] = useState(false)
   const [selectedLead, setSelectedLead] = useState<any>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isResolveMode, setIsResolveMode] = useState(false)
@@ -239,6 +242,16 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
                   />
                 </div>
                 
+                <Button
+                  onClick={() => setShowMyDojoSync(true)}
+                  variant="outline"
+                  size="sm"
+                  title="Sync leads & students from MyDojo website"
+                  className={`${isDarkMode ? 'bg-white/5 border-white/20 text-white hover:bg-white/10' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                >
+                  <RefreshCw className="h-4 w-4 mr-1.5" />
+                  <span className="text-xs">MyDojo Sync</span>
+                </Button>
                 <Button 
                   onClick={() => setShowSettings(true)} 
                   variant="outline" 
@@ -439,6 +452,16 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
         <LeadSourceSettings 
           isOpen={showSettings} 
           onClose={() => setShowSettings(false)} 
+        />
+
+        {/* MyDojo Sync Modal */}
+        <MyDojoSyncModal
+          isOpen={showMyDojoSync}
+          onClose={() => setShowMyDojoSync(false)}
+          onSyncComplete={() => {
+            // Refetch leads after sync
+            window.location.reload()
+          }}
         />
 
         {/* Add Lead Modal */}

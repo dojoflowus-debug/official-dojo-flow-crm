@@ -52,6 +52,7 @@ import { emailTemplatesRouter } from './emailTemplatesRouter';
 import { organizationsRouter } from './routers/organizations';
 import { classesRouter } from './classesRouter';
 import { publicLeadRouter } from './publicLeadRouter';
+import { myDojoSyncRouter } from './myDojoSyncRouter';
 import { waiverRouter } from './waiverRouter';
 import { tutorialRouter } from './tutorialRouter';
 import { kaiCreativeRouter } from './kaiCreativeRouter';
@@ -676,6 +677,7 @@ export const appRouter = router({
   pcBankCard: pcBankCardRouter,
   dojoFlowMessaging: messagingRouter,
   publicLead: publicLeadRouter,
+  myDojoSync: myDojoSyncRouter,
   waiver: waiverRouter,
   
   // File upload for attachments

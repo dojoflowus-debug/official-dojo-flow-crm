@@ -147,12 +147,13 @@ async function runStartupMigrations() {
     // Ensure dojo_settings has owner profile columns (SHOW COLUMNS for TiDB compatibility)
     try {
       const [dsExistingCols] = await conn.execute(
-        `SHOW COLUMNS FROM \`dojo_settings\` WHERE Field IN ('ownerRank','programsTaught')`
+        `SHOW COLUMNS FROM \`dojo_settings\` WHERE Field IN ('ownerRank','programsTaught','lastMyDojoSync')`
       ) as any;
       const dsExistingNames = new Set((dsExistingCols as any[]).map((c: any) => c.Field));
       const dsColsToAdd: [string, string][] = [
         ['ownerRank', 'VARCHAR(100) NULL'],
         ['programsTaught', 'TEXT NULL'],
+        ['lastMyDojoSync', 'VARCHAR(64) NULL'],
       ];
       for (const [col, def] of dsColsToAdd) {
         if (!dsExistingNames.has(col)) {
