@@ -197,6 +197,81 @@ const crmTools = [
       },
     },
   },
+  // ── Action tools (write/delete operations) ──────────────────────────────
+  {
+    type: 'function' as const,
+    function: {
+      name: 'remove_student',
+      description: 'Archive or remove a student from the active roster. ADMIN ONLY. Use when user explicitly asks to remove, delete, or archive a student.',
+      parameters: {
+        type: 'object',
+        properties: {
+          studentId: { type: 'number', description: 'The ID of the student to remove' },
+          studentName: { type: 'string', description: 'The name of the student (for confirmation)' },
+          reason: { type: 'string', description: 'Reason for removal (optional)' },
+        },
+        required: ['studentId', 'studentName'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'add_lead',
+      description: 'Add a new lead/prospect to the CRM. Use when the user wants to create a new lead.',
+      parameters: {
+        type: 'object',
+        properties: {
+          firstName: { type: 'string', description: "Lead's first name" },
+          lastName: { type: 'string', description: "Lead's last name" },
+          email: { type: 'string', description: "Lead's email address" },
+          phone: { type: 'string', description: "Lead's phone number" },
+          source: { type: 'string', description: 'Where the lead came from (e.g., Website, Referral, Walk-in)' },
+          interestedProgram: { type: 'string', description: 'Program they are interested in' },
+          notes: { type: 'string', description: 'Any notes about the lead' },
+        },
+        required: ['firstName'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'update_lead_status',
+      description: "Update a lead's pipeline status. Use when user wants to move a lead to a different stage.",
+      parameters: {
+        type: 'object',
+        properties: {
+          leadId: { type: 'number', description: 'The ID of the lead' },
+          leadName: { type: 'string', description: 'The name of the lead (for confirmation)' },
+          status: {
+            type: 'string',
+            enum: ['New Lead', 'Attempting Contact', 'Contact Made', 'Intro Scheduled', 'Offer Presented', 'Enrolled', 'Nurture', 'Lost/Winback'],
+            description: 'The new pipeline stage for the lead',
+          },
+        },
+        required: ['leadId', 'leadName', 'status'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'mark_attendance',
+      description: 'Mark a student as present, absent, or late for a class session.',
+      parameters: {
+        type: 'object',
+        properties: {
+          studentId: { type: 'number', description: "The student's ID" },
+          studentName: { type: 'string', description: "The student's name" },
+          classId: { type: 'number', description: 'The class ID (optional)' },
+          status: { type: 'string', enum: ['present', 'absent', 'late'], description: 'Attendance status' },
+          date: { type: 'string', description: 'Date of attendance (YYYY-MM-DD, defaults to today)' },
+        },
+        required: ['studentId', 'studentName', 'status'],
+      },
+    },
+  },
 ];
 
 export interface KaiConversationMessage {
@@ -236,6 +311,10 @@ export async function chatWithKai(
 - Revenue insights and financial health
 - Lead nurturing and conversion strategies
 - Search and retrieve detailed student/lead information
+- **Add new leads** to the CRM (say "add lead" or "create lead")
+- **Update lead pipeline stage** (say "move John to Intro Scheduled")
+- **Archive/remove students** from the roster — ADMIN ONLY
+- **Mark student attendance** (say "mark Sarah as present")
 
 **Data Query Tools Available:**
 You have access to these functions for querying data:
@@ -247,6 +326,19 @@ You have access to these functions for querying data:
 - search_leads: Search for leads by name, email, or phone
 - get_classes: Get today's class schedule (or any day's schedule). Use for questions about today's classes, the weekly schedule, or what's on right now.
 - get_lead: Get full details for a specific lead by ID
+
+**Action Tools Available (write/modify data):**
+- remove_student: Archive a student from the active roster (ADMIN ONLY — will be blocked for non-admins)
+- add_lead: Create a new lead in the CRM
+- update_lead_status: Move a lead to a different pipeline stage
+- mark_attendance: Record a student's attendance for a class session
+
+**PERMISSION RULES:**
+- When a user asks to remove/delete/archive a student, use remove_student. The system will enforce admin-only access automatically.
+- When a user asks to add a lead, use add_lead.
+- When a user asks to move/update a lead's status, use update_lead_status.
+- When a user asks to mark attendance, use mark_attendance.
+- If a permission error is returned, relay the exact error message to the user.
 
 **Important Stats Definitions:**
 - "How many students do I have?" means ACTIVE students (default)

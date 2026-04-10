@@ -9322,3 +9322,15 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Create MyDojoSyncModal.tsx - frontend modal with preview counts and import controls
 - [x] Add "MyDojo Sync" button to Leads page toolbar
 - [x] Wire MyDojoSyncModal into Leads.tsx with onSyncComplete handler
+
+## Kai Action Functions + Staff Permission Levels
+- [x] Audit Kai chat router and team_members schema for current role/permission model
+- [x] Define staff permission levels: Owner > Admin > Manager > Instructor > Front Desk
+- [x] Add permission middleware to Kai chat that checks caller's role before executing destructive actions
+- [x] Kai action: remove/archive student (Admin+ only)
+- [x] Kai action: add lead (Manager+ allowed)
+- [x] Kai action: change lead status / move pipeline stage (Manager+ allowed)
+- [x] Kai action: look up student/lead info (all roles allowed)
+- [x] Kai action: mark attendance (Instructor+ allowed)
+- [x] Kai refuses destructive actions for non-admin staff with a clear permission error message
+- [ ] Staff page UI shows role badge and permission level for each team member

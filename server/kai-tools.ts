@@ -158,6 +158,94 @@ export const kaiTools = [
       }
     }
   },
+  // ── Action tools (write/delete operations) ──────────────────────────────
+  {
+    type: "function",
+    function: {
+      name: "remove_student",
+      description: "Archive or remove a student from the system. ADMIN ONLY. Use this when the user explicitly asks to remove, delete, or archive a student. Always confirm the student's name before proceeding.",
+      parameters: {
+        type: "object",
+        properties: {
+          studentId: {
+            type: "number",
+            description: "The ID of the student to remove"
+          },
+          studentName: {
+            type: "string",
+            description: "The name of the student (for confirmation)"
+          },
+          reason: {
+            type: "string",
+            description: "Reason for removal (optional)"
+          }
+        },
+        required: ["studentId", "studentName"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "add_lead",
+      description: "Add a new lead to the CRM. Use this when the user wants to create or add a new lead/prospect.",
+      parameters: {
+        type: "object",
+        properties: {
+          firstName: { type: "string", description: "Lead's first name" },
+          lastName: { type: "string", description: "Lead's last name" },
+          email: { type: "string", description: "Lead's email address" },
+          phone: { type: "string", description: "Lead's phone number" },
+          source: { type: "string", description: "Where the lead came from (e.g., Website, Referral, Walk-in)" },
+          interestedProgram: { type: "string", description: "Program they are interested in" },
+          notes: { type: "string", description: "Any notes about the lead" }
+        },
+        required: ["firstName"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "update_lead_status",
+      description: "Update a lead's pipeline status or stage. Use this when the user wants to move a lead to a different stage (e.g., 'mark John as Intro Scheduled', 'move Sarah to Enrolled').",
+      parameters: {
+        type: "object",
+        properties: {
+          leadId: { type: "number", description: "The ID of the lead" },
+          leadName: { type: "string", description: "The name of the lead (for confirmation)" },
+          status: {
+            type: "string",
+            enum: ["New Lead", "Attempting Contact", "Contact Made", "Intro Scheduled", "Offer Presented", "Enrolled", "Nurture", "Lost/Winback"],
+            description: "The new status/pipeline stage for the lead"
+          }
+        },
+        required: ["leadId", "leadName", "status"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "mark_attendance",
+      description: "Mark a student as present or absent for a class session. Use this when the user wants to record attendance.",
+      parameters: {
+        type: "object",
+        properties: {
+          studentId: { type: "number", description: "The student's ID" },
+          studentName: { type: "string", description: "The student's name" },
+          classId: { type: "number", description: "The class ID" },
+          status: {
+            type: "string",
+            enum: ["present", "absent", "late"],
+            description: "Attendance status"
+          },
+          date: { type: "string", description: "Date of attendance (YYYY-MM-DD, defaults to today)" }
+        },
+        required: ["studentId", "studentName", "status"]
+      }
+    }
+  },
   {
     type: "function",
     function: {
@@ -215,6 +303,7 @@ export interface SmsBlastResult {
 
 /**
  * Tool call executor - maps tool names to actual kaiDataRouter calls
+ * Includes permission enforcement via staffPermissions module
  */
 export async function executeKaiTool(
   toolName: string,
@@ -222,6 +311,18 @@ export async function executeKaiTool(
   ctx: any
 ): Promise<string> {
   const { kaiDataRouter } = await import("./kaiDataRouter");
+  const { checkKaiPermission, getUserRole } = await import("./staffPermissions");
+
+  // ── Permission check ──────────────────────────────────────────────────────
+  const userRole = await getUserRole(ctx);
+  const permCheck = checkKaiPermission(userRole, toolName);
+  if (!permCheck.allowed) {
+    return JSON.stringify({
+      success: false,
+      permissionDenied: true,
+      message: permCheck.reason,
+    });
+  }
   
   try {
     switch (toolName) {
@@ -341,6 +442,23 @@ export async function executeKaiTool(
 
       case "send_sms_blast": {
         return await executeSmsBlast(toolArgs, ctx);
+      }
+
+      // ── Action tools ─────────────────────────────────────────────────────
+      case "remove_student": {
+        return await executeRemoveStudent(toolArgs, ctx);
+      }
+
+      case "add_lead": {
+        return await executeAddLead(toolArgs, ctx);
+      }
+
+      case "update_lead_status": {
+        return await executeUpdateLeadStatus(toolArgs, ctx);
+      }
+
+      case "mark_attendance": {
+        return await executeMarkAttendance(toolArgs, ctx);
       }
       
       default:
@@ -575,5 +693,217 @@ async function executeUpdateUserName(
     data: { preferredName: newName },
     message: `Got it! I'll call you ${newName} from now on. Your legal name remains unchanged for billing purposes.`,
     action: "refresh_user"
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Action tool implementations
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Remove (archive) a student — Admin+ only (permission already checked upstream)
+ */
+async function executeRemoveStudent(
+  args: { studentId: number; studentName: string; reason?: string },
+  ctx: any
+): Promise<string> {
+  const { getDb } = await import("./db");
+  const { students } = await import("../drizzle/schema");
+  const { eq, and } = await import("drizzle-orm");
+
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const orgId = ctx.user.organizationId;
+
+  // Verify the student belongs to this org
+  const [existing] = await db
+    .select({ id: students.id, firstName: students.firstName, lastName: students.lastName })
+    .from(students)
+    .where(and(eq(students.id, args.studentId), eq(students.organizationId, orgId)))
+    .limit(1);
+
+  if (!existing) {
+    return JSON.stringify({
+      success: false,
+      message: `Student "${args.studentName}" (ID: ${args.studentId}) was not found in your organization.`,
+    });
+  }
+
+  const fullName = `${existing.firstName} ${existing.lastName}`.trim();
+
+  // Archive the student (set status to Inactive rather than hard-delete)
+  await db
+    .update(students)
+    .set({
+      status: "Inactive",
+      updatedAt: new Date().toISOString().slice(0, 19).replace("T", " "),
+    })
+    .where(eq(students.id, args.studentId));
+
+  return JSON.stringify({
+    success: true,
+    action: "student_archived",
+    message: `✅ **${fullName}** has been archived and removed from the active roster.${args.reason ? ` Reason: ${args.reason}` : ""} Their records are preserved for history.`,
+  });
+}
+
+/**
+ * Add a new lead — Manager+ (permission already checked upstream)
+ */
+async function executeAddLead(
+  args: {
+    firstName: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    source?: string;
+    interestedProgram?: string;
+    notes?: string;
+  },
+  ctx: any
+): Promise<string> {
+  const { getDb } = await import("./db");
+  const { leads } = await import("../drizzle/schema");
+
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const orgId = ctx.user.organizationId;
+  const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+  const [inserted] = await db
+    .insert(leads)
+    .values({
+      firstName: args.firstName,
+      lastName: args.lastName || "",
+      email: args.email?.toLowerCase() || null,
+      phone: args.phone?.replace(/[^0-9+]/g, "") || null,
+      status: "New Lead",
+      source: args.source || "Kai",
+      interestedProgram: args.interestedProgram || null,
+      notes: args.notes || null,
+      organizationId: orgId,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .$returningId();
+
+  const fullName = `${args.firstName} ${args.lastName || ""}`.trim();
+
+  return JSON.stringify({
+    success: true,
+    action: "lead_added",
+    data: { leadId: (inserted as any)?.id },
+    message: `✅ New lead **${fullName}** has been added to the CRM as a **New Lead**.${args.email ? ` Email: ${args.email}` : ""}${args.phone ? ` Phone: ${args.phone}` : ""}`,
+  });
+}
+
+/**
+ * Update a lead's pipeline status — Manager+ (permission already checked upstream)
+ */
+async function executeUpdateLeadStatus(
+  args: { leadId: number; leadName: string; status: string },
+  ctx: any
+): Promise<string> {
+  const { getDb } = await import("./db");
+  const { leads } = await import("../drizzle/schema");
+  const { eq, and } = await import("drizzle-orm");
+
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const orgId = ctx.user.organizationId;
+  const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+  // Verify lead belongs to this org
+  const [existing] = await db
+    .select({ id: leads.id, firstName: leads.firstName, lastName: leads.lastName, status: leads.status })
+    .from(leads)
+    .where(and(eq(leads.id, args.leadId), eq(leads.organizationId, orgId)))
+    .limit(1);
+
+  if (!existing) {
+    return JSON.stringify({
+      success: false,
+      message: `Lead "${args.leadName}" (ID: ${args.leadId}) was not found in your organization.`,
+    });
+  }
+
+  const oldStatus = existing.status;
+  const fullName = `${existing.firstName} ${existing.lastName || ""}`.trim();
+
+  await db
+    .update(leads)
+    .set({ status: args.status as any, updatedAt: now })
+    .where(eq(leads.id, args.leadId));
+
+  return JSON.stringify({
+    success: true,
+    action: "lead_status_updated",
+    message: `✅ **${fullName}**'s pipeline stage has been updated from **${oldStatus}** → **${args.status}**.`,
+  });
+}
+
+/**
+ * Mark student attendance — Instructor+ (permission already checked upstream)
+ */
+async function executeMarkAttendance(
+  args: { studentId: number; studentName: string; classId?: number; status: string; date?: string },
+  ctx: any
+): Promise<string> {
+  const { getDb } = await import("./db");
+  const { studentAttendance, students } = await import("../drizzle/schema");
+  const { eq, and } = await import("drizzle-orm");
+
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const orgId = ctx.user.organizationId;
+
+  // Verify student belongs to this org
+  const [existing] = await db
+    .select({ id: students.id, firstName: students.firstName, lastName: students.lastName })
+    .from(students)
+    .where(and(eq(students.id, args.studentId), eq(students.organizationId, orgId)))
+    .limit(1);
+
+  if (!existing) {
+    return JSON.stringify({
+      success: false,
+      message: `Student "${args.studentName}" (ID: ${args.studentId}) was not found in your organization.`,
+    });
+  }
+
+  const fullName = `${existing.firstName} ${existing.lastName || ""}`.trim();
+  const attendanceDate = args.date || new Date().toISOString().slice(0, 10);
+  const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+  try {
+    await db.insert(studentAttendance).values({
+      studentId: args.studentId,
+      classId: args.classId || null,
+      date: attendanceDate,
+      status: args.status as any,
+      organizationId: orgId,
+      createdAt: now,
+      updatedAt: now,
+    } as any);
+  } catch (err: any) {
+    // If duplicate entry, update instead
+    if (err?.code === "ER_DUP_ENTRY" || err?.message?.includes("Duplicate")) {
+      return JSON.stringify({
+        success: false,
+        message: `Attendance for **${fullName}** on ${attendanceDate} has already been recorded.`,
+      });
+    }
+    throw err;
+  }
+
+  const statusEmoji = args.status === "present" ? "✅" : args.status === "late" ? "⏰" : "❌";
+  return JSON.stringify({
+    success: true,
+    action: "attendance_marked",
+    message: `${statusEmoji} **${fullName}** marked as **${args.status}** for ${attendanceDate}.`,
   });
 }

@@ -452,6 +452,80 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
     case 'get_inactive_students':
       // TODO: Implement actual inactive student query
       return { count: 0, days: args.days, message: 'Feature coming soon' };
+
+    // ── Action cases (write/modify data) ───────────────────────────────────────────
+    case 'remove_student': {
+      const { checkKaiPermission, getUserRole } = await import('./staffPermissions');
+      const userRole = await getUserRole(ctx);
+      const perm = checkKaiPermission(userRole, 'remove_student');
+      if (!perm.allowed) return { error: perm.reason, permissionDenied: true };
+      const { getDb: getDbA } = await import('./db');
+      const { students: studentsA } = await import('../drizzle/schema');
+      const { eq: eqA, and: andA } = await import('drizzle-orm');
+      const dbA = await getDbA();
+      if (!dbA) return { error: 'Database not available' };
+      const orgIdA = ctx?.currentOrganizationId || ctx?.user?.organizationId;
+      const [existingA] = await dbA.select({ id: studentsA.id, firstName: studentsA.firstName, lastName: studentsA.lastName })
+        .from(studentsA).where(andA(eqA(studentsA.id, args.studentId), eqA(studentsA.organizationId, orgIdA))).limit(1);
+      if (!existingA) return { error: `Student "${args.studentName}" not found.` };
+      await dbA.update(studentsA).set({ status: 'Inactive', updatedAt: new Date().toISOString().slice(0, 19).replace('T', ' ') }).where(eqA(studentsA.id, args.studentId));
+      return { success: true, action: 'student_archived', message: `✅ **${existingA.firstName} ${existingA.lastName}** has been archived.${args.reason ? ` Reason: ${args.reason}` : ''}` };
+    }
+
+    case 'add_lead': {
+      const { checkKaiPermission, getUserRole } = await import('./staffPermissions');
+      const userRole = await getUserRole(ctx);
+      const perm = checkKaiPermission(userRole, 'add_lead');
+      if (!perm.allowed) return { error: perm.reason, permissionDenied: true };
+      const { getDb: getDbB } = await import('./db');
+      const { leads: leadsB } = await import('../drizzle/schema');
+      const dbB = await getDbB();
+      if (!dbB) return { error: 'Database not available' };
+      const orgIdB = ctx?.currentOrganizationId || ctx?.user?.organizationId;
+      const nowB = new Date().toISOString().slice(0, 19).replace('T', ' ');
+      await dbB.insert(leadsB).values({ firstName: args.firstName, lastName: args.lastName || '', email: args.email?.toLowerCase() || null, phone: args.phone?.replace(/[^0-9+]/g, '') || null, status: 'New Lead', source: args.source || 'Kai', interestedProgram: args.interestedProgram || null, notes: args.notes || null, organizationId: orgIdB, createdAt: nowB, updatedAt: nowB });
+      const fullNameB = `${args.firstName} ${args.lastName || ''}`.trim();
+      return { success: true, action: 'lead_added', message: `✅ New lead **${fullNameB}** added.${args.email ? ` Email: ${args.email}` : ''}${args.phone ? ` Phone: ${args.phone}` : ''}` };
+    }
+
+    case 'update_lead_status': {
+      const { checkKaiPermission, getUserRole } = await import('./staffPermissions');
+      const userRole = await getUserRole(ctx);
+      const perm = checkKaiPermission(userRole, 'update_lead_status');
+      if (!perm.allowed) return { error: perm.reason, permissionDenied: true };
+      const { getDb: getDbC } = await import('./db');
+      const { leads: leadsC } = await import('../drizzle/schema');
+      const { eq: eqC, and: andC } = await import('drizzle-orm');
+      const dbC = await getDbC();
+      if (!dbC) return { error: 'Database not available' };
+      const orgIdC = ctx?.currentOrganizationId || ctx?.user?.organizationId;
+      const [existingC] = await dbC.select({ id: leadsC.id, firstName: leadsC.firstName, lastName: leadsC.lastName, status: leadsC.status })
+        .from(leadsC).where(andC(eqC(leadsC.id, args.leadId), eqC(leadsC.organizationId, orgIdC))).limit(1);
+      if (!existingC) return { error: `Lead "${args.leadName}" not found.` };
+      await dbC.update(leadsC).set({ status: args.status, updatedAt: new Date().toISOString().slice(0, 19).replace('T', ' ') }).where(eqC(leadsC.id, args.leadId));
+      return { success: true, action: 'lead_status_updated', message: `✅ **${existingC.firstName} ${existingC.lastName || ''}** stage: **${existingC.status}** → **${args.status}**.` };
+    }
+
+    case 'mark_attendance': {
+      const { checkKaiPermission, getUserRole } = await import('./staffPermissions');
+      const userRole = await getUserRole(ctx);
+      const perm = checkKaiPermission(userRole, 'mark_attendance');
+      if (!perm.allowed) return { error: perm.reason, permissionDenied: true };
+      const { getDb: getDbD } = await import('./db');
+      const { studentAttendance, students: studentsD } = await import('../drizzle/schema');
+      const { eq: eqD, and: andD } = await import('drizzle-orm');
+      const dbD = await getDbD();
+      if (!dbD) return { error: 'Database not available' };
+      const orgIdD = ctx?.currentOrganizationId || ctx?.user?.organizationId;
+      const [existingD] = await dbD.select({ id: studentsD.id, firstName: studentsD.firstName, lastName: studentsD.lastName })
+        .from(studentsD).where(andD(eqD(studentsD.id, args.studentId), eqD(studentsD.organizationId, orgIdD))).limit(1);
+      if (!existingD) return { error: `Student "${args.studentName}" not found.` };
+      const attendanceDateD = args.date || new Date().toISOString().slice(0, 10);
+      const nowD = new Date().toISOString().slice(0, 19).replace('T', ' ');
+      await dbD.insert(studentAttendance).values({ studentId: args.studentId, classId: args.classId || null, date: attendanceDateD, status: args.status, organizationId: orgIdD, createdAt: nowD, updatedAt: nowD } as any);
+      const emojiD = args.status === 'present' ? '✅' : args.status === 'late' ? '⏰' : '❌';
+      return { success: true, action: 'attendance_marked', message: `${emojiD} **${existingD.firstName} ${existingD.lastName || ''}** marked **${args.status}** for ${attendanceDateD}.` };
+    }
     
     default:
       return { error: 'Unknown function' };
@@ -629,6 +703,16 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
       text: `Here are today's **${total} class${total === 1 ? '' : 'es'}** for ${date}:\n\n${classList}`,
       ui_blocks: []
     };
+  }
+
+  // Handle action results (remove_student, add_lead, update_lead_status, mark_attendance)
+  if (result.success && result.message) {
+    return { text: result.message, ui_blocks: [] };
+  }
+
+  // Handle permission denied errors
+  if (result.permissionDenied) {
+    return { text: `⛔ ${result.error}`, ui_blocks: [] };
   }
 
   return { text: JSON.stringify(result), ui_blocks: [] };
