@@ -156,7 +156,7 @@ export default function StaffChangePassword() {
                 Your password has been changed successfully. You can now use your new password to sign in.
               </p>
               <Button
-                onClick={() => navigate("/staff/dashboard")}
+                onClick={() => navigate("/dashboard")}
                 className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl"
               >
                 Go to Dashboard

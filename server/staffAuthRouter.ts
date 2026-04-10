@@ -122,6 +122,7 @@ export const staffAuthRouter = router({
 
       return {
         success: true,
+        mustChangePassword: (user as any).mustChangePassword === 1,
         user: {
           id: user.id,
           email: user.email,
@@ -361,13 +362,28 @@ export const staffAuthRouter = router({
       // Hash the new password
       const hashedNewPassword = await bcrypt.hash(input.newPassword, 12);
 
-      // Update the password in the database
+      // Update the password in the database and clear the mustChangePassword flag
       await db
         .update(users)
-        .set({ password: hashedNewPassword })
+        .set({ password: hashedNewPassword, mustChangePassword: 0 } as any)
         .where(eq(users.id, ctx.user.id));
 
       return { success: true, message: "Password updated successfully" };
+    }),
+
+  /**
+   * Check if the current staff user must change their password
+   */
+  getMustChangePassword: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db || !ctx.user) return { mustChangePassword: false };
+      const [user] = await db
+        .select({ mustChangePassword: users.mustChangePassword })
+        .from(users)
+        .where(eq(users.id, ctx.user.id))
+        .limit(1);
+      return { mustChangePassword: (user as any)?.mustChangePassword === 1 };
     }),
 
   /**

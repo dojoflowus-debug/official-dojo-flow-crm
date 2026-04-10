@@ -1471,6 +1471,7 @@ export const users = mysqlTable("users", {
 		authProvider: mysqlEnum(['password', 'google']).default('password').notNull(),
 		emailVerified: int().default(0).notNull(),
 		welcomeMessageSeen: int().default(0).notNull(),
+		mustChangePassword: int().default(0).notNull(),
 	},
 	(table) => [
 		uniqueIndex("idx_users_openId").on(table.openId),

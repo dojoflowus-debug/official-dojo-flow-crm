@@ -123,6 +123,18 @@ async function runStartupMigrations() {
       console.warn('[Migration] Logo URL column upgrade warning:', logoErr.message);
     }
 
+    // Ensure users table has must_change_password column
+    try {
+      await conn.execute(
+        `ALTER TABLE \`users\` ADD COLUMN IF NOT EXISTS \`must_change_password\` INT NOT NULL DEFAULT 0`
+      );
+      console.log('[Migration] ✓ users.must_change_password column ensured');
+    } catch (mcpErr: any) {
+      if (!mcpErr.message?.includes('Duplicate column')) {
+        console.warn('[Migration] users.must_change_password warning:', mcpErr.message);
+      }
+    }
+
     await conn.end();
   } catch (err: any) {
     console.warn('[Migration] Startup migration warning (non-fatal):', err.message);

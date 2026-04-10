@@ -170,6 +170,23 @@ async function runStartupMigrations() {
       console.warn('[Migration] dojo_settings columns warning:', (dsErr as any).message);
     }
 
+    // Ensure users table has must_change_password column
+    try {
+      const [mcpCols] = await conn.execute(
+        `SHOW COLUMNS FROM \`users\` WHERE Field = 'mustChangePassword'`
+      ) as any;
+      if ((mcpCols as any[]).length === 0) {
+        await conn.execute(
+          `ALTER TABLE \`users\` ADD COLUMN \`mustChangePassword\` INT NOT NULL DEFAULT 0`
+        );
+        console.log('[Migration] ✓ users.mustChangePassword column added');
+      } else {
+        console.log('[Migration] users.mustChangePassword already exists, no change needed');
+      }
+    } catch (mcpErr: any) {
+      console.warn('[Migration] users.mustChangePassword warning:', mcpErr.message);
+    }
+
     await conn.end();
   } catch (err: any) {
     console.warn('[Migration] Startup migration warning (non-fatal):', err.message);

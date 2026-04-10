@@ -19,6 +19,13 @@ export default function StaffAuth() {
     onSuccess: (data) => {
       toast.success("Login successful!");
 
+      // If staff must change their temporary password, redirect immediately
+      if (data.mustChangePassword) {
+        toast.info("Please set a new password to continue.", { duration: 4000 });
+        navigate("/staff/change-password");
+        return;
+      }
+
       // If user belongs to multiple organizations, show selector
       if (data.organizations && data.organizations.length > 1) {
         navigate("/select-organization", { state: { organizations: data.organizations } });

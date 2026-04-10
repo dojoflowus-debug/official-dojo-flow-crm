@@ -1118,6 +1118,7 @@ export async function executeInviteStaff(
     role: "staff",
     openId,
     organizationId: orgId,
+    mustChangePassword: 1,
   } as any);
 
   // Fetch the new user
