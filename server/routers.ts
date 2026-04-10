@@ -248,9 +248,17 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       } catch (fpErr: any) {
         console.error('[get_revenue] FluidPay error:', fpErr.message);
       }
-      // Fallback to internal stats
-      const revenueStats = await getDashboardStats();
-      return { source: 'internal', revenue: revenueStats?.monthly_revenue || 0, period: args.period || 'month' };
+      // Fallback to internal tuition records
+      const revenueStats = await getDashboardStats(ctx?.currentOrganizationId);
+      const revenueAmount = revenueStats?.monthly_revenue || 0;
+      return { 
+        source: 'internal', 
+        revenue: revenueAmount, 
+        period: args.period || 'month',
+        message: revenueAmount === 0 
+          ? 'No paid tuition records found for this month. If you use FluidPay, connect it to see payment data.'
+          : `$${revenueAmount.toFixed ? revenueAmount.toFixed(2) : revenueAmount} collected this month from tuition records.`
+      };
     }
     
     case 'get_leads':
@@ -732,7 +740,15 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
   }
   
   if (result.revenue !== undefined) {
-    return { text: `Revenue: $${result.revenue}`, ui_blocks: [] };
+    // Use the message field if available (includes helpful context)
+    if (result.message) {
+      return { text: result.message, ui_blocks: [] };
+    }
+    const revenueAmt = Number(result.revenue || 0).toFixed(2);
+    if (Number(revenueAmt) === 0) {
+      return { text: `No paid tuition records found for this month. If you use FluidPay for payment processing, connect it via Settings so Kai can pull live payment data.`, ui_blocks: [] };
+    }
+    return { text: `💰 **Revenue this month:** $${revenueAmt} (from internal tuition records)`, ui_blocks: [] };
   }
 
   // Handle FluidPay live revenue data

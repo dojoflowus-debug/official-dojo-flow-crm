@@ -266,8 +266,8 @@ export async function getDashboardStats(organizationId?: number | null) {
     };
   }
   
-  const { students, leads, classes, attendance, enrollments } = await import("../drizzle/schema");
-  const { eq, count, and, gte, lte } = await import("drizzle-orm");
+  const { students, leads, classes, studentAttendance: attendance, enrollments, studentTuition } = await import("../drizzle/schema");
+  const { eq, count, and, gte, lte, sum } = await import("drizzle-orm");
   
   // Filter by organization for multi-tenancy
   // Count ALL students for the organization (not just active) to match the Students page
@@ -293,9 +293,9 @@ export async function getDashboardStats(organizationId?: number | null) {
   
   const todayAttendanceResult = await db.select({ count: count() }).from(attendance).where(
     and(
-      gte(attendance.checkInTime, todayStart.toISOString()),
-      lte(attendance.checkInTime, todayEnd.toISOString()),
-      eq(attendance.status, 'present')
+      gte(attendance.classDate, todayStart.toISOString()),
+      lte(attendance.classDate, todayEnd.toISOString()),
+      eq(attendance.status, 'attended')
     )
   );
   
@@ -334,7 +334,19 @@ export async function getDashboardStats(organizationId?: number | null) {
     new_leads: newLeadsResult[0]?.count || 0,
     trials_scheduled: trialsScheduledResult[0]?.count || 0,
     new_enrollments: newEnrollmentsResult[0]?.count || 0,
-    monthly_revenue: 12500, // TODO: Calculate from billing data
+    monthly_revenue: await (async () => {
+      try {
+        const now = new Date();
+        const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const paidThisMonth = await db.select({ total: sum(studentTuition.amount) })
+          .from(studentTuition)
+          .where(and(
+            eq(studentTuition.status, 'paid'),
+            gte(studentTuition.paidDate, thisMonthStart.toISOString())
+          ));
+        return Number(paidThisMonth[0]?.total || 0);
+      } catch { return 0; }
+    })(),
     total_leads: totalLeads[0]?.count || 0,
     alerts: alerts,
     todays_classes: todaysClasses.map(c => ({

@@ -133,10 +133,13 @@ export const kaiTools = [
     type: "function",
     function: {
       name: "get_revenue_summary",
-      description: "Get revenue statistics and financial summary",
+      description: "Get revenue statistics from the internal tuition/billing records. Use this when the user asks about revenue, money collected, payments, or financial summary. Automatically uses the current month if no date range is specified.",
       parameters: {
         type: "object",
-        properties: {},
+        properties: {
+          startDate: { type: "string", description: "Start date in YYYY-MM-DD format. Defaults to first day of current month." },
+          endDate: { type: "string", description: "End date in YYYY-MM-DD format. Defaults to last day of current month." }
+        },
         required: []
       }
     }
@@ -511,11 +514,26 @@ export async function executeKaiTool(
       }
       
       case "get_revenue_summary": {
-        const result = await (kaiDataRouter.getRevenueSummary as any).createCaller(ctx)({});
+        // Auto-generate current month date range if not provided
+        const now = new Date();
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+        const startDate = toolArgs.startDate || firstDayOfMonth;
+        const endDate = toolArgs.endDate || lastDayOfMonth;
+        const result = await (kaiDataRouter.getRevenueSummary as any).createCaller(ctx)({
+          startDate,
+          endDate,
+        });
+        const totalRevenueDollars = (result.totalRevenue || 0).toFixed(2);
+        const avgDollars = (result.averageTransactionValue || 0).toFixed(2);
+        const txCount = result.totalTransactions || 0;
+        const message = txCount === 0
+          ? `No paid tuition records found from ${startDate} to ${endDate}. If you use FluidPay for payments, try asking about FluidPay revenue instead.`
+          : `Revenue from ${startDate} to ${endDate}: $${totalRevenueDollars} total across ${txCount} transactions (avg $${avgDollars} per transaction).`;
         return JSON.stringify({
           success: true,
           data: result,
-          message: `Revenue summary retrieved`
+          message
         });
       }
 
