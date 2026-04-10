@@ -116,6 +116,7 @@ const WelcomeDashboard = lazy(() => import("../pages/WelcomeDashboard"));
 const OwnerAuth = lazy(() => import("../pages/OwnerAuth"));
 const OwnerOnboarding = lazy(() => import("../pages/OwnerOnboarding"));
 const StaffAuth = lazy(() => import("../pages/StaffAuth"));
+const StaffChangePassword = lazy(() => import("../pages/StaffChangePassword"));
 const StudentAuthNew = lazy(() => import("../pages/StudentAuthNew"));
 const KioskStaffAuth = lazy(() => import("../pages/KioskStaffAuth"));
 const KioskStudentAuth = lazy(() => import("../pages/KioskStudentAuth"));
@@ -172,6 +173,7 @@ export const appRoutes: RouteConfig[] = [
   { path: "/dashboard/command-center", element: <OwnerCommandCenter />, label: "Command Center" },
   { path: "/welcome", element: <WelcomeDashboard />, label: "Welcome" },
   { path: "/staff/login", element: <StaffAuth />, label: "Staff Login" },
+  { path: "/staff/change-password", element: <StaffChangePassword />, label: "Staff Change Password" },
   { path: "/student-login", element: <StudentAuthNew />, label: "Student Login" },
   { path: "/select-organization", element: <SelectOrganization />, label: "Select Organization" },
   { path: "/login", element: <Login />, label: "Login" },

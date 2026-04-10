@@ -10,7 +10,7 @@ import { useAuth } from '@/_core/hooks/useAuth'
 import { useEnvironment } from '@/contexts/EnvironmentContext'
 import { useModal } from '@/contexts/ModalContext'
 import { trpc } from '@/lib/trpc'
-import { Coins, Sun, Moon, Clapperboard, LogOut, Settings, User, Palette } from 'lucide-react'
+import { Coins, Sun, Moon, Clapperboard, LogOut, Settings, User, Palette, Lock } from 'lucide-react'
 
 import { BrandLogo } from '@/components/BrandLogo'
 import { KaiVersionChip } from '@/components/KaiVersionChip'
@@ -218,6 +218,13 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onSelect={handleOpenProfile} onMouseDown={(e) => { e.preventDefault(); handleOpenProfile(); }}><User className="h-4 w-4 mr-2" />Profile</DropdownMenuItem>
             <DropdownMenuItem onSelect={handleOpenSettings} onMouseDown={(e) => { e.preventDefault(); handleOpenSettings(); }}><Settings className="h-4 w-4 mr-2" />Settings</DropdownMenuItem>
+            {user?.role === 'staff' && (
+              <DropdownMenuItem asChild>
+                <Link href="/staff/change-password" className="flex items-center w-full cursor-pointer">
+                  <Lock className="h-4 w-4 mr-2" />Change Password
+                </Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => logout()} className="text-red-500">
               <LogOut className="h-4 w-4 mr-2" />Sign Out

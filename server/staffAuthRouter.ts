@@ -1,4 +1,4 @@
-import { router, publicProcedure } from "./_core/trpc";
+import { router, publicProcedure, protectedProcedure } from "./_core/trpc";
 import { z } from "zod";
 import * as bcrypt from "bcryptjs";
 import { getDb } from "./db";
@@ -306,6 +306,68 @@ export const staffAuthRouter = router({
         success: true,
         name: user.name,
       };
+    }),
+
+  /**
+   * Change password for authenticated staff members
+   */
+  changePassword: protectedProcedure
+    .input(
+      z.object({
+        currentPassword: z.string().min(1, "Current password is required"),
+        newPassword: z.string().min(8, "New password must be at least 8 characters"),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database connection failed",
+        });
+      }
+
+      // Ensure the user is a staff member
+      if (!ctx.user || ctx.user.role !== "staff") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only staff members can use this endpoint",
+        });
+      }
+
+      // Fetch the current user record with password
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, ctx.user.id))
+        .limit(1);
+
+      if (!user || !user.password) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User account not found or has no password set",
+        });
+      }
+
+      // Verify current password
+      const isCurrentPasswordValid = await bcrypt.compare(input.currentPassword, user.password);
+      if (!isCurrentPasswordValid) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Current password is incorrect",
+        });
+      }
+
+      // Hash the new password
+      const hashedNewPassword = await bcrypt.hash(input.newPassword, 12);
+
+      // Update the password in the database
+      await db
+        .update(users)
+        .set({ password: hashedNewPassword })
+        .where(eq(users.id, ctx.user.id));
+
+      return { success: true, message: "Password updated successfully" };
     }),
 
   /**

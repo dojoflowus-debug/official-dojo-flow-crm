@@ -9366,3 +9366,8 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Wire Kai to answer revenue questions using live FluidPay data
 - [x] Store Vincent/MyDojo production FluidPay key (api_38LwmB8Nh276NX2FrOA0s2Eyt7m) for org 210001
 - [x] Test end-to-end: Kai answers "how much collected this month?" with real FluidPay data ($496)
+
+## Staff Change Password Feature
+- [x] Staff Change Password API endpoint — POST /api/staff/change-password with bcrypt verification of current password and hashing of new password
+- [x] Staff Change Password page — /staff/change-password route with current password, new password, confirm fields, strength indicator
+- [x] Link to Change Password from staff dashboard profile header/settings
