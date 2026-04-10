@@ -61,7 +61,7 @@ const crmTools = [
     type: 'function' as const,
     function: {
       name: 'get_revenue',
-      description: 'Get revenue information for the dojo',
+      description: 'Get LIVE revenue information from FluidPay payment gateway. Use this for ANY question about money collected, payments, revenue, transactions, or how much was charged. This returns real-time data from FluidPay. Always use this for questions like "how much was collected this month?", "what is the total revenue?", "how many payments came in?"',
       parameters: {
         type: 'object',
         properties: {

@@ -210,9 +210,48 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       console.log('[executeCRMFunction] find_student - no student found');
       return { error: 'Student not found' };
     
-    case 'get_revenue':
+    case 'get_revenue': {
+      // Pull live data from FluidPay if connected
+      try {
+        const { getDb: getDbRevenue } = await import('./db');
+        const { dojoSettings: dojoSettingsRev } = await import('../drizzle/schema');
+        const { eq: eqRev } = await import('drizzle-orm');
+        const { getMonthlyRevenue: getMonthlyRevenueFP, getRecentTransactions: getRecentTxns } = await import('./services/fluidpay');
+        const dbRev = await getDbRevenue();
+        if (dbRev && ctx.currentOrganizationId) {
+          const settingsRev = await dbRev.select().from(dojoSettingsRev).where(eqRev(dojoSettingsRev.organizationId, ctx.currentOrganizationId)).limit(1);
+          const fpKey = (settingsRev[0] as any)?.fluidpayApiKey;
+          if (fpKey) {
+            const now = new Date();
+            const rev = await getMonthlyRevenueFP(fpKey, now.getUTCFullYear(), now.getUTCMonth() + 1);
+            const recentTxns = await getRecentTxns(fpKey, 5);
+            return {
+              source: 'fluidpay',
+              period: args.period || 'month',
+              month: rev.month,
+              year: rev.year,
+              totalCollected: rev.totalDollars,
+              settled: rev.settledDollars,
+              pending: rev.pendingDollars,
+              refunds: rev.refundDollars,
+              transactionCount: rev.transactionCount,
+              recentTransactions: recentTxns.slice(0, 5).map(t => ({
+                date: t.created_at?.slice(0, 10),
+                amount: (t.amount / 100).toFixed(2),
+                type: t.type,
+                status: t.status,
+                name: t.billing ? `${t.billing.first_name || ''} ${t.billing.last_name || ''}`.trim() : 'Unknown',
+              }))
+            };
+          }
+        }
+      } catch (fpErr: any) {
+        console.error('[get_revenue] FluidPay error:', fpErr.message);
+      }
+      // Fallback to internal stats
       const revenueStats = await getDashboardStats();
-      return { revenue: revenueStats?.monthly_revenue || 0, period: args.period || 'month' };
+      return { source: 'internal', revenue: revenueStats?.monthly_revenue || 0, period: args.period || 'month' };
+    }
     
     case 'get_leads':
       const leadStats = await getDashboardStats();
@@ -674,6 +713,29 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
   
   if (result.revenue !== undefined) {
     return { text: `Revenue: $${result.revenue}`, ui_blocks: [] };
+  }
+
+  // Handle FluidPay live revenue data
+  if (result.source === 'fluidpay' && result.totalCollected !== undefined) {
+    const total = Number(result.totalCollected).toFixed(2);
+    const settled = Number(result.settled).toFixed(2);
+    const pending = Number(result.pending).toFixed(2);
+    const refunds = Number(result.refunds || 0).toFixed(2);
+    const count = result.transactionCount || 0;
+    let text = `💳 **${result.month} ${result.year} Revenue (FluidPay)**\n\n`;
+    text += `**Total Collected:** $${total}\n`;
+    text += `**Settled:** $${settled}\n`;
+    if (Number(pending) > 0) text += `**Pending Settlement:** $${pending}\n`;
+    if (Number(refunds) > 0) text += `**Refunds:** -$${refunds}\n`;
+    text += `**Transactions:** ${count}\n`;
+    if (result.recentTransactions && result.recentTransactions.length > 0) {
+      text += `\n**Recent Transactions:**\n`;
+      result.recentTransactions.forEach((t: any) => {
+        const name = t.name || 'Unknown';
+        text += `• ${t.date} — $${t.amount} (${t.type}, ${t.status})${name ? ' — ' + name : ''}\n`;
+      });
+    }
+    return { text, ui_blocks: [] };
   }
 
   // Handle get_classes results

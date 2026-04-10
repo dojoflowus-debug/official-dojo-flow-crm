@@ -513,6 +513,8 @@ export const dojoSettings = mysqlTable("dojo_settings", {
 	organizationId: int(),
 	kioskTheme: varchar({ length: 50 }).default('default'),
 	kioskFeatureFlags: text(),
+	fluidpayApiKey: varchar({ length: 500 }),
+	fluidpayMerchantId: varchar({ length: 255 }),
 });
 
 export const enrollments = mysqlTable("enrollments", {

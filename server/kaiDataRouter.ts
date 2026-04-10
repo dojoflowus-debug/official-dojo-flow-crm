@@ -7,8 +7,9 @@
 import { z } from "zod";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getDb } from "./db";
-import { students, leads, classes, classSessions, classEnrollments, studentAttendance, signedWaivers, kiosks, kioskLocations, studentTuition } from "../drizzle/schema";
+import { students, leads, classes, classSessions, classEnrollments, studentAttendance, signedWaivers, kiosks, kioskLocations, studentTuition, dojoSettings } from "../drizzle/schema";
 import { eq, like, and, or, sql, desc, asc, gte, lte } from "drizzle-orm";
+import { validateFluidPayKey, getMonthlyRevenue, getRecentTransactions } from "./services/fluidpay";
 
 /**
  * Student card payload shape - matches existing Student Card UI
@@ -1383,6 +1384,98 @@ export const kaiDataRouter = router({
         totalCount: payments.length,
         dateRange: { start: input.startDate, end: input.endDate },
       };
+    }),
+
+  /**
+   * Connect FluidPay API key for this organization
+   */
+  connectFluidPay: protectedProcedure
+    .input(z.object({ apiKey: z.string().min(10) }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not initialized");
+      const orgId = ctx.currentOrganizationId;
+      if (!orgId) throw new Error("No organization found");
+
+      // Validate the key against FluidPay
+      const validation = await validateFluidPayKey(input.apiKey);
+      if (!validation.valid) {
+        return { success: false, error: validation.error || 'Invalid API key' };
+      }
+
+      // Store the key in dojo_settings
+      const existing = await db.select({ id: dojoSettings.id })
+        .from(dojoSettings)
+        .where(eq(dojoSettings.organizationId, orgId))
+        .limit(1);
+
+      if (existing.length > 0) {
+        await db.update(dojoSettings)
+          .set({ fluidpayApiKey: input.apiKey } as any)
+          .where(eq(dojoSettings.organizationId, orgId));
+      } else {
+        await db.insert(dojoSettings).values({ organizationId: orgId, fluidpayApiKey: input.apiKey } as any);
+      }
+
+      return { success: true, message: 'FluidPay connected successfully!' };
+    }),
+
+  /**
+   * Get FluidPay monthly revenue for this organization
+   */
+  getFluidPayRevenue: protectedProcedure
+    .input(z.object({ year: z.number().optional(), month: z.number().optional() }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not initialized");
+      const orgId = ctx.currentOrganizationId;
+      if (!orgId) return { connected: false, error: 'No organization found' };
+
+      const settings = await db.select()
+        .from(dojoSettings)
+        .where(eq(dojoSettings.organizationId, orgId))
+        .limit(1);
+
+      const apiKey = (settings[0] as any)?.fluidpayApiKey;
+      if (!apiKey) {
+        return { connected: false, error: 'FluidPay not connected. Ask Kai to connect your FluidPay account.' };
+      }
+
+      try {
+        const revenue = await getMonthlyRevenue(apiKey, input.year, input.month);
+        return { connected: true, ...revenue };
+      } catch (err: any) {
+        return { connected: true, error: err.message };
+      }
+    }),
+
+  /**
+   * Get recent FluidPay transactions for this organization
+   */
+  getFluidPayTransactions: protectedProcedure
+    .input(z.object({ limit: z.number().default(20) }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not initialized");
+      const orgId = ctx.currentOrganizationId;
+      if (!orgId) return { connected: false, transactions: [], error: 'No organization found' };
+
+      const settings = await db.select()
+        .from(dojoSettings)
+        .where(eq(dojoSettings.organizationId, orgId))
+        .limit(1);
+
+      const apiKey = (settings[0] as any)?.fluidpayApiKey;
+      if (!apiKey) {
+        return { connected: false, transactions: [], error: 'FluidPay not connected.' };
+      }
+
+      try {
+        const transactions = await getRecentTransactions(apiKey, input.limit);
+        return { connected: true, transactions };
+      } catch (err: any) {
+        return { connected: true, transactions: [], error: err.message };
+      }
     }),
 });
 

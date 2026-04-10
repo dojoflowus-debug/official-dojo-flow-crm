@@ -9356,3 +9356,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix Kai so delete/remove commands trigger remove_student tool (not find_student)
 - [x] Fix confirm_archive handler to send confirmedAction as structured object (bypass LLM)
 - [x] Fix webhook $returningId error for new lead creation
+
+## FluidPay Integration (Per-Organization)
+- [x] Research FluidPay API endpoints (transactions, auth validation)
+- [x] Add fluidpayApiKey column to dojo_settings table
+- [x] Add connect_fluidpay Kai action: validates key and stores it per org
+- [x] Add get_revenue Kai tool: pulls monthly/weekly totals from FluidPay
+- [x] Add get_transactions Kai tool: lists recent transactions with student names
+- [x] Wire Kai to answer revenue questions using live FluidPay data
+- [x] Store Vincent/MyDojo production FluidPay key (api_38LwmB8Nh276NX2FrOA0s2Eyt7m) for org 210001
+- [x] Test end-to-end: Kai answers "how much collected this month?" with real FluidPay data ($496)

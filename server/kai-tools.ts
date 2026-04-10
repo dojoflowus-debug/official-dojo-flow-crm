@@ -275,6 +275,52 @@ export const kaiTools = [
         required: ["message", "target"]
       }
     }
+  },
+  {
+    type: "function",
+    function: {
+      name: "connect_fluidpay",
+      description: "Connect a FluidPay payment gateway account to this dojo. Use this when the user provides a FluidPay API key or asks to connect their FluidPay account. Validates and stores the key securely.",
+      parameters: {
+        type: "object",
+        properties: {
+          api_key: {
+            type: "string",
+            description: "The FluidPay API key provided by the user (e.g., 'pub_38LwnXemi...')"
+          }
+        },
+        required: ["api_key"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_fluidpay_revenue",
+      description: "Get monthly revenue totals from FluidPay for this dojo. Use when the user asks about revenue, money collected, payments, or how much was earned this month. Returns total, settled, and pending amounts.",
+      parameters: {
+        type: "object",
+        properties: {
+          month: { type: "number", description: "Month number (1-12). Defaults to current month." },
+          year: { type: "number", description: "Year (e.g., 2026). Defaults to current year." }
+        },
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_fluidpay_transactions",
+      description: "Get recent payment transactions from FluidPay. Use when the user asks to see recent payments, transactions, or payment history.",
+      parameters: {
+        type: "object",
+        properties: {
+          limit: { type: "number", description: "Number of transactions to return (default 10, max 50)" }
+        },
+        required: []
+      }
+    }
   }
 ];
 
@@ -461,6 +507,50 @@ export async function executeKaiTool(
         return await executeMarkAttendance(toolArgs, ctx);
       }
       
+      case "connect_fluidpay": {
+        const result = await (kaiDataRouter.connectFluidPay as any).createCaller(ctx)({ apiKey: toolArgs.api_key });
+        if (result.success) {
+          return JSON.stringify({ success: true, message: '✅ FluidPay connected successfully! Your payment data will now appear in real-time.' });
+        } else {
+          return JSON.stringify({ success: false, message: `❌ Could not connect FluidPay: ${result.error}` });
+        }
+      }
+
+      case "get_fluidpay_revenue": {
+        const result = await (kaiDataRouter.getFluidPayRevenue as any).createCaller(ctx)({ year: toolArgs.year, month: toolArgs.month });
+        if (!result.connected) {
+          return JSON.stringify({ success: false, message: '⚠️ FluidPay is not connected. Please provide your FluidPay API key so I can connect it for you.' });
+        }
+        if (result.error) {
+          return JSON.stringify({ success: false, message: `FluidPay error: ${result.error}` });
+        }
+        return JSON.stringify({
+          success: true,
+          data: result,
+          message: `FluidPay revenue for ${result.month} ${result.year}: $${result.totalDollars?.toFixed(2)} total ($${result.settledDollars?.toFixed(2)} settled, $${result.pendingDollars?.toFixed(2)} pending) across ${result.transactionCount} transactions.`
+        });
+      }
+
+      case "get_fluidpay_transactions": {
+        const result = await (kaiDataRouter.getFluidPayTransactions as any).createCaller(ctx)({ limit: toolArgs.limit || 10 });
+        if (!result.connected) {
+          return JSON.stringify({ success: false, message: '⚠️ FluidPay is not connected. Please provide your FluidPay API key.' });
+        }
+        if (result.error) {
+          return JSON.stringify({ success: false, message: `FluidPay error: ${result.error}` });
+        }
+        const txList = (result.transactions || []).slice(0, toolArgs.limit || 10).map((t: any) => ({
+          id: t.id,
+          amount: `$${((t.amount || 0) / 100).toFixed(2)}`,
+          status: t.status,
+          type: t.type,
+          name: t.billing ? `${t.billing.first_name || ''} ${t.billing.last_name || ''}`.trim() : 'Unknown',
+          date: t.created_at ? new Date(t.created_at).toLocaleDateString() : 'Unknown',
+          card: t.card?.masked_card || '',
+        }));
+        return JSON.stringify({ success: true, data: txList, message: `Recent FluidPay transactions retrieved.` });
+      }
+
       default:
         return JSON.stringify({
           success: false,
