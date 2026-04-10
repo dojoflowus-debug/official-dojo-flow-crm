@@ -4694,8 +4694,12 @@ export default function KaiCommand() {
                                   setIsLoading(true);
                                   try {
                                     const confirmResult = await kaiChatMutation.mutateAsync({
-                                      message: `CONFIRMED: Execute ${pendingAction.toolName} with args: ${JSON.stringify(pendingAction.toolArgs)}`,
+                                      message: `✅ Confirmed: archive ${pendingAction.toolArgs?.studentName || 'student'}`,
                                       conversationHistory: [],
+                                      confirmedAction: {
+                                        toolName: pendingAction.toolName,
+                                        toolArgs: pendingAction.toolArgs,
+                                      },
                                     });
                                     setMessages(prev => [...prev, {
                                       id: `confirm-result-${Date.now()}`,

@@ -9346,3 +9346,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Kai asks "Are you sure you want to archive [Name]?" before executing remove_student
 - [x] Kai waits for user to click Yes/No quick reply buttons before proceeding
 - [x] Kai cancels the action if user clicks Cancel
+
+## Real-Time MyDojo Webhook
+- [ ] Add /api/webhooks/mydojo endpoint in DojoFlow (HMAC-signed, creates lead on receipt)
+- [ ] Add webhook trigger in mydojoma.com on new intro appointment creation
+- [ ] Test end-to-end: new appointment on mydojoma → appears in DojoFlow leads instantly
+
+## Kai Action Execution Fix
+- [x] Fix Kai so delete/remove commands trigger remove_student tool (not find_student)
+- [x] Fix confirm_archive handler to send confirmedAction as structured object (bypass LLM)
+- [x] Fix webhook $returningId error for new lead creation

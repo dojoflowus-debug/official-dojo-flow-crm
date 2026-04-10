@@ -300,6 +300,10 @@ async function startServer() {
   
   // Mount webhook management routes
   app.use("/api/webhook-management", webhookManagementRouter);
+
+  // Mount MyDojo real-time webhook receiver
+  const { default: myDojoWebhookRouter } = await import("../myDojoWebhookRouter");
+  app.use(myDojoWebhookRouter);
   
   // Mount storage proxy for serving S3 images (needed because CloudFront URLs don't have public access)
   app.use("/api/storage-proxy", storageProxyRouter);

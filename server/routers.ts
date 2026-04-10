@@ -3969,6 +3969,10 @@ Return the data as a structured JSON object.`
           content: z.string(),
         })).optional(),
         organizationId: z.number().optional(), // For credit consumption
+        confirmedAction: z.object({
+          toolName: z.string(),
+          toolArgs: z.record(z.any()),
+        }).optional(), // Pre-confirmed destructive action (bypass LLM)
       }).strict())
       .mutation(async ({ input, ctx }) => {
         // Validate input is not undefined
@@ -3977,6 +3981,19 @@ Return the data as a structured JSON object.`
         }
         
         const { message, avatarName = 'Kai', conversationHistory = [], organizationId } = input;
+
+        // ── CONFIRMED ACTION SHORTCUT ─────────────────────────────────────────
+        // When user clicked "Yes, archive" — bypass LLM and execute directly
+        if (input.confirmedAction) {
+          const { toolName, toolArgs } = input.confirmedAction;
+          console.log('[Kai Chat] Executing confirmed action:', toolName, toolArgs);
+          const result = await executeCRMFunction(toolName, toolArgs, ctx);
+          if (result.error) {
+            return { response: `❌ ${result.error}`, ui_blocks: [] };
+          }
+          return { response: result.message || `✅ Action completed.`, ui_blocks: [] };
+        }
+        // ── END CONFIRMED ACTION SHORTCUT ─────────────────────────────────────
         
         console.log('[Kai Chat] Input received:', { message, avatarName, hasHistory: conversationHistory.length > 0, organizationId });
         console.log('[Kai Chat] User message:', message);
