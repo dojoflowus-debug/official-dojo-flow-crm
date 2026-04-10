@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react';
 import ManagementLayout from '@/components/ManagementLayout';
 import { trpc } from '@/lib/trpc';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -36,7 +36,7 @@ import {
   X,
   Smartphone,
 } from 'lucide-react'
-import { trpc } from '@/lib/trpc'
+import RoleBadge from '@/components/RoleBadge'
 import { toast } from 'sonner'
 
 const API_URL = '/api'  // Use relative path to work from any device
@@ -478,10 +478,14 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-lg truncate">
-                        {staff.first_name} {staff.last_name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-3">{staff.role}</p>
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h3 className="font-semibold text-lg truncate">
+                          {staff.first_name} {staff.last_name}
+                        </h3>
+                      </div>
+                      <div className="mb-3">
+                        <RoleBadge role={staff.role || 'Staff'} />
+                      </div>
                       
                       <div className="space-y-2 text-sm">
                         {staff.email && (
@@ -588,12 +592,48 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Master Instructor">Master Instructor</SelectItem>
-                    <SelectItem value="Instructor">Instructor</SelectItem>
-                    <SelectItem value="Assistant Instructor">Assistant Instructor</SelectItem>
-                    <SelectItem value="Admin">Admin</SelectItem>
-                    <SelectItem value="Receptionist">Receptionist</SelectItem>
-                    <SelectItem value="Staff">Staff</SelectItem>
+                    <SelectItem value="Admin">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
+                        <span>Admin</span>
+                        <span className="text-xs text-muted-foreground ml-1">· Full access, can delete records</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Master Instructor">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-purple-500 flex-shrink-0" />
+                        <span>Master Instructor</span>
+                        <span className="text-xs text-muted-foreground ml-1">· Senior instructor access</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Instructor">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
+                        <span>Instructor</span>
+                        <span className="text-xs text-muted-foreground ml-1">· Attendance & class access</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Assistant Instructor">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-teal-500 flex-shrink-0" />
+                        <span>Assistant Instructor</span>
+                        <span className="text-xs text-muted-foreground ml-1">· Limited instructor access</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Receptionist">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-gray-400 flex-shrink-0" />
+                        <span>Front Desk / Receptionist</span>
+                        <span className="text-xs text-muted-foreground ml-1">· Add leads, read-only</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Staff">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
+                        <span>Staff</span>
+                        <span className="text-xs text-muted-foreground ml-1">· Basic access</span>
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -774,12 +814,48 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Master Instructor">Master Instructor</SelectItem>
-                    <SelectItem value="Instructor">Instructor</SelectItem>
-                    <SelectItem value="Assistant Instructor">Assistant Instructor</SelectItem>
-                    <SelectItem value="Admin">Admin</SelectItem>
-                    <SelectItem value="Receptionist">Receptionist</SelectItem>
-                    <SelectItem value="Staff">Staff</SelectItem>
+                    <SelectItem value="Admin">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
+                        <span>Admin</span>
+                        <span className="text-xs text-muted-foreground ml-1">· Full access, can delete records</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Master Instructor">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-purple-500 flex-shrink-0" />
+                        <span>Master Instructor</span>
+                        <span className="text-xs text-muted-foreground ml-1">· Senior instructor access</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Instructor">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
+                        <span>Instructor</span>
+                        <span className="text-xs text-muted-foreground ml-1">· Attendance & class access</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Assistant Instructor">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-teal-500 flex-shrink-0" />
+                        <span>Assistant Instructor</span>
+                        <span className="text-xs text-muted-foreground ml-1">· Limited instructor access</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Receptionist">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-gray-400 flex-shrink-0" />
+                        <span>Front Desk / Receptionist</span>
+                        <span className="text-xs text-muted-foreground ml-1">· Add leads, read-only</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Staff">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
+                        <span>Staff</span>
+                        <span className="text-xs text-muted-foreground ml-1">· Basic access</span>
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>

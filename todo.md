@@ -9333,4 +9333,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Kai action: look up student/lead info (all roles allowed)
 - [x] Kai action: mark attendance (Instructor+ allowed)
 - [x] Kai refuses destructive actions for non-admin staff with a clear permission error message
-- [ ] Staff page UI shows role badge and permission level for each team member
+- [x] Staff page UI shows role badge and permission level for each team member
+
+## Staff Page Role Badges
+- [x] Find the Staff page component and understand current structure
+- [x] Create RoleBadge component with color-coded levels (Owner=gold, Admin=red, Manager=blue, Instructor=green, Front Desk=gray)
+- [x] Add permission summary tooltip/popover to each badge showing what the role can/cannot do
+- [x] Display role badge next to each staff member's name on the Staff page
