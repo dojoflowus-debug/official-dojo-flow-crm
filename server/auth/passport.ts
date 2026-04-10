@@ -30,7 +30,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: process.env.GOOGLE_CALLBACK_URL || "https://3001-irsc894q9xht7gijx14lw-a8283e50.manusvm.computer/api/auth/google/callback",
+        callbackURL: process.env.GOOGLE_CALLBACK_URL || "https://dojo-flow.ai/api/auth/google/callback",
       },
       async (accessToken, refreshToken, profile, done) => {
         try {
