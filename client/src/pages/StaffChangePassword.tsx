@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Lock, CheckCircle, AlertCircle, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Lock, CheckCircle, AlertCircle, ShieldCheck, KeyRound } from "lucide-react";
 
 function getPasswordStrength(password: string): { score: number; label: string; color: string } {
   let score = 0;
@@ -23,6 +23,9 @@ function getPasswordStrength(password: string): { score: number; label: string; 
 
 export default function StaffChangePassword() {
   const navigate = useNavigate();
+  const location = useLocation();
+  // isFirstLogin is true when redirected from login with mustChangePassword flag
+  const isFirstLogin = (location.state as any)?.firstLogin === true;
   const [mounted, setMounted] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -143,6 +146,21 @@ export default function StaffChangePassword() {
             <img src="/dojoflow-logo-light.png" alt="DojoFlow" className="h-8 w-auto" />
           </div>
 
+          {/* First Login Banner */}
+          {isFirstLogin && !success && (
+            <div className="mb-6 flex items-start gap-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+              <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                <KeyRound className="h-4 w-4 text-amber-400" />
+              </div>
+              <div>
+                <p className="text-amber-300 font-semibold text-sm mb-0.5">Action Required: Set Your Password</p>
+                <p className="text-amber-400/80 text-xs leading-relaxed">
+                  Your account was created with a temporary password. You must set a new password before you can access the dashboard.
+                </p>
+              </div>
+            </div>
+          )}
+
           {success ? (
             /* Success State */
             <div className="text-center">
@@ -171,16 +189,20 @@ export default function StaffChangePassword() {
           ) : (
             /* Form State */
             <>
-              <div className="mb-8">
+                <div className="mb-8">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-8 h-8 rounded-lg bg-red-600/20 border border-red-600/30 flex items-center justify-center">
                     <Lock className="h-4 w-4 text-red-400" />
                   </div>
                   <span className="text-red-400 text-xs font-semibold uppercase tracking-widest">Staff Portal</span>
                 </div>
-                <h2 className="text-3xl font-black text-white mb-2">Change Password</h2>
+                <h2 className="text-3xl font-black text-white mb-2">
+                  {isFirstLogin ? "Set Your Password" : "Change Password"}
+                </h2>
                 <p className="text-gray-400 text-sm">
-                  Update your temporary password to secure your account.
+                  {isFirstLogin
+                    ? "Welcome! Create a secure password to protect your account."
+                    : "Update your temporary password to secure your account."}
                 </p>
               </div>
 

@@ -9371,3 +9371,4 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Staff Change Password API endpoint — POST /api/staff/change-password with bcrypt verification of current password and hashing of new password
 - [x] Staff Change Password page — /staff/change-password route with current password, new password, confirm fields, strength indicator
 - [x] Link to Change Password from staff dashboard profile header/settings
+- [x] Add First Login banner on StaffChangePassword page

@@ -22,7 +22,7 @@ export default function StaffAuth() {
       // If staff must change their temporary password, redirect immediately
       if (data.mustChangePassword) {
         toast.info("Please set a new password to continue.", { duration: 4000 });
-        navigate("/staff/change-password");
+        navigate("/staff/change-password", { state: { firstLogin: true } });
         return;
       }
 
