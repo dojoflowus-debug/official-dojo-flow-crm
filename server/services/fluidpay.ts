@@ -100,7 +100,7 @@ export async function searchTransactions(
     },
     body: JSON.stringify({
       limit,
-      created_at: {
+      date_range: {
         start_date: startDate,
         end_date: endDate,
       },

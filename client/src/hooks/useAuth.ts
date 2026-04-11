@@ -78,25 +78,27 @@ export function useAuth() {
         if (currentUser.id) {
           localStorage.setItem('dojo_user_id', String(currentUser.id));
         }
+        setUser({
+          id: currentUser.id,
+          openId: currentUser.openId,
+          name: currentUser.name,
+          preferredName: (currentUser as any).preferredName ?? null,
+          email: currentUser.email,
+          role: currentUser.role,
+          setupCompleted: dojoSettings?.setupCompleted === 1,
+          photoUrl: currentUser.photoUrl,
+          photoUrlSmall: currentUser.photoUrlSmall,
+          activeOrgId: currentUser.activeOrgId,
+          globalRole: currentUser.globalRole,
+          phone: currentUser.phone,
+          bio: currentUser.bio,
+        });
       } else {
-        // getCurrentUser returned demo user but localStorage has a real user — keep the stored value
+        // getCurrentUser returned demo user but localStorage has a real user — keep the stored user state
+        // Only update setupCompleted from dojoSettings
         console.log('[useAuth] Keeping stored user', storedUserId, 'org', storedOrgId, '— ignoring demo user from getCurrentUser');
+        setUser(prev => prev ? { ...prev, setupCompleted: dojoSettings?.setupCompleted === 1 } : prev);
       }
-      setUser({
-        id: currentUser.id,
-        openId: currentUser.openId,
-        name: currentUser.name,
-        preferredName: (currentUser as any).preferredName ?? null,
-        email: currentUser.email,
-        role: currentUser.role,
-        setupCompleted: dojoSettings?.setupCompleted === 1,
-        photoUrl: currentUser.photoUrl,
-        photoUrlSmall: currentUser.photoUrlSmall,
-        activeOrgId: currentUser.activeOrgId,
-        globalRole: currentUser.globalRole,
-        phone: currentUser.phone,
-        bio: currentUser.bio,
-      });
     } else {
       setUser(null);
     }
