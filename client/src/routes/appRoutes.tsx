@@ -61,6 +61,7 @@ const Programs = lazy(() => import("../pages/Programs"));
 const Staff = lazy(() => import("../pages/Staff"));
 const Billing = lazy(() => import("../pages/Billing"));
 const BillingStructure = lazy(() => import("../pages/BillingStructure"));
+const TuitionPlans = lazy(() => import("../pages/TuitionPlans"));
 const PCBancardApplication = lazy(() => import("../pages/PCBancardApplication"));
 const StripeSetup = lazy(() => import("../pages/StripeSetup"));
 const BillingApplications = lazy(() => import("../pages/BillingApplications"));
@@ -279,6 +280,7 @@ export const appRoutes: RouteConfig[] = [
   { path: "/billing/pcbancard-application", element: <PCBancardApplication />, label: "PCBancard Application" },
   { path: "/billing/stripe-setup", element: <StripeSetup />, label: "Stripe Setup" },
   { path: "/billing/applications", element: <BillingApplications />, label: "Billing Applications" },
+  { path: "/billing/tuition-plans", element: <AppShell><TuitionPlans /></AppShell>, label: "Tuition Plans" },
   { path: "/merchandise", element: <AppShell><Merchandise /></AppShell>, label: "Merchandise" },
   { path: "/operations", element: <AppShell><Operations /></AppShell>, label: "Operations" },
   { path: "/operations/merchandise", element: <AppShell><Operations /></AppShell>, label: "Operations Merchandise" },

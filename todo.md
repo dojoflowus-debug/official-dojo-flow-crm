@@ -9381,3 +9381,31 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix routers.ts get_revenue case to also use org membership fallback
 - [x] Update kai-tools.ts get_revenue_summary message to display FluidPay data in formatted markdown
 - [x] All 4 FluidPay org resolution tests pass
+
+## Paid Enrollments System via FluidPay (Apr 11, 2026)
+- [ ] Add fluidpayCustomerId and fluidpayPaymentMethodId columns to students table
+- [ ] Create tuition_plans table (name, amount, frequency, organizationId)
+- [ ] Create student_billing_enrollments table (studentId, planId, status, nextBillingDate, fluidpaySubscriptionId)
+- [ ] Add FluidPay customer vault functions to fluidpay.ts (createCustomer, addCard, chargeCustomer)
+- [ ] Add tRPC procedures: createTuitionPlan, listTuitionPlans, enrollStudentInPlan, chargeStudentTuition, getStudentBillingStatus
+- [ ] Build Billing tab in student profile — show plan, card on file, payment history, charge button
+- [ ] Build Tuition Plans management page under Settings or Billing
+- [ ] Build card collection UI using FluidPay hosted payment fields (iframe tokenization)
+- [ ] Wire Kai to enroll a student in a tuition plan via natural language command
+- [ ] Wire Kai to charge a student's tuition via natural language command
+- [ ] Update Kai revenue reporting to include FluidPay tuition charges
+
+## Paid Enrollments & FluidPay Billing System (Apr 11, 2026)
+- [x] Fix FluidPay revenue showing zero in Kai (resolveOrgId fallback)
+- [x] Add resolveOrgId helper to all 6 FluidPay procedures in kaiDataRouter
+- [x] Create tuition_plans, student_billing_enrollments, student_tuition_payments DB tables
+- [x] Add FluidPay customer vault functions (createCustomer, addCard, charge, getTokenizerKey)
+- [x] Build tuitionBillingRouter.ts with full CRUD for plans, enrollment, charging
+- [x] Register tuitionBillingRouter in routers.ts
+- [x] Build StudentBillingTab component (enrollment, card status, payment history, charge button)
+- [x] Add Billing & Tuition section to StudentCommandProfile page
+- [x] Build TuitionPlans management page at /billing/tuition-plans
+- [x] Add TuitionPlans route to appRoutes.tsx
+- [x] Add 5 new Kai tools: list_tuition_plans, create_tuition_plan, enroll_student_in_plan, get_student_billing_status, charge_student_tuition
+- [x] Add executor functions for all 5 new Kai billing tools
+- [x] Fix all table/column names in Kai executor functions (amount_cents, student_billing_enrollments, student_tuition_payments)

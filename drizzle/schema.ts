@@ -2059,3 +2059,73 @@ export const paymentReminders = mysqlTable("payment_reminders", {
   index("idx_payment_reminders_student").on(table.studentId),
   index("idx_payment_reminders_sent_at").on(table.orgId, table.sentAt),
 ]);
+
+// ─── Tuition Plans ────────────────────────────────────────────────────────────
+// Defines the recurring billing plans offered by a dojo (e.g., "Monthly Karate - $99/mo")
+export const tuitionPlans = mysqlTable("tuition_plans", {
+  id: int().autoincrement().notNull().primaryKey(),
+  organizationId: int("organization_id").notNull(),
+  name: varchar({ length: 255 }).notNull(),                // e.g., "Monthly Karate"
+  description: text(),
+  amountCents: int("amount_cents").notNull(),              // Amount in cents (e.g., 9900 = $99.00)
+  frequency: mysqlEnum("frequency", ["monthly", "weekly", "biweekly", "quarterly", "annual", "one_time"]).default("monthly").notNull(),
+  isActive: int("is_active").default(1).notNull(),
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+  index("idx_tuition_plans_org").on(table.organizationId),
+  index("idx_tuition_plans_active").on(table.organizationId, table.isActive),
+]);
+
+// ─── Student Billing Enrollments ─────────────────────────────────────────────
+// Links a student to a tuition plan and tracks their billing status
+export const studentBillingEnrollments = mysqlTable("student_billing_enrollments", {
+  id: int().autoincrement().notNull().primaryKey(),
+  studentId: int("student_id").notNull(),
+  organizationId: int("organization_id").notNull(),
+  planId: int("plan_id").notNull(),                        // FK → tuition_plans.id
+  status: mysqlEnum("status", ["active", "paused", "cancelled", "past_due"]).default("active").notNull(),
+  startDate: timestamp("start_date", { mode: "string" }).notNull(),
+  nextBillingDate: timestamp("next_billing_date", { mode: "string" }),
+  endDate: timestamp("end_date", { mode: "string" }),
+  fluidpayCustomerId: varchar("fluidpay_customer_id", { length: 255 }),   // FluidPay customer vault ID
+  fluidpayPaymentMethodId: varchar("fluidpay_payment_method_id", { length: 255 }), // Stored card token
+  cardLast4: varchar("card_last4", { length: 4 }),
+  cardBrand: varchar("card_brand", { length: 50 }),
+  notes: text(),
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+  index("idx_sbe_student").on(table.studentId),
+  index("idx_sbe_org").on(table.organizationId),
+  index("idx_sbe_plan").on(table.planId),
+  index("idx_sbe_status").on(table.status),
+  index("idx_sbe_next_billing").on(table.nextBillingDate),
+]);
+
+// ─── Student Tuition Payments ─────────────────────────────────────────────────
+// Records every payment attempt (success or failure) for a student's tuition
+export const studentTuitionPayments = mysqlTable("student_tuition_payments", {
+  id: int().autoincrement().notNull().primaryKey(),
+  enrollmentId: int("enrollment_id"),                      // FK → student_billing_enrollments.id
+  studentId: int("student_id").notNull(),
+  organizationId: int("organization_id").notNull(),
+  amountCents: int("amount_cents").notNull(),
+  status: mysqlEnum("status", ["pending", "success", "failed", "refunded", "voided"]).default("pending").notNull(),
+  fluidpayTransactionId: varchar("fluidpay_transaction_id", { length: 255 }),
+  fluidpayCustomerId: varchar("fluidpay_customer_id", { length: 255 }),
+  description: varchar({ length: 500 }),
+  failureReason: text("failure_reason"),
+  paidAt: timestamp("paid_at", { mode: "string" }),
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+  index("idx_stp_student").on(table.studentId),
+  index("idx_stp_org").on(table.organizationId),
+  index("idx_stp_enrollment").on(table.enrollmentId),
+  index("idx_stp_status").on(table.status),
+  index("idx_stp_paid_at").on(table.paidAt),
+]);

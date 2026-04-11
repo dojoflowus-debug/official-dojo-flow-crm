@@ -269,3 +269,177 @@ export async function getAllTransactions(
     totalCount: result.total_count || 0,
   };
 }
+
+// ─── Customer Vault & Charging ────────────────────────────────────────────────
+
+export interface FluidPayCustomer {
+  id: string;
+  description: string;
+}
+
+export interface FluidPayChargeResult {
+  success: boolean;
+  transactionId?: string;
+  status?: string;
+  amount?: number;
+  error?: string;
+  rawResponse?: any;
+}
+
+/**
+ * Create a FluidPay customer vault entry for a student.
+ */
+export async function createFluidPayCustomer(
+  apiKey: string,
+  studentData: { firstName: string; lastName: string; email?: string; phone?: string },
+  baseUrl = FLUIDPAY_PROD_URL
+): Promise<{ customerId: string; error?: string }> {
+  try {
+    const response = await fetch(`${baseUrl}/api/customer`, {
+      method: 'POST',
+      headers: { 'Authorization': apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        description: `${studentData.firstName} ${studentData.lastName}`,
+        payment_method: {},
+        billing_address: {
+          first_name: studentData.firstName,
+          last_name: studentData.lastName,
+          email: studentData.email || '',
+          phone: studentData.phone || '',
+        },
+      }),
+    });
+    const data = await response.json() as any;
+    if (data.status === 'success' && data.data?.id) {
+      return { customerId: data.data.id };
+    }
+    return { customerId: '', error: data.msg || 'Failed to create customer' };
+  } catch (err: any) {
+    return { customerId: '', error: err.message };
+  }
+}
+
+/**
+ * Add a card to a FluidPay customer vault using a tokenized card number.
+ */
+export async function addCardToFluidPayCustomer(
+  apiKey: string,
+  customerId: string,
+  cardToken: string,
+  baseUrl = FLUIDPAY_PROD_URL
+): Promise<{ paymentMethodId: string; last4?: string; cardBrand?: string; error?: string }> {
+  try {
+    const response = await fetch(`${baseUrl}/api/customer/${customerId}/payment-method/card`, {
+      method: 'POST',
+      headers: { 'Authorization': apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ card_number: cardToken }),
+    });
+    const data = await response.json() as any;
+    if (data.status === 'success' && data.data?.id) {
+      return {
+        paymentMethodId: data.data.id,
+        last4: data.data.last_four,
+        cardBrand: data.data.card_type,
+      };
+    }
+    return { paymentMethodId: '', error: data.msg || 'Failed to add card' };
+  } catch (err: any) {
+    return { paymentMethodId: '', error: err.message };
+  }
+}
+
+/**
+ * Charge a stored card in the FluidPay customer vault.
+ * amountCents: amount in cents (e.g., 9900 = $99.00)
+ */
+export async function chargeFluidPayCustomer(
+  apiKey: string,
+  customerId: string,
+  paymentMethodId: string,
+  amountCents: number,
+  description: string,
+  baseUrl = FLUIDPAY_PROD_URL
+): Promise<FluidPayChargeResult> {
+  try {
+    const response = await fetch(`${baseUrl}/api/transaction`, {
+      method: 'POST',
+      headers: { 'Authorization': apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'sale',
+        amount: amountCents,
+        currency: 'usd',
+        description,
+        payment_method: {
+          customer: {
+            id: customerId,
+            payment_method_type: 'card',
+            payment_method_id: paymentMethodId,
+          },
+        },
+        email_receipt: false,
+      }),
+    });
+    const data = await response.json() as any;
+    if (data.status === 'success' && data.data?.id) {
+      return {
+        success: true,
+        transactionId: data.data.id,
+        status: data.data.status,
+        amount: data.data.amount,
+        rawResponse: data.data,
+      };
+    }
+    return { success: false, error: data.msg || data.data?.response || 'Charge failed', rawResponse: data };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Get a FluidPay customer's stored payment methods.
+ */
+export async function getFluidPayCustomerPaymentMethods(
+  apiKey: string,
+  customerId: string,
+  baseUrl = FLUIDPAY_PROD_URL
+): Promise<{ methods: any[]; error?: string }> {
+  try {
+    const response = await fetch(`${baseUrl}/api/customer/${customerId}`, {
+      headers: { 'Authorization': apiKey },
+    });
+    const data = await response.json() as any;
+    if (data.status === 'success') {
+      const methods: any[] = [];
+      if (data.data?.payment_method?.card) {
+        methods.push({ type: 'card', ...data.data.payment_method.card });
+      }
+      return { methods };
+    }
+    return { methods: [], error: data.msg };
+  } catch (err: any) {
+    return { methods: [], error: err.message };
+  }
+}
+
+/**
+ * Generate a FluidPay tokenizer key for hosted payment fields (secure card collection).
+ */
+export async function getFluidPayTokenizerKey(
+  apiKey: string,
+  baseUrl = FLUIDPAY_PROD_URL
+): Promise<{ tokenizerKey?: string; error?: string }> {
+  try {
+    const response = await fetch(`${baseUrl}/api/transaction/tokenize`, {
+      method: 'POST',
+      headers: { 'Authorization': apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'tokenize' }),
+    });
+    const data = await response.json() as any;
+    if (data.status === 'success' && data.data?.token_id) {
+      return { tokenizerKey: data.data.token_id };
+    }
+    return { error: data.msg || 'Failed to get tokenizer key' };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}

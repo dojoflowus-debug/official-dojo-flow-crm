@@ -361,6 +361,79 @@ export const kaiTools = [
         required: []
       }
     }
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_tuition_plans",
+      description: "List all available tuition plans for this dojo. Use when the user asks about tuition plans, billing plans, or what payment options are available.",
+      parameters: { type: "object", properties: {}, required: [] }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "create_tuition_plan",
+      description: "Create a new tuition plan for the dojo. Use when the user wants to set up a new billing plan, tuition amount, or payment tier.",
+      parameters: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "Plan name (e.g., 'Monthly Karate', 'Kids Program')" },
+          amountDollars: { type: "number", description: "Monthly/recurring amount in dollars (e.g., 99 for $99)" },
+          frequency: { type: "string", enum: ["monthly", "weekly", "biweekly", "quarterly", "annual", "one_time"], description: "Billing frequency. Default: monthly" },
+          description: { type: "string", description: "Optional description of what's included" }
+        },
+        required: ["name", "amountDollars"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "enroll_student_in_plan",
+      description: "Enroll a student in a tuition plan. Use when the user asks to enroll, sign up, or assign a billing plan to a student. This links the student to a recurring tuition plan.",
+      parameters: {
+        type: "object",
+        properties: {
+          studentId: { type: "number", description: "The ID of the student to enroll" },
+          studentName: { type: "string", description: "The student's name (for confirmation)" },
+          planId: { type: "number", description: "The ID of the tuition plan to enroll them in" },
+          planName: { type: "string", description: "The plan name (for confirmation)" }
+        },
+        required: ["studentId", "studentName", "planId", "planName"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_student_billing_status",
+      description: "Get a student's current billing enrollment status, plan details, and payment history. Use when the user asks about a specific student's billing, tuition status, or payment history.",
+      parameters: {
+        type: "object",
+        properties: {
+          studentId: { type: "number", description: "The ID of the student" },
+          studentName: { type: "string", description: "The student's name" }
+        },
+        required: ["studentId", "studentName"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "charge_student_tuition",
+      description: "Charge a student's tuition via FluidPay using their card on file. Use when the user asks to charge, collect payment, or run a tuition payment for a specific student. The student must have a card on file and be enrolled in a plan.",
+      parameters: {
+        type: "object",
+        properties: {
+          studentId: { type: "number", description: "The ID of the student to charge" },
+          studentName: { type: "string", description: "The student's name (for confirmation)" },
+          amountDollars: { type: "number", description: "Optional override amount. If not provided, uses the plan amount." }
+        },
+        required: ["studentId", "studentName"]
+      }
+    }
   }
 ];
 
@@ -630,6 +703,26 @@ export async function executeKaiTool(
 
       case "list_staff": {
         return await executeListStaff(toolArgs, ctx);
+      }
+
+      case "list_tuition_plans": {
+        return await executeListTuitionPlans(ctx);
+      }
+
+      case "create_tuition_plan": {
+        return await executeCreateTuitionPlan(toolArgs, ctx);
+      }
+
+      case "enroll_student_in_plan": {
+        return await executeEnrollStudentInPlan(toolArgs, ctx);
+      }
+
+      case "get_student_billing_status": {
+        return await executeGetStudentBillingStatus(toolArgs, ctx);
+      }
+
+      case "charge_student_tuition": {
+        return await executeChargeStudentTuition(toolArgs, ctx);
       }
 
       default:
@@ -1281,4 +1374,261 @@ export async function executeListStaff(
     data: list,
     message: `**${filtered.length} staff member${filtered.length !== 1 ? "s" : ""}** found:\n${list.map((s: any) => `• **${s.name}** — ${s.role} (${s.email})`).join("\n")}`,
   });
+}
+
+
+// ── Tuition Billing Executors ────────────────────────────────────────────────
+
+async function resolveOrgIdForKai(ctx: any): Promise<number | null> {
+  const direct = ctx.user?.organizationId || ctx?.currentOrganizationId;
+  if (direct) return direct;
+  // Fallback: look up from user membership
+  try {
+    const { getDb } = await import("./db");
+    const { organizationUsers } = await import("../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    if (!db || !ctx.user?.id) return null;
+    const memberships = await db
+      .select({ organizationId: organizationUsers.organizationId })
+      .from(organizationUsers)
+      .where(eq(organizationUsers.userId, ctx.user.id))
+      .limit(1);
+    return memberships[0]?.organizationId ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function executeListTuitionPlans(ctx: any): Promise<string> {
+  const { getDb } = await import("./db");
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const orgId = await resolveOrgIdForKai(ctx);
+  if (!orgId) return JSON.stringify({ success: false, message: "No organization found." });
+
+  const plans = await db.execute(
+    `SELECT id, name, description, amount_cents, frequency, is_active FROM tuition_plans WHERE organization_id = ${orgId} AND is_active = 1 ORDER BY amount_cents ASC`
+  ) as any;
+  const rows = Array.isArray(plans) ? plans : (plans.rows || []);
+
+  if (!rows.length) {
+    return JSON.stringify({ success: true, data: [], message: "No tuition plans created yet. You can create one by saying 'create a monthly plan for $99'." });
+  }
+
+  const list = rows.map((p: any) => ({
+    id: p.id,
+    name: p.name,
+    amountDollars: (parseInt(p.amount_cents) / 100),
+    frequency: p.frequency,
+    description: p.description || "",
+  }));
+
+  const summary = list.map((p: any) => `• **${p.name}** — $${p.amountDollars.toFixed(2)}/${p.frequency} (ID: ${p.id})`).join("\n");
+  return JSON.stringify({ success: true, data: list, message: `**${list.length} tuition plan${list.length !== 1 ? "s" : ""}**:\n${summary}` });
+}
+
+export async function executeCreateTuitionPlan(
+  args: { name: string; amountDollars: number; frequency?: string; description?: string },
+  ctx: any
+): Promise<string> {
+  const { getDb } = await import("./db");
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const orgId = await resolveOrgIdForKai(ctx);
+  if (!orgId) return JSON.stringify({ success: false, message: "No organization found." });
+
+  const freq = args.frequency || "monthly";
+  const amount = parseFloat(String(args.amountDollars));
+  if (isNaN(amount) || amount <= 0) return JSON.stringify({ success: false, message: "Invalid amount. Please provide a positive dollar amount." });
+
+  const amountCents = Math.round(amount * 100);
+  await db.execute(
+    `INSERT INTO tuition_plans (organization_id, name, description, amount_cents, frequency, is_active, created_at) VALUES (${orgId}, ${JSON.stringify(args.name)}, ${args.description ? JSON.stringify(args.description) : "NULL"}, ${amountCents}, ${JSON.stringify(freq)}, 1, NOW())`
+  );
+
+  return JSON.stringify({
+    success: true,
+    message: `✅ **"${args.name}"** plan created — $${amount.toFixed(2)}/${freq}. You can now enroll students in this plan from their profile or by asking me to enroll them.`,
+  });
+}
+
+export async function executeEnrollStudentInPlan(
+  args: { studentId: number; studentName: string; planId: number; planName: string },
+  ctx: any
+): Promise<string> {
+  const { getDb } = await import("./db");
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const orgId = await resolveOrgIdForKai(ctx);
+  if (!orgId) return JSON.stringify({ success: false, message: "No organization found." });
+
+  // Verify plan belongs to org
+  const planRows = await db.execute(
+    `SELECT id, name, amount_cents, frequency FROM tuition_plans WHERE id = ${args.planId} AND organization_id = ${orgId} AND is_active = 1`
+  ) as any;
+  const plans = Array.isArray(planRows) ? planRows : (planRows.rows || []);
+  if (!plans.length) return JSON.stringify({ success: false, message: `Plan not found. Use 'list tuition plans' to see available plans.` });
+
+  const plan = plans[0];
+  const planAmountDollars = (parseInt(plan.amount_cents) / 100).toFixed(2);
+
+  // Check for existing active enrollment
+  const existingRows = await db.execute(
+    `SELECT id FROM student_billing_enrollments WHERE student_id = ${args.studentId} AND plan_id = ${args.planId} AND status = 'active'`
+  ) as any;
+  const existing = Array.isArray(existingRows) ? existingRows : (existingRows.rows || []);
+  if (existing.length) {
+    return JSON.stringify({ success: false, message: `${args.studentName} is already enrolled in "${plan.name}".` });
+  }
+
+  // Create enrollment
+  const nextBilling = new Date();
+  nextBilling.setMonth(nextBilling.getMonth() + 1);
+
+  await db.execute(
+    `INSERT INTO student_billing_enrollments (student_id, plan_id, organization_id, status, next_billing_date, created_at) VALUES (${args.studentId}, ${args.planId}, ${orgId}, 'active', '${nextBilling.toISOString().slice(0, 10)}', NOW())`
+  );
+
+  return JSON.stringify({
+    success: true,
+    message: `✅ **${args.studentName}** enrolled in **"${plan.name}"** ($${planAmountDollars}/${plan.frequency}). Next billing: ${nextBilling.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}. To charge their card, they need a payment method on file — add it via their student profile.`,
+  });
+}
+
+export async function executeGetStudentBillingStatus(
+  args: { studentId: number; studentName: string },
+  ctx: any
+): Promise<string> {
+  const { getDb } = await import("./db");
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const enrollRows = await db.execute(
+    `SELECT e.id, e.status, e.next_billing_date, p.name as plan_name, p.amount_cents, p.frequency, e.fluidpay_customer_id, e.card_last4, e.card_brand
+     FROM student_billing_enrollments e
+     JOIN tuition_plans p ON e.plan_id = p.id
+     WHERE e.student_id = ${args.studentId}
+     ORDER BY e.created_at DESC`
+  ) as any;
+  const enrollments = Array.isArray(enrollRows) ? enrollRows : (enrollRows.rows || []);
+
+  const paymentRows = await db.execute(
+    `SELECT amount_cents, status, paid_at, description FROM student_tuition_payments WHERE student_id = ${args.studentId} ORDER BY created_at DESC LIMIT 5`
+  ) as any;
+  const payments = Array.isArray(paymentRows) ? paymentRows : (paymentRows.rows || []);
+
+  if (!enrollments.length) {
+    return JSON.stringify({ success: true, message: `${args.studentName} has no tuition plan assigned. Enroll them with 'enroll [name] in [plan name]'.` });
+  }
+
+  const activeEnrollments = enrollments.filter((e: any) => e.status === "active");
+  const totalMonthlyCents = activeEnrollments.reduce((sum: number, e: any) => sum + parseInt(e.amount_cents || 0), 0);
+  const totalMonthly = totalMonthlyCents / 100;
+  const hasCard = activeEnrollments.some((e: any) => e.card_last4);
+
+  let msg = `**${args.studentName} — Billing Status**\n\n`;
+  msg += `**Active Plans:** ${activeEnrollments.length}\n`;
+  msg += `**Monthly Total:** $${totalMonthly.toFixed(2)}\n`;
+  msg += `**Card on File:** ${hasCard ? `✅ ${activeEnrollments.find((e: any) => e.card_last4)?.card_brand || "Card"} •••• ${activeEnrollments.find((e: any) => e.card_last4)?.card_last4}` : "❌ No card on file"}\n\n`;
+
+  if (activeEnrollments.length) {
+    msg += `**Plans:**\n`;
+    for (const e of activeEnrollments) {
+      msg += `• ${e.plan_name} — $${(parseInt(e.amount_cents) / 100).toFixed(2)}/${e.frequency}`;
+      if (e.next_billing_date) msg += ` (next: ${new Date(e.next_billing_date).toLocaleDateString()})`;
+      msg += "\n";
+    }
+  }
+
+  if (payments.length) {
+    msg += `\n**Recent Payments:**\n`;
+    for (const p of payments) {
+      const date = p.paid_at ? new Date(p.paid_at).toLocaleDateString() : "—";
+      msg += `• $${(parseInt(p.amount_cents) / 100).toFixed(2)} — ${p.status} (${date})\n`;
+    }
+  }
+
+  return JSON.stringify({ success: true, message: msg });
+}
+
+export async function executeChargeStudentTuition(
+  args: { studentId: number; studentName: string; amountDollars?: number },
+  ctx: any
+): Promise<string> {
+  const { getDb } = await import("./db");
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const orgId = await resolveOrgIdForKai(ctx);
+  if (!orgId) return JSON.stringify({ success: false, message: "No organization found." });
+
+  // Get active enrollment with card
+  const enrollRows = await db.execute(
+    `SELECT e.id, e.fluidpay_customer_id, e.card_last4, e.card_brand, p.name as plan_name, p.amount_cents
+     FROM student_billing_enrollments e
+     JOIN tuition_plans p ON e.plan_id = p.id
+     WHERE e.student_id = ${args.studentId} AND e.status = 'active' AND e.fluidpay_customer_id IS NOT NULL
+     LIMIT 1`
+  ) as any;
+  const enrollments = Array.isArray(enrollRows) ? enrollRows : (enrollRows.rows || []);
+
+  if (!enrollments.length) {
+    return JSON.stringify({ success: false, message: `Cannot charge ${args.studentName} — either they have no active tuition plan or no card on file. Add a card via their student profile first.` });
+  }
+
+  const enrollment = enrollments[0];
+  const amount = args.amountDollars || (parseInt(enrollment.amount_cents) / 100);
+
+  // Get FluidPay API key for org
+  const settingsRows = await db.execute(
+    `SELECT fluidpay_api_key FROM dojo_settings WHERE organization_id = ${orgId} LIMIT 1`
+  ) as any;
+  const settings = Array.isArray(settingsRows) ? settingsRows : (settingsRows.rows || []);
+  const apiKey = settings[0]?.fluidpay_api_key;
+
+  if (!apiKey) {
+    return JSON.stringify({ success: false, message: "FluidPay is not connected. Connect it via Settings → Payments first." });
+  }
+
+  // Charge via FluidPay customer vault
+  try {
+    const response = await fetch("https://app.fluidpay.com/api/transaction", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": apiKey },
+      body: JSON.stringify({
+        type: "sale",
+        amount: Math.round(amount * 100),
+        currency: "USD",
+        vault_id: enrollment.fluidpay_customer_id,
+        description: `Tuition: ${enrollment.plan_name} — ${args.studentName}`,
+      }),
+    });
+
+    const result = await response.json() as any;
+
+    if (result.status === "success" || result.data?.status === "pending_settlement" || result.data?.status === "approved") {
+      const txId = result.data?.id || result.id;
+      // Record payment
+      const amountCentsToRecord = Math.round(amount * 100);
+      await db.execute(
+        `INSERT INTO student_tuition_payments (student_id, enrollment_id, organization_id, amount_cents, status, fluidpay_transaction_id, description, paid_at, created_at)
+         VALUES (${args.studentId}, ${enrollment.id}, ${orgId}, ${amountCentsToRecord}, 'success', ${txId ? JSON.stringify(String(txId)) : "NULL"}, ${JSON.stringify(`Tuition: ${enrollment.plan_name}`)}, NOW(), NOW())`
+      );
+      return JSON.stringify({
+        success: true,
+        message: `✅ **$${amount.toFixed(2)} charged** to ${args.studentName}'s ${enrollment.card_brand || "card"} •••• ${enrollment.card_last4} for **${enrollment.plan_name}**. Transaction ID: ${txId || "N/A"}`,
+      });
+    } else {
+      const errMsg = result.msg || result.message || result.data?.response_body?.card?.processor_response_text || "Payment declined";
+      // Record failed attempt
+      const failedAmountCents = Math.round(amount * 100);
+      await db.execute(
+        `INSERT INTO student_tuition_payments (student_id, enrollment_id, organization_id, amount_cents, status, description, created_at)
+         VALUES (${args.studentId}, ${enrollment.id}, ${orgId}, ${failedAmountCents}, 'failed', ${JSON.stringify(`Failed: ${errMsg}`)}, NOW())`
+      );
+      return JSON.stringify({ success: false, message: `❌ Payment failed for ${args.studentName}: ${errMsg}` });
+    }
+  } catch (err: any) {
+    return JSON.stringify({ success: false, message: `Error charging card: ${err.message}` });
+  }
 }

@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ChevronLeft, Phone, Mail, MessageSquare, Edit, Save, X, AlertCircle, CheckCircle2, Calendar, MapPin, Users, FileText, Camera, Check, AlertTriangle } from 'lucide-react';
 import { PhotoUploadModal } from '@/components/PhotoUploadModal';
+import StudentBillingTab from '@/components/StudentBillingTab';
 import { useToast } from '@/hooks/use-toast';
 
 interface EditableField {
@@ -549,6 +550,19 @@ function StudentCommandProfile() {
               )}
             </CardContent>
           </Card>
+
+          {/* Billing & Tuition Section */}
+          {student && (
+            <div>
+              <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <span className="text-red-400">💳</span> Billing & Tuition
+              </h2>
+              <StudentBillingTab
+                studentId={studentId}
+                studentName={`${student.firstName} ${student.lastName}`}
+              />
+            </div>
+          )}
 
           <div className="flex gap-2">
             <Button onClick={() => setShowSaveConfirm(true)} className="gap-2 bg-red-600 hover:bg-red-700 text-white">

@@ -3,6 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { setupWizardRouter } from "./setupWizardRouter";
 import { billingRouter } from "./billingRouter";
+import { tuitionBillingRouter } from "./tuitionBillingRouter";
 import { webhookRouter } from "./webhookRouter";
 import { campaignsRouter } from "./campaignsRouter";
 import { automationRouter } from "./automationRouter";
@@ -961,6 +962,7 @@ export const appRouter = router({
   kioskDirect: kioskDirectRouter,
   kiosk: kioskRouter,
   billing: billingRouter,
+  tuitionBilling: tuitionBillingRouter,
   membershipPlans: membershipPlansRouter,
   classEntitlements: classEntitlementsRouter,
   oneTimeFees: oneTimeFeesRouter,
