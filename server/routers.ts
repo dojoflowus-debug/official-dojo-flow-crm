@@ -230,7 +230,18 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
         }
         if (dbRev && resolvedOrgId) {
           const settingsRev = await dbRev.select().from(dojoSettingsRev).where(eqRev(dojoSettingsRev.organizationId, resolvedOrgId)).limit(1);
-          const fpKey = (settingsRev[0] as any)?.fluidpayApiKey;
+          let fpKey = (settingsRev[0] as any)?.fluidpayApiKey;
+          // If no key for resolved org, search ALL orgs the user belongs to
+          if (!fpKey && ctx.user && dbRev) {
+            const allOrgs = await dbRev.select({ organizationId: orgUsersRev.organizationId })
+              .from(orgUsersRev)
+              .where(eqRev(orgUsersRev.userId, ctx.user.id));
+            for (const membership of allOrgs) {
+              const altSettings = await dbRev.select().from(dojoSettingsRev).where(eqRev(dojoSettingsRev.organizationId, membership.organizationId)).limit(1);
+              const altKey = (altSettings[0] as any)?.fluidpayApiKey;
+              if (altKey) { fpKey = altKey; resolvedOrgId = membership.organizationId; break; }
+            }
+          }
           if (fpKey) {
             const now = new Date();
             const rev = await getMonthlyRevenueFP(fpKey, now.getUTCFullYear(), now.getUTCMonth() + 1);

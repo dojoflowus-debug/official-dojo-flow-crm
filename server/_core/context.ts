@@ -61,7 +61,7 @@ export async function createContext(
           .limit(1);
         if (orgMemberships.length > 0) {
           currentOrganizationId = orgMemberships[0].organizationId;
-          console.log('[Context] Got org from DB lookup:', currentOrganizationId);
+          console.log('[Context] Got org from DB lookup:', currentOrganizationId, 'for user:', user?.id, user?.email);
         }
       } catch (e) {
         console.log('[Context] Error looking up org from DB:', e);
