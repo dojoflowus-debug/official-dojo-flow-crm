@@ -64,12 +64,23 @@ export function useAuth() {
     // User is authenticated and settings loaded, or user is not authenticated
     if (currentUser) {
       // Persist org ID and user ID in localStorage so tRPC headers can send them
-      // This ensures the server can identify the correct user even when cookies are unavailable
-      if (currentUser.activeOrgId) {
-        localStorage.setItem('dojo_active_org_id', String(currentUser.activeOrgId));
-      }
-      if (currentUser.id) {
-        localStorage.setItem('dojo_user_id', String(currentUser.id));
+      // IMPORTANT: Only update localStorage if getCurrentUser returned a non-demo user,
+      // OR if localStorage is empty. Never overwrite a real user ID with demo user ID (1).
+      const storedUserId = localStorage.getItem('dojo_user_id');
+      const storedOrgId = localStorage.getItem('dojo_active_org_id');
+      const isDemoUser = currentUser.id === 1; // demo@dojoflow.com is always ID 1
+      
+      if (!isDemoUser || !storedUserId) {
+        // Safe to update: either this is a real user, or nothing is stored yet
+        if (currentUser.activeOrgId) {
+          localStorage.setItem('dojo_active_org_id', String(currentUser.activeOrgId));
+        }
+        if (currentUser.id) {
+          localStorage.setItem('dojo_user_id', String(currentUser.id));
+        }
+      } else {
+        // getCurrentUser returned demo user but localStorage has a real user — keep the stored value
+        console.log('[useAuth] Keeping stored user', storedUserId, 'org', storedOrgId, '— ignoring demo user from getCurrentUser');
       }
       setUser({
         id: currentUser.id,
