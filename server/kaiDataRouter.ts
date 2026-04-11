@@ -10,6 +10,28 @@ import { getDb } from "./db";
 import { students, leads, classes, classSessions, classEnrollments, studentAttendance, signedWaivers, kiosks, kioskLocations, studentTuition, dojoSettings } from "../drizzle/schema";
 import { eq, like, and, or, sql, desc, asc, gte, lte } from "drizzle-orm";
 import { validateFluidPayKey, getMonthlyRevenue, getRecentTransactions, getRevenueHistory, getAllTransactions } from "./services/fluidpay";
+import type { Database } from "./db";
+import type { TrpcContext } from "./_core/context";
+
+/**
+ * Resolve the current organization ID from session or fall back to user's first membership.
+ * This handles cases where the session cookie is missing (e.g., JWT-only auth).
+ */
+async function resolveOrgId(ctx: TrpcContext, db: Database): Promise<number | null> {
+  if (ctx.currentOrganizationId) return ctx.currentOrganizationId;
+  if (!ctx.user) return null;
+  try {
+    const { organizationUsers } = await import('../drizzle/schema');
+    const memberships = await db
+      .select({ organizationId: organizationUsers.organizationId })
+      .from(organizationUsers)
+      .where(eq(organizationUsers.userId, ctx.user.id))
+      .limit(1);
+    return memberships.length > 0 ? memberships[0].organizationId : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Student card payload shape - matches existing Student Card UI
@@ -1156,13 +1178,23 @@ export const kaiDataRouter = router({
         averageTransactionValue: z.number(),
         dateRange: z.object({ start: z.string(), end: z.string() }),
         locationId: z.number().optional(),
+        source: z.string().optional(),
+        fluidpayData: z.object({
+          totalDollars: z.number(),
+          settledDollars: z.number(),
+          pendingDollars: z.number(),
+          refundDollars: z.number(),
+          month: z.string(),
+          year: z.number(),
+        }).optional(),
       })
     )
     .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
 
-      const orgId = ctx.currentOrganizationId;
+      // Resolve org ID: use session org, fall back to user's first org membership
+      const orgId = await resolveOrgId(ctx, db);
       if (!orgId) {
         return {
           totalRevenue: 0,
@@ -1173,7 +1205,40 @@ export const kaiDataRouter = router({
         };
       }
 
-      // Get tuition records for date range that are paid
+      // Check if FluidPay is connected — use live data if available
+      try {
+        const settings = await db.select().from(dojoSettings).where(eq(dojoSettings.organizationId, orgId)).limit(1);
+        const fpKey = (settings[0] as any)?.fluidpayApiKey;
+        if (fpKey) {
+          // Parse year/month from startDate (e.g. "2026-04-01")
+          const [yearStr, monthStr] = input.startDate.split('-');
+          const year = parseInt(yearStr, 10);
+          const month = parseInt(monthStr, 10);
+          const rev = await getMonthlyRevenue(fpKey, year, month);
+          const totalRevenueCents = rev.totalDollars * 100; // convert back to cents for consistency
+          const txCount = rev.transactionCount || 0;
+          return {
+            totalRevenue: Math.round(rev.totalDollars * 100), // stored in cents
+            totalTransactions: txCount,
+            averageTransactionValue: txCount > 0 ? Math.round((rev.totalDollars * 100) / txCount) : 0,
+            dateRange: { start: input.startDate, end: input.endDate },
+            locationId: input.locationId,
+            source: 'fluidpay' as any,
+            fluidpayData: {
+              totalDollars: rev.totalDollars,
+              settledDollars: rev.settledDollars,
+              pendingDollars: rev.pendingDollars,
+              refundDollars: rev.refundDollars,
+              month: rev.month,
+              year: rev.year,
+            } as any,
+          };
+        }
+      } catch (fpErr: any) {
+        console.error('[getRevenueSummary] FluidPay error:', fpErr.message);
+      }
+
+      // Fallback: Get tuition records for date range that are paid
       const tuitionData = await db
         .select()
         .from(studentTuition)
@@ -1394,7 +1459,7 @@ export const kaiDataRouter = router({
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
-      const orgId = ctx.currentOrganizationId;
+      const orgId = await resolveOrgId(ctx, db);
       if (!orgId) throw new Error("No organization found");
 
       // Validate the key against FluidPay
@@ -1428,7 +1493,7 @@ export const kaiDataRouter = router({
     .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
-      const orgId = ctx.currentOrganizationId;
+      const orgId = await resolveOrgId(ctx, db);
       if (!orgId) return { connected: false, error: 'No organization found' };
 
       const settings = await db.select()
@@ -1457,7 +1522,7 @@ export const kaiDataRouter = router({
     .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
-      const orgId = ctx.currentOrganizationId;
+      const orgId = await resolveOrgId(ctx, db);
       if (!orgId) return { connected: false, transactions: [], error: 'No organization found' };
 
       const settings = await db.select()
@@ -1486,7 +1551,7 @@ export const kaiDataRouter = router({
     .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
-      const orgId = ctx.currentOrganizationId;
+      const orgId = await resolveOrgId(ctx, db);
       if (!orgId) return { connected: false, history: [], error: 'No organization found' };
 
       const settings = await db.select()
@@ -1519,7 +1584,7 @@ export const kaiDataRouter = router({
     .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
-      const orgId = ctx.currentOrganizationId;
+      const orgId = await resolveOrgId(ctx, db);
       if (!orgId) return { connected: false, transactions: [], totalCount: 0, error: 'No organization found' };
 
       const settings = await db.select()

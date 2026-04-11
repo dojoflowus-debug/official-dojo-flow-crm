@@ -9372,3 +9372,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Staff Change Password page — /staff/change-password route with current password, new password, confirm fields, strength indicator
 - [x] Link to Change Password from staff dashboard profile header/settings
 - [x] Add First Login banner on StaffChangePassword page
+
+## FluidPay Revenue Fix (Apr 11, 2026)
+- [x] Fix FluidPay revenue showing zero in Kai — root cause: session cookie missing on some requests, causing org ID to resolve to org 1 (Demo Dojo) instead of org 210001 (MyDojo)
+- [x] Add resolveOrgId() helper in kaiDataRouter.ts — falls back to user's org membership when session cookie org is missing
+- [x] Update getRevenueSummary to check FluidPay key first, use live data when available
+- [x] Update getFluidPayRevenue, getFluidPayTransactions, getFluidPayRevenueHistory, getFluidPayAllTransactions, connectFluidPay to use resolveOrgId()
+- [x] Fix routers.ts get_revenue case to also use org membership fallback
+- [x] Update kai-tools.ts get_revenue_summary message to display FluidPay data in formatted markdown
+- [x] All 4 FluidPay org resolution tests pass

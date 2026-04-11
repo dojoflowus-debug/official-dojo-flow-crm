@@ -214,12 +214,21 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       // Pull live data from FluidPay if connected
       try {
         const { getDb: getDbRevenue } = await import('./db');
-        const { dojoSettings: dojoSettingsRev } = await import('../drizzle/schema');
+        const { dojoSettings: dojoSettingsRev, organizationUsers: orgUsersRev } = await import('../drizzle/schema');
         const { eq: eqRev } = await import('drizzle-orm');
         const { getMonthlyRevenue: getMonthlyRevenueFP, getRecentTransactions: getRecentTxns } = await import('./services/fluidpay');
         const dbRev = await getDbRevenue();
-        if (dbRev && ctx.currentOrganizationId) {
-          const settingsRev = await dbRev.select().from(dojoSettingsRev).where(eqRev(dojoSettingsRev.organizationId, ctx.currentOrganizationId)).limit(1);
+        // Resolve org ID: use session org, fall back to user's first org membership
+        let resolvedOrgId = ctx.currentOrganizationId;
+        if (!resolvedOrgId && ctx.user && dbRev) {
+          const memberships = await dbRev.select({ organizationId: orgUsersRev.organizationId })
+            .from(orgUsersRev)
+            .where(eqRev(orgUsersRev.userId, ctx.user.id))
+            .limit(1);
+          if (memberships.length > 0) resolvedOrgId = memberships[0].organizationId;
+        }
+        if (dbRev && resolvedOrgId) {
+          const settingsRev = await dbRev.select().from(dojoSettingsRev).where(eqRev(dojoSettingsRev.organizationId, resolvedOrgId)).limit(1);
           const fpKey = (settingsRev[0] as any)?.fluidpayApiKey;
           if (fpKey) {
             const now = new Date();

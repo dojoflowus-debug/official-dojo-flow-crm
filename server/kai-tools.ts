@@ -524,12 +524,30 @@ export async function executeKaiTool(
           startDate,
           endDate,
         });
-        const totalRevenueDollars = (result.totalRevenue || 0).toFixed(2);
-        const avgDollars = (result.averageTransactionValue || 0).toFixed(2);
-        const txCount = result.totalTransactions || 0;
-        const message = txCount === 0
-          ? `No paid tuition records found from ${startDate} to ${endDate}. If you use FluidPay for payments, try asking about FluidPay revenue instead.`
-          : `Revenue from ${startDate} to ${endDate}: $${totalRevenueDollars} total across ${txCount} transactions (avg $${avgDollars} per transaction).`;
+        // Check if FluidPay data was returned
+        const fpData = (result as any).fluidpayData;
+        let message: string;
+        if (fpData) {
+          // FluidPay live data
+          const totalDollars = fpData.totalDollars?.toFixed(2) ?? '0.00';
+          const settledDollars = fpData.settledDollars?.toFixed(2) ?? '0.00';
+          const pendingDollars = fpData.pendingDollars?.toFixed(2) ?? '0.00';
+          const refundDollars = fpData.refundDollars?.toFixed(2) ?? '0.00';
+          const txCount = result.totalTransactions || 0;
+          message = `💳 **${fpData.month} ${fpData.year} Revenue (FluidPay)**\n\n` +
+            `- **Total Collected:** $${totalDollars}\n` +
+            `- **Settled:** $${settledDollars}\n` +
+            `- **Pending:** $${pendingDollars}\n` +
+            `- **Refunds:** $${refundDollars}\n` +
+            `- **Transactions:** ${txCount}`;
+        } else {
+          const totalRevenueDollars = ((result.totalRevenue || 0) / 100).toFixed(2);
+          const avgDollars = ((result.averageTransactionValue || 0) / 100).toFixed(2);
+          const txCount = result.totalTransactions || 0;
+          message = txCount === 0
+            ? `No paid tuition records found from ${startDate} to ${endDate}. If you use FluidPay for payments, connect it so Kai can pull live payment data.`
+            : `Revenue from ${startDate} to ${endDate}: $${totalRevenueDollars} total across ${txCount} transactions (avg $${avgDollars} per transaction).`;
+        }
         return JSON.stringify({
           success: true,
           data: result,
