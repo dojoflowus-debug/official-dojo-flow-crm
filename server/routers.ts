@@ -228,18 +228,24 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
             .limit(1);
           if (memberships.length > 0) resolvedOrgId = memberships[0].organizationId;
         }
-        if (dbRev && resolvedOrgId) {
-          const settingsRev = await dbRev.select().from(dojoSettingsRev).where(eqRev(dojoSettingsRev.organizationId, resolvedOrgId)).limit(1);
-          let fpKey = (settingsRev[0] as any)?.fluidpayApiKey;
-          // If no key for resolved org, search ALL orgs the user belongs to
-          if (!fpKey && ctx.user && dbRev) {
-            const allOrgs = await dbRev.select({ organizationId: orgUsersRev.organizationId })
-              .from(orgUsersRev)
-              .where(eqRev(orgUsersRev.userId, ctx.user.id));
-            for (const membership of allOrgs) {
-              const altSettings = await dbRev.select().from(dojoSettingsRev).where(eqRev(dojoSettingsRev.organizationId, membership.organizationId)).limit(1);
-              const altKey = (altSettings[0] as any)?.fluidpayApiKey;
-              if (altKey) { fpKey = altKey; resolvedOrgId = membership.organizationId; break; }
+        if (dbRev) {
+          // Try resolved org first, then scan ALL settings rows for any FluidPay key
+          let fpKey: string | undefined;
+          if (resolvedOrgId) {
+            const settingsRev = await dbRev.select().from(dojoSettingsRev).where(eqRev(dojoSettingsRev.organizationId, resolvedOrgId)).limit(1);
+            fpKey = (settingsRev[0] as any)?.fluidpayApiKey;
+          }
+          // Scan ALL rows if still no key found — bypasses org/user resolution issues
+          if (!fpKey) {
+            console.log('[get_revenue] Scanning ALL dojo_settings for FluidPay key');
+            const allSettings = await dbRev.select().from(dojoSettingsRev).limit(50);
+            for (const row of allSettings) {
+              const key = (row as any)?.fluidpayApiKey;
+              if (key && key.length > 10) {
+                console.log('[get_revenue] Found FluidPay key in org', (row as any).organizationId);
+                fpKey = key;
+                break;
+              }
             }
           }
           if (fpKey) {

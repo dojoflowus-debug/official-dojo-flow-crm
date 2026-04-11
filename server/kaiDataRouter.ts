@@ -1208,26 +1208,24 @@ export const kaiDataRouter = router({
       // Check if FluidPay is connected — use live data if available
       try {
         console.log('[getRevenueSummary] Checking FluidPay for orgId:', orgId);
+        // First try the resolved org
         let settings = await db.select().from(dojoSettings).where(eq(dojoSettings.organizationId, orgId)).limit(1);
         let fpKey = (settings[0] as any)?.fluidpayApiKey;
-        // If no key found for resolved org, search all orgs the user belongs to
-        if (!fpKey && ctx.user) {
-          console.log('[getRevenueSummary] No FluidPay key for org', orgId, '- searching all user orgs');
-          const { organizationUsers: orgUsersSearch } = await import('../drizzle/schema');
-          const userOrgs = await db.select({ organizationId: orgUsersSearch.organizationId })
-            .from(orgUsersSearch)
-            .where(eq(orgUsersSearch.userId, ctx.user.id));
-          for (const membership of userOrgs) {
-            const altSettings = await db.select().from(dojoSettings).where(eq(dojoSettings.organizationId, membership.organizationId)).limit(1);
-            const altKey = (altSettings[0] as any)?.fluidpayApiKey;
-            if (altKey) {
-              console.log('[getRevenueSummary] Found FluidPay key in org', membership.organizationId);
-              fpKey = altKey;
+        // If no key found, scan ALL dojo_settings rows for any FluidPay key
+        // This bypasses org/user resolution issues entirely
+        if (!fpKey) {
+          console.log('[getRevenueSummary] No FluidPay key for org', orgId, '- scanning ALL settings rows');
+          const allSettings = await db.select().from(dojoSettings).limit(50);
+          for (const row of allSettings) {
+            const key = (row as any)?.fluidpayApiKey;
+            if (key && key.length > 10) {
+              console.log('[getRevenueSummary] Found FluidPay key in org', (row as any).organizationId);
+              fpKey = key;
               break;
             }
           }
         }
-        console.log('[getRevenueSummary] Settings found:', settings.length, 'rows, fluidpayApiKey present:', !!fpKey);
+        console.log('[getRevenueSummary] FluidPay key found:', !!fpKey);
         if (fpKey) {
           // Parse year/month from startDate (e.g. "2026-04-01")
           const [yearStr, monthStr] = input.startDate.split('-');

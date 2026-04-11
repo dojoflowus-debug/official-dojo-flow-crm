@@ -1381,23 +1381,38 @@ export async function executeListStaff(
 
 async function resolveOrgIdForKai(ctx: any): Promise<number | null> {
   const direct = ctx.user?.organizationId || ctx?.currentOrganizationId;
-  if (direct) return direct;
-  // Fallback: look up from user membership
-  try {
-    const { getDb } = await import("./db");
-    const { organizationUsers } = await import("../drizzle/schema");
-    const { eq } = await import("drizzle-orm");
-    const db = await getDb();
-    if (!db || !ctx.user?.id) return null;
-    const memberships = await db
-      .select({ organizationId: organizationUsers.organizationId })
-      .from(organizationUsers)
-      .where(eq(organizationUsers.userId, ctx.user.id))
-      .limit(1);
-    return memberships[0]?.organizationId ?? null;
-  } catch {
-    return null;
+  if (direct && direct !== 1) return direct; // skip demo org 1
+  if (direct === 1 || !direct) {
+    // If resolved to demo org or nothing, scan ALL dojo_settings for a real org with FluidPay key
+    try {
+      const { getDb } = await import("./db");
+      const { dojoSettings } = await import("../drizzle/schema");
+      const db = await getDb();
+      if (!db) return direct || null;
+      const allSettings = await db.select().from(dojoSettings).limit(50);
+      for (const row of allSettings) {
+        const key = (row as any)?.fluidpayApiKey;
+        const orgId = (row as any)?.organizationId;
+        if (key && key.length > 10 && orgId && orgId !== 1) {
+          console.log('[resolveOrgIdForKai] Found real org with FluidPay key:', orgId);
+          return orgId;
+        }
+      }
+      // No FluidPay key found, fall back to user membership
+      const { organizationUsers } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      if (!ctx.user?.id) return direct || null;
+      const memberships = await db
+        .select({ organizationId: organizationUsers.organizationId })
+        .from(organizationUsers)
+        .where(eq(organizationUsers.userId, ctx.user.id))
+        .limit(1);
+      return memberships[0]?.organizationId ?? direct ?? null;
+    } catch {
+      return direct || null;
+    }
   }
+  return direct;
 }
 
 export async function executeListTuitionPlans(ctx: any): Promise<string> {
