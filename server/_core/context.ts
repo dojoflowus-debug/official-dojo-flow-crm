@@ -37,15 +37,35 @@ export async function createContext(
     // Extract organization and location context from session cookie
     const sessionCookie = opts.req.cookies?.session;
     console.log('[Context] Session cookie raw:', sessionCookie ? 'present' : 'missing');
+    
+    let sessionUserId: number | null = null;
+    
     if (sessionCookie) {
       try {
         const sessionData = JSON.parse(sessionCookie);
         console.log('[Context] Session data parsed:', { userId: sessionData.userId, orgId: sessionData.currentOrganizationId });
         currentOrganizationId = sessionData.currentOrganizationId || null;
         locationSlug = sessionData.locationSlug || null;
+        sessionUserId = sessionData.userId || null;
       } catch (e) {
         console.log('[Context] Error parsing session cookie:', e);
-        // Invalid session data, ignore
+      }
+    }
+
+    // If the session cookie has a userId that differs from the SDK-authenticated user,
+    // load the correct user from DB. This handles the case where the SDK token is shared
+    // (e.g., OWNER_OPEN_ID env var) but the session cookie identifies the real user.
+    if (sessionUserId && db && user && user.id !== sessionUserId) {
+      try {
+        const { users } = await import("../../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const [correctUser] = await db.select().from(users).where(eq(users.id, sessionUserId)).limit(1);
+        if (correctUser) {
+          console.log('[Context] Correcting user from SDK user', user.id, '(', user.email, ') to session user', correctUser.id, '(', correctUser.email, ')');
+          user = correctUser as User;
+        }
+      } catch (e) {
+        console.log('[Context] Error loading correct user from session:', e);
       }
     }
     
