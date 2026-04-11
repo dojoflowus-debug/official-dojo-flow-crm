@@ -222,6 +222,13 @@ function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const loginMutation = trpc.ownerAuth.login.useMutation({
     onSuccess: (data) => {
       toast.success("Login successful!");
+      // Store org ID and user ID in localStorage for header-based auth fallback
+      if (data.organizationId) {
+        localStorage.setItem('dojo_active_org_id', String(data.organizationId));
+      }
+      if (data.user?.id) {
+        localStorage.setItem('dojo_user_id', String(data.user.id));
+      }
       if (data.hasOrganization) {
         navigate("/kai");
       } else {

@@ -63,6 +63,14 @@ export function useAuth() {
     
     // User is authenticated and settings loaded, or user is not authenticated
     if (currentUser) {
+      // Persist org ID and user ID in localStorage so tRPC headers can send them
+      // This ensures the server can identify the correct user even when cookies are unavailable
+      if (currentUser.activeOrgId) {
+        localStorage.setItem('dojo_active_org_id', String(currentUser.activeOrgId));
+      }
+      if (currentUser.id) {
+        localStorage.setItem('dojo_user_id', String(currentUser.id));
+      }
       setUser({
         id: currentUser.id,
         openId: currentUser.openId,

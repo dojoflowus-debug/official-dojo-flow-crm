@@ -113,6 +113,16 @@ const trpcClient = trpc.createClient({
     httpBatchLink({
       url: "/api/trpc",
       transformer: superjson,
+      headers() {
+        // Send org ID and user ID as headers so server can identify the correct user
+        // even when session cookies are not available (proxy stripping, SameSite issues)
+        const orgId = localStorage.getItem('dojo_active_org_id');
+        const userId = localStorage.getItem('dojo_user_id');
+        const headers: Record<string, string> = {};
+        if (orgId) headers['x-organization-id'] = orgId;
+        if (userId) headers['x-user-id'] = userId;
+        return headers;
+      },
       fetch(input, init) {
         return globalThis.fetch(input, {
           ...(init ?? {}),

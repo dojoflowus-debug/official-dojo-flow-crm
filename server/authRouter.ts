@@ -19,7 +19,46 @@ export const authRouter = router({
    */
   getCurrentUser: publicProcedure.query(async ({ ctx }) => {
     if (!ctx.user) return null;
-    const user = await getUserByOpenId(ctx.user.openId);
+    
+    // Use the corrected user from context (which already handles session cookie userId mismatch)
+    // ctx.user is already the correct user after context.ts fix
+    let user = ctx.user;
+    
+    // Double-check: if session cookie has a different userId, load that user
+    const sessionCookie = ctx.req?.cookies?.session;
+    if (sessionCookie) {
+      try {
+        const sessionData = JSON.parse(sessionCookie);
+        if (sessionData.userId && sessionData.userId !== user.id) {
+          const db2 = await getDb();
+          if (db2) {
+            const [correctUser] = await db2.select().from(users).where(eq(users.id, sessionData.userId)).limit(1);
+            if (correctUser) {
+              console.log('[getCurrentUser] Using session user', correctUser.id, correctUser.email, 'instead of SDK user', user.id);
+              user = correctUser as typeof user;
+            }
+          }
+        }
+      } catch (e) {
+        // ignore parse errors
+      }
+    }
+    
+    // Also check x-user-id header (sent by frontend from localStorage after login)
+    const headerUserId = ctx.req?.headers?.['x-user-id'];
+    if (headerUserId) {
+      const parsedHeaderUserId = parseInt(String(headerUserId), 10);
+      if (!isNaN(parsedHeaderUserId) && parsedHeaderUserId !== user.id) {
+        const db3 = await getDb();
+        if (db3) {
+          const [headerUser] = await db3.select().from(users).where(eq(users.id, parsedHeaderUserId)).limit(1);
+          if (headerUser) {
+            console.log('[getCurrentUser] Using x-user-id header user', headerUser.id, headerUser.email, 'instead of SDK user', user.id);
+            user = headerUser as typeof user;
+          }
+        }
+      }
+    }
     
     if (!user) {
       throw new Error("User not found");

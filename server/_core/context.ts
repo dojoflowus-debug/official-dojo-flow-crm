@@ -69,6 +69,39 @@ export async function createContext(
       }
     }
     
+    // Check for org ID from custom request header (sent by frontend as fallback when cookies are unavailable)
+    if (!currentOrganizationId) {
+      const headerOrgId = opts.req.headers['x-organization-id'];
+      if (headerOrgId) {
+        const parsed = parseInt(String(headerOrgId), 10);
+        if (!isNaN(parsed)) {
+          currentOrganizationId = parsed;
+          console.log('[Context] Got org from x-organization-id header:', currentOrganizationId);
+        }
+      }
+    }
+    
+    // Check for user ID from custom request header (sent by frontend as fallback)
+    if (user && db) {
+      const headerUserId = opts.req.headers['x-user-id'];
+      if (headerUserId) {
+        const parsedUserId = parseInt(String(headerUserId), 10);
+        if (!isNaN(parsedUserId) && parsedUserId !== user.id) {
+          try {
+            const { users: usersTable } = await import('../../drizzle/schema');
+            const { eq: eqHeader } = await import('drizzle-orm');
+            const [headerUser] = await db.select().from(usersTable).where(eqHeader(usersTable.id, parsedUserId)).limit(1);
+            if (headerUser) {
+              console.log('[Context] Correcting user from header: SDK user', user.id, '->', 'header user', headerUser.id, headerUser.email);
+              user = headerUser as typeof user;
+            }
+          } catch (e) {
+            console.log('[Context] Error loading user from header:', e);
+          }
+        }
+      }
+    }
+
     // If no org from session cookie, try to get it from user's organization membership
     if (!currentOrganizationId && user && db) {
       try {
