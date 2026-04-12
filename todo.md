@@ -9419,3 +9419,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Replace browser Web Speech API with ElevenLabs TTS for Kai responses
 - [x] Support voice selection (male/female) mapped to ElevenLabs voice IDs
 - [x] Ensure voice plays on double-tap/double-click of Kai glass ball
+
+## MyDojo Lead Sync (Automatic)
+- [x] Investigate existing MyDojo lead capture webhook/endpoint
+- [x] Audit leads table schema and pipeline stages
+- [x] Build/fix POST /api/webhooks/mydojo/lead endpoint to receive leads from MyDojo
+- [x] Auto-create lead in DojoFlow pipeline on receipt (stage: New Lead, source: MyDojo)
+- [ ] Trigger Kai auto-follow-up sequence on new MyDojo lead
+- [x] Add widget API key auth to protect the webhook
+- [x] Test end-to-end lead sync flow (Jane Doe lead #150001 confirmed)

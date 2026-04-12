@@ -10,15 +10,15 @@
 
 import { Router, Request, Response } from "express";
 import { getDb } from "./db";
-import { leads } from "../drizzle/schema";
-import { eq, and, or } from "drizzle-orm";
+import { leads, organizations } from "../drizzle/schema";
+import { eq, and } from "drizzle-orm";
 
 const router = Router();
 
 // The shared secret — must match MYDOJO_WEBHOOK_SECRET on both sides
 const WEBHOOK_SECRET = process.env.MYDOJO_WEBHOOK_SECRET || "dojo-flow-mydojo-sync-2026";
 
-// Default org ID for vincent.holmes00@gmail.com (MyDojo)
+// Fallback org ID for vincent.holmes00@gmail.com (MyDojo) — used only if no API key provided
 const MYDOJO_ORG_ID = 210001;
 
 router.post("/api/webhooks/mydojo", async (req: Request, res: Response) => {
@@ -26,10 +26,28 @@ router.post("/api/webhooks/mydojo", async (req: Request, res: Response) => {
     // ── 1. Authenticate ──────────────────────────────────────────────────────
     const incomingSecret =
       req.headers["x-webhook-secret"] ||
-      req.headers["x-api-key"] ||
       req.query.secret;
+    const incomingApiKey = req.headers["x-api-key"] as string || req.body?.api_key as string;
 
-    if (incomingSecret !== WEBHOOK_SECRET) {
+    // Allow either the shared webhook secret OR a valid widgetApiKey
+    let resolvedOrgId: number = MYDOJO_ORG_ID;
+
+    if (incomingApiKey) {
+      // Validate widgetApiKey and resolve org
+      const db = await getDb();
+      if (!db) return res.status(500).json({ error: "Database unavailable" });
+      const orgRows = await db
+        .select({ id: organizations.id, name: organizations.name })
+        .from(organizations)
+        .where(eq(organizations.widgetApiKey, incomingApiKey))
+        .limit(1);
+      if (orgRows.length === 0) {
+        console.warn("[MyDojo Webhook] Invalid widgetApiKey:", incomingApiKey);
+        return res.status(401).json({ error: "Invalid API key" });
+      }
+      resolvedOrgId = orgRows[0].id;
+      console.log(`[MyDojo Webhook] Authenticated via widgetApiKey — org: ${orgRows[0].name} (${resolvedOrgId})`);
+    } else if (incomingSecret !== WEBHOOK_SECRET) {
       console.warn("[MyDojo Webhook] Unauthorized request — bad secret");
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -104,18 +122,19 @@ router.post("/api/webhooks/mydojo", async (req: Request, res: Response) => {
       .join(" | ") || undefined;
 
     // ── 4. Upsert lead ───────────────────────────────────────────────────────
+    // Get db (may already be initialized above for API key validation)
     const db = await getDb();
     if (!db) {
       return res.status(500).json({ error: "Database unavailable" });
     }
 
-    // Check for existing lead by email or phone
+    // Check for existing lead by email or phone within the resolved org
     let existingLead: { id: number } | undefined;
     if (email) {
       const rows = await db
         .select({ id: leads.id })
         .from(leads)
-        .where(and(eq(leads.email, email), eq(leads.organizationId, MYDOJO_ORG_ID)))
+        .where(and(eq(leads.email, email), eq(leads.organizationId, resolvedOrgId)))
         .limit(1);
       existingLead = rows[0];
     }
@@ -123,7 +142,7 @@ router.post("/api/webhooks/mydojo", async (req: Request, res: Response) => {
       const rows = await db
         .select({ id: leads.id })
         .from(leads)
-        .where(and(eq(leads.phone, phone), eq(leads.organizationId, MYDOJO_ORG_ID)))
+        .where(and(eq(leads.phone, phone), eq(leads.organizationId, resolvedOrgId)))
         .limit(1);
       existingLead = rows[0];
     }
@@ -167,7 +186,7 @@ router.post("/api/webhooks/mydojo", async (req: Request, res: Response) => {
         notes,
         status: "Intro Scheduled",
         stage: "appointment_set",
-        organizationId: MYDOJO_ORG_ID,
+        organizationId: resolvedOrgId,
         leadScore: 70, // Intro appointments are warm leads
       });
 
@@ -200,12 +219,114 @@ router.post("/api/webhooks/mydojo", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Simplified lead capture endpoint for MyDojo landing page forms.
+ * Accepts flat JSON: { firstName, lastName, name, email, phone, program, source, api_key }
+ * Auth: x-api-key header (widgetApiKey) OR x-webhook-secret header
+ * Endpoint: POST /api/webhooks/mydojo/lead
+ */
+router.post("/api/webhooks/mydojo/lead", async (req: Request, res: Response) => {
+  try {
+    const incomingApiKey = req.headers["x-api-key"] as string || req.body?.api_key as string;
+    const incomingSecret = req.headers["x-webhook-secret"] as string || req.query.secret as string;
+
+    let resolvedOrgId: number = MYDOJO_ORG_ID;
+
+    const db = await getDb();
+    if (!db) return res.status(500).json({ error: "Database unavailable" });
+
+    if (incomingApiKey) {
+      const orgRows = await db
+        .select({ id: organizations.id, name: organizations.name })
+        .from(organizations)
+        .where(eq(organizations.widgetApiKey, incomingApiKey))
+        .limit(1);
+      if (orgRows.length === 0) {
+        return res.status(401).json({ error: "Invalid API key" });
+      }
+      resolvedOrgId = orgRows[0].id;
+    } else if (incomingSecret !== WEBHOOK_SECRET) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const body = req.body || {};
+    let firstName = body.firstName || "";
+    let lastName = body.lastName || "";
+    if (!firstName && body.name) {
+      const parts = (body.name as string).trim().split(/\s+/);
+      firstName = parts[0] || "";
+      lastName = parts.slice(1).join(" ") || "";
+    }
+
+    if (!firstName) return res.status(400).json({ error: "firstName or name is required" });
+
+    const email = body.email?.trim() || undefined;
+    const phone = body.phone?.replace(/\D/g, "") || undefined;
+    if (!email && !phone) return res.status(400).json({ error: "email or phone is required" });
+
+    const source = body.source || "MyDojo Website";
+    const program = body.program || body.interestedProgram || undefined;
+    const notes = body.notes || body.message || undefined;
+
+    // Dedup check
+    let existingLead: { id: number } | undefined;
+    if (email) {
+      const rows = await db.select({ id: leads.id }).from(leads)
+        .where(and(eq(leads.email, email), eq(leads.organizationId, resolvedOrgId))).limit(1);
+      existingLead = rows[0];
+    }
+    if (!existingLead && phone) {
+      const rows = await db.select({ id: leads.id }).from(leads)
+        .where(and(eq(leads.phone, phone), eq(leads.organizationId, resolvedOrgId))).limit(1);
+      existingLead = rows[0];
+    }
+
+    if (existingLead) {
+      await db.update(leads).set({
+        firstName, lastName,
+        email: email || undefined,
+        phone: phone || undefined,
+        source, interestedProgram: program, notes,
+        updatedAt: new Date().toISOString(),
+      }).where(eq(leads.id, existingLead.id));
+      console.log(`[MyDojo Lead] Updated lead #${existingLead.id} (${firstName} ${lastName})`);
+      return res.json({ success: true, action: "updated", lead_id: existingLead.id });
+    }
+
+    const insertResult = await db.insert(leads).values({
+      firstName, lastName, email, phone, source,
+      interestedProgram: program, notes,
+      status: "New Lead",
+      stage: "new",
+      organizationId: resolvedOrgId,
+      leadScore: 65,
+      createdAt: new Date().toISOString().slice(0, 19).replace("T", " "),
+      updatedAt: new Date().toISOString().slice(0, 19).replace("T", " "),
+    });
+    const newLeadId: number = (insertResult as any).insertId ?? 0;
+    console.log(`[MyDojo Lead] Created lead #${newLeadId} (${firstName} ${lastName}) org=${resolvedOrgId}`);
+
+    try {
+      const { notifyNewLead } = await import("./services/notifications.js");
+      notifyNewLead({ id: newLeadId, firstName, lastName, email, phone, source }).catch(() => {});
+    } catch {}
+
+    return res.status(201).json({ success: true, action: "created", lead_id: newLeadId });
+  } catch (err: any) {
+    console.error("[MyDojo Lead] Error:", err);
+    return res.status(500).json({ error: err.message || "Internal server error" });
+  }
+});
+
 // Health check for the webhook endpoint
 router.get("/api/webhooks/mydojo/health", (_req: Request, res: Response) => {
   res.json({
     status: "ok",
-    endpoint: "POST /api/webhooks/mydojo",
-    auth: "x-webhook-secret header",
+    endpoints: [
+      "POST /api/webhooks/mydojo (intro appointment events)",
+      "POST /api/webhooks/mydojo/lead (flat lead form submissions)",
+    ],
+    auth: "x-api-key (widgetApiKey) OR x-webhook-secret header",
     timestamp: new Date().toISOString(),
   });
 });
