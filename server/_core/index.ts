@@ -187,6 +187,25 @@ async function runStartupMigrations() {
       console.warn('[Migration] users.mustChangePassword warning:', mcpErr.message);
     }
 
+    // Ensure dojo_settings has kaiVoiceGender column for Kai voice preference
+    try {
+      const [voiceCols] = await conn.execute(
+        `SHOW COLUMNS FROM \`dojo_settings\` WHERE Field = 'kaiVoiceGender'`
+      ) as any;
+      if ((voiceCols as any[]).length === 0) {
+        await conn.execute(
+          `ALTER TABLE \`dojo_settings\` ADD COLUMN \`kaiVoiceGender\` VARCHAR(10) DEFAULT 'female'`
+        );
+        console.log('[Migration] \u2713 dojo_settings.kaiVoiceGender column added');
+      } else {
+        console.log('[Migration] dojo_settings.kaiVoiceGender already exists, no change needed');
+      }
+    } catch (voiceErr: any) {
+      if (!voiceErr.message?.includes('Duplicate column')) {
+        console.warn('[Migration] dojo_settings.kaiVoiceGender warning:', voiceErr.message);
+      }
+    }
+
     // Ensure student_billing_enrollments has retry_count column for billing retry tracking
     try {
       const [sbeColsCheck] = await conn.execute(

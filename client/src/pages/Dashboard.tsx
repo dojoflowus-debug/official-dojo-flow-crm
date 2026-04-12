@@ -23,6 +23,7 @@ import {
   Maximize2
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { trpc } from '@/lib/trpc'
 
 export default function Dashboard({ onLogout, theme, toggleTheme }: { onLogout: () => void; theme: string; toggleTheme: () => void }) {
   const { theme: currentTheme } = useTheme()
@@ -41,6 +42,13 @@ export default function Dashboard({ onLogout, theme, toggleTheme }: { onLogout: 
   const hasGreetedRef = useRef(false)  // Prevent duplicate greetings
 
   const [isFullScreen, setIsFullScreen] = useState(false)
+
+  // Kai voice preference from settings
+  const { data: kaiVoiceData } = trpc.settings.getKaiVoice.useQuery(undefined, {
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  })
+  const kaiVoiceGender = kaiVoiceData?.voiceGender || 'female'
 
   // Kiosk stats
   const [kioskStats, setKioskStats] = useState({
@@ -232,13 +240,13 @@ export default function Dashboard({ onLogout, theme, toggleTheme }: { onLogout: 
     try {
       setIsSpeaking(true)
       
-      // Try ElevenLabs API first
+      // Try ElevenLabs API first (pass saved voice gender preference)
       const response = await fetch('/api/tts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ text })
+        body: JSON.stringify({ text, voiceGender: kaiVoiceGender })
       })
 
       if (response.ok) {

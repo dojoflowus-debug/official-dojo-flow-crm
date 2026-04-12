@@ -9411,3 +9411,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add 5 new Kai tools: list_tuition_plans, create_tuition_plan, enroll_student_in_plan, get_student_billing_status, charge_student_tuition
 - [x] Add executor functions for all 5 new Kai billing tools
 - [x] Fix all table/column names in Kai executor functions (amount_cents, student_billing_enrollments, student_tuition_payments)
+
+## Voice Feature (ElevenLabs Integration)
+- [x] Store ElevenLabs API key as ELEVENLABS_API_KEY secret
+- [x] Build server-side /api/tts endpoint using ElevenLabs API (already existed, now wired up)
+- [x] Fix Kai voice switching (assisted voice mode)
+- [x] Replace browser Web Speech API with ElevenLabs TTS for Kai responses
+- [x] Support voice selection (male/female) mapped to ElevenLabs voice IDs
+- [x] Ensure voice plays on double-tap/double-click of Kai glass ball

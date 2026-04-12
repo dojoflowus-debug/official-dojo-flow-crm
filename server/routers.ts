@@ -4876,6 +4876,42 @@ Return the data as a structured JSON object.`
         return { widgetApiKey: rows[0]?.widgetApiKey ?? null, organizationId: orgId };
       }),
 
+    // Kai voice preference
+    getKaiVoice: protectedProcedure
+      .query(async ({ ctx }) => {
+        const { getDb } = await import("./db");
+        const { organizations } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const orgId = ctx.currentOrganizationId;
+        const rows = await db.select({ settings: organizations.settings })
+          .from(organizations).where(eq(organizations.id, orgId)).limit(1);
+        let parsed: any = {};
+        try { parsed = JSON.parse(rows[0]?.settings || '{}'); } catch {}
+        return { voiceGender: (parsed.kaiVoiceGender as string) || 'female' };
+      }),
+
+    setKaiVoice: protectedProcedure
+      .input(z.object({ voiceGender: z.enum(['male', 'female']) }))
+      .mutation(async ({ ctx, input }) => {
+        const { getDb } = await import("./db");
+        const { organizations } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const orgId = ctx.currentOrganizationId;
+        const rows = await db.select({ settings: organizations.settings })
+          .from(organizations).where(eq(organizations.id, orgId)).limit(1);
+        let parsed: any = {};
+        try { parsed = JSON.parse(rows[0]?.settings || '{}'); } catch {}
+        parsed.kaiVoiceGender = input.voiceGender;
+        await db.update(organizations)
+          .set({ settings: JSON.stringify(parsed) })
+          .where(eq(organizations.id, orgId));
+        return { success: true, voiceGender: input.voiceGender };
+      }),
+
     regenerateWidgetKey: protectedProcedure
       .mutation(async ({ ctx }) => {
         const { getDb } = await import("./db");
