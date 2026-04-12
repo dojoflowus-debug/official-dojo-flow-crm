@@ -187,6 +187,25 @@ async function runStartupMigrations() {
       console.warn('[Migration] users.mustChangePassword warning:', mcpErr.message);
     }
 
+    // Ensure student_billing_enrollments has retry_count column for billing retry tracking
+    try {
+      const [sbeColsCheck] = await conn.execute(
+        `SHOW COLUMNS FROM \`student_billing_enrollments\` WHERE Field = 'retry_count'`
+      ) as any;
+      if ((sbeColsCheck as any[]).length === 0) {
+        await conn.execute(
+          `ALTER TABLE \`student_billing_enrollments\` ADD COLUMN \`retry_count\` INT NOT NULL DEFAULT 0`
+        );
+        console.log('[Migration] \u2713 student_billing_enrollments.retry_count column added');
+      } else {
+        console.log('[Migration] student_billing_enrollments.retry_count already exists, no change needed');
+      }
+    } catch (retryErr: any) {
+      if (!retryErr.message?.includes('Duplicate column') && !retryErr.message?.includes("doesn't exist")) {
+        console.warn('[Migration] student_billing_enrollments.retry_count warning:', retryErr.message);
+      }
+    }
+
     await conn.end();
   } catch (err: any) {
     console.warn('[Migration] Startup migration warning (non-fatal):', err.message);

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import { AlertCircle, TrendingUp, Users, Calendar, Target, DollarSign, AlertTriangle } from 'lucide-react';
+import { FluidPayRevenueWidget } from '@/components/FluidPayRevenueWidget';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -175,13 +176,23 @@ export function OwnerCommandCenter() {
           </div>
         </div>
 
-        {/* Attendance Trend */}
-        <Card className="p-6 mt-6">
-          <h2 className="text-lg font-semibold mb-4">Attendance Trend</h2>
-          <div className="h-64 flex items-center justify-center text-muted-foreground">
-            <p>Attendance data coming soon</p>
+        {/* Revenue + Attendance row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          {/* FluidPay Live Revenue */}
+          <div className="lg:col-span-1">
+            <FluidPayRevenueWidget />
           </div>
-        </Card>
+
+          {/* Attendance Trend */}
+          <div className="lg:col-span-2">
+            <Card className="p-6 h-full">
+              <h2 className="text-lg font-semibold mb-4">Attendance Trend</h2>
+              <div className="h-48 flex items-center justify-center text-muted-foreground">
+                <p>Attendance data coming soon</p>
+              </div>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -135,6 +135,18 @@ async function runStartupMigrations() {
       }
     }
 
+    // Ensure student_billing_enrollments has retry_count column
+    try {
+      await conn.execute(
+        `ALTER TABLE \`student_billing_enrollments\` ADD COLUMN IF NOT EXISTS \`retry_count\` INT NOT NULL DEFAULT 0`
+      );
+      console.log('[Migration] ✓ student_billing_enrollments.retry_count column ensured');
+    } catch (retryErr: any) {
+      if (!retryErr.message?.includes('Duplicate column')) {
+        console.warn('[Migration] student_billing_enrollments.retry_count warning:', retryErr.message);
+      }
+    }
+
     await conn.end();
   } catch (err: any) {
     console.warn('[Migration] Startup migration warning (non-fatal):', err.message);

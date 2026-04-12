@@ -1,5 +1,6 @@
 import { processClassReminders } from "../classReminderService";
 import { checkLowStockItems } from "../stockAlertEngine";
+import { processDueTuitionBilling } from "../tuitionBillingScheduler";
 
 /**
  * Background Job Scheduler
@@ -9,6 +10,7 @@ import { checkLowStockItems } from "../stockAlertEngine";
 let schedulerInterval: NodeJS.Timeout | null = null;
 let reminderInterval: NodeJS.Timeout | null = null;
 let stockAlertInterval: NodeJS.Timeout | null = null;
+let tuitionBillingInterval: NodeJS.Timeout | null = null;
 
 /**
  * Start the automation scheduler
@@ -27,6 +29,9 @@ export function startScheduler() {
   
   // Start stock alert scheduler
   startStockAlertScheduler();
+
+  // Start tuition billing scheduler
+  startTuitionBillingScheduler();
 }
 
 /**
@@ -114,6 +119,51 @@ function startStockAlertScheduler() {
 }
 
 /**
+ * Start the tuition billing scheduler
+ * Runs once per day (every 24 hours) to auto-charge enrolled students
+ */
+function startTuitionBillingScheduler() {
+  if (tuitionBillingInterval) {
+    console.log("Tuition billing scheduler already running");
+    return;
+  }
+
+  console.log("Starting tuition billing scheduler...");
+
+  // Run initial check 30 seconds after startup
+  setTimeout(() => {
+    console.log("[TuitionBilling] Initial billing check...");
+    processDueTuitionBilling()
+      .then(result => {
+        console.log(`[TuitionBilling] Initial check complete: ${result.processed} processed, ${result.succeeded} succeeded, ${result.failed} failed, ${result.skipped} skipped`);
+        if (result.errors.length > 0) {
+          console.error("[TuitionBilling] Errors:", result.errors);
+        }
+      })
+      .catch(error => {
+        console.error("Error in initial tuition billing processing:", error);
+      });
+  }, 30000); // 30 seconds after startup
+
+  // Run every 24 hours
+  tuitionBillingInterval = setInterval(() => {
+    console.log("[TuitionBilling] Running daily billing run...");
+    processDueTuitionBilling()
+      .then(result => {
+        console.log(`[TuitionBilling] Daily run complete: ${result.processed} processed, ${result.succeeded} succeeded, ${result.failed} failed, ${result.skipped} skipped`);
+        if (result.errors.length > 0) {
+          console.error("[TuitionBilling] Errors:", result.errors);
+        }
+      })
+      .catch(error => {
+        console.error("Error in tuition billing processing:", error);
+      });
+  }, 24 * 60 * 60 * 1000); // 24 hours
+
+  console.log("Tuition billing scheduler started - running every 24 hours");
+}
+
+/**
  * Stop the automation scheduler
  */
 export function stopScheduler() {
@@ -132,6 +182,11 @@ export function stopScheduler() {
     stockAlertInterval = null;
     console.log("Stock alert scheduler stopped");
   }
+  if (tuitionBillingInterval) {
+    clearInterval(tuitionBillingInterval);
+    tuitionBillingInterval = null;
+    console.log("Tuition billing scheduler stopped");
+  }
 }
 
 /**
@@ -142,9 +197,11 @@ export function getSchedulerStatus() {
     running: schedulerInterval !== null,
     reminderRunning: reminderInterval !== null,
     stockAlertRunning: stockAlertInterval !== null,
+    tuitionBillingRunning: tuitionBillingInterval !== null,
     automationInterval: 60000, // milliseconds
     reminderInterval: 3600000, // milliseconds (1 hour)
     stockAlertInterval: 21600000, // milliseconds (6 hours)
+    tuitionBillingInterval: 86400000, // milliseconds (24 hours)
   };
 }
 
@@ -162,4 +219,12 @@ export async function triggerReminderProcessing() {
 export async function triggerStockAlertProcessing() {
   console.log("[StockAlert] Manual stock alert trigger...");
   return checkLowStockItems();
+}
+
+/**
+ * Manually trigger tuition billing run (for testing/admin)
+ */
+export async function triggerTuitionBillingRun() {
+  console.log("[TuitionBilling] Manual billing trigger...");
+  return processDueTuitionBilling();
 }
