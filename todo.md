@@ -1,6 +1,8 @@
 # DojoFlow TODO
 
 ## Current Task
+- [ ] Fix FluidPay transaction customer names showing as "Unknown" in Kai revenue responses
+
 - [x] Full screen mode not working - button in top-right toolbar does nothing (implemented browser Fullscreen API)
 - [x] Add default placeholder image to profile photo in Settings when no photo is present
 - [x] Update trial: $1 upfront verification, $49.99/month post-trial, 15 starter credits on trial start

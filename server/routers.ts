@@ -267,7 +267,17 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
                 amount: (t.amount / 100).toFixed(2),
                 type: t.type,
                 status: t.status,
-                name: t.billing ? `${t.billing.first_name || ''} ${t.billing.last_name || ''}`.trim() : 'Unknown',
+                name: (() => {
+                  if (t.billing) {
+                    const n = `${t.billing.first_name || ''} ${t.billing.last_name || ''}`.trim();
+                    if (n) return n;
+                  }
+                  if (t.description && t.description.trim()) return t.description.trim();
+                  if (t.order_id && t.order_id.trim()) return `Order ${t.order_id.trim()}`;
+                  if (t.customer_id && t.customer_id.trim()) return `Customer ${t.customer_id.trim()}`;
+                  if (t.processor_id && t.processor_id.trim()) return `Tx ${t.processor_id.trim()}`;
+                  return `Txn ${(t.id || '').slice(-6)}`;
+                })(),
               }))
             };
           }
