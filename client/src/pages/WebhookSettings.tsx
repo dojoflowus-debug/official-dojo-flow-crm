@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import {
   Copy, RefreshCw, Code, Globe, TestTube2, CheckCircle2,
-  XCircle, Loader2, Zap, Link2, AlertCircle
+  XCircle, Loader2, Zap, Link2, AlertCircle, Monitor, Calendar, BookOpen, Users
 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -15,10 +15,13 @@ export default function WebhookSettings() {
   const [testStatus, setTestStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [testResult, setTestResult] = useState<string>("");
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [kioskTestStatus, setKioskTestStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [kioskTestResult, setKioskTestResult] = useState<any>(null);
 
   const baseUrl = window.location.origin;
   const webhookUrl = `${baseUrl}/api/webhooks/mydojo/lead`;
   const appointmentWebhookUrl = `${baseUrl}/api/webhooks/mydojo`;
+  const kioskSyncBase = `${baseUrl}/api/mydojo/sync`;
 
   // Fetch the widget API key (used as the MyDojo webhook auth key)
   const { data: widgetKeyData, isLoading: keyLoading, refetch: refetchKey } =
@@ -179,7 +182,7 @@ async function sendLeadToDojoFlow(leadData) {
         </div>
 
         <Tabs defaultValue="setup" className="space-y-6">
-          <TabsList className="bg-zinc-900 border border-zinc-800">
+          <TabsList className="bg-zinc-900 border border-zinc-800 flex-wrap h-auto gap-1">
             <TabsTrigger value="setup" className="data-[state=active]:bg-red-600">
               <Link2 className="w-4 h-4 mr-2" />
               Setup & Keys
@@ -191,6 +194,10 @@ async function sendLeadToDojoFlow(leadData) {
             <TabsTrigger value="test" className="data-[state=active]:bg-red-600">
               <TestTube2 className="w-4 h-4 mr-2" />
               Test Connection
+            </TabsTrigger>
+            <TabsTrigger value="kiosk-sync" className="data-[state=active]:bg-blue-600">
+              <Monitor className="w-4 h-4 mr-2" />
+              Kiosk Sync
             </TabsTrigger>
           </TabsList>
 
@@ -515,6 +522,195 @@ async function sendLeadToDojoFlow(leadData) {
               </CardContent>
             </Card>
           </TabsContent>
+          {/* Kiosk Sync Tab */}
+          <TabsContent value="kiosk-sync" className="space-y-5">
+            {/* Header info */}
+            <Card className="bg-zinc-900 border-zinc-800">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Monitor className="w-5 h-5 text-blue-400" />
+                  Kiosk ↔ MyDojo Website Sync
+                </CardTitle>
+                <CardDescription>
+                  These public REST endpoints let your MyDojo website pull live class schedules, programs,
+                  and branding from DojoFlow — and push student check-ins back in real time.
+                  Authenticate every request with your API key as the <code className="text-yellow-400">x-api-key</code> header.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {[
+                    { icon: <CheckCircle2 className="w-4 h-4 text-green-400" />, label: "Status Check", method: "GET", path: "/api/mydojo/sync/status", color: "text-green-400" },
+                    { icon: <Calendar className="w-4 h-4 text-blue-400" />, label: "Class Schedule", method: "GET", path: "/api/mydojo/sync/schedule", color: "text-blue-400" },
+                    { icon: <BookOpen className="w-4 h-4 text-purple-400" />, label: "Programs", method: "GET", path: "/api/mydojo/sync/programs", color: "text-purple-400" },
+                    { icon: <Globe className="w-4 h-4 text-yellow-400" />, label: "Kiosk Branding", method: "GET", path: "/api/mydojo/sync/kiosk", color: "text-yellow-400" },
+                    { icon: <Users className="w-4 h-4 text-orange-400" />, label: "Today's Check-ins", method: "GET", path: "/api/mydojo/sync/checkins", color: "text-orange-400" },
+                    { icon: <Zap className="w-4 h-4 text-red-400" />, label: "Record Check-in", method: "POST", path: "/api/mydojo/sync/checkin", color: "text-red-400" },
+                  ].map(({ icon, label, method, path, color }) => (
+                    <div key={path} className="flex items-center gap-3 bg-zinc-800 rounded-lg p-3">
+                      {icon}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white">{label}</p>
+                        <p className="text-xs font-mono text-gray-400 truncate">
+                          <span className={`font-bold mr-1 ${color}`}>{method}</span>
+                          {path}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => handleCopy(`${baseUrl}${path}`, label + " URL")}
+                        variant="ghost"
+                        size="sm"
+                        className="shrink-0 text-gray-400 hover:text-white"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Live Connection Test */}
+            <Card className="bg-zinc-900 border-zinc-800">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <TestTube2 className="w-5 h-5 text-blue-400" />
+                  Test Kiosk Sync Connection
+                </CardTitle>
+                <CardDescription>
+                  Verify the kiosk sync API is working and your API key is valid.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {!apiKey && !keyLoading && (
+                  <div className="flex items-center gap-2 text-yellow-400 text-sm bg-yellow-400/10 rounded-lg p-3">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    Generate an API key in the Setup tab first.
+                  </div>
+                )}
+                <Button
+                  onClick={async () => {
+                    if (!apiKey) return;
+                    setKioskTestStatus("loading");
+                    setKioskTestResult(null);
+                    try {
+                      const res = await fetch(`/api/mydojo/sync/status`, {
+                        headers: { "x-api-key": apiKey },
+                      });
+                      const data = await res.json();
+                      if (res.ok && data.connected) {
+                        setKioskTestStatus("success");
+                        setKioskTestResult(data);
+                        toast.success("Kiosk sync connected: " + data.organization);
+                      } else {
+                        setKioskTestStatus("error");
+                        setKioskTestResult({ error: data.error || "Connection failed" });
+                        toast.error("Kiosk sync test failed");
+                      }
+                    } catch (err: any) {
+                      setKioskTestStatus("error");
+                      setKioskTestResult({ error: err.message });
+                      toast.error("Network error: " + err.message);
+                    }
+                  }}
+                  disabled={kioskTestStatus === "loading" || !apiKey}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {kioskTestStatus === "loading" ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Testing...</>
+                  ) : (
+                    <><TestTube2 className="w-4 h-4 mr-2" />Test Kiosk Sync</>  
+                  )}
+                </Button>
+
+                {kioskTestStatus === "success" && kioskTestResult && (
+                  <div className="flex items-start gap-3 bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                    <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-green-400">Kiosk Sync Connected!</p>
+                      <p className="text-sm text-gray-300 mt-1">Organization: <span className="text-white font-medium">{kioskTestResult.organization}</span></p>
+                      <p className="text-xs text-gray-500 mt-0.5">All 5 sync endpoints are live and ready for your MyDojo website.</p>
+                    </div>
+                  </div>
+                )}
+
+                {kioskTestStatus === "error" && kioskTestResult && (
+                  <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                    <XCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-red-400">Test Failed</p>
+                      <p className="text-sm text-gray-400 mt-0.5">{kioskTestResult.error}</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Integration snippet */}
+            <Card className="bg-zinc-900 border-zinc-800">
+              <CardHeader>
+                <CardTitle className="text-white">JavaScript Integration Snippet</CardTitle>
+                <CardDescription>Fetch class schedule and programs from your MyDojo website.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="relative">
+                  <pre className="bg-zinc-950 rounded-lg p-4 text-xs text-gray-300 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed max-h-72 overflow-y-auto">{`// Fetch live class schedule from DojoFlow
+const API_KEY = '${apiKey || "YOUR_API_KEY_HERE"}';
+const BASE = '${baseUrl}';
+
+async function getSchedule() {
+  const res = await fetch(BASE + '/api/mydojo/sync/schedule', {
+    headers: { 'x-api-key': API_KEY }
+  });
+  return res.json(); // { schedule, byDay, totalClasses }
+}
+
+async function getPrograms() {
+  const res = await fetch(BASE + '/api/mydojo/sync/programs', {
+    headers: { 'x-api-key': API_KEY }
+  });
+  return res.json(); // { programs, totalPrograms }
+}
+
+async function getBranding() {
+  const res = await fetch(BASE + '/api/mydojo/sync/kiosk', {
+    headers: { 'x-api-key': API_KEY }
+  });
+  return res.json(); // { branding, contact, booking }
+}
+
+// Record a member check-in from your website
+async function checkIn(email) {
+  const res = await fetch(BASE + '/api/mydojo/sync/checkin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
+    body: JSON.stringify({ email })
+  });
+  return res.json(); // { success, action, attendanceId }
+}`}</pre>
+                  <Button
+                    onClick={() => handleCopy(
+                      `const API_KEY = '${apiKey || "YOUR_API_KEY_HERE"}';
+const BASE = '${baseUrl}';
+
+async function getSchedule() {
+  const res = await fetch(BASE + '/api/mydojo/sync/schedule', { headers: { 'x-api-key': API_KEY } });
+  return res.json();
+}`,
+                      "Kiosk sync snippet"
+                    )}
+                    variant="outline"
+                    size="sm"
+                    className="absolute top-3 right-3 border-zinc-700 bg-zinc-900"
+                  >
+                    <Copy className="w-3.5 h-3.5 mr-1.5" />
+                    Copy
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
         </Tabs>
       </div>
     </div>

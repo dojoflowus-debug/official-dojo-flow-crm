@@ -9428,3 +9428,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Trigger Kai auto-follow-up sequence on new MyDojo lead
 - [x] Add widget API key auth to protect the webhook
 - [x] Test end-to-end lead sync flow (Jane Doe lead #150001 confirmed)
+
+## Kiosk ↔ MyDojo Website Sync
+- [x] Audit kiosk data model: classes, programs, announcements, check-ins
+- [x] Build public API endpoints to expose kiosk data (schedule, programs) for MyDojo
+- [x] Build reverse sync: MyDojo bookings/check-ins flow into DojoFlow kiosk
+- [x] Add Kiosk Sync status panel in DojoFlow settings/kiosk page
+- [x] Test end-to-end kiosk ↔ MyDojo sync

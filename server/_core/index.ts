@@ -361,6 +361,10 @@ async function startServer() {
   // Mount MyDojo real-time webhook receiver
   const { default: myDojoWebhookRouter } = await import("../myDojoWebhookRouter");
   app.use(myDojoWebhookRouter);
+
+  // Mount MyDojo Kiosk Sync API (public REST endpoints for schedule, programs, check-ins)
+  const { default: myDojoKioskSyncRouter } = await import("../myDojoKioskSyncRouter");
+  app.use(myDojoKioskSyncRouter);
   
   // Mount storage proxy for serving S3 images (needed because CloudFront URLs don't have public access)
   app.use("/api/storage-proxy", storageProxyRouter);
