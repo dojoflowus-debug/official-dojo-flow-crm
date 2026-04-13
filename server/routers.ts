@@ -4236,6 +4236,85 @@ Return the data as a structured JSON object.`
             }
           }
           
+          // ── AUTO-IMPORT: If user asks Kai to place/import schedule and history has SCHEDULE_JSON ──
+          // When the user sends a follow-up text like "put this in classes" or "import these",
+          // we scan the conversation history for a prior SCHEDULE_JSON block and auto-execute
+          // createClassesFromSchedule so classes are actually saved to the DB.
+          const importTriggerPhrases = [
+            'put this in', 'place this', 'add this', 'import this', 'save this',
+            'put these', 'place these', 'add these', 'import these', 'save these',
+            'put it in', 'place it', 'add it to classes', 'save to classes',
+            'add to classes', 'put in classes', 'place in classes',
+          ];
+          const msgLowerForImport = message.toLowerCase();
+          const isImportRequest = importTriggerPhrases.some(p => msgLowerForImport.includes(p));
+
+          if (isImportRequest && ctx.currentOrganizationId) {
+            // Scan conversation history for a SCHEDULE_JSON block
+            let historicScheduleData: any = null;
+            for (const histMsg of [...conversationHistory].reverse()) {
+              if (histMsg.role === 'assistant') {
+                const histMatch = histMsg.content.match(/\[SCHEDULE_JSON:(\{.*?\})]\s*$/s);
+                if (histMatch) {
+                  try {
+                    historicScheduleData = JSON.parse(histMatch[1]);
+                    break;
+                  } catch { /* ignore parse errors */ }
+                }
+              }
+            }
+
+            if (historicScheduleData?.classes?.length > 0) {
+              console.log('[Kai Chat] Auto-importing', historicScheduleData.classes.length, 'classes from conversation history');
+              try {
+                const { getDb } = await import('./db');
+                const { classes: classesTable } = await import('../drizzle/schema');
+                const autoDb = await getDb();
+                if (autoDb) {
+                  let autoCreatedCount = 0;
+                  const formatTime24to12 = (t: string) => {
+                    const [h, m] = t.split(':').map(Number);
+                    const ampm = h >= 12 ? 'PM' : 'AM';
+                    return `${h % 12 || 12}:${m.toString().padStart(2, '0')} ${ampm}`;
+                  };
+                  for (const cls of historicScheduleData.classes) {
+                    try {
+                      const dayStr = Array.isArray(cls.dayOfWeek) ? cls.dayOfWeek.join(',') : cls.dayOfWeek;
+                      const timeDisplay = `${formatTime24to12(cls.startTime)} - ${formatTime24to12(cls.endTime)}`;
+                      await autoDb.insert(classesTable).values({
+                        name: cls.name,
+                        dayOfWeek: dayStr,
+                        time: timeDisplay,
+                        instructor: cls.instructor || null,
+                        capacity: cls.maxCapacity || 20,
+                        isActive: 1,
+                        enrolled: 0,
+                        organizationId: ctx.currentOrganizationId!,
+                      });
+                      autoCreatedCount++;
+                    } catch (e: any) {
+                      console.error('[Kai Chat] Auto-import class error:', e.message);
+                    }
+                  }
+                  console.log('[Kai Chat] Auto-import complete:', autoCreatedCount, 'classes created');
+                  const reviewRequestAutoImport = {
+                    taskSummary: message.slice(0, 120),
+                    taskType: 'schedule',
+                    creditsUsed: 0,
+                  };
+                  return {
+                    response: `✅ Done! I've added **${autoCreatedCount} class${autoCreatedCount !== 1 ? 'es' : ''}** to your schedule. You can view and manage them in the Classes section.`,
+                    ui_blocks: [],
+                    reviewRequest: reviewRequestAutoImport,
+                  };
+                }
+              } catch (autoImportErr: any) {
+                console.error('[Kai Chat] Auto-import outer error:', autoImportErr.message);
+              }
+            }
+          }
+          // ── END AUTO-IMPORT ───────────────────────────────────────────────────
+
           // ── SCHEDULE_JSON EXTRACTION ──────────────────────────────────────────
           // If vision response contains [SCHEDULE_JSON:{...}], extract it and
           // return as a schedule_import ui_block so the client can render an import button

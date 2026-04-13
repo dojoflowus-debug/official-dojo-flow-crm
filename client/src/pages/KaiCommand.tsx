@@ -2644,6 +2644,19 @@ export default function KaiCommand() {
         }
 
         // Replace the ack message with the real response
+        // Also check ui_blocks for schedule_import data (server may put it there)
+        const visionScheduleBlock = (response.ui_blocks || []).find((b: any) => b.type === 'schedule_import');
+        const visionScheduleData = (response as any).scheduleImportData || (visionScheduleBlock ? visionScheduleBlock.data : undefined);
+
+        // Detect task completion for review prompt
+        const visionCompletionPhrases = ['done!', 'completed!', 'finished!', 'set up', 'successfully', 'has been', "i've", 'imported', 'created', 'added', 'scheduled'];
+        const visionIsTaskCompletion = visionCompletionPhrases.some(p => response.response.toLowerCase().includes(p));
+        const visionReviewRequest = visionIsTaskCompletion ? {
+          taskSummary: (inputText.trim() || 'Image analysis').slice(0, 120),
+          taskType: 'schedule',
+          creditsUsed: 0,
+        } : undefined;
+
         setMessages(prev => {
           const withoutAck = prev.filter(m => m.id !== ackMsg.id);
           return [...withoutAck, {
@@ -2652,7 +2665,8 @@ export default function KaiCommand() {
             content: response.response,
             timestamp: new Date(),
             audioUrl,
-            scheduleImportData: (response as any).scheduleImportData || undefined,
+            scheduleImportData: visionScheduleData,
+            reviewRequest: (response as any).reviewRequest || visionReviewRequest,
           }];
         });
       } catch (err: any) {
