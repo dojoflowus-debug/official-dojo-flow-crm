@@ -1921,6 +1921,20 @@ export default function KaiCommand() {
           } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
             // Generic PDF — auto-analyze with AI to determine document type and suggest routing
             handleDocumentAnalysis(result.url, file.type, file.name, result.key);
+          } else if (file.type.startsWith('image/')) {
+            // Generic image (screenshot, photo, etc.) — auto-trigger vision analysis
+            // Small delay to let the attachment render first
+            setTimeout(() => {
+              handleSendMessage('click', '', [{ 
+                id: tempId, 
+                fileName: file.name, 
+                fileType: file.type, 
+                fileSize: file.size, 
+                url: result.url, 
+                storageKey: result.key, 
+                uploading: false 
+              }]);
+            }, 300);
           }
         } catch (error: any) {
           console.error('Upload failed:', error);
