@@ -2129,3 +2129,55 @@ export const studentTuitionPayments = mysqlTable("student_tuition_payments", {
   index("idx_stp_status").on(table.status),
   index("idx_stp_paid_at").on(table.paidAt),
 ]);
+
+// ─── Kai Task Reviews ─────────────────────────────────────────────────────────
+// Stores post-task star ratings and feedback submitted by users after Kai completes a task
+export const kaiReviews = mysqlTable("kai_reviews", {
+  id: int().autoincrement().notNull().primaryKey(),
+  organizationId: int("organization_id").notNull(),
+  userId: int("user_id").notNull(),                        // owner user id
+  conversationId: varchar("conversation_id", { length: 255 }), // Kai conversation context
+  taskSummary: text("task_summary"),                       // Brief description of what Kai did
+  starRating: int("star_rating").notNull(),                // 1–5
+  feedback: text("feedback"),                              // Optional written feedback
+  taskType: varchar("task_type", { length: 100 }),         // e.g. "sms_blast", "student_lookup", "schedule_import"
+  creditsUsed: int("credits_used").default(0),             // Credits consumed by the task
+  hasTicket: int("has_ticket").default(0).notNull(),       // 1 if a support ticket was created
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+},
+(table) => [
+  index("idx_kai_reviews_org").on(table.organizationId),
+  index("idx_kai_reviews_user").on(table.organizationId, table.userId),
+  index("idx_kai_reviews_rating").on(table.organizationId, table.starRating),
+  index("idx_kai_reviews_created").on(table.organizationId, table.createdAt),
+]);
+
+// ─── Kai Support Tickets ──────────────────────────────────────────────────────
+// Support tickets created when a user rates a Kai task poorly or requests a credit refund
+export const kaiSupportTickets = mysqlTable("kai_support_tickets", {
+  id: int().autoincrement().notNull().primaryKey(),
+  organizationId: int("organization_id").notNull(),
+  userId: int("user_id").notNull(),
+  reviewId: int("review_id"),                              // FK → kai_reviews.id (nullable for manual tickets)
+  ticketNumber: varchar("ticket_number", { length: 20 }).notNull(), // e.g. "KAI-00042"
+  subject: varchar("subject", { length: 255 }).notNull(),
+  description: text("description"),
+  starRating: int("star_rating"),                          // Rating that triggered the ticket
+  taskSummary: text("task_summary"),                       // What Kai was doing
+  creditsRequested: int("credits_requested").default(0),   // Credits user is requesting back
+  creditsRefunded: int("credits_refunded").default(0),     // Credits actually refunded
+  status: mysqlEnum("status", ["open", "in_review", "resolved", "closed", "refunded"]).default("open").notNull(),
+  priority: mysqlEnum("priority", ["low", "medium", "high", "urgent"]).default("medium").notNull(),
+  adminNotes: text("admin_notes"),                         // Internal notes from admin
+  resolvedAt: timestamp("resolved_at", { mode: "string" }),
+  resolvedBy: int("resolved_by"),                          // Admin user id
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+  index("idx_kai_tickets_org").on(table.organizationId),
+  index("idx_kai_tickets_status").on(table.status),
+  index("idx_kai_tickets_priority").on(table.priority),
+  index("idx_kai_tickets_created").on(table.createdAt),
+  index("idx_kai_tickets_number").on(table.ticketNumber),
+]);

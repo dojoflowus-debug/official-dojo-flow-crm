@@ -37,6 +37,7 @@ const StudentRegister = lazy(() => import("../pages/StudentRegister"));
 const KaiDashboard = lazy(() => import("../pages/KaiDashboard"));
 const KaiCommand = lazy(() => import("../pages/KaiCommand"));
 const KaiCreative = lazy(() => import("../pages/KaiCreative"));
+const KaiReviewPanel = lazy(() => import("../pages/KaiReviewPanel"));
 const ReleaseNotes = lazy(() => import("../pages/ReleaseNotes"));
 const Changelog = lazy(() => import("../pages/Changelog"));
 const KaiCommandDashboard = lazy(() => import("../pages/KaiCommandDashboard"));
@@ -186,6 +187,8 @@ export const appRoutes: RouteConfig[] = [
   { path: "/test-settings", element: <TestSettingsModal />, label: "Test Settings Modal" },
   { path: "/kai", element: <AppShell><KaiCommand /></AppShell>, label: "Kai Command" },
   { path: "/kai/creative", element: <AppShell><KaiCreative /></AppShell>, label: "Kai Creative" },
+  { path: "/kai/reviews", element: <AppShell><KaiReviewPanel /></AppShell>, label: "Kai Review Panel" },
+  { path: "/settings/kai-reviews", element: <AppShell><KaiReviewPanel /></AppShell>, label: "Kai Review Panel Settings" },
   { path: "/kai-command", element: <Navigate to="/kai" replace />, label: "Kai Command Redirect" },
   { path: "/command", element: <Navigate to="/kai" replace />, label: "Command Redirect" },
   { path: "/kai-onboarding", element: <KaiHeroOnboarding />, label: "Kai Onboarding" },

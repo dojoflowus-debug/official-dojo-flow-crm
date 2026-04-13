@@ -57,6 +57,7 @@ import { myDojoSyncRouter } from './myDojoSyncRouter';
 import { waiverRouter } from './waiverRouter';
 import { tutorialRouter } from './tutorialRouter';
 import { kaiCreativeRouter } from './kaiCreativeRouter';
+import { kaiReviewRouter } from './kaiReviewRouter';
 import { brandDnaRouter } from './brandDnaRouter';
 import { fluidPayRouter } from './fluidPayRouter';
 import { publicProcedure, protectedProcedure, orgScopedProcedure, router } from "./_core/trpc";
@@ -884,6 +885,7 @@ export const appRouter = router({
   kaiOnboardingSM: kaiOnboardingStateMachineRouter,
   tutorial: tutorialRouter,
   kaiCreative: kaiCreativeRouter,
+  kaiReview: kaiReviewRouter,
   brandDna: brandDnaRouter,
   setupMode: setupModeRouter,
   subscription: subscriptionRouter,
@@ -4261,10 +4263,51 @@ Return the data as a structured JSON object.`
               classCount: scheduleImportData.classes.length,
             });
           }
+          // ── POST-TASK REVIEW DETECTION ──────────────────────────────────────
+          // Detect task-completion signals in the response to prompt a review.
+          // We look for common completion phrases that indicate Kai finished a meaningful task.
+          const taskCompletionPhrases = [
+            'done!', 'completed!', 'finished!', 'sent!', 'created!', 'added!',
+            'scheduled!', 'updated!', 'deleted!', 'removed!', 'imported!',
+            'i\'ve sent', 'i\'ve created', 'i\'ve added', 'i\'ve scheduled',
+            'i\'ve updated', 'i\'ve deleted', 'i\'ve removed', 'i\'ve imported',
+            'successfully sent', 'successfully created', 'successfully added',
+            'successfully scheduled', 'successfully updated', 'has been sent',
+            'has been created', 'has been added', 'has been scheduled',
+          ];
+          const lowerCleanedResponse = cleanedResponse.toLowerCase();
+          const isTaskCompletion = taskCompletionPhrases.some(phrase =>
+            lowerCleanedResponse.includes(phrase)
+          );
+
+          // Determine task type from the message content
+          let detectedTaskType: string | undefined;
+          const msgLower = (message || '').toLowerCase();
+          if (msgLower.includes('sms') || msgLower.includes('text') || msgLower.includes('blast')) detectedTaskType = 'sms';
+          else if (msgLower.includes('email')) detectedTaskType = 'email';
+          else if (msgLower.includes('class') || msgLower.includes('schedule')) detectedTaskType = 'schedule';
+          else if (msgLower.includes('student') || msgLower.includes('enroll')) detectedTaskType = 'student_management';
+          else if (msgLower.includes('lead')) detectedTaskType = 'lead_management';
+          else if (msgLower.includes('import')) detectedTaskType = 'import';
+          else detectedTaskType = 'general';
+
+          // Build a short task summary from the user message (max 120 chars)
+          const taskSummaryText = (message || '').length > 120
+            ? (message || '').slice(0, 117) + '…'
+            : (message || '');
+
+          const reviewRequest = isTaskCompletion ? {
+            taskSummary: taskSummaryText,
+            taskType: detectedTaskType,
+            creditsUsed: 0, // Will be enriched from credit deduction data if available
+          } : undefined;
+          // ── END POST-TASK REVIEW DETECTION ─────────────────────────────────
+
           return {
             response: cleanedResponse,
             ui_blocks: finalUiBlocks,
             scheduleImportData: scheduleImportData || undefined,
+            reviewRequest,
           };
         } catch (error) {
           console.error('[Kai Chat] Error caught:', error);

@@ -27,6 +27,7 @@ import { StudentDetailsPanel } from '@/components/StudentDetailsPanel';
 import { ManagementPanel } from '@/components/kai/ManagementPanel';
 import VoicePacedMessage from '@/components/VoicePacedMessage';
 import { KaiErrorAlert } from '@/components/KaiErrorAlert';
+import { KaiReviewCard } from '@/components/KaiReviewCard';
 import { BetaNoticeModal } from '@/components/BetaNoticeModal';
 import { KaiLoadingAnimation } from '@/components/KaiLoadingAnimation';
 import { KaiThinkingIndicator } from '@/components/KaiThinkingIndicator';
@@ -162,6 +163,13 @@ interface Message {
       instructor?: string;
       location?: string;
     }>;
+  };
+  /** Post-task review request — shown after Kai completes a significant task */
+  reviewRequest?: {
+    taskSummary: string;
+    taskType?: string;
+    creditsUsed?: number;
+    conversationId?: string;
   };
 }
 
@@ -3078,6 +3086,7 @@ export default function KaiCommand() {
           pendingAction: (response as any).pendingAction,
           quickReplies: (response as any).quickReplies,
           scheduleImportData: (response as any).scheduleImportData || undefined,
+          reviewRequest: (response as any).reviewRequest || undefined,
         };
         setMessages(prev => [...prev, aiMessage]);
         
@@ -4701,6 +4710,28 @@ export default function KaiCommand() {
                             </button>
                           </div>
                         </div>
+                      )}
+                      {/* Post-task Review Card — shown after Kai completes a significant task */}
+                      {message.reviewRequest && (
+                        <KaiReviewCard
+                          taskSummary={message.reviewRequest.taskSummary}
+                          taskType={message.reviewRequest.taskType}
+                          creditsUsed={message.reviewRequest.creditsUsed}
+                          conversationId={message.reviewRequest.conversationId}
+                          isDark={isDark}
+                          isCinematic={isCinematic}
+                          onDismiss={() => {
+                            setMessages(prev => prev.map(m =>
+                              m.id === message.id ? { ...m, reviewRequest: undefined } : m
+                            ));
+                          }}
+                          onSubmitted={(rating, ticketNumber) => {
+                            // Clear the review card from this message
+                            setMessages(prev => prev.map(m =>
+                              m.id === message.id ? { ...m, reviewRequest: undefined } : m
+                            ));
+                          }}
+                        />
                       )}
                       {/* Quick-reply action buttons */}
                       {message.quickReplies && message.quickReplies.length > 0 && (
