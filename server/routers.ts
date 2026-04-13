@@ -804,7 +804,7 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
     if (result.recentTransactions && result.recentTransactions.length > 0) {
       text += `\n**Recent Transactions:**\n`;
       result.recentTransactions.forEach((t: any) => {
-        const name = t.name || 'Unknown';
+        const name = t.name && t.name !== 'Unknown' ? t.name : null;
         text += `• ${t.date} — $${t.amount} (${t.type}, ${t.status})${name ? ' — ' + name : ''}\n`;
       });
     }

@@ -37,10 +37,27 @@ export const kaiTools = [
     type: "function",
     function: {
       name: "get_at_risk_students",
-      description: "Get list of at-risk students (those with low attendance or payment issues)",
+      description: "Get list of at-risk students (those with low attendance or payment issues). Also use this when user asks about absent, inactive, or missing students.",
       parameters: {
         type: "object",
         properties: {},
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_absent_students",
+      description: "Get students who have been absent or have not attended class recently. Use this when user asks 'Any absent students?', 'Who hasn\'t shown up?', 'Who missed class?', or similar attendance questions.",
+      parameters: {
+        type: "object",
+        properties: {
+          days: {
+            type: "number",
+            description: "Number of days to look back for absences (default: 14)"
+          }
+        },
         required: []
       }
     }
@@ -488,12 +505,17 @@ export async function executeKaiTool(
       case "search_students": {
         const result = await (kaiDataRouter.searchStudents as any).createCaller(ctx)({
           query: toolArgs.query,
-          limit: 5
+          limit: 10
         });
+        const studentList = Array.isArray(result) ? result : (result?.students || []);
+        const count = studentList.length;
+        const idList = studentList.map((s: any) => s.id).filter(Boolean).join(',');
         return JSON.stringify({
           success: true,
-          data: result,
-          message: `Found ${result?.length || 0} students matching "${toolArgs.query}"`
+          data: { students: studentList, studentIds: idList, totalCount: count },
+          message: count > 0
+            ? `Found ${count} student${count !== 1 ? 's' : ''} matching "${toolArgs.query}". IDs: ${idList}. Embed [STUDENT_LIST:${idList}:${count} students] in your response.`
+            : `No students found matching "${toolArgs.query}".`
         });
       }
       
@@ -519,12 +541,85 @@ export async function executeKaiTool(
       
       case "get_at_risk_students": {
         const result = await (kaiDataRouter.listAtRiskStudents as any).createCaller(ctx)({
-          limit: 10
+          days: 30
         });
+        const studentList = result?.students || result || [];
+        const count = studentList.length;
+        const idList = studentList.map((s: any) => s.id).filter(Boolean).join(',');
         return JSON.stringify({
           success: true,
-          data: result,
-          message: `Found ${result?.length || 0} at-risk students`
+          data: { students: studentList, studentIds: idList, totalCount: count },
+          message: count > 0
+            ? `Found ${count} at-risk student${count !== 1 ? 's' : ''} (inactive or on hold). IDs: ${idList}. Embed [STUDENT_LIST:${idList}:${count} students] in your response.`
+            : 'No at-risk students found at this time.'
+        });
+      }
+
+      case "get_absent_students": {
+        // Find active students who have NOT attended class in the last N days
+        const { getDb } = await import("./db");
+        const { students: studentsTable, studentAttendance } = await import("../drizzle/schema");
+        const { eq, and, gte, inArray, notInArray } = await import("drizzle-orm");
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        const orgId = ctx.user.organizationId;
+        const daysBack = toolArgs.days || 14;
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - daysBack);
+        const cutoffStr = cutoffDate.toISOString().slice(0, 10);
+
+        let absentStudents: any[] = [];
+        try {
+          // Get all active students
+          const activeStudents = await db
+            .select({
+              id: studentsTable.id,
+              firstName: studentsTable.firstName,
+              lastName: studentsTable.lastName,
+              status: studentsTable.status,
+              beltRank: studentsTable.beltRank,
+              phone: studentsTable.phone,
+              email: studentsTable.email,
+            })
+            .from(studentsTable)
+            .where(
+              and(
+                eq(studentsTable.organizationId, orgId),
+                eq(studentsTable.status, 'Active')
+              )
+            )
+            .limit(100);
+
+          if (activeStudents.length > 0) {
+            const activeIds = activeStudents.map(s => s.id);
+            // Find students who DID attend in the last N days
+            const attendedRows = await db
+              .select({ studentId: studentAttendance.studentId })
+              .from(studentAttendance)
+              .where(
+                and(
+                  inArray(studentAttendance.studentId, activeIds),
+                  gte(studentAttendance.classDate, cutoffStr)
+                )
+              );
+            const attendedIds = new Set(attendedRows.map(a => a.studentId));
+            // Students who did NOT attend = absent
+            absentStudents = activeStudents.filter(s => !attendedIds.has(s.id));
+          }
+        } catch (err) {
+          // Fallback: return at-risk students
+          const fallback = await (kaiDataRouter.listAtRiskStudents as any).createCaller(ctx)({ days: daysBack });
+          absentStudents = fallback?.students || fallback || [];
+        }
+
+        const absentCount = absentStudents.length;
+        const absentIdList = absentStudents.map((s: any) => s.id).filter(Boolean).join(',');
+        return JSON.stringify({
+          success: true,
+          data: { students: absentStudents, studentIds: absentIdList, totalCount: absentCount },
+          message: absentCount > 0
+            ? `Found ${absentCount} student${absentCount !== 1 ? 's' : ''} who have not attended class in the last ${daysBack} days. IDs: ${absentIdList}. Embed [STUDENT_LIST:${absentIdList}:${absentCount} students] in your response.`
+            : `All active students have attended class in the last ${daysBack} days.`
         });
       }
       

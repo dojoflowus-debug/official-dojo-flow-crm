@@ -562,7 +562,16 @@ TOOL RESULT HANDLING:
 - When a tool returns a JSON object with a "message" field, relay that message text directly to the user — do NOT echo the raw JSON.
 - If the tool result has success: true, confirm the action was completed using the message text.
 - If the tool result has success: false, report the error using the error field.
-- Never output raw JSON to the user.`;
+- Never output raw JSON to the user.
+
+UI BLOCK FORMAT — CRITICAL:
+When a tool returns a list of students (e.g. from get_at_risk_students, search_students, or any student list), you MUST embed a clickable UI block in your response using this exact format:
+[STUDENT_LIST:id1,id2,id3:N students]
+Example: If the tool returns students with IDs 5, 12, 37, write: [STUDENT_LIST:5,12,37:3 students]
+The IDs come from the "id" field in each student object in the tool result's data array or data.students array.
+Do NOT skip this block — it is required for the user to click and view student details.
+For lead lists, use: [LEAD_LIST:id1,id2,id3:N leads]
+Always place the UI block on its own line after your text response.`;
 
           // First attempt: Call LLM with tools
           let response = await invokeLLM({
