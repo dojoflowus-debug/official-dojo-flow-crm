@@ -309,6 +309,39 @@ const crmTools = [
       },
     },
   },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'extract_class_schedule',
+      description: 'MUST be called when you detect a class schedule in an image. Extracts all classes from the schedule image and returns structured data for import. Call this tool with every class you can see — do not embed schedule data in your text response.',
+      parameters: {
+        type: 'object',
+        properties: {
+          classes: {
+            type: 'array',
+            description: 'Array of all classes extracted from the schedule',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string', description: 'Class name/program (e.g. Dragon Kids, Little Ninjas)' },
+                dayOfWeek: { type: 'string', description: 'Full day name: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday' },
+                startTime: { type: 'string', description: 'Start time in 24-hour HH:MM format (e.g. 17:00)' },
+                endTime: { type: 'string', description: 'End time in 24-hour HH:MM format (e.g. 18:00)' },
+                instructor: { type: 'string', description: 'Instructor name, or empty string if not specified' },
+                location: { type: 'string', description: 'Location/facility name, or empty string if not specified' },
+              },
+              required: ['name', 'dayOfWeek', 'startTime', 'endTime'],
+            },
+          },
+          summary: {
+            type: 'string',
+            description: 'Brief human-readable summary of what was found (e.g. "Found 42 classes across 7 days")',
+          },
+        },
+        required: ['classes', 'summary'],
+      },
+    },
+  },
 ];
 
 export interface KaiConversationMessage {
@@ -478,15 +511,13 @@ ${getSalesKnowledgeSection()}`;
       ? [
           { type: 'text', text: userMessage || `Please analyze this image and describe what you see in detail.
 
-If it contains a class schedule, extract ALL classes with their times, days, programs, locations, and instructors. Then at the very end of your response, output a structured JSON block in EXACTLY this format (no extra text before or after the block):
+If it contains a class schedule, you MUST call the extract_class_schedule tool with ALL the classes you can see. Do NOT include schedule data or JSON in your text response — use the tool instead. The tool will handle displaying and importing the data.
 
-[SCHEDULE_JSON:{"classes":[{"name":"Dragon Kids","dayOfWeek":"Monday","startTime":"17:00","endTime":"18:00","instructor":"Master Holmes","location":"MyDojo Headquarters - Tomball"}]}]
-
-IMPORTANT:
-- startTime and endTime must be in 24-hour HH:MM format
+For the extract_class_schedule tool:
+- startTime and endTime must be in 24-hour HH:MM format (e.g. 17:00)
 - dayOfWeek must be the full day name (Monday, Tuesday, etc.)
-- Include every class you can see in the image
-- The JSON block must be on its own line at the end` },
+- Include every class visible in the image
+- If instructor or location is not shown, use an empty string` },
           { type: 'image_url', image_url: { url: imageUrl, detail: 'high' } },
         ]
       : userMessage;

@@ -4206,6 +4206,35 @@ Return the data as a structured JSON object.`
             }
             // ── END CONFIRMATION GATE ──────────────────────────────────────────
 
+            // ── EXTRACT_CLASS_SCHEDULE TOOL CALL ───────────────────────────────
+            // When the LLM calls extract_class_schedule, return the schedule data
+            // as a scheduleImportData block so the client can render the import button.
+            // This is the clean approach — no JSON embedded in visible text.
+            const scheduleToolCall = aiResponse.functionCalls.find((c: any) => c.name === 'extract_class_schedule');
+            if (scheduleToolCall) {
+              const scheduleArgs = scheduleToolCall.arguments;
+              const classCount = scheduleArgs?.classes?.length || 0;
+              const summary = scheduleArgs?.summary || `Found ${classCount} classes`;
+              console.log('[Kai Chat] extract_class_schedule tool called with', classCount, 'classes');
+              // Build a review request since this is a completed vision task
+              const reviewRequest = {
+                taskType: 'schedule_import',
+                taskDescription: `Analyzed schedule image: ${summary}`,
+                completedAt: new Date().toISOString(),
+              };
+              return {
+                response: `I've analyzed the schedule. ${summary}. Review the classes below and click **"Import X Classes"** to add them to your schedule.`,
+                scheduleImportData: { classes: scheduleArgs?.classes || [] },
+                ui_blocks: [{
+                  type: 'schedule_import',
+                  data: { classes: scheduleArgs?.classes || [] },
+                  classCount,
+                }],
+                reviewRequest,
+              };
+            }
+            // ── END EXTRACT_CLASS_SCHEDULE ─────────────────────────────────────
+
             const functionResults: any[] = [];
             
             for (const call of aiResponse.functionCalls) {
