@@ -3054,7 +3054,19 @@ export default function KaiCommand() {
             role: m.role as 'user' | 'assistant' | 'system',
             content: typeof m.content === 'string' ? m.content : String(m.content),
           }));
-        const payload = {
+        // Check if there's pending schedule data in recent messages that should be passed to the server
+        // This is needed because the SCHEDULE_JSON block is stripped from the cleaned response in history
+        const importKeywords = ['put this in', 'place this', 'add this', 'import this', 'save this',
+          'put these', 'place these', 'add these', 'import these', 'save these',
+          'put it in', 'place it', 'add it to classes', 'save to classes',
+          'add to classes', 'put in classes', 'place in classes',
+          'can you place', 'please place', 'can you add', 'please add'];
+        const isImportMsg = importKeywords.some(k => currentInput.toLowerCase().includes(k));
+        const pendingScheduleData = isImportMsg
+          ? messages.slice().reverse().find(m => m.role === 'assistant' && m.scheduleImportData)?.scheduleImportData
+          : undefined;
+
+        const payload: any = {
           message: currentInput,
           organizationId: 1, // TODO: Get from user context when multi-org is implemented
           conversationHistory: historyMessages,
@@ -3063,7 +3075,8 @@ export default function KaiCommand() {
             activeStudents: stats.activeStudents,
             totalLeads: stats.totalLeads,
             totalClasses: stats.totalClasses
-          } : undefined
+          } : undefined,
+          ...(pendingScheduleData ? { pendingScheduleData } : {}),
         };
         const response = await kaiChatMutation.mutateAsync(payload);
 

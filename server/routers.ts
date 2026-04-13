@@ -4112,6 +4112,17 @@ Return the data as a structured JSON object.`
           toolArgs: z.record(z.any()),
         }).optional(), // Pre-confirmed destructive action (bypass LLM)
         imageUrl: z.string().optional(), // Vision: URL of an image for Kai to analyze
+        pendingScheduleData: z.object({
+          classes: z.array(z.object({
+            name: z.string(),
+            dayOfWeek: z.union([z.string(), z.array(z.string())]),
+            startTime: z.string(),
+            endTime: z.string(),
+            instructor: z.string().optional(),
+            location: z.string().optional(),
+            maxCapacity: z.number().optional(),
+          })),
+        }).optional(), // Pre-extracted schedule data to import directly (bypasses history scan)
       }).strict())
       .mutation(async ({ input, ctx }) => {
         // Validate input is not undefined
@@ -4236,33 +4247,41 @@ Return the data as a structured JSON object.`
             }
           }
           
-          // ── AUTO-IMPORT: If user asks Kai to place/import schedule and history has SCHEDULE_JSON ──
-          // When the user sends a follow-up text like "put this in classes" or "import these",
-          // we scan the conversation history for a prior SCHEDULE_JSON block and auto-execute
-          // createClassesFromSchedule so classes are actually saved to the DB.
+          // ── AUTO-IMPORT: If user asks Kai to place/import schedule, use pendingScheduleData from client ──
+          // The client passes pendingScheduleData directly when the user asks to import a schedule
+          // that was previously extracted from an image. This is more reliable than scanning history
+          // because the SCHEDULE_JSON block is stripped from the cleaned response stored in history.
           const importTriggerPhrases = [
             'put this in', 'place this', 'add this', 'import this', 'save this',
             'put these', 'place these', 'add these', 'import these', 'save these',
             'put it in', 'place it', 'add it to classes', 'save to classes',
             'add to classes', 'put in classes', 'place in classes',
+            'can you place', 'please place', 'can you add', 'please add',
           ];
           const msgLowerForImport = message.toLowerCase();
           const isImportRequest = importTriggerPhrases.some(p => msgLowerForImport.includes(p));
 
-          if (isImportRequest && ctx.currentOrganizationId) {
-            // Scan conversation history for a SCHEDULE_JSON block
-            let historicScheduleData: any = null;
-            for (const histMsg of [...conversationHistory].reverse()) {
-              if (histMsg.role === 'assistant') {
-                const histMatch = histMsg.content.match(/\[SCHEDULE_JSON:(\{.*?\})]\s*$/s);
-                if (histMatch) {
-                  try {
-                    historicScheduleData = JSON.parse(histMatch[1]);
-                    break;
-                  } catch { /* ignore parse errors */ }
+          // Use pendingScheduleData passed directly from client (preferred), or fall back to history scan
+          const directScheduleData = input.pendingScheduleData || null;
+
+          if ((isImportRequest || directScheduleData) && ctx.currentOrganizationId) {
+            // Use directly passed schedule data first, then fall back to history scan
+            let historicScheduleData: any = directScheduleData;
+            if (!historicScheduleData) {
+              // Fallback: scan conversation history for a SCHEDULE_JSON block
+              for (const histMsg of [...conversationHistory].reverse()) {
+                if (histMsg.role === 'assistant') {
+                  const histMatch = histMsg.content.match(/\[SCHEDULE_JSON:(\{.*?\})]\s*$/s);
+                  if (histMatch) {
+                    try {
+                      historicScheduleData = JSON.parse(histMatch[1]);
+                      break;
+                    } catch { /* ignore parse errors */ }
+                  }
                 }
               }
             }
+            console.log('[Kai Chat] Auto-import check: directScheduleData=', !!directScheduleData, 'historicScheduleData=', !!historicScheduleData, 'classes=', historicScheduleData?.classes?.length);
 
             if (historicScheduleData?.classes?.length > 0) {
               console.log('[Kai Chat] Auto-importing', historicScheduleData.classes.length, 'classes from conversation history');
@@ -4346,20 +4365,37 @@ Return the data as a structured JSON object.`
           // Detect task-completion signals in the response to prompt a review.
           // We look for common completion phrases that indicate Kai finished a meaningful task.
           const taskCompletionPhrases = [
+            // Explicit completion markers
             'done!', 'completed!', 'finished!', 'sent!', 'created!', 'added!',
             'scheduled!', 'updated!', 'deleted!', 'removed!', 'imported!',
+            // "I've" patterns
             'i\'ve sent', 'i\'ve created', 'i\'ve added', 'i\'ve scheduled',
             'i\'ve updated', 'i\'ve deleted', 'i\'ve removed', 'i\'ve imported',
+            'i\'ve set up', 'i\'ve set', 'i\'ve placed', 'i\'ve saved',
+            // "Successfully" patterns
             'successfully sent', 'successfully created', 'successfully added',
-            'successfully scheduled', 'successfully updated', 'has been sent',
-            'has been created', 'has been added', 'has been scheduled',
+            'successfully scheduled', 'successfully updated', 'successfully set',
+            'successfully imported', 'successfully placed',
+            // "Has been" patterns
+            'has been sent', 'has been created', 'has been added',
+            'has been scheduled', 'has been set up', 'has been updated',
+            // Image/schedule analysis completion
+            'here are the extracted', 'here is a summary', 'here\'s a summary',
+            'here are the classes', 'extracted the following', 'i extracted',
+            'the schedule shows', 'the image contains', 'i can see',
+            'let me know if you need', 'feel free to let me know',
+            // Import/action completion
+            'importing the class schedule', 'import the class schedule',
+            'set up with the correct', 'reflected in the schedule',
+            'classes to your schedule', 'added to your schedule',
           ];
           const lowerCleanedResponse = cleanedResponse.toLowerCase();
-          const isTaskCompletion = taskCompletionPhrases.some(phrase =>
+          // Also trigger review for image-based tasks (vision) and when scheduleImportData is present
+          const isVisionTask = !!input.imageUrl;
+          const hasScheduleData = scheduleImportData && scheduleImportData.classes?.length > 0;
+          const isTaskCompletion = isVisionTask || hasScheduleData || taskCompletionPhrases.some(phrase =>
             lowerCleanedResponse.includes(phrase)
-          );
-
-          // Determine task type from the message content
+          );     // Determine task type from the message content
           let detectedTaskType: string | undefined;
           const msgLower = (message || '').toLowerCase();
           if (msgLower.includes('sms') || msgLower.includes('text') || msgLower.includes('blast')) detectedTaskType = 'sms';
