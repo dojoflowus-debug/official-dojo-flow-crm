@@ -4322,9 +4322,11 @@ Return the data as a structured JSON object.`
                     creditsUsed: 0,
                   };
                   return {
-                    response: `✅ Done! I've added **${autoCreatedCount} class${autoCreatedCount !== 1 ? 'es' : ''}** to your schedule. You can view and manage them in the Classes section.`,
+                    response: `✅ Done! I've added **${autoCreatedCount} class${autoCreatedCount !== 1 ? 'es' : ''}** to your schedule.`,
                     ui_blocks: [],
                     reviewRequest: reviewRequestAutoImport,
+                    viewClassesLink: true,
+                    importedClassCount: autoCreatedCount,
                   };
                 }
               } catch (autoImportErr: any) {
