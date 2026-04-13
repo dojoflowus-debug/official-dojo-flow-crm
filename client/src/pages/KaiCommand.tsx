@@ -2547,7 +2547,98 @@ export default function KaiCommand() {
     const imageAttachments = inputAttachments.filter(
       att => att.fileType?.startsWith('image/') && att.url && !att.uploading && !att.error
     );
-    if ((imageAttachments.length > 0 && inputText.trim().length > 2) || chatIntent === 'creative_edit') {
+    // Detect if the user wants to ANALYZE/READ the image (vision) vs EDIT it (creative)
+    const visionKeywords = ['read', 'analyze', 'analyse', 'what is', 'what does', 'what do', 'what are', 'describe', 'tell me', 'import', 'extract', 'schedule', 'class', 'student', 'roster', 'list', 'show me', 'can you see', 'look at', 'check', 'review', 'scan', 'recognize', 'identify', 'find', 'who is', 'how many'];
+    const isVisionIntent = imageAttachments.length > 0 && (
+      inputText.trim().length === 0 || // No text = just dropped image, analyze it
+      visionKeywords.some(k => inputText.toLowerCase().includes(k))
+    );
+    const isCreativeEditIntent = !isVisionIntent && ((imageAttachments.length > 0 && inputText.trim().length > 2) || chatIntent === 'creative_edit');
+
+    // ─── VISION ANALYSIS ROUTE (dropped image for Kai to read/analyze) ──────────
+    if (isVisionIntent) {
+      const firstImage = imageAttachments[0];
+      const userMsg: Message = {
+        id: (messageIdCounterRef.current++).toString(),
+        role: 'user',
+        content: inputText.trim() || 'Please analyze this image.',
+        timestamp: new Date(),
+        attachments: [...inputAttachments],
+      };
+      setMessages(prev => [...prev, userMsg]);
+      setMessageInput('');
+      setAttachments([]);
+      setIsLoading(true);
+
+      const ackMsg: Message = {
+        id: (messageIdCounterRef.current++).toString(),
+        role: 'assistant',
+        content: `Got it — analyzing your image now...`,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, ackMsg]);
+
+      try {
+        const stats = statsQuery.data;
+        const historyMessages = messages
+          .filter(m => !(m as any).isOnboarding)
+          .slice(-20)
+          .map(m => ({
+            role: m.role as 'user' | 'assistant' | 'system',
+            content: typeof m.content === 'string' ? m.content : String(m.content),
+          }));
+        const visionPayload = {
+          message: inputText.trim() || 'Please analyze this image. If it contains a class schedule, extract all classes with their times, days, programs, locations, and instructors. If it contains student data, extract the student information.',
+          organizationId: 1,
+          conversationHistory: historyMessages,
+          imageUrl: firstImage.url,
+          context: stats ? {
+            totalStudents: stats.totalStudents,
+            activeStudents: stats.activeStudents,
+            totalLeads: stats.totalLeads,
+            totalClasses: stats.totalClasses
+          } : undefined
+        };
+        const response = await kaiChatMutation.mutateAsync(visionPayload);
+
+        // Generate TTS if voice is enabled
+        let audioUrl: string | undefined;
+        if (voiceEnabled) {
+          try {
+            const ttsResult = await generateSpeechMutation.mutateAsync({ text: response.response });
+            if (ttsResult.success) audioUrl = ttsResult.audioUrl;
+          } catch (e) { /* TTS optional */ }
+        }
+
+        // Replace the ack message with the real response
+        setMessages(prev => {
+          const withoutAck = prev.filter(m => m.id !== ackMsg.id);
+          return [...withoutAck, {
+            id: (messageIdCounterRef.current++).toString(),
+            role: 'assistant' as const,
+            content: response.response,
+            timestamp: new Date(),
+            audioUrl,
+          }];
+        });
+      } catch (err: any) {
+        setMessages(prev => {
+          const withoutAck = prev.filter(m => m.id !== ackMsg.id);
+          return [...withoutAck, {
+            id: (messageIdCounterRef.current++).toString(),
+            role: 'assistant' as const,
+            content: `I couldn't analyze that image. Please try again or describe what you'd like me to do with it.`,
+            timestamp: new Date(),
+          }];
+        });
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+    // --- END VISION ANALYSIS ROUTE ---
+
+    if (isCreativeEditIntent) {
       const firstImage = imageAttachments[0];
       // Convert image URL to base64 for the API
       const fetchBase64 = async (url: string): Promise<string> => {

@@ -4109,6 +4109,7 @@ Return the data as a structured JSON object.`
           toolName: z.string(),
           toolArgs: z.record(z.any()),
         }).optional(), // Pre-confirmed destructive action (bypass LLM)
+        imageUrl: z.string().optional(), // Vision: URL of an image for Kai to analyze
       }).strict())
       .mutation(async ({ input, ctx }) => {
         // Validate input is not undefined
@@ -4154,7 +4155,7 @@ Return the data as a structured JSON object.`
         const { processAbsenceReportQuery } = await import("./services/absenceReportWrapper");
         
         try {
-          const aiResponse = await chatWithKai(message, conversationHistory, avatarName);
+          const aiResponse = await chatWithKai(message, conversationHistory, avatarName, input.imageUrl);
           console.log('[Kai Chat] AI response:', JSON.stringify(aiResponse, null, 2));
           
           // Check if this is an absence report query and wrap data for InfoPanel

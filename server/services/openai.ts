@@ -319,7 +319,8 @@ export interface KaiConversationMessage {
 export async function chatWithKai(
   userMessage: string,
   conversationHistory: KaiConversationMessage[] = [],
-  avatarName: string = 'Kai'
+  avatarName: string = 'Kai',
+  imageUrl?: string
 ): Promise<{
   response: string;
   functionCalls?: Array<{ name: string; arguments: any }>;
@@ -472,13 +473,21 @@ When a user mentions uploading, dropping, or sharing a file (PDF, Excel, CSV, im
 ${getSalesKnowledgeSection()}`;
 
     // Build messages array
+    // If an image is attached, build a multimodal content array for vision analysis
+    const userContent: any = imageUrl
+      ? [
+          { type: 'text', text: userMessage || 'Please analyze this image and describe what you see. If it contains a class schedule, extract all the classes with their times, days, programs, locations, and instructors.' },
+          { type: 'image_url', image_url: { url: imageUrl, detail: 'high' } },
+        ]
+      : userMessage;
+
     const messages = [
       { role: 'system' as const, content: systemPrompt },
       ...conversationHistory.map((msg) => ({
         role: msg.role as 'user' | 'assistant' | 'system',
         content: msg.content,
       })),
-      { role: 'user' as const, content: userMessage },
+      { role: 'user' as const, content: userContent },
     ];
 
     console.log('[Kai] Calling Manus LLM with message:', userMessage);
