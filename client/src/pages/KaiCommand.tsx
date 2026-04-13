@@ -21,6 +21,7 @@ import { ScheduleReviewScreen } from '@/components/ScheduleReviewScreen';
 import { ResultsPanel, ResultsPanelData } from '@/components/ResultsPanel';
 import { InfoPanel, InfoPanelData } from '@/components/InfoPanel';
 import { parseKaiMessage, renderParsedMessage } from '@/lib/kaiUIBlocks';
+import { stripScheduleJson } from '@/lib/stripScheduleJson';
 import { useKaiResponseParser } from '@/hooks/useKaiResponseParser';
 import { UIBlockRenderer } from '@/components/UIBlockRenderer';
 import { StudentDetailsPanel } from '@/components/StudentDetailsPanel';
@@ -2668,9 +2669,12 @@ export default function KaiCommand() {
         const visionScheduleBlock = (response.ui_blocks || []).find((b: any) => b.type === 'schedule_import');
         const visionScheduleData = (response as any).scheduleImportData || (visionScheduleBlock ? visionScheduleBlock.data : undefined);
 
+        // Strip any [SCHEDULE_JSON:{...}] block from the visible response text
+        const cleanedVisionResponse = stripScheduleJson(response.response);
+
         // Detect task completion for review prompt
         const visionCompletionPhrases = ['done!', 'completed!', 'finished!', 'set up', 'successfully', 'has been', "i've", 'imported', 'created', 'added', 'scheduled'];
-        const visionIsTaskCompletion = visionCompletionPhrases.some(p => response.response.toLowerCase().includes(p));
+        const visionIsTaskCompletion = visionCompletionPhrases.some(p => cleanedVisionResponse.toLowerCase().includes(p));
         const visionReviewRequest = visionIsTaskCompletion ? {
           taskSummary: (inputText.trim() || 'Image analysis').slice(0, 120),
           taskType: 'schedule',
@@ -2682,7 +2686,7 @@ export default function KaiCommand() {
           return [...withoutAck, {
             id: (messageIdCounterRef.current++).toString(),
             role: 'assistant' as const,
-            content: response.response,
+            content: cleanedVisionResponse,
             timestamp: new Date(),
             audioUrl,
             scheduleImportData: visionScheduleData,
@@ -3121,10 +3125,13 @@ export default function KaiCommand() {
           }
         }
 
+        // Strip any leaked [SCHEDULE_JSON:{...}] block before storing in message state
+        const cleanedResponse = stripScheduleJson(response.response);
+
         const aiMessage: Message = {
           id: (messageIdCounterRef.current++).toString(),
           role: 'assistant',
-          content: response.response,
+          content: cleanedResponse,
           timestamp: new Date(),
           attachments: response.attachments || [],
           audioUrl,
