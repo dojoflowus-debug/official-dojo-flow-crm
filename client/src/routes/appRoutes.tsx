@@ -171,6 +171,7 @@ export const appRoutes: RouteConfig[] = [
   { path: "/onboarding/setup", element: <OwnerOnboarding />, label: "Onboarding Setup" },
   { path: "/onboarding", element: <Onboarding />, label: "Onboarding" },
   { path: "/owner/dashboard", element: <Navigate to="/kai" replace />, label: "Owner Dashboard Redirect" },
+  { path: "/dashboard", element: <Navigate to="/kai" replace />, label: "Dashboard Redirect" },
   { path: "/dashboard/command-center", element: <OwnerCommandCenter />, label: "Command Center" },
   { path: "/welcome", element: <WelcomeDashboard />, label: "Welcome" },
   { path: "/staff/login", element: <StaffAuth />, label: "Staff Login" },

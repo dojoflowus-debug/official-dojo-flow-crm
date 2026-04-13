@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff, Calendar, Users, Zap, TrendingUp } from "lucide-react";
@@ -236,7 +236,18 @@ function LoginForm({ onSwitchToSignup }: LoginFormProps) {
       }
     },
     onError: (error) => {
-      toast.error(error.message);
+      if (error.data?.code === 'FORBIDDEN') {
+        // Staff member trying to use owner login
+        toast.info('Staff members: please use the Staff Login page.', {
+          duration: 6000,
+          action: {
+            label: 'Staff Login →',
+            onClick: () => navigate('/staff/login'),
+          },
+        });
+      } else {
+        toast.error(error.message);
+      }
     },
   });
 
@@ -423,6 +434,17 @@ function LoginForm({ onSwitchToSignup }: LoginFormProps) {
         >
           Create account
         </button>
+      </p>
+
+      {/* Staff Login Link */}
+      <p className="text-center text-gray-500 text-xs mt-2">
+        Are you a staff member?{" "}
+        <Link
+          to="/staff/login"
+          className="text-gray-400 hover:text-white transition-colors underline underline-offset-2"
+        >
+          Staff Login →
+        </Link>
       </p>
     </div>
   );

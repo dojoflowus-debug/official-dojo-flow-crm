@@ -63,7 +63,14 @@ export function OwnerGoogleSignInButton({
 
       // Handle authorization errors specifically
       if (error.data?.code === "FORBIDDEN") {
-        toast.error(error.message);
+        // Staff members should use the staff login page instead
+        toast.info("Staff members: please use the Staff Login page.", {
+          duration: 5000,
+          action: {
+            label: "Go to Staff Login",
+            onClick: () => navigate("/staff/login"),
+          },
+        });
         onError?.(error.message);
       } else {
         const message = "Google sign-in failed. Please try again.";

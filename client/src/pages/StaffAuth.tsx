@@ -19,6 +19,14 @@ export default function StaffAuth() {
     onSuccess: (data) => {
       toast.success("Login successful!");
 
+      // Store user and org IDs in localStorage for tRPC header-based auth
+      if (data.user?.id) {
+        localStorage.setItem('dojo_user_id', String(data.user.id));
+      }
+      if (data.organizations && data.organizations.length === 1) {
+        localStorage.setItem('dojo_active_org_id', String(data.organizations[0].id));
+      }
+
       // If staff must change their temporary password, redirect immediately
       if (data.mustChangePassword) {
         toast.info("Please set a new password to continue.", { duration: 4000 });
@@ -30,7 +38,7 @@ export default function StaffAuth() {
       if (data.organizations && data.organizations.length > 1) {
         navigate("/select-organization", { state: { organizations: data.organizations } });
       } else if (data.organizations && data.organizations.length === 1) {
-        navigate("/dashboard");
+        navigate("/kai");
       } else {
         toast.error("You are not associated with any school. Please contact your administrator.");
       }

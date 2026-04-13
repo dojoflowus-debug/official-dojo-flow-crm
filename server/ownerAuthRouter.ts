@@ -286,7 +286,22 @@ export const ownerAuthRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
       
-      // Find user by email
+      // Find user by email (check all roles to give better error messages)
+      const [anyUser] = await db
+        .select({ id: users.id, role: users.role, email: users.email })
+        .from(users)
+        .where(eq(users.email, input.email))
+        .limit(1);
+
+      // If user exists but is staff, redirect them to the correct login page
+      if (anyUser && anyUser.role === 'staff') {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Staff members must use the Staff Login page at /staff/login",
+        });
+      }
+
+      // Find owner user by email
       const [user] = await db
         .select()
         .from(users)
