@@ -476,7 +476,17 @@ ${getSalesKnowledgeSection()}`;
     // If an image is attached, build a multimodal content array for vision analysis
     const userContent: any = imageUrl
       ? [
-          { type: 'text', text: userMessage || 'Please analyze this image and describe what you see. If it contains a class schedule, extract all the classes with their times, days, programs, locations, and instructors.' },
+          { type: 'text', text: userMessage || `Please analyze this image and describe what you see in detail.
+
+If it contains a class schedule, extract ALL classes with their times, days, programs, locations, and instructors. Then at the very end of your response, output a structured JSON block in EXACTLY this format (no extra text before or after the block):
+
+[SCHEDULE_JSON:{"classes":[{"name":"Dragon Kids","dayOfWeek":"Monday","startTime":"17:00","endTime":"18:00","instructor":"Master Holmes","location":"MyDojo Headquarters - Tomball"}]}]
+
+IMPORTANT:
+- startTime and endTime must be in 24-hour HH:MM format
+- dayOfWeek must be the full day name (Monday, Tuesday, etc.)
+- Include every class you can see in the image
+- The JSON block must be on its own line at the end` },
           { type: 'image_url', image_url: { url: imageUrl, detail: 'high' } },
         ]
       : userMessage;

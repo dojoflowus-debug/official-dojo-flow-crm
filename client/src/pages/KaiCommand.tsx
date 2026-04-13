@@ -152,6 +152,17 @@ interface Message {
     toolName: string;
     toolArgs: Record<string, any>;
   };
+  /** Schedule import data extracted from vision analysis */
+  scheduleImportData?: {
+    classes: Array<{
+      name: string;
+      dayOfWeek: string;
+      startTime: string;
+      endTime: string;
+      instructor?: string;
+      location?: string;
+    }>;
+  };
 }
 
 // Attachment type
@@ -2633,6 +2644,7 @@ export default function KaiCommand() {
             content: response.response,
             timestamp: new Date(),
             audioUrl,
+            scheduleImportData: (response as any).scheduleImportData || undefined,
           }];
         });
       } catch (err: any) {
@@ -3065,6 +3077,7 @@ export default function KaiCommand() {
           ui_blocks: response.ui_blocks || [],
           pendingAction: (response as any).pendingAction,
           quickReplies: (response as any).quickReplies,
+          scheduleImportData: (response as any).scheduleImportData || undefined,
         };
         setMessages(prev => [...prev, aiMessage]);
         
@@ -4607,6 +4620,87 @@ export default function KaiCommand() {
                             )}
                           </div>
                         </>
+                      )}
+                      {/* Schedule Import Button — shown when Kai extracts a schedule from a vision analysis */}
+                      {message.scheduleImportData && message.scheduleImportData.classes && message.scheduleImportData.classes.length > 0 && (
+                        <div className={`mt-3 p-3 rounded-xl border ${
+                          isCinematic ? 'border-cyan-500/30 bg-cyan-950/30' :
+                          isDark ? 'border-emerald-500/30 bg-emerald-950/30' :
+                          'border-emerald-200 bg-emerald-50'
+                        }`}>
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <p className={`text-sm font-semibold ${
+                                isCinematic ? 'text-cyan-300' : isDark ? 'text-emerald-300' : 'text-emerald-800'
+                              }`}>
+                                📅 {message.scheduleImportData.classes.length} class{message.scheduleImportData.classes.length !== 1 ? 'es' : ''} detected
+                              </p>
+                              <p className={`text-xs mt-0.5 ${
+                                isCinematic ? 'text-cyan-400/70' : isDark ? 'text-emerald-400/70' : 'text-emerald-600'
+                              }`}>
+                                {message.scheduleImportData.classes.slice(0, 3).map(c => c.name).join(', ')}{message.scheduleImportData.classes.length > 3 ? ` +${message.scheduleImportData.classes.length - 3} more` : ''}
+                              </p>
+                            </div>
+                            <button
+                              onClick={async () => {
+                                if (!message.scheduleImportData) return;
+                                const importingMsgId = `schedule-importing-${Date.now()}`;
+                                setMessages(prev => [...prev, {
+                                  id: importingMsgId,
+                                  role: 'assistant',
+                                  content: `Importing ${message.scheduleImportData!.classes.length} classes into your schedule…`,
+                                  timestamp: new Date(),
+                                }]);
+                                // Clear the import button from this message
+                                setMessages(prev => prev.map(m =>
+                                  m.id === message.id ? { ...m, scheduleImportData: undefined } : m
+                                ));
+                                try {
+                                  const result = await createClassesMutation.mutateAsync({
+                                    classes: message.scheduleImportData!.classes,
+                                  });
+                                  setMessages(prev => prev.filter(m => m.id !== importingMsgId));
+                                  if (result.success) {
+                                    toast.success(`✅ ${result.createdCount} class${result.createdCount !== 1 ? 'es' : ''} added to your schedule!`);
+                                    setMessages(prev => [...prev, {
+                                      id: `schedule-imported-${Date.now()}`,
+                                      role: 'assistant',
+                                      content: `Done! I've added **${result.createdCount} class${result.createdCount !== 1 ? 'es' : ''}** to your schedule. Head to the **Classes** section to review them.`,
+                                      timestamp: new Date(),
+                                    }]);
+                                  } else {
+                                    toast.error(result.error || 'Failed to import classes');
+                                    setMessages(prev => [...prev, {
+                                      id: `schedule-error-${Date.now()}`,
+                                      role: 'assistant',
+                                      content: `I ran into an issue importing the classes: ${result.error || 'Unknown error'}. Please try again or add them manually.`,
+                                      timestamp: new Date(),
+                                    }]);
+                                  }
+                                } catch (err: any) {
+                                  setMessages(prev => prev.filter(m => m.id !== importingMsgId));
+                                  toast.error('Failed to import classes');
+                                  setMessages(prev => [...prev, {
+                                    id: `schedule-error-${Date.now()}`,
+                                    role: 'assistant',
+                                    content: `Something went wrong while importing. Please try again.`,
+                                    timestamp: new Date(),
+                                  }]);
+                                }
+                              }}
+                              disabled={createClassesMutation.isLoading}
+                              className={`shrink-0 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                                isCinematic
+                                  ? 'bg-cyan-500 hover:bg-cyan-400 text-black'
+                                  : isDark
+                                  ? 'bg-emerald-500 hover:bg-emerald-400 text-white'
+                                  : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            >
+                              {createClassesMutation.isLoading ? 'Importing…' : `Import ${message.scheduleImportData.classes.length} Classes →`}
+                            </button>
+                          </div>
+                        </div>
                       )}
                       {/* Quick-reply action buttons */}
                       {message.quickReplies && message.quickReplies.length > 0 && (

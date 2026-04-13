@@ -4234,10 +4234,37 @@ Return the data as a structured JSON object.`
             }
           }
           
+          // ── SCHEDULE_JSON EXTRACTION ──────────────────────────────────────────
+          // If vision response contains [SCHEDULE_JSON:{...}], extract it and
+          // return as a schedule_import ui_block so the client can render an import button
+          let scheduleImportData: any = null;
+          let cleanedResponse = aiResponse.response || '';
+          const scheduleJsonMatch = cleanedResponse.match(/\[SCHEDULE_JSON:(\{.*?\})]\s*$/s);
+          if (scheduleJsonMatch) {
+            try {
+              scheduleImportData = JSON.parse(scheduleJsonMatch[1]);
+              // Strip the block from the visible response text
+              cleanedResponse = cleanedResponse.replace(scheduleJsonMatch[0], '').trim();
+              console.log('[Kai Chat] Extracted schedule import data:', JSON.stringify(scheduleImportData));
+            } catch (parseErr) {
+              console.warn('[Kai Chat] Failed to parse SCHEDULE_JSON block:', parseErr);
+            }
+          }
+          // ── END SCHEDULE_JSON EXTRACTION ──────────────────────────────────────
+
           // Return response with ui_blocks for InfoPanel population
+          const finalUiBlocks = [...(aiResponse.ui_blocks || [])];
+          if (scheduleImportData && scheduleImportData.classes?.length > 0) {
+            finalUiBlocks.push({
+              type: 'schedule_import',
+              data: scheduleImportData,
+              classCount: scheduleImportData.classes.length,
+            });
+          }
           return {
-            response: aiResponse.response,
-            ui_blocks: aiResponse.ui_blocks || [],
+            response: cleanedResponse,
+            ui_blocks: finalUiBlocks,
+            scheduleImportData: scheduleImportData || undefined,
           };
         } catch (error) {
           console.error('[Kai Chat] Error caught:', error);
