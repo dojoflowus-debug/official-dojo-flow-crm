@@ -50,7 +50,7 @@ describe('SCHEDULE_JSON extraction from Kai vision response', () => {
 
   it('should return null scheduleImportData when JSON is malformed', () => {
     const response = `Some text\n[SCHEDULE_JSON:{invalid json here}]`;
-    const { scheduleImportData, cleanedResponse } = extractScheduleJson(response);
+    const { scheduleImportData } = extractScheduleJson(response);
     expect(scheduleImportData).toBeNull();
   });
 
