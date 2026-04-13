@@ -4348,7 +4348,7 @@ export default function KaiCommand() {
                           <div className="w-8 h-8 rounded-full shrink-0 shadow-lg shadow-red-500/30 overflow-hidden">
                             <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/RWtkCgdJjxxOQJjI.png" alt="Kai" className="w-full h-full object-cover" />
                           </div>
-                          <div className="flex-1">
+                          <div className="flex-1 flex flex-col min-w-0">
                             <div 
                               className={`font-medium mb-1`}
                               style={(isCinematic || isFocusMode) ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isDark ? { color: 'white' } : { color: '#0f172a' }}
