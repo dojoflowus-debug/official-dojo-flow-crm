@@ -123,11 +123,35 @@ const trpcClient = trpc.createClient({
         if (userId) headers['x-user-id'] = userId;
         return headers;
       },
-      fetch(input, init) {
-        return globalThis.fetch(input, {
+      async fetch(input, init) {
+        const response = await globalThis.fetch(input, {
           ...(init ?? {}),
           credentials: "include",
         });
+        // Handle rate-limit (HTTP 429) responses that return plain text instead of JSON.
+        // Without this, tRPC throws "Unexpected token 'R', 'Rate exceeded.' is not valid JSON"
+        // which crashes the entire login page.
+        if (response.status === 429) {
+          const text = await response.text();
+          console.warn('[tRPC] Rate limit hit (HTTP 429):', text);
+          // Return a synthetic JSON error response that tRPC can parse
+          return new Response(
+            JSON.stringify([{
+              error: {
+                json: {
+                  message: 'Server is busy. Please wait a moment and try again.',
+                  code: -32001,
+                  data: { code: 'TOO_MANY_REQUESTS', httpStatus: 429 },
+                },
+              },
+            }]),
+            {
+              status: 429,
+              headers: { 'Content-Type': 'application/json' },
+            }
+          );
+        }
+        return response;
       },
     }),
   ],
