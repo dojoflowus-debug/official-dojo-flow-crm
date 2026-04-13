@@ -4332,27 +4332,49 @@ Return the data as a structured JSON object.`
               }
             }
           }
-          // ── END AUTO-IMPORT ───────────────────────────────────────────────────
-
-          // ── SCHEDULE_JSON EXTRACTION ──────────────────────────────────────────
+          // ── END AUTO-IMPORT ───────────────────────────────────────          // ── SCHEDULE_JSON EXTRACTION ────────────────────────────────────────────────────
           // If vision response contains [SCHEDULE_JSON:{...}], extract it and
-          // return as a schedule_import ui_block so the client can render an import button
+          // return as a schedule_import ui_block so the client can render an import button.
+          // We use bracket counting instead of regex to handle large nested JSON reliably.
           let scheduleImportData: any = null;
           let cleanedResponse = aiResponse.response || '';
-          const scheduleJsonMatch = cleanedResponse.match(/\[SCHEDULE_JSON:(\{.*?\})]\s*$/s);
-          if (scheduleJsonMatch) {
-            try {
-              scheduleImportData = JSON.parse(scheduleJsonMatch[1]);
-              // Strip the block from the visible response text
-              cleanedResponse = cleanedResponse.replace(scheduleJsonMatch[0], '').trim();
-              console.log('[Kai Chat] Extracted schedule import data:', JSON.stringify(scheduleImportData));
-            } catch (parseErr) {
-              console.warn('[Kai Chat] Failed to parse SCHEDULE_JSON block:', parseErr);
+          const scheduleTag = '[SCHEDULE_JSON:';
+          const scheduleTagIdx = cleanedResponse.indexOf(scheduleTag);
+          if (scheduleTagIdx !== -1) {
+            // Find the matching closing bracket by counting depth
+            const jsonStart = scheduleTagIdx + scheduleTag.length;
+            let depth = 0;
+            let jsonEnd = -1;
+            for (let i = jsonStart; i < cleanedResponse.length; i++) {
+              if (cleanedResponse[i] === '{') depth++;
+              else if (cleanedResponse[i] === '}') {
+                depth--;
+                if (depth === 0) { jsonEnd = i + 1; break; }
+              }
+            }
+            if (jsonEnd !== -1) {
+              const jsonStr = cleanedResponse.slice(jsonStart, jsonEnd);
+              try {
+                scheduleImportData = JSON.parse(jsonStr);
+                // Strip the entire [SCHEDULE_JSON:{...}] block (and any trailing ] or whitespace) from the visible text
+                const blockEnd = cleanedResponse.indexOf(']', jsonEnd);
+                const removeUntil = blockEnd !== -1 ? blockEnd + 1 : jsonEnd;
+                cleanedResponse = (cleanedResponse.slice(0, scheduleTagIdx) + cleanedResponse.slice(removeUntil)).trim();
+                console.log('[Kai Chat] Extracted schedule import data with', scheduleImportData?.classes?.length, 'classes');
+              } catch (parseErr) {
+                // JSON parse failed — still strip the block so it doesn't show as raw text
+                const blockEnd = cleanedResponse.indexOf(']', jsonEnd);
+                const removeUntil = blockEnd !== -1 ? blockEnd + 1 : jsonEnd;
+                cleanedResponse = (cleanedResponse.slice(0, scheduleTagIdx) + cleanedResponse.slice(removeUntil)).trim();
+                console.warn('[Kai Chat] Failed to parse SCHEDULE_JSON block:', parseErr);
+              }
+            } else {
+              // Couldn’t find closing bracket — strip everything from the tag to end of string
+              cleanedResponse = cleanedResponse.slice(0, scheduleTagIdx).trim();
+              console.warn('[Kai Chat] SCHEDULE_JSON block has no closing bracket, stripped from response');
             }
           }
-          // ── END SCHEDULE_JSON EXTRACTION ──────────────────────────────────────
-
-          // Return response with ui_blocks for InfoPanel population
+          // ── END SCHEDULE_JSON EXTRACTION ────────────────────────────────────────────────      // Return response with ui_blocks for InfoPanel population
           const finalUiBlocks = [...(aiResponse.ui_blocks || [])];
           if (scheduleImportData && scheduleImportData.classes?.length > 0) {
             finalUiBlocks.push({

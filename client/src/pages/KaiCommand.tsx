@@ -467,6 +467,22 @@ export default function KaiCommand() {
   };
 
   const renderMessageWithMentions = (content: string, isKaiMessage: boolean = false) => {
+    // Safety net: strip any [SCHEDULE_JSON:{...}] block that the server may have missed
+    // This prevents raw JSON from being visible in the chat
+    if (content && content.includes('[SCHEDULE_JSON:')) {
+      const tagIdx = content.indexOf('[SCHEDULE_JSON:');
+      const jsonStart = tagIdx + '[SCHEDULE_JSON:'.length;
+      let depth = 0;
+      let jsonEnd = -1;
+      for (let i = jsonStart; i < content.length; i++) {
+        if (content[i] === '{') depth++;
+        else if (content[i] === '}') { depth--; if (depth === 0) { jsonEnd = i + 1; break; } }
+      }
+      const blockEnd = jsonEnd !== -1 ? content.indexOf(']', jsonEnd) : -1;
+      const removeUntil = blockEnd !== -1 ? blockEnd + 1 : (jsonEnd !== -1 ? jsonEnd : content.length);
+      content = (content.slice(0, tagIdx) + content.slice(removeUntil)).trim();
+    }
+
     // Parse Kai UI blocks if this is a Kai message
     if (isKaiMessage) {
       const parsed = parseKaiMessage(content);
