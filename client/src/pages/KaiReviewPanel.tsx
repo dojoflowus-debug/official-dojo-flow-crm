@@ -5,9 +5,9 @@
  */
 
 import { useState } from "react";
-import { trpc } from "../utils/trpc";
-import { toast } from "react-hot-toast";
-import { useTheme } from "../hooks/useTheme";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -67,7 +67,8 @@ export default function KaiReviewPanel() {
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20;
 
-  const { isDark } = useTheme?.() ?? { isDark: true };
+  const { theme } = useTheme();
+  const isDark = theme === 'dark' || theme === 'cinematic';
 
   const { data: stats } = trpc.kaiReview.getStats.useQuery(undefined, {
     refetchInterval: 30000,

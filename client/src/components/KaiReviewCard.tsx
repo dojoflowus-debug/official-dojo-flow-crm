@@ -5,8 +5,8 @@
  */
 
 import { useState } from "react";
-import { trpc } from "../utils/trpc";
-import { toast } from "react-hot-toast";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 interface KaiReviewCardProps {
   taskSummary?: string;
