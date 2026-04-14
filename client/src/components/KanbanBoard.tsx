@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   Flame, 
   Phone, 
@@ -96,6 +96,11 @@ export default function KanbanBoard({
   const [draggedLeadId, setDraggedLeadId] = useState<number | null>(null);
   const [hoveredStageId, setHoveredStageId] = useState<string | null>(null);
   const [optimisticLeads, setOptimisticLeads] = useState<Record<string, Lead[]>>(leads);
+
+  // Sync optimisticLeads when the leads prop changes (e.g., after API data loads)
+  useEffect(() => {
+    setOptimisticLeads(leads);
+  }, [leads]);
 
   // Configure sensors for drag detection
   const sensors = useSensors(

@@ -9444,3 +9444,7 @@ Transform kiosk from admin dashboard to premium location experience
 
 ## iPad Bottom Nav Fix (Apr 14, 2026)
 - [x] Fix bottom navigation bar disappearing on iPad when on the Kai Command page (cinematic/full-screen mode hides the bottom nav)
+
+## Leads Fixes (Apr 14, 2026)
+- [x] Add "date added" column to leads table/pipeline view
+- [x] Fix lead import - current leads from MyDojo/external sources not syncing into DojoFlow (KanbanBoard optimisticLeads state was not syncing with API data on load)

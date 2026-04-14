@@ -51,6 +51,13 @@ export default function KanbanLeadCard({
     return `${diffDays}d ago`;
   };
 
+  // Get formatted date added
+  const getDateAdded = () => {
+    if (!lead.created_at) return null;
+    const created = new Date(lead.created_at);
+    return created.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
   // Get score color
   const getScoreColor = () => {
     if (score >= 70) return { bg: 'bg-green-500', text: 'text-green-500' };
@@ -171,7 +178,9 @@ export default function KanbanLeadCard({
           <div className="flex items-center gap-2">
             <Clock className={`w-3 h-3 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`} />
             <span className={`text-xs ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>
-              {getAge()}
+              {getDateAdded() ? (
+                <span title={`Added ${getAge()}`}>{getDateAdded()}</span>
+              ) : getAge()}
             </span>
           </div>
         </div>
