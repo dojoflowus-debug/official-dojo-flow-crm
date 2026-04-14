@@ -9448,3 +9448,14 @@ Transform kiosk from admin dashboard to premium location experience
 ## Leads Fixes (Apr 14, 2026)
 - [x] Add "date added" column to leads table/pipeline view
 - [x] Fix lead import - current leads from MyDojo/external sources not syncing into DojoFlow (KanbanBoard optimisticLeads state was not syncing with API data on load)
+
+## Kai Command Execution Engine (Apr 14, 2026)
+- [x] Audit existing Kai architecture: chat processing, tool calling, CRM helpers, Twilio, pricing, enrollment links, activity log
+- [x] Build command parser + intent resolver (extract action, contact, content, channel from natural language)
+- [x] Build contact resolver (CRM lookup by name, handle ambiguous/missing contacts)
+- [x] Build program/pricing resolver (match contact to correct program and pricing)
+- [x] Build enrollment link resolver (retrieve or generate correct enrollment link)
+- [x] Build message template system (pricing-only, pricing+link, trial offer, missed class, reactivation, intro reminder)
+- [x] Build action executor (send SMS via Twilio, send email, with idempotency protection)
+- [x] Build activity logger (log who sent what to whom, channel, timestamp, message SID)
+- [x] Wire command execution into Kai chat (action summary card, contact card, SMS preview, delivery status, follow-up offer)

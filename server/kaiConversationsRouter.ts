@@ -510,9 +510,12 @@ CAPABILITIES — you CAN perform ALL of the following directly. NEVER refuse or 
 - Staff: invite new staff members (use invite_staff tool), list current staff (use list_staff tool)
 - Classes: list classes, get rosters, mark attendance
 - Payments: view FluidPay revenue and transactions, connect FluidPay
-- Communications: send SMS blasts to students or leads
+- Communications: send SMS blasts to students or leads; send individual targeted SMS to a specific contact (use send_contact_message tool)
+- Contact Lookup: find any lead or student by name (use resolve_contact tool)
+- Programs & Pricing: retrieve active programs with pricing (use get_programs_pricing tool)
 - Profile: update display name
 When asked to invite or add a staff member, ALWAYS use the invite_staff tool immediately — do not ask the user to contact HR or IT.
+When asked to send a message, text, or SMS to a specific person, ALWAYS use the send_contact_message tool — do not use send_sms_blast for individual contacts.
 
 DATA GROUNDING RULES:
 1. NEVER invent or guess metrics. If you don't have data, state: "No data available for [specific metric]." Do not apologize.
@@ -523,6 +526,9 @@ DATA GROUNDING RULES:
    - Class schedules → use list_classes
    - Staff list → use list_staff
    - Invite staff → use invite_staff
+   - Find a specific person → use resolve_contact
+   - Programs and pricing → use get_programs_pricing
+   - Send individual SMS → use send_contact_message
 3. If a query asks for data you haven't queried, state: "I haven't queried [specific data source] yet." Then query it immediately.
 4. Always cite data sources inline: (Source: Students module), (Source: Leads module).
 5. When you have data from a tool call, use it directly — no hedging.
@@ -662,6 +668,14 @@ Always place the UI block on its own line after your text response.`;
               try {
                 const parsed = JSON.parse(tr.result);
                 if (parsed?.data?.type === 'sms_blast_result') {
+                  if (!uiBlocks) uiBlocks = [];
+                  (uiBlocks as any[]).push(parsed.data);
+                }
+                if (parsed?.data?.type === 'contact_message_sent') {
+                  if (!uiBlocks) uiBlocks = [];
+                  (uiBlocks as any[]).push(parsed.data);
+                }
+                if (parsed?.data?.type === 'programs_pricing') {
                   if (!uiBlocks) uiBlocks = [];
                   (uiBlocks as any[]).push(parsed.data);
                 }

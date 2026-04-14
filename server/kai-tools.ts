@@ -452,6 +452,72 @@ export const kaiTools = [
       }
     }
   }
+,
+  // ── Kai Command Execution Engine Tools ──────────────────────────────────────
+  {
+    type: "function",
+    function: {
+      name: "send_contact_message",
+      description: "Send an SMS or email to a specific contact (lead or student) with plans, pricing, enrollment link, trial offer, or a custom message. Use this when the user says things like 'text Vincent the plans and enrollment link', 'send pricing to Marcus', 'text Sarah the trial offer', 'email John the membership plans'. This tool resolves the contact, builds the message from a template, sends it via Twilio, and logs the activity.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description: "The full natural-language command from the user, e.g. 'Text Vincent plans and pricing and send him an enrollment link'"
+          },
+          contact_name_override: {
+            type: "string",
+            description: "If the user has already confirmed which contact to use (e.g. after disambiguation), provide the exact full name here"
+          },
+          program_name_override: {
+            type: "string",
+            description: "If the user has specified a specific program (e.g. 'Dragon Kids', 'Kickboxing'), provide it here"
+          },
+          channel: {
+            type: "string",
+            enum: ["sms", "email"],
+            description: "Delivery channel. Default: sms"
+          }
+        },
+        required: ["query"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "resolve_contact",
+      description: "Look up a contact by name in the CRM (searches both leads and students). Use this when you need to find a contact before sending a message, or when the user asks 'who is Vincent?' or 'find Marcus in the CRM'.",
+      parameters: {
+        type: "object",
+        properties: {
+          name: {
+            type: "string",
+            description: "The contact's name to search for"
+          }
+        },
+        required: ["name"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_programs_pricing",
+      description: "Get the list of active programs and their pricing from the CRM. Use this when the user asks 'what are our programs?', 'what do we charge?', 'show me the pricing', or when building a pricing summary to send to a contact.",
+      parameters: {
+        type: "object",
+        properties: {
+          program_name: {
+            type: "string",
+            description: "Optional: filter to a specific program name (e.g. 'Dragon Kids', 'Kickboxing')"
+          }
+        },
+        required: []
+      }
+    }
+  }
 ];
 
 /**
@@ -828,6 +894,110 @@ export async function executeKaiTool(
 
       case "charge_student_tuition": {
         return await executeChargeStudentTuition(toolArgs, ctx);
+      }
+
+      // ── Kai Command Execution Engine ──────────────────────────────────────
+      case "send_contact_message": {
+        const { runCommandPipeline } = await import("./kai-command-engine");
+        const { getDb } = await import("./db");
+        const { users } = await import("../drizzle/schema");
+        const { eq: eqUser } = await import("drizzle-orm");
+        const db2 = await getDb();
+        let initiatedByName = ctx.user?.name || "Staff";
+        if (db2 && ctx.user?.id) {
+          const [u] = await db2.select({ name: users.name, preferredName: users.preferredName })
+            .from(users).where(eqUser(users.id, ctx.user.id)).limit(1);
+          if (u) initiatedByName = u.preferredName || u.name || initiatedByName;
+        }
+        const cmdResult = await runCommandPipeline({
+          query: toolArgs.query,
+          contactNameOverride: toolArgs.contact_name_override,
+          programNameOverride: toolArgs.program_name_override,
+          channelOverride: toolArgs.channel as "sms" | "email" | undefined,
+          organizationId: ctx.user.organizationId,
+          initiatedById: ctx.user.id,
+          initiatedByName,
+        });
+        if (cmdResult.success) {
+          const contactName = `${cmdResult.contact?.firstName} ${cmdResult.contact?.lastName}`.trim();
+          const channel = (cmdResult.channel || "sms").toUpperCase();
+          const programName = cmdResult.program?.name || "our programs";
+          return JSON.stringify({
+            success: true,
+            data: {
+              type: "command_execution_result",
+              intent: cmdResult.intent,
+              contact: cmdResult.contact,
+              program: cmdResult.program,
+              messageSent: cmdResult.messageSent,
+              channel: cmdResult.channel,
+              deliveryId: cmdResult.deliveryId,
+              enrollmentLink: cmdResult.enrollmentLink,
+              loggedActivityId: cmdResult.loggedActivityId,
+            },
+            message: `✅ Done. I sent ${contactName} the ${cmdResult.intent.replace(/_/g, ' ').toLowerCase()} by ${channel}. Message delivered${cmdResult.deliveryId ? ` (SID: ${cmdResult.deliveryId})` : ''}. Activity logged to CRM.\n\nWould you like me to follow up with ${contactName} tomorrow if they don't reply?`,
+          });
+        } else if (cmdResult.ambiguousContacts && cmdResult.ambiguousContacts.length > 1) {
+          const options = cmdResult.ambiguousContacts
+            .map((c, i) => `${i + 1}. ${c.firstName} ${c.lastName} (${c.type}) — ${c.phone || c.email || 'no contact info'}`)
+            .join('\n');
+          return JSON.stringify({
+            success: false,
+            data: { type: "contact_disambiguation", contacts: cmdResult.ambiguousContacts },
+            message: `Found ${cmdResult.ambiguousContacts.length} contacts with that name. Which one did you mean?\n\n${options}\n\nReply with the number or full name to confirm.`,
+          });
+        } else if (cmdResult.isDuplicate) {
+          return JSON.stringify({
+            success: false,
+            message: cmdResult.error || "Duplicate send blocked.",
+          });
+        } else {
+          return JSON.stringify({
+            success: false,
+            message: cmdResult.error || "Command execution failed.",
+          });
+        }
+      }
+
+      case "resolve_contact": {
+        const { resolveContact } = await import("./kai-command-engine");
+        const matches = await resolveContact(toolArgs.name, ctx.user.organizationId);
+        if (matches.length === 0) {
+          return JSON.stringify({ success: false, message: `No contact named "${toolArgs.name}" found in the CRM.` });
+        }
+        const contactList = matches.map(c =>
+          `• ${c.firstName} ${c.lastName} (${c.type}) — Phone: ${c.phone || 'N/A'} | Email: ${c.email || 'N/A'}`
+        ).join('\n');
+        return JSON.stringify({
+          success: true,
+          data: { contacts: matches },
+          message: `Found ${matches.length} contact${matches.length > 1 ? 's' : ''} named "${toolArgs.name}":\n${contactList}`,
+        });
+      }
+
+      case "get_programs_pricing": {
+        const { resolveProgram } = await import("./kai-command-engine");
+        const progs = await resolveProgram(
+          toolArgs.program_name || "",
+          null,
+          ctx.user.organizationId
+        );
+        if (progs.length === 0) {
+          return JSON.stringify({ success: false, message: "No active programs found in the CRM. Add programs in the Programs section." });
+        }
+        const summary = progs.map(p => {
+          const price = p.price ? `$${(p.price / 100).toFixed(0)}/mo` : "Contact for pricing";
+          const trial = p.trialType && p.trialType !== "none"
+            ? ` | Trial: ${p.trialLengthDays} days ${p.trialPrice === 0 ? "FREE" : `$${((p.trialPrice || 0) / 100).toFixed(0)}`}`
+            : "";
+          const age = p.ageRange ? ` | Ages: ${p.ageRange}` : "";
+          return `• **${p.name}**: ${price}${trial}${age}`;
+        }).join('\n');
+        return JSON.stringify({
+          success: true,
+          data: { programs: progs },
+          message: `Here are your active programs:\n\n${summary}`,
+        });
       }
 
       default:

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Users, User, CheckCircle2, XCircle, AlertTriangle, Phone, MessageSquare, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { Users, User, CheckCircle2, XCircle, AlertTriangle, Phone, MessageSquare, ChevronDown, ChevronUp, Send, DollarSign, Link } from 'lucide-react';
 import { KaiStudentCard, KaiStudentCardData } from './KaiStudentCard';
 import { FlyerCreationPanel } from './kai/FlyerCreationPanel';
 
@@ -26,8 +26,41 @@ interface SmsBlastResultBlock {
   retryCount: number;
 }
 
+interface ContactMessageSentBlock {
+  type: 'contact_message_sent';
+  success: boolean;
+  contactName: string;
+  contactPhone: string;
+  contactType: 'lead' | 'student';
+  intent: string;
+  channel: string;
+  messageSent: string;
+  deliveryId?: string;
+  enrollmentLink?: string;
+  programName?: string;
+  programPrice?: number;
+  error?: string;
+}
+
+interface ProgramsPricingBlock {
+  type: 'programs_pricing';
+  programs: Array<{
+    id: number;
+    name: string;
+    type: string;
+    price: number;
+    billing: string;
+    ageRange?: string;
+    trialType?: string;
+    trialPrice?: number;
+    trialLengthDays?: number;
+    enrollmentLink?: string;
+  }>;
+  kioskBaseUrl?: string;
+}
+
 interface UIBlock {
-  type: 'student_card' | 'student_list' | 'lead_card' | 'lead_list' | 'flyer_creation' | 'sms_blast_result';
+  type: 'student_card' | 'student_list' | 'lead_card' | 'lead_list' | 'flyer_creation' | 'sms_blast_result' | 'contact_message_sent' | 'programs_pricing';
   studentId?: number;
   studentIds?: number[];
   leadId?: number;
@@ -53,6 +86,84 @@ interface UIBlockRendererProps {
   blocks: UIBlock[];
   onBlockClick?: (block: UIBlock) => void;
   theme?: 'light' | 'dark' | 'cinematic';
+}
+
+function ContactMessageSentCard({ block }: { block: ContactMessageSentBlock }) {
+  const intentLabel = block.intent.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  return (
+    <div className="mt-3 rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+      <div className={`px-4 py-3 flex items-center justify-between ${block.success ? 'bg-gradient-to-r from-blue-600 to-indigo-600' : 'bg-gradient-to-r from-red-600 to-rose-600'}`}>
+        <div className="flex items-center gap-2">
+          <Send className="w-4 h-4 text-white" />
+          <span className="text-white font-semibold text-sm">
+            {block.success ? 'Message Delivered' : 'Message Failed'}
+          </span>
+          <Badge className="bg-white/20 text-white border-0 text-xs">{block.channel.toUpperCase()}</Badge>
+        </div>
+        {block.success && <CheckCircle2 className="w-4 h-4 text-white/80" />}
+        {!block.success && <XCircle className="w-4 h-4 text-white/80" />}
+      </div>
+      <div className="px-4 py-3 border-b border-slate-100">
+        <div className="flex items-center gap-2 mb-1">
+          <User className="w-4 h-4 text-slate-400" />
+          <span className="font-semibold text-slate-800">{block.contactName}</span>
+          <span className="text-slate-400 text-xs font-mono">{block.contactPhone}</span>
+          <Badge variant="outline" className="text-xs ml-auto">{block.contactType}</Badge>
+        </div>
+        <div className="text-xs text-slate-500">{intentLabel}</div>
+      </div>
+      <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
+        <div className="text-xs text-slate-500 font-medium mb-1">Message sent:</div>
+        <div className="text-sm text-slate-700 italic">&ldquo;{block.messageSent}&rdquo;</div>
+      </div>
+      {block.enrollmentLink && (
+        <div className="px-4 py-3 flex items-center gap-2">
+          <Link className="w-3.5 h-3.5 text-blue-500" />
+          <a href={block.enrollmentLink} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline truncate">
+            {block.enrollmentLink}
+          </a>
+        </div>
+      )}
+      {block.error && (
+        <div className="px-4 py-3 bg-red-50 border-t border-red-100 text-xs text-red-600">
+          {block.error}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProgramsPricingCard({ block }: { block: ProgramsPricingBlock }) {
+  return (
+    <div className="mt-3 rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+      <div className="bg-gradient-to-r from-violet-600 to-purple-600 px-4 py-3 flex items-center gap-2">
+        <DollarSign className="w-4 h-4 text-white" />
+        <span className="text-white font-semibold text-sm">Programs &amp; Pricing</span>
+        <Badge className="bg-white/20 text-white border-0 text-xs ml-auto">{block.programs.length} programs</Badge>
+      </div>
+      <div className="divide-y divide-slate-100">
+        {block.programs.map((p, i) => (
+          <div key={i} className="px-4 py-3 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="font-medium text-slate-800 text-sm truncate">{p.name}</div>
+              <div className="text-xs text-slate-500">{p.type.replace(/_/g, ' ')}{p.ageRange ? ` · ${p.ageRange}` : ''}</div>
+              {p.trialType && p.trialType !== 'none' && (
+                <div className="text-xs text-emerald-600 mt-0.5">
+                  {p.trialType === 'free'
+                    ? `Free ${p.trialLengthDays}-day trial`
+                    : `${p.trialLengthDays}-day trial for $${((p.trialPrice || 0) / 100).toFixed(0)}`}
+                </div>
+              )}
+            </div>
+            <div className="text-right shrink-0">
+              <div className="font-bold text-slate-800">${(p.price / 100).toFixed(0)}</div>
+              <div className="text-xs text-slate-400">{p.billing?.replace(/_/g, ' ')}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function SmsBlastResultCard({ block }: { block: SmsBlastResultBlock }) {
@@ -207,6 +318,26 @@ export function UIBlockRenderer({ blocks, onBlockClick, theme = 'light' }: UIBlo
             <SmsBlastResultCard
               key={index}
               block={block as unknown as SmsBlastResultBlock}
+            />
+          );
+        }
+
+        // Render contact message sent card
+        if (block.type === 'contact_message_sent') {
+          return (
+            <ContactMessageSentCard
+              key={index}
+              block={block as unknown as ContactMessageSentBlock}
+            />
+          );
+        }
+
+        // Render programs pricing card
+        if (block.type === 'programs_pricing') {
+          return (
+            <ProgramsPricingCard
+              key={index}
+              block={block as unknown as ProgramsPricingBlock}
             />
           );
         }
