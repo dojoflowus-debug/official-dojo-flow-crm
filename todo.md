@@ -9435,3 +9435,6 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Build reverse sync: MyDojo bookings/check-ins flow into DojoFlow kiosk
 - [x] Add Kiosk Sync status panel in DojoFlow settings/kiosk page
 - [x] Test end-to-end kiosk ↔ MyDojo sync
+
+## Kai Chat Card Layout Fix (Apr 13, 2026)
+- [x] Fix class schedule import card layout - content stacking in column instead of horizontal row (classes detected + import button + rating widget should be side-by-side)

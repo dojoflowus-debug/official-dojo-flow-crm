@@ -119,7 +119,7 @@ export function KaiReviewCard({
   if (submitted) {
     return (
       <div
-        className={`mt-3 p-4 rounded-xl border ${cardBg} flex items-center gap-3`}
+        className={`p-4 rounded-xl border ${cardBg} flex items-center gap-3`}
       >
         <span className="text-2xl">
           {selected >= 4 ? "🌟" : selected >= 3 ? "👍" : "📋"}
@@ -143,7 +143,7 @@ export function KaiReviewCard({
   }
 
   return (
-    <div className={`mt-3 p-4 rounded-xl border w-full ${cardBg}`}>
+    <div className={`p-4 rounded-xl border w-full ${cardBg}`}>
       {/* Header */}
       <div className="flex items-start justify-between gap-2 mb-3">
         <div>

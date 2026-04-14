@@ -4686,9 +4686,11 @@ export default function KaiCommand() {
                           </div>
                         </>
                       )}
-                      {/* Schedule Import Button — shown when Kai extracts a schedule from a vision analysis */}
+                      {/* Schedule Import Button + Review Card — shown side-by-side in a horizontal row */}
+                      {(message.scheduleImportData?.classes?.length ?? 0) > 0 || message.reviewRequest ? (
+                        <div className="mt-3 flex flex-row flex-wrap gap-3 items-start">
                       {message.scheduleImportData && message.scheduleImportData.classes && message.scheduleImportData.classes.length > 0 && (
-                        <div className={`mt-3 p-3 rounded-xl border ${
+                        <div className={`flex-1 min-w-[220px] p-3 rounded-xl border ${
                           isCinematic ? 'border-cyan-500/30 bg-cyan-950/30' :
                           isDark ? 'border-emerald-500/30 bg-emerald-950/30' :
                           'border-emerald-200 bg-emerald-50'
@@ -4769,6 +4771,7 @@ export default function KaiCommand() {
                       )}
                       {/* Post-task Review Card — shown after Kai completes a significant task */}
                       {message.reviewRequest && (
+                        <div className="flex-1 min-w-[220px]">
                         <KaiReviewCard
                           taskSummary={message.reviewRequest.taskSummary}
                           taskType={message.reviewRequest.taskType}
@@ -4788,7 +4791,10 @@ export default function KaiCommand() {
                             ));
                           }}
                         />
+                        </div>
                       )}
+                        </div>
+                      ) : null}
                       {/* View in Classes button — shown after a successful schedule auto-import */}
                       {message.viewClassesLink && (
                         <div className={`mt-3 flex items-center gap-3 p-3 rounded-xl border ${
