@@ -3510,7 +3510,7 @@ export default function KaiCommand() {
       
       {/* Cinematic Mode Vignette Overlay - Now rendered inside main content area, not here */}
       
-      <div ref={containerRef} className={`kai-command-page w-full overflow-hidden ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`} style={{
+      <div ref={containerRef} className={`kai-command-page w-full overflow-hidden ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode && !isMobile && !isTablet ? 'focus-mode fixed inset-0 z-50' : isFocusMode ? 'focus-mode' : ''} transition-all duration-500 ease-in-out`} style={{
         display: 'grid',
         height: 'calc(100vh - var(--topbar-h, 56px) - var(--bottomnav-h, 72px))',
         maxHeight: 'calc(100vh - var(--topbar-h, 56px) - var(--bottomnav-h, 72px))',

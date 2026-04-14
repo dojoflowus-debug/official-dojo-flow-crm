@@ -9441,3 +9441,6 @@ Transform kiosk from admin dashboard to premium location experience
 
 ## Kai Chat Layout Fix Round 2 (Apr 14, 2026)
 - [x] Fix Kai message text rendering in narrow column - text wraps one word per line when schedule import card is present; message text should be full-width above the cards
+
+## iPad Bottom Nav Fix (Apr 14, 2026)
+- [x] Fix bottom navigation bar disappearing on iPad when on the Kai Command page (cinematic/full-screen mode hides the bottom nav)

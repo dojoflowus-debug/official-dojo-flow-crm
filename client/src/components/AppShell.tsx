@@ -104,8 +104,21 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
     return location.pathname === href || location.pathname.startsWith(href + '/')
   }
 
-  // Should show bottom nav (not in focus mode and not explicitly hidden)
-  const showBottomNav = !hideBottomNav && !isFocusMode
+  // Detect mobile/tablet (iPad, phones) — bottom nav must ALWAYS be visible on touch devices
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 1024px)').matches
+  )
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1024px)')
+    const handler = (e: MediaQueryListEvent) => setIsMobileOrTablet(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  // Should show bottom nav:
+  // - Always on mobile/tablet (isMobileOrTablet) regardless of focus mode
+  // - On desktop: only when not in focus mode and not explicitly hidden
+  const showBottomNav = !hideBottomNav && (!isFocusMode || isMobileOrTablet)
 
   // Determine page title based on route
   const getPageTitle = () => {
