@@ -4683,10 +4683,7 @@ export default function KaiCommand() {
                               />
                               </>
                             )}
-                          </div>
-                        </>
-                      )}
-                      {/* Schedule Import Button + Review Card — shown side-by-side in a horizontal row */}
+                            {/* Schedule Import Button + Review Card — shown side-by-side in a horizontal row */}
                       {(message.scheduleImportData?.classes?.length ?? 0) > 0 || message.reviewRequest ? (
                         <div className="mt-3 flex flex-row flex-wrap gap-3 items-start">
                       {message.scheduleImportData && message.scheduleImportData.classes && message.scheduleImportData.classes.length > 0 && (
@@ -5089,6 +5086,9 @@ export default function KaiCommand() {
                             </button>
                           ))}
                         </div>
+                      )}
+                          </div>
+                        </>
                       )}
                     </div>
                   ))}

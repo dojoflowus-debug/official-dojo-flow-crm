@@ -9438,3 +9438,6 @@ Transform kiosk from admin dashboard to premium location experience
 
 ## Kai Chat Card Layout Fix (Apr 13, 2026)
 - [x] Fix class schedule import card layout - content stacking in column instead of horizontal row (classes detected + import button + rating widget should be side-by-side)
+
+## Kai Chat Layout Fix Round 2 (Apr 14, 2026)
+- [x] Fix Kai message text rendering in narrow column - text wraps one word per line when schedule import card is present; message text should be full-width above the cards
