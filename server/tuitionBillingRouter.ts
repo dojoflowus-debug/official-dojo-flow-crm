@@ -230,9 +230,20 @@ export const tuitionBillingRouter = router({
       const payments = await rawQuery(db,
         `SELECT * FROM student_tuition_payments
          WHERE student_id = ? AND organization_id = ?
-         ORDER BY created_at DESC LIMIT 20`,
+         ORDER BY created_at DESC LIMIT 100`,
         [input.studentId, orgId]
       );
+
+      // Compute retry counts per enrollment: count consecutive failed attempts before each success or current state
+      const retryCounts: Record<number, number> = {};
+      const lastDeclinedAt: Record<number, string | null> = {};
+      for (const p of payments as any[]) {
+        const eid = p.enrollment_id;
+        if (p.status === 'failed' || p.status === 'declined') {
+          retryCounts[eid] = (retryCounts[eid] || 0) + 1;
+          if (!lastDeclinedAt[eid]) lastDeclinedAt[eid] = p.created_at;
+        }
+      }
 
       return {
         enrollments: enrollments.map((e: any) => ({
@@ -249,14 +260,18 @@ export const tuitionBillingRouter = router({
           cardBrand: e.card_brand,
           fluidpayCustomerId: e.fluidpay_customer_id,
           fluidpayPaymentMethodId: e.fluidpay_payment_method_id,
+          retryCount: retryCounts[e.id] || 0,
+          lastDeclinedAt: lastDeclinedAt[e.id] || null,
         })),
         payments: payments.map((p: any) => ({
           id: p.id,
+          enrollmentId: p.enrollment_id,
           amountDollars: p.amount_cents / 100,
           status: p.status,
           description: p.description,
           paidAt: p.paid_at,
           createdAt: p.created_at,
+          declinedAt: (p.status === 'failed' || p.status === 'declined') ? p.created_at : null,
           fluidpayTransactionId: p.fluidpay_transaction_id,
           failureReason: p.failure_reason,
         })),

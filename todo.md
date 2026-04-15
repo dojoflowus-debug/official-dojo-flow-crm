@@ -9459,3 +9459,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Build action executor (send SMS via Twilio, send email, with idempotency protection)
 - [x] Build activity logger (log who sent what to whom, channel, timestamp, message SID)
 - [x] Wire command execution into Kai chat (action summary card, contact card, SMS preview, delivery status, follow-up offer)
+
+## Student Payments Tab (Apr 15, 2026)
+- [ ] Audit FluidPay transaction schema and student billing tables
+- [ ] Build tRPC procedure: get payments by student (status, dates, retry count)
+- [ ] Build Payments tab UI in student detail panel (transaction table with success/decline/retry info)
+- [ ] Show payment date, decline date, retry count, amount, and status badge per transaction

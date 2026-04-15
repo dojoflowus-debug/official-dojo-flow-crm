@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Calendar, DollarSign, Award, FileText, Phone, Mail, MapPin, Clock } from 'lucide-react';
+import { X, User, Calendar, DollarSign, Award, FileText, Phone, Mail, MapPin, Clock, CheckCircle2, XCircle, AlertTriangle, RefreshCw, CreditCard } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,12 @@ export function StudentDetailsPanel({ studentId, isOpen, onClose, theme = 'light
     { enabled: isOpen && !!studentId && activeTab === 'attendance' }
   );
 
+  // Fetch billing/payment data
+  const { data: billingData, isLoading: isBillingLoading } = trpc.tuitionBilling.getStudentBillingStatus.useQuery(
+    { studentId },
+    { enabled: isOpen && !!studentId && activeTab === 'payments' }
+  );
+
   // Close on escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -51,6 +57,7 @@ export function StudentDetailsPanel({ studentId, isOpen, onClose, theme = 'light
 
   const textClass = isCinematic || isDark ? 'text-white' : 'text-slate-900';
   const mutedTextClass = isCinematic ? 'text-white/60' : isDark ? 'text-slate-400' : 'text-slate-600';
+  const cardClass = isCinematic ? 'bg-white/5 border-white/10' : isDark ? 'bg-slate-800 border-slate-700' : 'bg-gray-50 border-gray-200';
 
   return (
     <>
@@ -91,27 +98,27 @@ export function StudentDetailsPanel({ studentId, isOpen, onClose, theme = 'light
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className={`w-full justify-start rounded-none border-b ${
+          <TabsList className={`w-full justify-start rounded-none border-b overflow-x-auto ${
             isCinematic ? 'bg-black/50 border-white/10' : isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'
           }`}>
-            <TabsTrigger value="overview" className="gap-2">
-              <User className="w-4 h-4" />
+            <TabsTrigger value="overview" className="gap-1.5 text-xs">
+              <User className="w-3.5 h-3.5" />
               Overview
             </TabsTrigger>
-            <TabsTrigger value="attendance" className="gap-2">
-              <Calendar className="w-4 h-4" />
+            <TabsTrigger value="attendance" className="gap-1.5 text-xs">
+              <Calendar className="w-3.5 h-3.5" />
               Attendance
             </TabsTrigger>
-            <TabsTrigger value="billing" className="gap-2">
-              <DollarSign className="w-4 h-4" />
-              Billing
+            <TabsTrigger value="payments" className="gap-1.5 text-xs">
+              <CreditCard className="w-3.5 h-3.5" />
+              Payments
             </TabsTrigger>
-            <TabsTrigger value="rank" className="gap-2">
-              <Award className="w-4 h-4" />
+            <TabsTrigger value="rank" className="gap-1.5 text-xs">
+              <Award className="w-3.5 h-3.5" />
               Rank
             </TabsTrigger>
-            <TabsTrigger value="notes" className="gap-2">
-              <FileText className="w-4 h-4" />
+            <TabsTrigger value="notes" className="gap-1.5 text-xs">
+              <FileText className="w-3.5 h-3.5" />
               Notes
             </TabsTrigger>
           </TabsList>
@@ -222,12 +229,137 @@ export function StudentDetailsPanel({ studentId, isOpen, onClose, theme = 'light
               )}
             </TabsContent>
 
-            {/* Billing Tab */}
-            <TabsContent value="billing" className="p-4 space-y-4">
-              <h4 className={`font-semibold ${textClass}`}>Billing Information</h4>
-              <div className={`text-center py-8 ${mutedTextClass}`}>
-                Billing details coming soon
-              </div>
+            {/* Payments Tab */}
+            <TabsContent value="payments" className="p-0">
+              {isBillingLoading ? (
+                <div className={`flex items-center justify-center py-12 ${mutedTextClass}`}>
+                  <RefreshCw className="w-5 h-5 animate-spin mr-2" />
+                  Loading payment history...
+                </div>
+              ) : !billingData || (billingData.payments.length === 0 && billingData.enrollments.length === 0) ? (
+                <div className={`flex flex-col items-center justify-center py-12 ${mutedTextClass}`}>
+                  <CreditCard className="w-10 h-10 mb-3 opacity-30" />
+                  <p className="text-sm">No payment records found</p>
+                </div>
+              ) : (
+                <div className="p-4 space-y-5">
+                  {/* Enrollment Plans Summary */}
+                  {billingData.enrollments.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className={`text-xs font-semibold uppercase tracking-wider ${mutedTextClass}`}>Active Plans</h4>
+                      {billingData.enrollments.map((enr: any) => (
+                        <div key={enr.id} className={`rounded-lg border p-3 ${cardClass}`}>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className={`font-medium text-sm ${textClass}`}>{enr.planName}</p>
+                              <p className={`text-xs ${mutedTextClass}`}>${enr.amountDollars.toFixed(2)} / {enr.frequency}</p>
+                              {enr.hasCard && (
+                                <p className={`text-xs mt-1 flex items-center gap-1 ${mutedTextClass}`}>
+                                  <CreditCard className="w-3 h-3" />
+                                  {enr.cardBrand} ••••{enr.cardLast4}
+                                </p>
+                              )}
+                              {enr.nextBillingDate && (
+                                <p className={`text-xs mt-1 ${mutedTextClass}`}>
+                                  Next: {new Date(enr.nextBillingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </p>
+                              )}
+                              {enr.lastDeclinedAt && (
+                                <p className="text-xs mt-1 text-red-400">
+                                  Last declined: {new Date(enr.lastDeclinedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                              <Badge variant={enr.status === 'active' ? 'default' : 'destructive'} className="text-xs">
+                                {enr.status}
+                              </Badge>
+                              {enr.retryCount > 0 && (
+                                <span className="text-xs text-orange-400 flex items-center gap-1">
+                                  <RefreshCw className="w-3 h-3" />
+                                  {enr.retryCount} decline{enr.retryCount !== 1 ? 's' : ''}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Transaction History */}
+                  {billingData.payments.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className={`text-xs font-semibold uppercase tracking-wider ${mutedTextClass}`}>
+                        Transaction History ({billingData.payments.length})
+                      </h4>
+                      <div className="space-y-2">
+                        {billingData.payments.map((pmt: any) => {
+                          const isSuccess = pmt.status === 'success' || pmt.status === 'paid';
+                          const isFailed = pmt.status === 'failed' || pmt.status === 'declined';
+                          const isPending = !isSuccess && !isFailed;
+                          return (
+                            <div key={pmt.id} className={`rounded-lg border p-3 ${isCinematic ? 'bg-white/5 border-white/10' : isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-start gap-2 flex-1 min-w-0">
+                                  <div className={`mt-0.5 flex-shrink-0 ${isSuccess ? 'text-green-500' : isFailed ? 'text-red-500' : 'text-yellow-500'}`}>
+                                    {isSuccess ? (
+                                      <CheckCircle2 className="w-4 h-4" />
+                                    ) : isFailed ? (
+                                      <XCircle className="w-4 h-4" />
+                                    ) : (
+                                      <AlertTriangle className="w-4 h-4" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className={`text-sm font-medium truncate ${textClass}`}>
+                                      {pmt.description || 'Tuition Payment'}
+                                    </p>
+                                    {isSuccess && pmt.paidAt && (
+                                      <p className={`text-xs ${mutedTextClass}`}>
+                                        Paid: {new Date(pmt.paidAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                      </p>
+                                    )}
+                                    {isFailed && pmt.declinedAt && (
+                                      <p className="text-xs text-red-400">
+                                        Declined: {new Date(pmt.declinedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                      </p>
+                                    )}
+                                    {isPending && pmt.createdAt && (
+                                      <p className={`text-xs ${mutedTextClass}`}>
+                                        Created: {new Date(pmt.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                      </p>
+                                    )}
+                                    {isFailed && pmt.failureReason && (
+                                      <p className="text-xs text-red-400 truncate">{pmt.failureReason}</p>
+                                    )}
+                                    {pmt.fluidpayTransactionId && (
+                                      <p className={`text-xs font-mono truncate ${mutedTextClass} opacity-60`}>
+                                        {pmt.fluidpayTransactionId}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="text-right flex-shrink-0">
+                                  <p className={`text-sm font-semibold ${isSuccess ? 'text-green-500' : isFailed ? 'text-red-500' : textClass}`}>
+                                    ${pmt.amountDollars.toFixed(2)}
+                                  </p>
+                                  <Badge
+                                    variant={isSuccess ? 'default' : isFailed ? 'destructive' : 'secondary'}
+                                    className="text-xs mt-1"
+                                  >
+                                    {pmt.status}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </TabsContent>
 
             {/* Rank Tab */}
