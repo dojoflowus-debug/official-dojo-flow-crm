@@ -2759,6 +2759,28 @@ export const appRouter = router({
         }
       }),
     
+    // Count students with active billing issues (past_due enrollments)
+    getBillingIssuesCount: protectedProcedure
+      .input(z.void())
+      .query(async ({ ctx }) => {
+        const { getDb } = await import("./db");
+        const { sql } = await import("drizzle-orm");
+        const db = await getDb();
+        if (!db) return { count: 0 };
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) return { count: 0 };
+        try {
+          const result = await db.execute(
+            sql`SELECT COUNT(DISTINCT student_id) as cnt FROM student_billing_enrollments WHERE organization_id = ${orgId} AND status = 'past_due'`
+          ) as any;
+          const rows = result?.rows || result || [];
+          const cnt = Number(rows[0]?.cnt ?? rows[0]?.[0] ?? 0);
+          return { count: cnt };
+        } catch {
+          return { count: 0 };
+        }
+      }),
+
     // Get students by segment
     getBySegment: protectedProcedure
       .input(z.object({ segmentId: z.number() }))

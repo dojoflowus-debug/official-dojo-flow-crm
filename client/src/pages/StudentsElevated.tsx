@@ -494,6 +494,12 @@ function StudentsElevatedContent() {
   // Fetch analytics
   const { data: analyticsData } = trpc.students.getAnalytics.useQuery(undefined)
 
+  // Fetch live billing issues count
+  const { data: billingCountData } = trpc.students.getBillingIssuesCount.useQuery(undefined, {
+    refetchInterval: 60000, // refresh every 60s
+  })
+  const billingIssuesCount = billingCountData?.count ?? 0
+
   // Mutations
   const deleteStudentMutation = trpc.students.delete.useMutation({
     onSuccess: () => { setShowDeleteConfirm(false); setStudentToDelete(null) },
@@ -562,6 +568,15 @@ function StudentsElevatedContent() {
             >
               {activeTab === tab.key ? tab.activeIcon : tab.icon}
               {tab.label}
+              {tab.key === 'billing' && billingIssuesCount > 0 && (
+                <span className={`ml-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-black leading-none ${
+                  activeTab === 'billing'
+                    ? 'bg-white/30 text-white'
+                    : 'bg-orange-500 text-white'
+                }`}>
+                  {billingIssuesCount}
+                </span>
+              )}
             </button>
           ))}
           {/* View toggle */}
