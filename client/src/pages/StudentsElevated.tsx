@@ -488,6 +488,7 @@ function StudentsElevatedContent() {
     limit: 21,
     search: searchQuery || undefined,
     status: statusFilter,
+    billingIssues: activeTab === 'billing' ? true : undefined,
   })
 
   // Fetch analytics
@@ -515,11 +516,8 @@ function StudentsElevatedContent() {
     return active.reduce((best, s) => seededRandom(s.id, 1000) > seededRandom(best.id, 1000) ? s : best, active[0])
   }, [students])
 
-  // Filter students for billing/promote tabs client-side
+  // Filter students for promote tab client-side (billing is now server-side)
   const displayedStudents = useMemo(() => {
-    if (activeTab === 'billing') {
-      return students.filter(s => s.membershipStatus === 'Overdue' || s.membershipStatus === 'Suspended')
-    }
     if (activeTab === 'ready-promote') {
       return students.filter(s => seededRandom(s.id + 1, 85) + 15 >= 80)
     }

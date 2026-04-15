@@ -2540,11 +2540,12 @@ export const appRouter = router({
         beltRank: z.string().optional(),
         sortBy: z.enum(['name', 'enrollment', 'lastContact', 'status']).optional().default('name'),
         sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
+        billingIssues: z.boolean().optional(),
       }))
       .query(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
         const { students } = await import("../drizzle/schema");
-        const { eq, and, or, like, sql, desc, asc } = await import("drizzle-orm");
+        const { eq, and, or, like, sql, desc, asc, inArray } = await import("drizzle-orm");
         
         const db = await getDb();
         if (!db) throw new Error('Database not available');
@@ -2584,6 +2585,19 @@ export const appRouter = router({
         
         if (input.beltRank) {
           conditions.push(eq(students.beltRank, input.beltRank));
+        }
+
+        // Billing issues filter: find students with past_due enrollments
+        if (input.billingIssues) {
+          const billingStudentIds = await db.execute(
+            sql`SELECT DISTINCT student_id FROM student_billing_enrollments WHERE organization_id = ${orgId} AND status = 'past_due'`
+          ) as any;
+          const ids: number[] = (billingStudentIds?.rows || billingStudentIds || []).map((r: any) => Number(r.student_id || r[0])).filter(Boolean);
+          if (ids.length === 0) {
+            // No students with billing issues — return empty
+            return { students: [], total: 0 };
+          }
+          conditions.push(inArray(students.id, ids));
         }
         
         // Get total count
