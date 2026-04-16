@@ -342,6 +342,44 @@ const crmTools = [
       },
     },
   },
+  // ── SMS Tools ─────────────────────────────────────────────────────────────
+  {
+    type: 'function' as const,
+    function: {
+      name: 'send_sms',
+      description: 'Send an SMS text message to a specific student or lead. Use this when the user asks to text, message, or SMS a specific person. Always look up the student/lead first with find_student if you only have a name and no ID.',
+      parameters: {
+        type: 'object',
+        properties: {
+          studentId: { type: 'number', description: 'The student ID to send the SMS to (preferred over raw phone)' },
+          phone: { type: 'string', description: 'Phone number to send to (fallback if no studentId)' },
+          recipientName: { type: 'string', description: 'Name of the recipient (for confirmation display)' },
+          message: { type: 'string', description: 'The text message content to send' },
+        },
+        required: ['message', 'recipientName'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'send_bulk_sms',
+      description: 'Send an SMS text message to a group of students matching a filter. Use for bulk messaging like "text all students with billing issues", "text all inactive students", or "send a message to everyone about the class cancellation".',
+      parameters: {
+        type: 'object',
+        properties: {
+          filter: {
+            type: 'string',
+            enum: ['all_active', 'billing_issues', 'inactive', 'at_risk', 'all'],
+            description: 'Which group of students to message: all_active (active students), billing_issues (past_due billing), inactive, at_risk, or all (everyone)',
+          },
+          message: { type: 'string', description: 'The text message content to send to all matching students' },
+          preview: { type: 'boolean', description: 'If true, return a preview of who would receive the message without actually sending. Use this when the user wants to see who will be contacted before confirming. Default: false.' },
+        },
+        required: ['filter', 'message'],
+      },
+    },
+  },
 ];
 
 export interface KaiConversationMessage {
@@ -388,6 +426,7 @@ export async function chatWithKai(
 - **Mark student attendance** (say "mark Sarah as present")
 - **Invite new staff members** — use invite_staff tool immediately when asked to add/invite/onboard staff
 - **List current staff** — use list_staff tool when asked to show/list staff or instructors
+- **Send SMS text messages** — use send_sms to text a specific student, or send_bulk_sms to message a group (billing issues, inactive, at-risk, all active, or everyone)
 
 **Data Query Tools Available:**
 You have access to these functions for querying data:
@@ -407,6 +446,8 @@ You have access to these functions for querying data:
 - mark_attendance: Record a student's attendance for a class session
 - invite_staff: Invite a new staff member (creates account + sends welcome email). Required: firstName, email. Optional: lastName, role.
 - list_staff: List all current staff members for this organization
+- send_sms: Send an SMS text message to a specific student by name or ID
+- send_bulk_sms: Send a text message to a group of students (filter: all_active, billing_issues, inactive, at_risk, all). Use preview:true first to show who will receive it before sending.
 
 **PERMISSION RULES:**
 - When a user asks to remove/delete/archive a student, use remove_student. The system will enforce admin-only access automatically.
@@ -415,6 +456,8 @@ You have access to these functions for querying data:
 - When a user asks to mark attendance, use mark_attendance.
 - When a user asks to invite/add/onboard/send invitation to a staff member, IMMEDIATELY use invite_staff — do NOT say you cannot do this.
 - When a user asks to list/show/see staff members, use list_staff.
+- When a user asks to text, SMS, or message a specific student, use send_sms. Look up the student first with find_student if you only have a name.
+- When a user asks to text/SMS a group ("text all billing issues", "message inactive students", "blast everyone"), use send_bulk_sms. Always call with preview:true first to confirm the recipient count, then ask the user to confirm before sending for real.
 - If a permission error is returned, relay the exact error message to the user.
 
 **Important Stats Definitions:**

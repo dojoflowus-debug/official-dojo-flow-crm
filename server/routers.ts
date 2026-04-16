@@ -632,11 +632,149 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       return await executeListStaff(args, ctx);
     }
 
-    default:
+    case 'send_sms': {
+      // Send SMS to a specific student by ID or phone number
+      const { sendSMS, formatPhoneNumber } = await import('./services/twilio.js');
+      const orgId = ctx?.currentOrganizationId;
+      if (!orgId) return { error: 'No organization context' };
+
+      let phone = args.phone as string | undefined;
+      let recipientName = args.recipientName as string;
+
+      // If studentId provided, look up their phone
+      if (args.studentId) {
+        const { db } = await import('./db');
+        const { students } = await import('../drizzle/schema');
+        const { eq, and } = await import('drizzle-orm');
+        const [student] = await db
+          .select({ phone: students.phone, firstName: students.firstName, lastName: students.lastName })
+          .from(students)
+          .where(and(eq(students.id, args.studentId), eq(students.organizationId, orgId)))
+          .limit(1);
+        if (!student) return { error: `Student ID ${args.studentId} not found` };
+        phone = student.phone || undefined;
+        recipientName = recipientName || `${student.firstName} ${student.lastName}`;
+      }
+
+      if (!phone) return { error: `No phone number on file for ${recipientName}. Cannot send SMS.` };
+
+      try {
+        const formatted = formatPhoneNumber(phone);
+        await sendSMS(formatted, args.message);
+        return {
+          success: true,
+          recipient: recipientName,
+          phone: formatted,
+          message: args.message,
+          sentAt: new Date().toISOString(),
+          summary: `SMS sent to ${recipientName} (${formatted})`,
+        };
+      } catch (err: any) {
+        return { error: `Failed to send SMS to ${recipientName}: ${err.message}` };
+      }
+    }
+
+    case 'send_bulk_sms': {
+      const { sendSMS, formatPhoneNumber } = await import('./services/twilio.js');
+      const { db } = await import('./db');
+      const { students, studentBillingEnrollments } = await import('../drizzle/schema');
+      const { eq, and, inArray } = await import('drizzle-orm');
+      const orgId = ctx?.currentOrganizationId;
+      if (!orgId) return { error: 'No organization context' };
+
+      const filter = args.filter as string;
+      const message = args.message as string;
+      const preview = args.preview as boolean | undefined;
+
+      // Fetch students based on filter
+      let targetStudents: { id: number; firstName: string; lastName: string; phone: string | null }[] = [];
+
+      if (filter === 'billing_issues') {
+        // Students with past_due billing enrollments
+        const billingRows = await db
+          .select({ studentId: studentBillingEnrollments.studentId })
+          .from(studentBillingEnrollments)
+          .where(and(
+            eq(studentBillingEnrollments.organizationId, orgId),
+            eq(studentBillingEnrollments.status, 'past_due')
+          ));
+        const ids = [...new Set(billingRows.map((r: any) => r.studentId).filter(Boolean))];
+        if (ids.length > 0) {
+          targetStudents = await db
+            .select({ id: students.id, firstName: students.firstName, lastName: students.lastName, phone: students.phone })
+            .from(students)
+            .where(and(eq(students.organizationId, orgId), inArray(students.id, ids)));
+        }
+      } else if (filter === 'inactive') {
+        targetStudents = await db
+          .select({ id: students.id, firstName: students.firstName, lastName: students.lastName, phone: students.phone })
+          .from(students)
+          .where(and(eq(students.organizationId, orgId), eq(students.status, 'Inactive')));
+      } else if (filter === 'at_risk') {
+        targetStudents = await db
+          .select({ id: students.id, firstName: students.firstName, lastName: students.lastName, phone: students.phone })
+          .from(students)
+          .where(and(eq(students.organizationId, orgId), eq(students.status, 'At Risk')));
+      } else if (filter === 'all_active') {
+        targetStudents = await db
+          .select({ id: students.id, firstName: students.firstName, lastName: students.lastName, phone: students.phone })
+          .from(students)
+          .where(and(eq(students.organizationId, orgId), eq(students.status, 'Active')));
+      } else {
+        // 'all' — everyone
+        targetStudents = await db
+          .select({ id: students.id, firstName: students.firstName, lastName: students.lastName, phone: students.phone })
+          .from(students)
+          .where(eq(students.organizationId, orgId));
+      }
+
+      const withPhone = targetStudents.filter((s: any) => s.phone);
+      const noPhone = targetStudents.filter((s: any) => !s.phone);
+
+      if (preview) {
+        return {
+          preview: true,
+          filter,
+          totalMatched: targetStudents.length,
+          willReceive: withPhone.length,
+          noPhone: noPhone.length,
+          recipients: withPhone.slice(0, 10).map((s: any) => `${s.firstName} ${s.lastName}`),
+          message,
+          summary: `Preview: ${withPhone.length} of ${targetStudents.length} students would receive this SMS (${noPhone.length} have no phone on file).`,
+        };
+      }
+
+      if (withPhone.length === 0) {
+        return { error: `No students in the "${filter}" group have a phone number on file.` };
+      }
+
+      // Send SMS to all
+      let sent = 0;
+      let failed = 0;
+      for (const student of withPhone) {
+        try {
+          const formatted = formatPhoneNumber(student.phone!);
+          await sendSMS(formatted, message);
+          sent++;
+        } catch {
+          failed++;
+        }
+      }
+
+      return {
+        success: true,
+        filter,
+        sent,
+        failed,
+        skipped: noPhone.length,
+        summary: `Bulk SMS sent: ${sent} delivered, ${failed} failed, ${noPhone.length} skipped (no phone).`,
+      };
+    }
+
+     default:
       return { error: 'Unknown function' };
   }
 }
-
 function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[] } {
   if (results.length === 0) return { text: 'No results found.', ui_blocks: [] };
   
