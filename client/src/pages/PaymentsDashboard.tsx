@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '@/lib/trpc'
 import { useTheme } from '@/contexts/ThemeContext'
 import {
   Phone, MessageSquare, CreditCard, X, ChevronRight,
-  RefreshCw, TrendingUp, MapPin, MoreHorizontal,
+  RefreshCw, TrendingUp, MoreHorizontal, ArrowUpRight,
 } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
@@ -16,7 +16,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 })
-
 const redIcon = new L.Icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
@@ -48,104 +47,67 @@ function initials(name: string) {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 }
 function avatarColor(name: string) {
-  const colors = [
-    '#e8f4fd', '#fef3c7', '#d1fae5', '#fce7f3', '#ede9fe', '#fee2e2', '#e0f2fe',
-  ]
-  const textColors = [
-    '#1d6fa4', '#92400e', '#065f46', '#9d174d', '#5b21b6', '#991b1b', '#0369a1',
-  ]
+  const colors = ['#e8f4fd','#fef3c7','#d1fae5','#fce7f3','#ede9fe','#fee2e2','#e0f2fe']
+  const textColors = ['#1d6fa4','#92400e','#065f46','#9d174d','#5b21b6','#991b1b','#0369a1']
   const idx = name.charCodeAt(0) % colors.length
   return { bg: colors[idx], text: textColors[idx] }
 }
 
-// Mini sparkline chart using SVG
+// Sparkline SVG
 function SparkLine({ data, color = '#22c55e' }: { data: number[], color?: string }) {
-  if (!data.length) return null
-  const max = Math.max(...data)
-  const min = Math.min(...data)
+  if (data.length < 2) return null
+  const max = Math.max(...data), min = Math.min(...data)
   const range = max - min || 1
-  const w = 200, h = 48
+  const w = 200, h = 44
   const pts = data.map((v, i) => {
     const x = (i / (data.length - 1)) * w
     const y = h - ((v - min) / range) * (h - 8) - 4
     return `${x},${y}`
   }).join(' ')
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ height: 48 }}>
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ height: 44 }}>
       <defs>
-        <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+        <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
-      <polyline
-        points={pts}
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {/* Area fill */}
-      <polygon
-        points={`0,${h} ${pts} ${w},${h}`}
-        fill="url(#sparkGrad)"
-      />
+      <polygon points={`0,${h} ${pts} ${w},${h}`} fill="url(#sg)" />
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
 
 interface OverdueAccount {
-  enrollmentId: number
-  studentId: number
-  studentName: string
-  phone: string | null
-  amountDollars: number
-  planName: string
-  frequency: string
-  daysLate: number
-  retryCount: number
-  lastDeclinedAt: string | null
-  latitude: string | null
-  longitude: string | null
-  photoUrl: string | null
+  enrollmentId: number; studentId: number; studentName: string; phone: string | null
+  amountDollars: number; planName: string; frequency: string; daysLate: number
+  retryCount: number; lastDeclinedAt: string | null; latitude: string | null
+  longitude: string | null; photoUrl: string | null
 }
-
 interface Transaction {
-  id: number
-  studentName: string
-  amountDollars: number
-  status: string
-  paidAt: string | null
-  createdAt: string
-  failureReason: string | null
-  description: string | null
-  transactionId: string | null
-  photoUrl: string | null
-  latitude: string | null
-  longitude: string | null
-  phone: string | null
+  id: number; studentName: string; amountDollars: number; status: string
+  paidAt: string | null; createdAt: string; failureReason: string | null
+  description: string | null; transactionId: string | null; photoUrl: string | null
+  latitude: string | null; longitude: string | null; phone: string | null
 }
 
-// Bottom sheet for student detail
+// Bottom sheet
 function StudentSheet({ student, onClose }: { student: OverdueAccount | null, onClose: () => void }) {
   const { data: billingStatus } = trpc.tuitionBilling.getStudentBillingStatus.useQuery(
-    { studentId: student?.studentId ?? 0 },
-    { enabled: !!student }
+    { studentId: student?.studentId ?? 0 }, { enabled: !!student }
   )
   const chargeStudent = trpc.tuitionBilling.chargeStudentTuition.useMutation()
   if (!student) return null
   const av = avatarColor(student.studentName)
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center"
-      style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)' }}
+      style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(10px)', animation: 'fadeIn 0.2s ease' }}
       onClick={onClose}
     >
       <div
         className="w-full max-w-lg bg-white rounded-t-3xl shadow-2xl"
-        style={{ maxHeight: '82vh', overflowY: 'auto' }}
+        style={{ maxHeight: '82vh', overflowY: 'auto', animation: 'slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1)' }}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex justify-center pt-3 pb-1">
@@ -154,21 +116,15 @@ function StudentSheet({ student, onClose }: { student: OverdueAccount | null, on
         <div className="px-6 pb-8 pt-3">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg overflow-hidden"
-                style={{ background: av.bg, color: av.text }}
-              >
-                {student.photoUrl
-                  ? <img src={student.photoUrl} alt="" className="w-full h-full object-cover" />
-                  : initials(student.studentName)
-                }
+              <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg overflow-hidden" style={{ background: av.bg, color: av.text }}>
+                {student.photoUrl ? <img src={student.photoUrl} alt="" className="w-full h-full object-cover" /> : initials(student.studentName)}
               </div>
               <div>
                 <p className="text-lg font-bold text-gray-900">{student.studentName}</p>
                 <p className="text-sm font-medium text-red-500">{student.daysLate}d overdue · {fmtFull(student.amountDollars)}</p>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100">
+            <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
               <X className="w-5 h-5 text-gray-400" />
             </button>
           </div>
@@ -176,19 +132,19 @@ function StudentSheet({ student, onClose }: { student: OverdueAccount | null, on
             <button
               onClick={() => chargeStudent.mutate({ enrollmentId: student.enrollmentId })}
               disabled={chargeStudent.isPending}
-              className="flex flex-col items-center gap-1.5 py-3 rounded-2xl text-white text-xs font-semibold"
+              className="flex flex-col items-center gap-1.5 py-3 rounded-2xl text-white text-xs font-semibold transition-transform active:scale-95"
               style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)' }}
             >
               <CreditCard className="w-5 h-5" />
               {chargeStudent.isPending ? 'Charging…' : 'Collect'}
             </button>
             {student.phone ? (
-              <a href={`sms:${student.phone}`} className="flex flex-col items-center gap-1.5 py-3 rounded-2xl text-blue-600 text-xs font-semibold bg-blue-50">
+              <a href={`sms:${student.phone}`} className="flex flex-col items-center gap-1.5 py-3 rounded-2xl text-blue-600 text-xs font-semibold bg-blue-50 transition-transform active:scale-95">
                 <MessageSquare className="w-5 h-5" />Text
               </a>
             ) : <div />}
             {student.phone ? (
-              <a href={`tel:${student.phone}`} className="flex flex-col items-center gap-1.5 py-3 rounded-2xl text-green-600 text-xs font-semibold bg-green-50">
+              <a href={`tel:${student.phone}`} className="flex flex-col items-center gap-1.5 py-3 rounded-2xl text-green-600 text-xs font-semibold bg-green-50 transition-transform active:scale-95">
                 <Phone className="w-5 h-5" />Call
               </a>
             ) : <div />}
@@ -199,9 +155,7 @@ function StudentSheet({ student, onClose }: { student: OverdueAccount | null, on
               {(billingStatus.payments as any[]).slice(0, 6).map((p: any) => (
                 <div key={p.id} className="flex items-center justify-between py-3 border-b border-gray-50">
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                      p.status === 'success' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'
-                    }`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${p.status === 'success' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}`}>
                       {p.status === 'success' ? '✓' : '✗'}
                     </div>
                     <div>
@@ -209,9 +163,7 @@ function StudentSheet({ student, onClose }: { student: OverdueAccount | null, on
                       <p className="text-xs text-gray-400">{p.status === 'success' ? timeAgo(p.paidAt) : p.failureReason || timeAgo(p.createdAt)}</p>
                     </div>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    p.status === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
-                  }`}>{p.status}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${p.status === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>{p.status}</span>
                 </div>
               ))}
             </div>
@@ -227,25 +179,25 @@ export default function PaymentsDashboard() {
   const navigate = useNavigate()
   const isDark = theme === 'dark' || theme === 'cinematic'
   const [mapMode, setMapMode] = useState<'pins' | 'heatmap'>('pins')
+  const [mapView, setMapView] = useState<'student' | 'payment'>('payment')
   const [selectedStudent, setSelectedStudent] = useState<OverdueAccount | null>(null)
   const [kaiDismissed, setKaiDismissed] = useState(false)
-  const [sparkData] = useState([42, 55, 48, 62, 58, 71, 76])
+  const sparkData = [42, 55, 48, 62, 58, 71, 76]
 
   const { data, isLoading, refetch } = trpc.tuitionBilling.getPaymentsDashboard.useQuery(undefined, {
     refetchInterval: 60_000,
   })
-
-  const chargeStudent = trpc.tuitionBilling.chargeStudentTuition.useMutation({
-    onSuccess: () => refetch(),
-  })
+  const chargeStudent = trpc.tuitionBilling.chargeStudentTuition.useMutation({ onSuccess: () => refetch() })
 
   const overdueAccounts: OverdueAccount[] = data?.overdueAccounts ?? []
   const transactions: Transaction[] = data?.transactions ?? []
   const paidMapStudents: any[] = data?.paidMapStudents ?? []
 
-  const overdueTotal = overdueAccounts.reduce((s, a) => s + a.amountDollars, 0)
-  const pendingTotal = transactions.filter(t => t.status === 'pending').reduce((s, t) => s + t.amountDollars, 0)
-  const collectedTotal = transactions.filter(t => t.status === 'success').reduce((s, t) => s + t.amountDollars, 0)
+  const overdueTotal = overdueAccounts.reduce((s, a) => s + a.amountDollars, 0) || data?.overdueTotal || 2130
+  const overdueCount = overdueAccounts.length || data?.overdueCount || 5
+  const pendingTotal = transactions.filter(t => t.status === 'pending').reduce((s, t) => s + t.amountDollars, 0) || 1020
+  const collectedTotal = transactions.filter(t => t.status === 'success').reduce((s, t) => s + t.amountDollars, 0) || data?.todayCollected || 8420
+  const efficiency = data?.collectionEfficiency ?? 76
 
   const allMapStudents = [
     ...overdueAccounts.filter(s => s.latitude && s.longitude).map(s => ({
@@ -255,13 +207,29 @@ export default function PaymentsDashboard() {
       id: s.id, name: s.name, lat: parseFloat(s.latitude), lng: parseFloat(s.longitude), isPaid: true,
     })),
   ]
+  const demoMapPins = [
+    { lat: 33.50, lng: -111.93, paid: true, name: 'Lana G.' },
+    { lat: 33.49, lng: -111.91, paid: false, name: 'Johnny Y.' },
+    { lat: 33.51, lng: -111.89, paid: true, name: 'Owen S.' },
+    { lat: 33.48, lng: -111.95, paid: false, name: 'Craig' },
+    { lat: 33.52, lng: -111.92, paid: true, name: 'Seven J.' },
+  ]
   const mapCenter: [number, number] = allMapStudents.length > 0
     ? [allMapStudents[0].lat, allMapStudents[0].lng]
-    : [33.4942, -111.9261] // Scottsdale, AZ
+    : [33.4942, -111.9261]
 
-  // Today's time string
   const now = new Date()
   const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+
+  // Demo overdue cards
+  const demoOverdue = [
+    { name: 'Lana Gabrhel', amount: 145, days: 7, retry: 20, phone: true },
+    { name: 'Johnny Yanez', amount: 120, days: 3, retry: 0, phone: false },
+    { name: 'Owen Simmons', amount: 85, days: 5, retry: 0, phone: true },
+    { name: 'Orcan Simmons', amount: 85, days: 5, retry: 25, phone: true },
+    { name: 'Craig', amount: 60, days: 2, retry: 0, phone: false },
+    { name: 'Seven Jackson', amount: 45, days: 8, retry: 0, phone: true },
+  ]
 
   if (isLoading) {
     return (
@@ -275,483 +243,356 @@ export default function PaymentsDashboard() {
   }
 
   return (
-    <div className="min-h-screen pb-32" style={{ background: '#f7f8fa' }}>
+    <>
+      {/* Inline styles for animations */}
+      <style>{`
+        @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+        @keyframes slideUp { from { transform:translateY(100%) } to { transform:translateY(0) } }
+        @keyframes pulse-glow { 0%,100% { box-shadow:0 0 0 0 rgba(34,197,94,0.4) } 50% { box-shadow:0 0 0 8px rgba(34,197,94,0) } }
+        @keyframes kai-pulse { 0%,100% { transform:scale(1) } 50% { transform:scale(1.06) } }
+        .card-hover { transition: transform 0.18s ease, box-shadow 0.18s ease; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1) !important; }
+        .btn-press { transition: transform 0.1s ease; }
+        .btn-press:active { transform: scale(0.96); }
+        .collect-btn { transition: transform 0.18s ease, box-shadow 0.18s ease; }
+        .collect-btn:hover { transform: scale(1.03); box-shadow: 0 6px 20px rgba(34,197,94,0.45) !important; }
+        .collect-btn:active { transform: scale(0.97); }
+        .kai-avatar { animation: kai-pulse 3s ease-in-out infinite; }
+        .kai-collect-btn { animation: pulse-glow 2.5s ease-in-out infinite; }
+      `}</style>
 
-      {/* ── Page Header ── */}
-      <div className="px-5 pt-6 pb-2 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Payments</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Revenue command center</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate('/payments')}
-            className="px-3 py-1.5 rounded-xl text-xs font-medium text-gray-500 bg-white border border-gray-200 shadow-sm"
-          >
-            Transactions
-          </button>
-          <button
-            onClick={() => refetch()}
-            className="p-2 rounded-xl bg-white border border-gray-200 shadow-sm"
-          >
-            <RefreshCw className="w-4 h-4 text-gray-400" />
-          </button>
-        </div>
-      </div>
+      <div className="min-h-screen pb-32" style={{ background: '#f5f5f7' }}>
 
-      <div className="px-5 space-y-4 mt-3">
-
-        {/* ── Hero Card ── */}
-        <div
-          className="rounded-3xl px-6 py-5 flex items-center justify-between"
-          style={{
-            background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-            boxShadow: '0 8px 32px rgba(15,52,96,0.25)',
-          }}
-        >
+        {/* ── Header ── */}
+        <div className="px-5 pt-6 pb-2 flex items-center justify-between">
           <div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-white">{fmt(overdueTotal || data?.overdueTotal || 2130)}</span>
-              <span className="text-xl font-medium text-gray-300">Outstanding</span>
-            </div>
-            <p className="text-sm text-gray-400 mt-1">
-              {overdueAccounts.length || data?.overdueCount || 5} Accounts Overdue
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Payments</h1>
+            <p className="text-sm text-gray-400 mt-0.5">Revenue command center</p>
           </div>
-          <button
-            onClick={() => overdueAccounts.forEach(a => chargeStudent.mutate({ enrollmentId: a.enrollmentId }))}
-            className="flex items-center gap-2 px-5 py-3 rounded-2xl font-semibold text-white text-sm"
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/payments')}
+              className="px-3 py-1.5 rounded-xl text-xs font-medium text-gray-500 bg-white border border-gray-200 shadow-sm btn-press"
+            >
+              Transactions
+            </button>
+            <button onClick={() => refetch()} className="p-2 rounded-xl bg-white border border-gray-200 shadow-sm btn-press">
+              <RefreshCw className="w-4 h-4 text-gray-400" />
+            </button>
+          </div>
+        </div>
+
+        <div className="px-5 space-y-4 mt-3">
+
+          {/* ── 1. Hero Card ── */}
+          <div
+            className="rounded-3xl px-6 py-5 flex items-center justify-between"
             style={{
-              background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-              boxShadow: '0 4px 16px rgba(34,197,94,0.4)',
+              background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 55%, #0f3460 100%)',
+              boxShadow: '0 8px 32px rgba(15,52,96,0.28)',
             }}
           >
-            Collect All
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* ── KPI Row ── */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            {
-              value: fmt(overdueTotal || data?.overdueTotal || 2130),
-              label: 'Today',
-              icon: '🔴',
-              bg: '#fff5f5',
-              border: '#fecaca',
-              valueColor: '#dc2626',
-            },
-            {
-              value: fmt(pendingTotal || 1020),
-              label: 'Pending',
-              icon: '🟡',
-              bg: '#fffbeb',
-              border: '#fde68a',
-              valueColor: '#d97706',
-            },
-            {
-              value: fmt(collectedTotal || data?.todayCollected || 8420),
-              label: 'Collected',
-              icon: '✅',
-              bg: '#f0fdf4',
-              border: '#bbf7d0',
-              valueColor: '#16a34a',
-            },
-          ].map(kpi => (
-            <div
-              key={kpi.label}
-              className="rounded-2xl p-4"
-              style={{ background: kpi.bg, border: `1.5px solid ${kpi.border}` }}
-            >
-              <span className="text-lg">{kpi.icon}</span>
-              <p className="text-xl font-bold mt-2" style={{ color: kpi.valueColor }}>{kpi.value}</p>
-              <p className="text-xs text-gray-500 mt-0.5 font-medium">{kpi.label}</p>
+            <div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-white">{fmt(overdueTotal)}</span>
+                <span className="text-xl font-medium text-gray-300">Outstanding</span>
+              </div>
+              <p className="text-sm text-gray-400 mt-0.5">{overdueCount} Accounts Overdue</p>
+              <p className="text-xs mt-2 font-medium" style={{ color: 'rgba(251,191,36,0.85)' }}>
+                Today's Focus: {overdueCount} overdue · {fmt(overdueTotal)} at risk
+              </p>
             </div>
-          ))}
-        </div>
-
-        {/* ── Overdue Section ── */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xl font-bold text-gray-900">
-              Overdue <span className="text-gray-400 font-normal">({overdueAccounts.length || 5})</span>
-            </h2>
-            <span className="text-xs text-gray-400">{overdueAccounts.length || 5} records</span>
+            <button
+              onClick={() => overdueAccounts.forEach(a => chargeStudent.mutate({ enrollmentId: a.enrollmentId }))}
+              className="collect-btn flex items-center gap-2 px-5 py-3 rounded-2xl font-bold text-white text-sm"
+              style={{
+                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                boxShadow: '0 4px 16px rgba(34,197,94,0.45)',
+              }}
+            >
+              Collect All
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
 
-          {overdueAccounts.length > 0 ? (
+          {/* ── 2. Collection Rate (moved up) ── */}
+          <div
+            className="bg-white rounded-2xl p-4 card-hover"
+            style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.05)', border: '1px solid #ebebeb' }}
+          >
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-base font-bold text-gray-900">Collection Rate</h3>
+              <span className="text-xs text-gray-400 flex items-center gap-1">
+                Last 7 days <ChevronRight className="w-3 h-3" />
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-4xl font-bold text-gray-900">{efficiency}%</span>
+              <div className="flex items-center gap-1">
+                <ArrowUpRight className="w-4 h-4 text-green-500" />
+                <span className="text-sm text-green-600 font-semibold">+8% from last week</span>
+              </div>
+            </div>
+            <div className="mt-2">
+              <SparkLine data={sparkData} color="#22c55e" />
+              <div className="flex justify-between mt-1">
+                {['Mo','Tu','We','Th','Fr','Sa','Su'].map(d => (
+                  <span key={d} className="text-[10px] text-gray-300 font-medium">{d}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── 3. KPI Cards (white, minimal) ── */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { value: fmt(overdueTotal), label: 'Today', icon: '🔴', accent: '#ef4444' },
+              { value: fmt(pendingTotal), label: 'Pending', icon: '🟡', accent: '#f59e0b' },
+              { value: fmt(collectedTotal), label: 'Collected', icon: '🟢', accent: '#22c55e' },
+            ].map(kpi => (
+              <div
+                key={kpi.label}
+                className="bg-white rounded-2xl p-4 card-hover"
+                style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)', border: '1px solid #ebebeb' }}
+              >
+                <span className="text-base">{kpi.icon}</span>
+                <p className="text-xl font-bold mt-2 text-gray-900">{kpi.value}</p>
+                <p className="text-xs text-gray-400 mt-0.5 font-medium">{kpi.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* ── 4. Overdue Section ── */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xl font-bold text-gray-900">
+                Overdue <span className="text-gray-400 font-normal text-lg">({overdueCount})</span>
+              </h2>
+              <span className="text-xs text-gray-400">{overdueCount} records</span>
+            </div>
+
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {overdueAccounts.map(account => {
-                const av = avatarColor(account.studentName)
+              {(overdueAccounts.length > 0 ? overdueAccounts : demoOverdue as any[]).map((account: any, i: number) => {
+                const name = account.studentName || account.name
+                const amount = account.amountDollars || account.amount
+                const days = account.daysLate || account.days
+                const retry = account.retryCount || account.retry || 0
+                const phone = account.phone
+                const av = avatarColor(name)
                 return (
                   <div
-                    key={account.enrollmentId}
-                    className="bg-white rounded-2xl p-4 cursor-pointer"
-                    style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}
-                    onClick={() => setSelectedStudent(account)}
+                    key={account.enrollmentId || i}
+                    className="bg-white rounded-2xl p-4 card-hover cursor-pointer"
+                    style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)', border: '1px solid #ebebeb' }}
+                    onClick={() => overdueAccounts.length > 0 && setSelectedStudent(account)}
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <div
                         className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 overflow-hidden"
                         style={{ background: av.bg, color: av.text }}
                       >
-                        {account.photoUrl
-                          ? <img src={account.photoUrl} alt="" className="w-full h-full object-cover" />
-                          : initials(account.studentName)
-                        }
+                        {account.photoUrl ? <img src={account.photoUrl} alt="" className="w-full h-full object-cover" /> : initials(name)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-gray-900 text-sm truncate">{account.studentName}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-sm font-bold text-gray-800">{fmtFull(account.amountDollars)}</span>
-                          <span className="text-xs text-gray-400">·</span>
-                          <span className="text-xs text-red-500 font-medium">{account.daysLate} days late</span>
-                          {account.retryCount > 0 && (
-                            <>
-                              <span className="text-xs text-gray-300">·</span>
-                              <span className="text-xs text-gray-400">+{account.retryCount}</span>
-                            </>
+                        <p className="font-bold text-gray-900 text-sm truncate">{name}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          <span className="text-sm font-bold text-gray-800">{typeof amount === 'number' ? fmtFull(amount) : `$${amount}`}</span>
+                          <span className="text-xs text-gray-300">·</span>
+                          <span className="text-xs text-red-500 font-medium">{days} days late</span>
+                          {retry > 0 && (
+                            <><span className="text-xs text-gray-300">·</span><span className="text-xs text-gray-400">+{retry}</span></>
                           )}
                         </div>
                       </div>
                     </div>
                     <div className="flex gap-2" onClick={e => e.stopPropagation()}>
                       <button
-                        onClick={() => chargeStudent.mutate({ enrollmentId: account.enrollmentId })}
-                        disabled={chargeStudent.isPending}
-                        className="flex-1 py-2 rounded-xl text-xs font-semibold text-gray-800 bg-gray-100 hover:bg-gray-200 transition-colors"
+                        onClick={() => account.enrollmentId && chargeStudent.mutate({ enrollmentId: account.enrollmentId })}
+                        className="flex-1 py-2 rounded-xl text-xs font-semibold text-green-700 bg-green-50 border border-green-100 btn-press hover:bg-green-100 transition-colors"
                       >
                         Collect
                       </button>
-                      {account.phone ? (
-                        <a
-                          href={`sms:${account.phone}`}
-                          className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50"
-                        >
-                          <MessageSquare className="w-3.5 h-3.5" />
-                          Text
-                          <ChevronRight className="w-3 h-3 text-gray-300" />
-                        </a>
-                      ) : account.phone !== undefined ? (
-                        <a
-                          href={`tel:${account.phone}`}
-                          className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50"
-                        >
-                          <Phone className="w-3.5 h-3.5" />
-                          Call
-                          <ChevronRight className="w-3 h-3 text-gray-300" />
-                        </a>
-                      ) : null}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            /* Demo cards if no real data */
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {[
-                { name: 'Lana Gabrhel', amount: 145, days: 7, retry: 20 },
-                { name: 'Johnny Yanez', amount: 120, days: 3, retry: 0 },
-                { name: 'Owen Simmons', amount: 85, days: 5, retry: 0 },
-                { name: 'Orcan Simmons', amount: 85, days: 5, retry: 25 },
-                { name: 'Craig', amount: 60, days: 2, retry: 0 },
-                { name: 'Seven Jackson', amount: 45, days: 8, retry: 0 },
-              ].map((d, i) => {
-                const av = avatarColor(d.name)
-                return (
-                  <div
-                    key={i}
-                    className="bg-white rounded-2xl p-4"
-                    style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
-                        style={{ background: av.bg, color: av.text }}
-                      >
-                        {initials(d.name)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-gray-900 text-sm truncate">{d.name}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-sm font-bold text-gray-800">${d.amount}</span>
-                          <span className="text-xs text-gray-400">·</span>
-                          <span className="text-xs text-red-500 font-medium">{d.days} days late</span>
-                          {d.retry > 0 && (
-                            <>
-                              <span className="text-xs text-gray-300">·</span>
-                              <span className="text-xs text-gray-400">+{d.retry}</span>
-                            </>
+                      {phone !== false && (
+                        <button className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold text-gray-500 border border-gray-200 btn-press hover:bg-gray-50 transition-colors">
+                          {typeof phone === 'string' ? (
+                            <a href={`sms:${phone}`} className="flex items-center gap-1"><MessageSquare className="w-3.5 h-3.5" />Text</a>
+                          ) : (
+                            <><MessageSquare className="w-3.5 h-3.5" />Text</>
                           )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button className="flex-1 py-2 rounded-xl text-xs font-semibold text-gray-800 bg-gray-100">
-                        Collect
-                      </button>
-                      <button className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold text-gray-600 border border-gray-200">
-                        {i % 2 === 0 ? <><MessageSquare className="w-3.5 h-3.5" />Text</> : <><Phone className="w-3.5 h-3.5" />Call</>}
-                        <ChevronRight className="w-3 h-3 text-gray-300" />
-                      </button>
+                          <ChevronRight className="w-3 h-3 text-gray-300" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 )
               })}
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* ── Transactions + Map side by side ── */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {/* ── 5 + 6. Map + Transactions side by side ── */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
-          {/* Transactions */}
-          <div className="space-y-3">
-            {/* Transaction feed */}
-            <div className="bg-white rounded-2xl p-4" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base font-bold text-gray-900">Transactions</h3>
-                <MoreHorizontal className="w-4 h-4 text-gray-300" />
-              </div>
-              <div className="text-xs font-semibold text-gray-400 mb-2">Today</div>
-              {transactions.filter(t => t.status === 'success').slice(0, 3).map((tx, i) => (
-                <div key={tx.id} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center">
-                      <span className="text-green-600 text-xs font-bold">+</span>
+            {/* 6. Transactions (Apple Wallet style) */}
+            <div className="space-y-3">
+              <div
+                className="bg-white rounded-2xl p-4"
+                style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)', border: '1px solid #ebebeb' }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-base font-bold text-gray-900">Transactions</h3>
+                  <MoreHorizontal className="w-4 h-4 text-gray-300" />
+                </div>
+                <p className="text-xs font-semibold text-gray-400 mb-2">Today</p>
+                {(transactions.filter(t => t.status === 'success').length > 0
+                  ? transactions.filter(t => t.status === 'success').slice(0, 5)
+                  : [
+                      { id: 1, studentName: 'Lana Gabrhel', amountDollars: 1240, status: 'success', paidAt: new Date().toISOString() },
+                      { id: 2, studentName: 'Johnny Yanez', amountDollars: 890, status: 'success', paidAt: new Date(Date.now() - 3600000).toISOString() },
+                    ]
+                ).map((tx: any) => (
+                  <div key={tx.id} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0 card-hover rounded-xl px-1">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-green-600 text-sm font-bold">+</span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold text-gray-900">{fmtFull(tx.amountDollars)}</span>
+                        <span className="text-sm text-gray-500 ml-1.5">{tx.studentName}</span>
+                      </div>
                     </div>
-                    <span className="text-sm font-semibold text-gray-800">{fmtFull(tx.amountDollars)} Collected</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs text-gray-400">{timeAgo(tx.paidAt)}</span>
-                    <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
-                  </div>
-                </div>
-              ))}
-              {transactions.filter(t => t.status === 'success').length === 0 && (
-                <div className="flex items-center justify-between py-2.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center">
-                      <span className="text-green-600 text-xs font-bold">+</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-gray-400">{timeAgo(tx.paidAt)}</span>
+                      <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
                     </div>
-                    <span className="text-sm font-semibold text-gray-800">$1,240 Collected</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs text-gray-400">{timeStr}</span>
-                    <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Collection Rate */}
-            <div className="bg-white rounded-2xl p-4" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}>
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-base font-bold text-gray-900">Collection Rate</h3>
-                <div className="flex items-center gap-1 text-xs text-gray-400">
-                  <span>Mbx: 7 days</span>
-                  <ChevronRight className="w-3 h-3" />
-                </div>
-              </div>
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-3xl font-bold text-gray-900">{data?.collectionEfficiency ?? 76}%</span>
-              </div>
-              <div className="flex items-center gap-1 mb-3">
-                <TrendingUp className="w-3.5 h-3.5 text-green-500" />
-                <span className="text-xs text-green-600 font-medium">+8% from last week</span>
-              </div>
-              <SparkLine data={sparkData} color="#22c55e" />
-              <div className="flex justify-between mt-1">
-                {['Mo', 'Tu', 'We', 'T', 'F', 'S', 'Su'].map(d => (
-                  <span key={d} className="text-xs text-gray-300">{d}</span>
                 ))}
               </div>
             </div>
 
-            {/* Transactions list 2 */}
-            <div className="bg-white rounded-2xl p-4" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base font-bold text-gray-900">Transactions</h3>
-                <div className="flex gap-1">
+            {/* 5. Map (intelligent) */}
+            <div className="flex flex-col gap-3">
+              <div
+                className="bg-white rounded-2xl overflow-hidden relative"
+                style={{ height: 320, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', border: '1px solid #ebebeb' }}
+              >
+                {/* Map view toggle */}
+                <div className="absolute top-3 left-3 z-10 flex rounded-xl overflow-hidden shadow-sm" style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)' }}>
+                  <button
+                    onClick={() => setMapView('student')}
+                    className={`px-3 py-1.5 text-xs font-semibold transition-colors ${mapView === 'student' ? 'bg-gray-900 text-white' : 'text-gray-500'}`}
+                  >
+                    Student Map
+                  </button>
+                  <button
+                    onClick={() => setMapView('payment')}
+                    className={`px-3 py-1.5 text-xs font-semibold transition-colors ${mapView === 'payment' ? 'bg-gray-900 text-white' : 'text-gray-500'}`}
+                  >
+                    Payment Map
+                  </button>
+                </div>
+
+                {/* Pins / Heat Map toggle */}
+                <div className="absolute top-3 right-3 z-10 flex rounded-xl overflow-hidden shadow-sm" style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)' }}>
                   <button
                     onClick={() => setMapMode('pins')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${mapMode === 'pins' ? 'bg-gray-900 text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                    className={`px-2.5 py-1.5 text-xs font-semibold transition-colors ${mapMode === 'pins' ? 'bg-gray-900 text-white' : 'text-gray-500'}`}
                   >
                     Pins
                   </button>
                   <button
                     onClick={() => setMapMode('heatmap')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${mapMode === 'heatmap' ? 'bg-gray-900 text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                    className={`px-2.5 py-1.5 text-xs font-semibold transition-colors ${mapMode === 'heatmap' ? 'bg-gray-900 text-white' : 'text-gray-500'}`}
                   >
                     Heat Map
                   </button>
                 </div>
+
+                {/* Overlay stats (payment map only) */}
+                {mapView === 'payment' && (
+                  <div
+                    className="absolute bottom-3 left-3 z-10 rounded-2xl px-3 py-2"
+                    style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)', boxShadow: '0 2px 12px rgba(0,0,0,0.1)' }}
+                  >
+                    <p className="text-xs font-bold text-red-500">{fmt(overdueTotal)} unpaid in this area</p>
+                    <p className="text-xs text-gray-500">{overdueCount} students within 5 miles</p>
+                  </div>
+                )}
+
+                <MapContainer center={mapCenter} zoom={11} style={{ height: '100%', width: '100%' }} zoomControl={false}>
+                  <TileLayer
+                    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                    attribution='&copy; OpenStreetMap contributors'
+                  />
+                  {allMapStudents.length > 0
+                    ? allMapStudents.map(s => (
+                        <Marker key={`${s.isPaid ? 'p' : 'u'}-${s.id}`} position={[s.lat, s.lng]} icon={s.isPaid ? greenIcon : redIcon}>
+                          <Popup><div className="text-sm"><p className="font-semibold">{s.name}</p><p className={s.isPaid ? 'text-green-600' : 'text-red-500'}>{s.isPaid ? '✓ Paid' : '⚠ Overdue'}</p></div></Popup>
+                        </Marker>
+                      ))
+                    : demoMapPins.map((p, i) => (
+                        <Marker key={i} position={[p.lat, p.lng]} icon={p.paid ? greenIcon : redIcon}>
+                          <Popup><div className="text-sm"><p className="font-semibold">{p.name}</p><p className={p.paid ? 'text-green-600' : 'text-red-500'}>{p.paid ? '✓ Paid' : '⚠ Overdue'}</p></div></Popup>
+                        </Marker>
+                      ))
+                  }
+                </MapContainer>
               </div>
-              {transactions.slice(0, 3).map((tx, i) => (
-                <div key={tx.id} className="flex items-center gap-3 py-2.5 border-b border-gray-50 last:border-0">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    tx.status === 'success' ? 'bg-green-100' : tx.status === 'failed' ? 'bg-red-100' : 'bg-yellow-100'
-                  }`}>
-                    <span className={`text-xs font-bold ${
-                      tx.status === 'success' ? 'text-green-600' : tx.status === 'failed' ? 'text-red-500' : 'text-yellow-600'
-                    }`}>{tx.status === 'success' ? '✓' : tx.status === 'failed' ? '✗' : '~'}</span>
+
+              {/* Map legend */}
+              <div className="flex items-center gap-4 px-1">
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-green-500" /><span className="text-xs text-gray-500 font-medium">Paid</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-red-500" /><span className="text-xs text-gray-500 font-medium">Unpaid</span></div>
+              </div>
+
+              {/* 7. Kai AI Panel (enhanced) */}
+              {!kaiDismissed && (
+                <div
+                  className="bg-white rounded-2xl p-4"
+                  style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.08)', border: '1px solid #ebebeb' }}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="kai-avatar w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'linear-gradient(135deg, #e8f5e9, #c8e6c9)' }}
+                      >
+                        <span className="text-2xl">🤖</span>
+                      </div>
+                      <p className="text-sm font-bold text-gray-900 leading-snug">
+                        Kai: {overdueCount} overdue accounts totaling {fmt(overdueTotal)}
+                      </p>
+                    </div>
+                    <button onClick={() => setKaiDismissed(true)} className="p-1 hover:bg-gray-100 rounded-full btn-press">
+                      <MoreHorizontal className="w-4 h-4 text-gray-300" />
+                    </button>
                   </div>
-                  <div className="flex-1">
-                    <span className="text-sm font-semibold text-gray-800">{fmtFull(tx.amountDollars)} {tx.status === 'success' ? 'Collected' : tx.status === 'failed' ? 'Failed' : 'Pending'}</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => overdueAccounts.forEach(a => chargeStudent.mutate({ enrollmentId: a.enrollmentId }))}
+                      className="kai-collect-btn py-3 rounded-2xl text-sm font-bold text-white btn-press"
+                      style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}
+                    >
+                      Collect All
+                    </button>
+                    <button
+                      className="py-3 rounded-2xl text-sm font-semibold text-gray-600 bg-gray-50 border border-gray-200 btn-press hover:bg-gray-100 transition-colors"
+                      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    >
+                      Review
+                    </button>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-gray-400">{timeAgo(tx.paidAt || tx.createdAt)}</span>
-                    <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
-                  </div>
-                </div>
-              ))}
-              {transactions.length === 0 && (
-                <div className="flex items-center gap-3 py-2.5">
-                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                    <span className="text-xs font-bold text-green-600">✓</span>
-                  </div>
-                  <span className="text-sm font-semibold text-gray-800">$1,240 Collected</span>
-                  <div className="flex-1" />
-                  <span className="text-xs text-gray-400">{timeStr}</span>
-                  <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
                 </div>
               )}
             </div>
           </div>
 
-          {/* Map */}
-          <div className="flex flex-col gap-3">
-            <div
-              className="bg-white rounded-2xl overflow-hidden"
-              style={{ height: 380, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}
-            >
-              {/* Map toggle header */}
-              <div className="absolute z-10 top-2 right-2 flex rounded-xl overflow-hidden shadow-sm" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)' }}>
-                <button
-                  onClick={() => setMapMode('pins')}
-                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${mapMode === 'pins' ? 'bg-gray-900 text-white' : 'text-gray-500'}`}
-                >
-                  ◆ Pins
-                </button>
-                <button
-                  onClick={() => setMapMode('heatmap')}
-                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${mapMode === 'heatmap' ? 'bg-gray-900 text-white' : 'text-gray-500'}`}
-                >
-                  — Heat Map
-                </button>
-              </div>
-
-              <div style={{ height: '100%', position: 'relative' }}>
-                <MapContainer
-                  center={mapCenter}
-                  zoom={11}
-                  style={{ height: '100%', width: '100%' }}
-                  zoomControl={false}
-                >
-                  <TileLayer
-                    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                    attribution='&copy; OpenStreetMap contributors'
-                  />
-                  {allMapStudents.map(s => (
-                    <Marker
-                      key={`${s.isPaid ? 'p' : 'u'}-${s.id}`}
-                      position={[s.lat, s.lng]}
-                      icon={s.isPaid ? greenIcon : redIcon}
-                    >
-                      <Popup>
-                        <div className="text-sm">
-                          <p className="font-semibold">{s.name}</p>
-                          <p className={s.isPaid ? 'text-green-600' : 'text-red-500'}>
-                            {s.isPaid ? '✓ Paid' : '⚠ Overdue'}
-                          </p>
-                        </div>
-                      </Popup>
-                    </Marker>
-                  ))}
-                  {/* Demo pins if no real data */}
-                  {allMapStudents.length === 0 && [
-                    { lat: 33.5, lng: -111.93, paid: true },
-                    { lat: 33.49, lng: -111.91, paid: false },
-                    { lat: 33.51, lng: -111.89, paid: true },
-                    { lat: 33.48, lng: -111.95, paid: false },
-                    { lat: 33.52, lng: -111.92, paid: true },
-                  ].map((p, i) => (
-                    <Marker key={i} position={[p.lat, p.lng]} icon={p.paid ? greenIcon : redIcon}>
-                      <Popup><p className={p.paid ? 'text-green-600' : 'text-red-500'}>{p.paid ? '✓ Paid' : '⚠ Overdue'}</p></Popup>
-                    </Marker>
-                  ))}
-                </MapContainer>
-              </div>
-            </div>
-
-            {/* Map legend */}
-            <div className="flex items-center gap-4 px-1">
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="text-xs text-gray-500 font-medium">Paid</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
-                <span className="text-xs text-gray-500 font-medium">Unpaid</span>
-              </div>
-            </div>
-
-            {/* Kai AI Panel */}
-            {!kaiDismissed && (
-              <div
-                className="bg-white rounded-2xl p-4"
-                style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.1)', border: '1px solid #f0f0f0' }}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    {/* Kai robot avatar */}
-                    <div
-                      className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: 'linear-gradient(135deg, #e8f5e9, #c8e6c9)' }}
-                    >
-                      <span className="text-2xl">🤖</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-gray-900">
-                        Kai: {overdueAccounts.length || 5} overdue accounts totaling {fmt(overdueTotal || data?.overdueTotal || 2130)}
-                      </p>
-                    </div>
-                  </div>
-                  <button onClick={() => setKaiDismissed(true)} className="p-1 hover:bg-gray-100 rounded-full">
-                    <MoreHorizontal className="w-4 h-4 text-gray-300" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => overdueAccounts.forEach(a => chargeStudent.mutate({ enrollmentId: a.enrollmentId }))}
-                    className="py-3 rounded-2xl text-sm font-bold text-white"
-                    style={{
-                      background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-                      boxShadow: '0 4px 12px rgba(34,197,94,0.3)',
-                    }}
-                  >
-                    Collect All
-                  </button>
-                  <button
-                    className="py-3 rounded-2xl text-sm font-semibold text-gray-600 bg-gray-50 border border-gray-200"
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  >
-                    Review
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
-
       </div>
 
       {/* Student Bottom Sheet */}
       {selectedStudent && (
         <StudentSheet student={selectedStudent} onClose={() => setSelectedStudent(null)} />
       )}
-    </div>
+    </>
   )
 }
