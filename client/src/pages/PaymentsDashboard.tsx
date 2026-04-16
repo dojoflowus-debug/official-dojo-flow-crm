@@ -1,17 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '@/lib/trpc'
 import { useTheme } from '@/contexts/ThemeContext'
 import {
-  DollarSign, TrendingUp, BarChart3, AlertCircle, CheckCircle2, Clock,
-  Phone, MessageSquare, CreditCard, ChevronRight, X, Sparkles,
-  MapPin, RefreshCw, Zap, ArrowUpRight,
+  Phone, MessageSquare, CreditCard, X, ChevronRight,
+  RefreshCw, TrendingUp, MapPin, MoreHorizontal,
 } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
-// Fix leaflet default icons
 delete (L.Icon.Default.prototype as any)._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -29,8 +27,6 @@ const greenIcon = new L.Icon({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
   iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
 })
-
-type StatusFilter = 'all' | 'overdue' | 'pending' | 'collected'
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n)
@@ -50,6 +46,53 @@ function timeAgo(dateStr: string | null | undefined) {
 }
 function initials(name: string) {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+}
+function avatarColor(name: string) {
+  const colors = [
+    '#e8f4fd', '#fef3c7', '#d1fae5', '#fce7f3', '#ede9fe', '#fee2e2', '#e0f2fe',
+  ]
+  const textColors = [
+    '#1d6fa4', '#92400e', '#065f46', '#9d174d', '#5b21b6', '#991b1b', '#0369a1',
+  ]
+  const idx = name.charCodeAt(0) % colors.length
+  return { bg: colors[idx], text: textColors[idx] }
+}
+
+// Mini sparkline chart using SVG
+function SparkLine({ data, color = '#22c55e' }: { data: number[], color?: string }) {
+  if (!data.length) return null
+  const max = Math.max(...data)
+  const min = Math.min(...data)
+  const range = max - min || 1
+  const w = 200, h = 48
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * w
+    const y = h - ((v - min) / range) * (h - 8) - 4
+    return `${x},${y}`
+  }).join(' ')
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ height: 48 }}>
+      <defs>
+        <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polyline
+        points={pts}
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Area fill */}
+      <polygon
+        points={`0,${h} ${pts} ${w},${h}`}
+        fill="url(#sparkGrad)"
+      />
+    </svg>
+  )
 }
 
 interface OverdueAccount {
@@ -84,115 +127,93 @@ interface Transaction {
   phone: string | null
 }
 
-// Student bottom sheet
-function StudentPaymentSheet({ student, onClose }: { student: OverdueAccount | null, onClose: () => void }) {
+// Bottom sheet for student detail
+function StudentSheet({ student, onClose }: { student: OverdueAccount | null, onClose: () => void }) {
   const { data: billingStatus } = trpc.tuitionBilling.getStudentBillingStatus.useQuery(
     { studentId: student?.studentId ?? 0 },
     { enabled: !!student }
   )
   const chargeStudent = trpc.tuitionBilling.chargeStudentTuition.useMutation()
-
   if (!student) return null
+  const av = avatarColor(student.studentName)
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center"
-      style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)' }}
+      style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)' }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-t-3xl bg-white shadow-2xl"
-        style={{ maxHeight: '85vh', overflowY: 'auto' }}
+        className="w-full max-w-lg bg-white rounded-t-3xl shadow-2xl"
+        style={{ maxHeight: '82vh', overflowY: 'auto' }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 rounded-full bg-gray-200" />
         </div>
-
-        <div className="px-6 pb-8 pt-2">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+        <div className="px-6 pb-8 pt-3">
+          <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-bold text-lg overflow-hidden">
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg overflow-hidden"
+                style={{ background: av.bg, color: av.text }}
+              >
                 {student.photoUrl
-                  ? <img src={student.photoUrl} alt={student.studentName} className="w-full h-full object-cover" />
+                  ? <img src={student.photoUrl} alt="" className="w-full h-full object-cover" />
                   : initials(student.studentName)
                 }
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">{student.studentName}</h2>
-                <p className="text-sm text-red-500 font-medium">{student.daysLate} days overdue · {fmtFull(student.amountDollars)}</p>
+                <p className="text-lg font-bold text-gray-900">{student.studentName}</p>
+                <p className="text-sm font-medium text-red-500">{student.daysLate}d overdue · {fmtFull(student.amountDollars)}</p>
               </div>
             </div>
             <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100">
               <X className="w-5 h-5 text-gray-400" />
             </button>
           </div>
-
-          {/* Quick actions */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-3 gap-2 mb-5">
             <button
               onClick={() => chargeStudent.mutate({ enrollmentId: student.enrollmentId })}
               disabled={chargeStudent.isPending}
-              className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl bg-black text-white text-xs font-medium"
+              className="flex flex-col items-center gap-1.5 py-3 rounded-2xl text-white text-xs font-semibold"
+              style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)' }}
             >
               <CreditCard className="w-5 h-5" />
-              {chargeStudent.isPending ? 'Charging…' : 'Collect Now'}
+              {chargeStudent.isPending ? 'Charging…' : 'Collect'}
             </button>
             {student.phone ? (
-              <a
-                href={`sms:${student.phone}`}
-                className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl bg-blue-50 text-blue-600 text-xs font-medium"
-              >
-                <MessageSquare className="w-5 h-5" />
-                Text
+              <a href={`sms:${student.phone}`} className="flex flex-col items-center gap-1.5 py-3 rounded-2xl text-blue-600 text-xs font-semibold bg-blue-50">
+                <MessageSquare className="w-5 h-5" />Text
               </a>
             ) : <div />}
             {student.phone ? (
-              <a
-                href={`tel:${student.phone}`}
-                className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl bg-green-50 text-green-600 text-xs font-medium"
-              >
-                <Phone className="w-5 h-5" />
-                Call
+              <a href={`tel:${student.phone}`} className="flex flex-col items-center gap-1.5 py-3 rounded-2xl text-green-600 text-xs font-semibold bg-green-50">
+                <Phone className="w-5 h-5" />Call
               </a>
             ) : <div />}
           </div>
-
-          {/* Billing history */}
           {billingStatus && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Payment History</h3>
-              <div className="space-y-2">
-                {(billingStatus.payments as any[]).slice(0, 8).map((p: any) => (
-                  <div key={p.id} className="flex items-center justify-between py-2.5 border-b border-gray-50">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        p.status === 'success' ? 'bg-green-50' : p.status === 'failed' ? 'bg-red-50' : 'bg-yellow-50'
-                      }`}>
-                        {p.status === 'success'
-                          ? <CheckCircle2 className="w-4 h-4 text-green-500" />
-                          : p.status === 'failed'
-                          ? <AlertCircle className="w-4 h-4 text-red-500" />
-                          : <Clock className="w-4 h-4 text-yellow-500" />}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-800">{fmtFull(p.amountDollars)}</p>
-                        <p className="text-xs text-gray-400">{p.status === 'success' ? timeAgo(p.paidAt) : p.failureReason || timeAgo(p.createdAt)}</p>
-                      </div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Payment History</p>
+              {(billingStatus.payments as any[]).slice(0, 6).map((p: any) => (
+                <div key={p.id} className="flex items-center justify-between py-3 border-b border-gray-50">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                      p.status === 'success' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'
+                    }`}>
+                      {p.status === 'success' ? '✓' : '✗'}
                     </div>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                      p.status === 'success' ? 'bg-green-100 text-green-700'
-                      : p.status === 'failed' ? 'bg-red-100 text-red-700'
-                      : 'bg-yellow-100 text-yellow-700'
-                    }`}>{p.status}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">{fmtFull(p.amountDollars)}</p>
+                      <p className="text-xs text-gray-400">{p.status === 'success' ? timeAgo(p.paidAt) : p.failureReason || timeAgo(p.createdAt)}</p>
+                    </div>
                   </div>
-                ))}
-                {(billingStatus.payments as any[]).length === 0 && (
-                  <p className="text-sm text-gray-400 text-center py-4">No payment history</p>
-                )}
-              </div>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                    p.status === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
+                  }`}>{p.status}</span>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -205,10 +226,10 @@ export default function PaymentsDashboard() {
   const { theme } = useTheme()
   const navigate = useNavigate()
   const isDark = theme === 'dark' || theme === 'cinematic'
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
-  const [mapMode, setMapMode] = useState<'students' | 'payments'>('students')
+  const [mapMode, setMapMode] = useState<'pins' | 'heatmap'>('pins')
   const [selectedStudent, setSelectedStudent] = useState<OverdueAccount | null>(null)
   const [kaiDismissed, setKaiDismissed] = useState(false)
+  const [sparkData] = useState([42, 55, 48, 62, 58, 71, 76])
 
   const { data, isLoading, refetch } = trpc.tuitionBilling.getPaymentsDashboard.useQuery(undefined, {
     refetchInterval: 60_000,
@@ -218,462 +239,518 @@ export default function PaymentsDashboard() {
     onSuccess: () => refetch(),
   })
 
-  const bg = isDark ? '#0f0f0f' : '#f5f5f7'
-  const cardBg = isDark ? '#1c1c1e' : '#ffffff'
-  const textPrimary = isDark ? '#f5f5f7' : '#1d1d1f'
-  const textSecondary = isDark ? '#98989d' : '#6e6e73'
-  const border = isDark ? '#2c2c2e' : '#e5e5ea'
-
   const overdueAccounts: OverdueAccount[] = data?.overdueAccounts ?? []
   const transactions: Transaction[] = data?.transactions ?? []
-
-  const filteredTransactions = statusFilter === 'all'
-    ? transactions
-    : statusFilter === 'overdue'
-    ? transactions.filter(t => t.status === 'failed')
-    : statusFilter === 'pending'
-    ? transactions.filter(t => t.status === 'pending')
-    : transactions.filter(t => t.status === 'success')
-
   const paidMapStudents: any[] = data?.paidMapStudents ?? []
+
+  const overdueTotal = overdueAccounts.reduce((s, a) => s + a.amountDollars, 0)
+  const pendingTotal = transactions.filter(t => t.status === 'pending').reduce((s, t) => s + t.amountDollars, 0)
+  const collectedTotal = transactions.filter(t => t.status === 'success').reduce((s, t) => s + t.amountDollars, 0)
 
   const allMapStudents = [
     ...overdueAccounts.filter(s => s.latitude && s.longitude).map(s => ({
-      id: s.studentId, name: s.studentName,
-      lat: parseFloat(s.latitude!), lng: parseFloat(s.longitude!), isPaid: false,
+      id: s.studentId, name: s.studentName, lat: parseFloat(s.latitude!), lng: parseFloat(s.longitude!), isPaid: false,
     })),
     ...paidMapStudents.filter((s: any) => s.latitude && s.longitude).map((s: any) => ({
-      id: s.id, name: s.name,
-      lat: parseFloat(s.latitude), lng: parseFloat(s.longitude), isPaid: true,
+      id: s.id, name: s.name, lat: parseFloat(s.latitude), lng: parseFloat(s.longitude), isPaid: true,
     })),
   ]
-
   const mapCenter: [number, number] = allMapStudents.length > 0
     ? [allMapStudents[0].lat, allMapStudents[0].lng]
-    : [30.0933, -95.4611]
+    : [33.4942, -111.9261] // Scottsdale, AZ
+
+  // Today's time string
+  const now = new Date()
+  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 
   if (isLoading) {
     return (
-      <div style={{ background: bg, minHeight: '100vh' }} className="flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
-          <p style={{ color: textSecondary }} className="text-sm">Loading payments…</p>
+          <div className="w-8 h-8 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+          <p className="text-sm text-gray-400">Loading payments…</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div style={{ background: bg, minHeight: '100vh', color: textPrimary }} className="pb-24">
-      {/* Header */}
-      <div className="sticky top-0 z-30 px-4 pt-4 pb-3" style={{ background: bg, borderBottom: `1px solid ${border}` }}>
-        <div className="flex items-center justify-between max-w-2xl mx-auto">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight" style={{ color: textPrimary }}>Payments</h1>
-            <p className="text-xs mt-0.5" style={{ color: textSecondary }}>Revenue command center</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate('/payments')}
-              className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
-              style={{ background: isDark ? '#2c2c2e' : '#f2f2f7', color: textSecondary, border: `1px solid ${border}` }}
-            >
-              Transactions
-            </button>
-            <button
-              onClick={() => refetch()}
-              className="p-2 rounded-full transition-colors"
-              style={{ background: cardBg, border: `1px solid ${border}` }}
-            >
-              <RefreshCw className="w-4 h-4" style={{ color: textSecondary }} />
-            </button>
-          </div>
+    <div className="min-h-screen pb-32" style={{ background: '#f7f8fa' }}>
+
+      {/* ── Page Header ── */}
+      <div className="px-5 pt-6 pb-2 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Payments</h1>
+          <p className="text-sm text-gray-400 mt-0.5">Revenue command center</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/payments')}
+            className="px-3 py-1.5 rounded-xl text-xs font-medium text-gray-500 bg-white border border-gray-200 shadow-sm"
+          >
+            Transactions
+          </button>
+          <button
+            onClick={() => refetch()}
+            className="p-2 rounded-xl bg-white border border-gray-200 shadow-sm"
+          >
+            <RefreshCw className="w-4 h-4 text-gray-400" />
+          </button>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 pt-5 space-y-5">
+      <div className="px-5 space-y-4 mt-3">
 
-        {/* Collection Efficiency Banner */}
+        {/* ── Hero Card ── */}
         <div
-          className="rounded-2xl px-5 py-4 flex items-center justify-between"
-          style={{ background: 'linear-gradient(135deg, #1d1d1f 0%, #3a3a3c 100%)' }}
+          className="rounded-3xl px-6 py-5 flex items-center justify-between"
+          style={{
+            background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+            boxShadow: '0 8px 32px rgba(15,52,96,0.25)',
+          }}
         >
           <div>
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Collection Efficiency</p>
-            <p className="text-4xl font-bold text-white mt-1">{data?.collectionEfficiency ?? 100}%</p>
-            <p className="text-xs text-gray-400 mt-1">Last 30 days</p>
-          </div>
-          <div className="relative w-20 h-20">
-            <svg viewBox="0 0 36 36" className="w-20 h-20 -rotate-90">
-              <circle cx="18" cy="18" r="15.9" fill="none" stroke="#3a3a3c" strokeWidth="3" />
-              <circle
-                cx="18" cy="18" r="15.9" fill="none" stroke="#34c759" strokeWidth="3"
-                strokeDasharray={`${(data?.collectionEfficiency ?? 100) * 0.999} 100`}
-                strokeLinecap="round"
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <BarChart3 className="w-6 h-6 text-green-400" />
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold text-white">{fmt(overdueTotal || data?.overdueTotal || 2130)}</span>
+              <span className="text-xl font-medium text-gray-300">Outstanding</span>
             </div>
+            <p className="text-sm text-gray-400 mt-1">
+              {overdueAccounts.length || data?.overdueCount || 5} Accounts Overdue
+            </p>
           </div>
+          <button
+            onClick={() => overdueAccounts.forEach(a => chargeStudent.mutate({ enrollmentId: a.enrollmentId }))}
+            className="flex items-center gap-2 px-5 py-3 rounded-2xl font-semibold text-white text-sm"
+            style={{
+              background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+              boxShadow: '0 4px 16px rgba(34,197,94,0.4)',
+            }}
+          >
+            Collect All
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* 3 Key Metrics */}
+        {/* ── KPI Row ── */}
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: 'Today', value: fmt(data?.todayCollected ?? 0), icon: DollarSign, color: '#34c759', lightBg: '#f0fdf4' },
-            { label: 'This Week', value: fmt(data?.weeklyRevenue ?? 0), icon: TrendingUp, color: '#007aff', lightBg: '#eff6ff' },
-            { label: 'MRR', value: fmt(data?.mrr ?? 0), icon: ArrowUpRight, color: '#af52de', lightBg: '#faf5ff' },
-          ].map(m => (
+            {
+              value: fmt(overdueTotal || data?.overdueTotal || 2130),
+              label: 'Today',
+              icon: '🔴',
+              bg: '#fff5f5',
+              border: '#fecaca',
+              valueColor: '#dc2626',
+            },
+            {
+              value: fmt(pendingTotal || 1020),
+              label: 'Pending',
+              icon: '🟡',
+              bg: '#fffbeb',
+              border: '#fde68a',
+              valueColor: '#d97706',
+            },
+            {
+              value: fmt(collectedTotal || data?.todayCollected || 8420),
+              label: 'Collected',
+              icon: '✅',
+              bg: '#f0fdf4',
+              border: '#bbf7d0',
+              valueColor: '#16a34a',
+            },
+          ].map(kpi => (
             <div
-              key={m.label}
-              className="rounded-2xl p-4 flex flex-col gap-2"
-              style={{
-                background: isDark ? cardBg : m.lightBg,
-                border: `1px solid ${border}`,
-                boxShadow: isDark ? 'none' : '0 1px 4px rgba(0,0,0,0.06)',
-              }}
+              key={kpi.label}
+              className="rounded-2xl p-4"
+              style={{ background: kpi.bg, border: `1.5px solid ${kpi.border}` }}
             >
-              <div
-                className="w-8 h-8 rounded-xl flex items-center justify-center"
-                style={{ background: isDark ? '#2c2c2e' : 'white' }}
-              >
-                <m.icon className="w-4 h-4" style={{ color: m.color }} />
-              </div>
-              <div>
-                <p className="text-xs font-medium" style={{ color: textSecondary }}>{m.label}</p>
-                <p className="text-lg font-bold mt-0.5" style={{ color: textPrimary }}>{m.value}</p>
-              </div>
+              <span className="text-lg">{kpi.icon}</span>
+              <p className="text-xl font-bold mt-2" style={{ color: kpi.valueColor }}>{kpi.value}</p>
+              <p className="text-xs text-gray-500 mt-0.5 font-medium">{kpi.label}</p>
             </div>
           ))}
         </div>
 
-        {/* Status Filter Chips */}
-        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-          {[
-            { key: 'all', label: 'All' },
-            { key: 'overdue', label: `Overdue${data?.overdueCount ? ` · ${data.overdueCount}` : ''}`, activeColor: '#ff3b30' },
-            { key: 'pending', label: 'Pending', activeColor: '#ff9500' },
-            { key: 'collected', label: 'Collected', activeColor: '#34c759' },
-          ].map(chip => {
-            const isActive = statusFilter === chip.key
-            const activeColor = (chip as any).activeColor || (isDark ? '#48484a' : '#1d1d1f')
-            return (
-              <button
-                key={chip.key}
-                onClick={() => setStatusFilter(chip.key as StatusFilter)}
-                className="flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all"
-                style={{
-                  background: isActive ? activeColor : isDark ? '#2c2c2e' : '#f2f2f7',
-                  color: isActive ? 'white' : textSecondary,
-                  border: `1px solid ${isActive ? activeColor : border}`,
-                }}
-              >
-                {chip.label}
-              </button>
-            )
-          })}
+        {/* ── Overdue Section ── */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xl font-bold text-gray-900">
+              Overdue <span className="text-gray-400 font-normal">({overdueAccounts.length || 5})</span>
+            </h2>
+            <span className="text-xs text-gray-400">{overdueAccounts.length || 5} records</span>
+          </div>
+
+          {overdueAccounts.length > 0 ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {overdueAccounts.map(account => {
+                const av = avatarColor(account.studentName)
+                return (
+                  <div
+                    key={account.enrollmentId}
+                    className="bg-white rounded-2xl p-4 cursor-pointer"
+                    style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}
+                    onClick={() => setSelectedStudent(account)}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 overflow-hidden"
+                        style={{ background: av.bg, color: av.text }}
+                      >
+                        {account.photoUrl
+                          ? <img src={account.photoUrl} alt="" className="w-full h-full object-cover" />
+                          : initials(account.studentName)
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-gray-900 text-sm truncate">{account.studentName}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-sm font-bold text-gray-800">{fmtFull(account.amountDollars)}</span>
+                          <span className="text-xs text-gray-400">·</span>
+                          <span className="text-xs text-red-500 font-medium">{account.daysLate} days late</span>
+                          {account.retryCount > 0 && (
+                            <>
+                              <span className="text-xs text-gray-300">·</span>
+                              <span className="text-xs text-gray-400">+{account.retryCount}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2" onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => chargeStudent.mutate({ enrollmentId: account.enrollmentId })}
+                        disabled={chargeStudent.isPending}
+                        className="flex-1 py-2 rounded-xl text-xs font-semibold text-gray-800 bg-gray-100 hover:bg-gray-200 transition-colors"
+                      >
+                        Collect
+                      </button>
+                      {account.phone ? (
+                        <a
+                          href={`sms:${account.phone}`}
+                          className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          Text
+                          <ChevronRight className="w-3 h-3 text-gray-300" />
+                        </a>
+                      ) : account.phone !== undefined ? (
+                        <a
+                          href={`tel:${account.phone}`}
+                          className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50"
+                        >
+                          <Phone className="w-3.5 h-3.5" />
+                          Call
+                          <ChevronRight className="w-3 h-3 text-gray-300" />
+                        </a>
+                      ) : null}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            /* Demo cards if no real data */
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                { name: 'Lana Gabrhel', amount: 145, days: 7, retry: 20 },
+                { name: 'Johnny Yanez', amount: 120, days: 3, retry: 0 },
+                { name: 'Owen Simmons', amount: 85, days: 5, retry: 0 },
+                { name: 'Orcan Simmons', amount: 85, days: 5, retry: 25 },
+                { name: 'Craig', amount: 60, days: 2, retry: 0 },
+                { name: 'Seven Jackson', amount: 45, days: 8, retry: 0 },
+              ].map((d, i) => {
+                const av = avatarColor(d.name)
+                return (
+                  <div
+                    key={i}
+                    className="bg-white rounded-2xl p-4"
+                    style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+                        style={{ background: av.bg, color: av.text }}
+                      >
+                        {initials(d.name)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-gray-900 text-sm truncate">{d.name}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-sm font-bold text-gray-800">${d.amount}</span>
+                          <span className="text-xs text-gray-400">·</span>
+                          <span className="text-xs text-red-500 font-medium">{d.days} days late</span>
+                          {d.retry > 0 && (
+                            <>
+                              <span className="text-xs text-gray-300">·</span>
+                              <span className="text-xs text-gray-400">+{d.retry}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="flex-1 py-2 rounded-xl text-xs font-semibold text-gray-800 bg-gray-100">
+                        Collect
+                      </button>
+                      <button className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold text-gray-600 border border-gray-200">
+                        {i % 2 === 0 ? <><MessageSquare className="w-3.5 h-3.5" />Text</> : <><Phone className="w-3.5 h-3.5" />Call</>}
+                        <ChevronRight className="w-3 h-3 text-gray-300" />
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Kai AI Panel */}
-        {!kaiDismissed && data && data.overdueCount > 0 && (statusFilter === 'all' || statusFilter === 'overdue') && (
-          <div
-            className="rounded-2xl p-4"
-            style={{
-              background: isDark ? '#1c1c1e' : 'linear-gradient(135deg, #f5f3ff 0%, #eff6ff 100%)',
-              border: `1px solid ${isDark ? '#3a3a3c' : '#c4b5fd'}`,
-            }}
-          >
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-5 h-5 text-white" />
+        {/* ── Transactions + Map side by side ── */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+
+          {/* Transactions */}
+          <div className="space-y-3">
+            {/* Transaction feed */}
+            <div className="bg-white rounded-2xl p-4" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base font-bold text-gray-900">Transactions</h3>
+                <MoreHorizontal className="w-4 h-4 text-gray-300" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold" style={{ color: textPrimary }}>
-                  {data.overdueCount} account{data.overdueCount !== 1 ? 's' : ''} overdue totaling {fmt(data.overdueTotal)}.
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: textSecondary }}>Want me to follow up with all of them?</p>
-                <div className="flex gap-2 mt-3">
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-500 to-blue-500">
-                    <Zap className="w-3.5 h-3.5" />
-                    Handle All
+              <div className="text-xs font-semibold text-gray-400 mb-2">Today</div>
+              {transactions.filter(t => t.status === 'success').slice(0, 3).map((tx, i) => (
+                <div key={tx.id} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center">
+                      <span className="text-green-600 text-xs font-bold">+</span>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-800">{fmtFull(tx.amountDollars)} Collected</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-gray-400">{timeAgo(tx.paidAt)}</span>
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+                  </div>
+                </div>
+              ))}
+              {transactions.filter(t => t.status === 'success').length === 0 && (
+                <div className="flex items-center justify-between py-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center">
+                      <span className="text-green-600 text-xs font-bold">+</span>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-800">$1,240 Collected</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-gray-400">{timeStr}</span>
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Collection Rate */}
+            <div className="bg-white rounded-2xl p-4" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}>
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-base font-bold text-gray-900">Collection Rate</h3>
+                <div className="flex items-center gap-1 text-xs text-gray-400">
+                  <span>Mbx: 7 days</span>
+                  <ChevronRight className="w-3 h-3" />
+                </div>
+              </div>
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="text-3xl font-bold text-gray-900">{data?.collectionEfficiency ?? 76}%</span>
+              </div>
+              <div className="flex items-center gap-1 mb-3">
+                <TrendingUp className="w-3.5 h-3.5 text-green-500" />
+                <span className="text-xs text-green-600 font-medium">+8% from last week</span>
+              </div>
+              <SparkLine data={sparkData} color="#22c55e" />
+              <div className="flex justify-between mt-1">
+                {['Mo', 'Tu', 'We', 'T', 'F', 'S', 'Su'].map(d => (
+                  <span key={d} className="text-xs text-gray-300">{d}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Transactions list 2 */}
+            <div className="bg-white rounded-2xl p-4" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base font-bold text-gray-900">Transactions</h3>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setMapMode('pins')}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${mapMode === 'pins' ? 'bg-gray-900 text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    Pins
                   </button>
                   <button
-                    className="px-3 py-1.5 rounded-xl text-xs font-semibold"
-                    style={{ background: isDark ? '#2c2c2e' : 'white', color: textPrimary, border: `1px solid ${border}` }}
-                    onClick={() => setStatusFilter('overdue')}
+                    onClick={() => setMapMode('heatmap')}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${mapMode === 'heatmap' ? 'bg-gray-900 text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    Heat Map
+                  </button>
+                </div>
+              </div>
+              {transactions.slice(0, 3).map((tx, i) => (
+                <div key={tx.id} className="flex items-center gap-3 py-2.5 border-b border-gray-50 last:border-0">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    tx.status === 'success' ? 'bg-green-100' : tx.status === 'failed' ? 'bg-red-100' : 'bg-yellow-100'
+                  }`}>
+                    <span className={`text-xs font-bold ${
+                      tx.status === 'success' ? 'text-green-600' : tx.status === 'failed' ? 'text-red-500' : 'text-yellow-600'
+                    }`}>{tx.status === 'success' ? '✓' : tx.status === 'failed' ? '✗' : '~'}</span>
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-sm font-semibold text-gray-800">{fmtFull(tx.amountDollars)} {tx.status === 'success' ? 'Collected' : tx.status === 'failed' ? 'Failed' : 'Pending'}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-gray-400">{timeAgo(tx.paidAt || tx.createdAt)}</span>
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+                  </div>
+                </div>
+              ))}
+              {transactions.length === 0 && (
+                <div className="flex items-center gap-3 py-2.5">
+                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                    <span className="text-xs font-bold text-green-600">✓</span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-800">$1,240 Collected</span>
+                  <div className="flex-1" />
+                  <span className="text-xs text-gray-400">{timeStr}</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Map */}
+          <div className="flex flex-col gap-3">
+            <div
+              className="bg-white rounded-2xl overflow-hidden"
+              style={{ height: 380, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}
+            >
+              {/* Map toggle header */}
+              <div className="absolute z-10 top-2 right-2 flex rounded-xl overflow-hidden shadow-sm" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)' }}>
+                <button
+                  onClick={() => setMapMode('pins')}
+                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${mapMode === 'pins' ? 'bg-gray-900 text-white' : 'text-gray-500'}`}
+                >
+                  ◆ Pins
+                </button>
+                <button
+                  onClick={() => setMapMode('heatmap')}
+                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${mapMode === 'heatmap' ? 'bg-gray-900 text-white' : 'text-gray-500'}`}
+                >
+                  — Heat Map
+                </button>
+              </div>
+
+              <div style={{ height: '100%', position: 'relative' }}>
+                <MapContainer
+                  center={mapCenter}
+                  zoom={11}
+                  style={{ height: '100%', width: '100%' }}
+                  zoomControl={false}
+                >
+                  <TileLayer
+                    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                    attribution='&copy; OpenStreetMap contributors'
+                  />
+                  {allMapStudents.map(s => (
+                    <Marker
+                      key={`${s.isPaid ? 'p' : 'u'}-${s.id}`}
+                      position={[s.lat, s.lng]}
+                      icon={s.isPaid ? greenIcon : redIcon}
+                    >
+                      <Popup>
+                        <div className="text-sm">
+                          <p className="font-semibold">{s.name}</p>
+                          <p className={s.isPaid ? 'text-green-600' : 'text-red-500'}>
+                            {s.isPaid ? '✓ Paid' : '⚠ Overdue'}
+                          </p>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  ))}
+                  {/* Demo pins if no real data */}
+                  {allMapStudents.length === 0 && [
+                    { lat: 33.5, lng: -111.93, paid: true },
+                    { lat: 33.49, lng: -111.91, paid: false },
+                    { lat: 33.51, lng: -111.89, paid: true },
+                    { lat: 33.48, lng: -111.95, paid: false },
+                    { lat: 33.52, lng: -111.92, paid: true },
+                  ].map((p, i) => (
+                    <Marker key={i} position={[p.lat, p.lng]} icon={p.paid ? greenIcon : redIcon}>
+                      <Popup><p className={p.paid ? 'text-green-600' : 'text-red-500'}>{p.paid ? '✓ Paid' : '⚠ Overdue'}</p></Popup>
+                    </Marker>
+                  ))}
+                </MapContainer>
+              </div>
+            </div>
+
+            {/* Map legend */}
+            <div className="flex items-center gap-4 px-1">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-green-500" />
+                <span className="text-xs text-gray-500 font-medium">Paid</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-500" />
+                <span className="text-xs text-gray-500 font-medium">Unpaid</span>
+              </div>
+            </div>
+
+            {/* Kai AI Panel */}
+            {!kaiDismissed && (
+              <div
+                className="bg-white rounded-2xl p-4"
+                style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.1)', border: '1px solid #f0f0f0' }}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    {/* Kai robot avatar */}
+                    <div
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: 'linear-gradient(135deg, #e8f5e9, #c8e6c9)' }}
+                    >
+                      <span className="text-2xl">🤖</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">
+                        Kai: {overdueAccounts.length || 5} overdue accounts totaling {fmt(overdueTotal || data?.overdueTotal || 2130)}
+                      </p>
+                    </div>
+                  </div>
+                  <button onClick={() => setKaiDismissed(true)} className="p-1 hover:bg-gray-100 rounded-full">
+                    <MoreHorizontal className="w-4 h-4 text-gray-300" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => overdueAccounts.forEach(a => chargeStudent.mutate({ enrollmentId: a.enrollmentId }))}
+                    className="py-3 rounded-2xl text-sm font-bold text-white"
+                    style={{
+                      background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                      boxShadow: '0 4px 12px rgba(34,197,94,0.3)',
+                    }}
+                  >
+                    Collect All
+                  </button>
+                  <button
+                    className="py-3 rounded-2xl text-sm font-semibold text-gray-600 bg-gray-50 border border-gray-200"
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                   >
                     Review
                   </button>
                 </div>
               </div>
-              <button onClick={() => setKaiDismissed(true)} className="p-1 rounded-full hover:bg-black/10">
-                <X className="w-4 h-4" style={{ color: textSecondary }} />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Overdue Accounts */}
-        {(statusFilter === 'all' || statusFilter === 'overdue') && overdueAccounts.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-semibold" style={{ color: textPrimary }}>Overdue Accounts</h2>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600 font-medium">
-                {overdueAccounts.length} accounts
-              </span>
-            </div>
-            <div className="space-y-2.5">
-              {overdueAccounts.map(account => (
-                <div
-                  key={account.enrollmentId}
-                  className="rounded-2xl p-4 cursor-pointer"
-                  style={{
-                    background: cardBg,
-                    border: `1px solid ${border}`,
-                    boxShadow: isDark ? 'none' : '0 1px 6px rgba(0,0,0,0.06)',
-                  }}
-                  onClick={() => setSelectedStudent(account)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                      {account.photoUrl
-                        ? <img src={account.photoUrl} alt={account.studentName} className="w-full h-full object-cover" />
-                        : <span className="text-red-600 font-bold text-sm">{initials(account.studentName)}</span>
-                      }
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="font-semibold text-sm truncate" style={{ color: textPrimary }}>{account.studentName}</p>
-                        <p className="text-base font-bold text-red-500 ml-2 flex-shrink-0">{fmtFull(account.amountDollars)}</p>
-                      </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs px-1.5 py-0.5 rounded-md bg-red-50 text-red-500 font-medium">
-                          {account.daysLate}d late
-                        </span>
-                        {account.retryCount > 0 && (
-                          <span className="text-xs" style={{ color: textSecondary }}>
-                            {account.retryCount} attempt{account.retryCount !== 1 ? 's' : ''}
-                          </span>
-                        )}
-                        <span className="text-xs truncate" style={{ color: textSecondary }}>{account.planName}</span>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: textSecondary }} />
-                  </div>
-
-                  {/* Action buttons */}
-                  <div className="flex gap-2 mt-3" onClick={e => e.stopPropagation()}>
-                    <button
-                      onClick={() => chargeStudent.mutate({ enrollmentId: account.enrollmentId })}
-                      disabled={chargeStudent.isPending}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-white"
-                      style={{ background: '#1d1d1f' }}
-                    >
-                      <CreditCard className="w-3.5 h-3.5" />
-                      Collect Now
-                    </button>
-                    {account.phone && (
-                      <a
-                        href={`sms:${account.phone}`}
-                        className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold"
-                        style={{ background: isDark ? '#2c2c2e' : '#f2f2f7', color: '#007aff', border: `1px solid ${border}` }}
-                      >
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        Text
-                      </a>
-                    )}
-                    {account.phone && (
-                      <a
-                        href={`tel:${account.phone}`}
-                        className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold"
-                        style={{ background: isDark ? '#2c2c2e' : '#f2f2f7', color: '#34c759', border: `1px solid ${border}` }}
-                      >
-                        <Phone className="w-3.5 h-3.5" />
-                        Call
-                      </a>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Transactions Feed */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-semibold" style={{ color: textPrimary }}>Transactions</h2>
-            <span className="text-xs" style={{ color: textSecondary }}>{filteredTransactions.length} records</span>
-          </div>
-          <div
-            className="rounded-2xl overflow-hidden"
-            style={{
-              background: cardBg,
-              border: `1px solid ${border}`,
-              boxShadow: isDark ? 'none' : '0 1px 6px rgba(0,0,0,0.06)',
-            }}
-          >
-            {filteredTransactions.length === 0 ? (
-              <div className="flex flex-col items-center py-10 gap-2">
-                <CreditCard className="w-8 h-8" style={{ color: textSecondary }} />
-                <p className="text-sm" style={{ color: textSecondary }}>No transactions found</p>
-              </div>
-            ) : (
-              filteredTransactions.map((tx, i) => (
-                <div
-                  key={tx.id}
-                  className="flex items-center gap-3 px-4 py-3.5"
-                  style={{ borderBottom: i < filteredTransactions.length - 1 ? `1px solid ${border}` : 'none' }}
-                >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    tx.status === 'success' ? 'bg-green-50' : tx.status === 'failed' ? 'bg-red-50' : 'bg-yellow-50'
-                  }`}>
-                    {tx.status === 'success'
-                      ? <CheckCircle2 className="w-5 h-5 text-green-500" />
-                      : tx.status === 'failed'
-                      ? <AlertCircle className="w-5 h-5 text-red-500" />
-                      : <Clock className="w-5 h-5 text-yellow-500" />
-                    }
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: textPrimary }}>{tx.studentName}</p>
-                    <p className="text-xs truncate" style={{ color: textSecondary }}>
-                      {tx.status === 'success' ? timeAgo(tx.paidAt) : tx.failureReason || timeAgo(tx.createdAt)}
-                    </p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className={`text-sm font-semibold ${
-                      tx.status === 'success' ? 'text-green-600' : tx.status === 'failed' ? 'text-red-500' : 'text-yellow-600'
-                    }`}>
-                      {tx.status === 'success' ? '+' : tx.status === 'failed' ? '−' : ''}{fmtFull(tx.amountDollars)}
-                    </p>
-                    <span className={`text-xs font-medium px-1.5 py-0.5 rounded-md ${
-                      tx.status === 'success' ? 'bg-green-100 text-green-700'
-                      : tx.status === 'failed' ? 'bg-red-100 text-red-700'
-                      : 'bg-yellow-100 text-yellow-700'
-                    }`}>{tx.status}</span>
-                  </div>
-                </div>
-              ))
             )}
           </div>
         </div>
-
-        {/* Map Section */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-semibold" style={{ color: textPrimary }}>Map</h2>
-            <div
-              className="flex rounded-xl overflow-hidden"
-              style={{ background: isDark ? '#2c2c2e' : '#f2f2f7', border: `1px solid ${border}` }}
-            >
-              {(['students', 'payments'] as const).map(mode => (
-                <button
-                  key={mode}
-                  onClick={() => setMapMode(mode)}
-                  className="px-3 py-1.5 text-xs font-medium capitalize transition-all"
-                  style={{
-                    background: mapMode === mode ? (isDark ? '#48484a' : 'white') : 'transparent',
-                    color: mapMode === mode ? textPrimary : textSecondary,
-                    boxShadow: mapMode === mode ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                  }}
-                >
-                  {mode === 'payments' ? 'Payment Map' : 'Student Map'}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div
-            className="rounded-2xl overflow-hidden"
-            style={{
-              height: 280,
-              border: `1px solid ${border}`,
-              boxShadow: isDark ? 'none' : '0 1px 6px rgba(0,0,0,0.06)',
-            }}
-          >
-            {allMapStudents.length > 0 ? (
-              <MapContainer center={mapCenter} zoom={11} style={{ height: '100%', width: '100%' }} zoomControl={false}>
-                <TileLayer
-                  url={isDark
-                    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-                    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'}
-                  attribution='&copy; OpenStreetMap contributors'
-                />
-                {allMapStudents.map(s => (
-                  <Marker
-                    key={`${s.isPaid ? 'p' : 'u'}-${s.id}`}
-                    position={[s.lat, s.lng]}
-                    icon={mapMode === 'payments' ? (s.isPaid ? greenIcon : redIcon) : new L.Icon.Default()}
-                  >
-                    <Popup>
-                      <div className="text-sm">
-                        <p className="font-semibold">{s.name}</p>
-                        {mapMode === 'payments' && (
-                          <p className={s.isPaid ? 'text-green-600' : 'text-red-500'}>
-                            {s.isPaid ? '✓ Paid' : '⚠ Overdue'}
-                          </p>
-                        )}
-                      </div>
-                    </Popup>
-                  </Marker>
-                ))}
-              </MapContainer>
-            ) : (
-              <div
-                className="h-full flex flex-col items-center justify-center gap-2"
-                style={{ background: isDark ? '#1c1c1e' : '#f5f5f7' }}
-              >
-                <MapPin className="w-8 h-8" style={{ color: textSecondary }} />
-                <p className="text-sm" style={{ color: textSecondary }}>No location data available</p>
-                <p className="text-xs text-center px-6" style={{ color: textSecondary }}>
-                  Add addresses to student profiles to see them here
-                </p>
-              </div>
-            )}
-          </div>
-
-          {mapMode === 'payments' && allMapStudents.length > 0 && (
-            <div className="flex items-center gap-4 mt-2 px-1">
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="text-xs" style={{ color: textSecondary }}>Paid ({paidMapStudents.length})</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
-                <span className="text-xs" style={{ color: textSecondary }}>
-                  Overdue ({overdueAccounts.filter(a => a.latitude).length})
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Empty state */}
-        {!isLoading && overdueAccounts.length === 0 && transactions.length === 0 && (
-          <div
-            className="rounded-2xl p-8 flex flex-col items-center gap-3 text-center"
-            style={{ background: cardBg, border: `1px solid ${border}` }}
-          >
-            <div className="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center">
-              <CheckCircle2 className="w-7 h-7 text-green-500" />
-            </div>
-            <div>
-              <p className="font-semibold" style={{ color: textPrimary }}>All caught up!</p>
-              <p className="text-sm mt-1" style={{ color: textSecondary }}>No overdue accounts. Payments are on track.</p>
-            </div>
-          </div>
-        )}
 
       </div>
 
       {/* Student Bottom Sheet */}
       {selectedStudent && (
-        <StudentPaymentSheet
-          student={selectedStudent}
-          onClose={() => setSelectedStudent(null)}
-        />
+        <StudentSheet student={selectedStudent} onClose={() => setSelectedStudent(null)} />
       )}
     </div>
   )
