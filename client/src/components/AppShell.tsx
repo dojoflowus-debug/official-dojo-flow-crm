@@ -15,7 +15,8 @@ import {
   Package,
   Grid3x3,
   Wand2,
-  Star
+  Star,
+  Wallet
 } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useFocusMode } from '@/contexts/FocusModeContext'
@@ -43,6 +44,7 @@ const NAVIGATION = [
   { id: 'kiosk-studio', name: 'Kiosk', href: '/kiosk-home', icon: Grid3x3 },
   { id: 'staff', name: 'Staff', href: '/staff', icon: UserCog },
   { id: 'programs', name: 'Programs', href: '/programs', icon: BookOpen },
+  { id: 'payments-dashboard', name: 'Payments', href: '/payments/dashboard', icon: Wallet },
   { id: 'reports', name: 'Reports', href: '/reports', icon: BarChart3 },
   { id: 'kai-creative', name: 'Creative', href: '/kai/creative', icon: Wand2 },
   { id: 'kai-reviews', name: 'Reviews', href: '/kai/reviews', icon: Star },
