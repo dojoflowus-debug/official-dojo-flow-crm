@@ -523,6 +523,119 @@ export const tuitionBillingRouter = router({
       );
       return { success: true };
     }),
+
+  // Payments command center dashboard
+  getPaymentsDashboard: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not initialized");
+      const orgId = await resolveOrgId(ctx, db);
+      if (!orgId) return null;
+
+      const todayRows = await rawQuery(db,
+        `SELECT COALESCE(SUM(amount_cents),0) as total FROM student_tuition_payments
+         WHERE organization_id = ? AND status = 'success' AND DATE(paid_at) = CURDATE()`,
+        [orgId]);
+      const todayCollected = (Number(todayRows[0]?.total) || 0) / 100;
+
+      const weekRows = await rawQuery(db,
+        `SELECT COALESCE(SUM(amount_cents),0) as total FROM student_tuition_payments
+         WHERE organization_id = ? AND status = 'success' AND paid_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)`,
+        [orgId]);
+      const weeklyRevenue = (Number(weekRows[0]?.total) || 0) / 100;
+
+      const mrrRows = await rawQuery(db,
+        `SELECT COALESCE(SUM(p.amount_cents),0) as total
+         FROM student_billing_enrollments e JOIN tuition_plans p ON e.plan_id = p.id
+         WHERE e.organization_id = ? AND e.status = 'active'`,
+        [orgId]);
+      const mrr = (Number(mrrRows[0]?.total) || 0) / 100;
+
+      const effRows = await rawQuery(db,
+        `SELECT COUNT(CASE WHEN status='success' THEN 1 END) as s, COUNT(CASE WHEN status='failed' THEN 1 END) as f
+         FROM student_tuition_payments WHERE organization_id = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)`,
+        [orgId]);
+      const sc = Number(effRows[0]?.s) || 0;
+      const fc = Number(effRows[0]?.f) || 0;
+      const collectionEfficiency = (sc + fc) > 0 ? Math.round((sc / (sc + fc)) * 100) : 100;
+
+      const overdueRows = await rawQuery(db,
+        `SELECT e.id as eid, e.student_id, e.retry_count, e.last_declined_at, e.next_billing_date,
+                p.amount_cents, p.name as plan_name, p.frequency,
+                s.first_name, s.last_name, s.phone, s.latitude, s.longitude, s.photo_url,
+                DATEDIFF(NOW(), COALESCE(e.last_declined_at, e.next_billing_date)) as days_late
+         FROM student_billing_enrollments e
+         JOIN tuition_plans p ON e.plan_id = p.id
+         JOIN students s ON e.student_id = s.id
+         WHERE e.organization_id = ? AND e.status = 'past_due'
+         ORDER BY days_late DESC LIMIT 50`,
+        [orgId]);
+      const overdueAccounts = overdueRows.map((r: any) => ({
+        enrollmentId: r.eid,
+        studentId: r.student_id,
+        studentName: `${r.first_name} ${r.last_name}`,
+        phone: r.phone,
+        amountDollars: (Number(r.amount_cents) || 0) / 100,
+        planName: r.plan_name,
+        frequency: r.frequency,
+        daysLate: Math.max(0, Number(r.days_late) || 0),
+        retryCount: Number(r.retry_count) || 0,
+        lastDeclinedAt: r.last_declined_at,
+        latitude: r.latitude,
+        longitude: r.longitude,
+        photoUrl: r.photo_url,
+      }));
+
+      const txRows = await rawQuery(db,
+        `SELECT stp.id, stp.amount_cents, stp.status, stp.paid_at, stp.created_at,
+                stp.failure_reason, stp.description, stp.fluidpay_transaction_id,
+                s.first_name, s.last_name, s.photo_url, s.latitude, s.longitude, s.phone
+         FROM student_tuition_payments stp
+         JOIN students s ON stp.student_id = s.id
+         WHERE stp.organization_id = ? ORDER BY stp.created_at DESC LIMIT 30`,
+        [orgId]);
+      const transactions = txRows.map((r: any) => ({
+        id: r.id,
+        studentName: `${r.first_name} ${r.last_name}`,
+        amountDollars: (Number(r.amount_cents) || 0) / 100,
+        status: r.status,
+        paidAt: r.paid_at,
+        createdAt: r.created_at,
+        failureReason: r.failure_reason,
+        description: r.description,
+        transactionId: r.fluidpay_transaction_id,
+        photoUrl: r.photo_url,
+        latitude: r.latitude,
+        longitude: r.longitude,
+        phone: r.phone,
+      }));
+
+      const paidMapRows = await rawQuery(db,
+        `SELECT DISTINCT s.id, s.first_name, s.last_name, s.latitude, s.longitude
+         FROM student_tuition_payments stp JOIN students s ON stp.student_id = s.id
+         WHERE stp.organization_id = ? AND stp.status = 'success'
+           AND s.latitude IS NOT NULL AND s.longitude IS NOT NULL
+           AND stp.paid_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)`,
+        [orgId]);
+
+      return {
+        todayCollected,
+        weeklyRevenue,
+        mrr,
+        collectionEfficiency,
+        overdueAccounts,
+        overdueCount: overdueAccounts.length,
+        overdueTotal: overdueAccounts.reduce((sum: number, a: any) => sum + a.amountDollars, 0),
+        transactions,
+        paidMapStudents: paidMapRows.map((r: any) => ({
+          id: r.id,
+          name: `${r.first_name} ${r.last_name}`,
+          latitude: r.latitude,
+          longitude: r.longitude,
+          isPaid: true,
+        })),
+      };
+    }),
 });
 
 export type TuitionBillingRouter = typeof tuitionBillingRouter;

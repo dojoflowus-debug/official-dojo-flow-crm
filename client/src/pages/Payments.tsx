@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { trpc } from '@/lib/trpc';
 import { useTheme } from '@/contexts/ThemeContext';
 import {
@@ -145,6 +146,7 @@ function getDateRange(preset: string): { start: string; end: string; label: stri
 
 export default function Payments() {
   const { theme } = useTheme();
+  const navigate = useNavigate();
   const isDark = theme === 'dark' || theme === 'cinematic';
 
   const [datePreset, setDatePreset] = useState('this_month');
@@ -241,6 +243,15 @@ export default function Payments() {
           <p className={`text-sm ${textSecondary}`}>Live FluidPay transaction data for your dojo</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/payments/dashboard')}
+            className={isDark ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800 border-violet-500/50' : 'border-violet-300 text-violet-700 hover:bg-violet-50'}
+          >
+            <Zap className="w-4 h-4 mr-1.5" />
+            Command Center
+          </Button>
           <Button
             variant="outline"
             size="sm"
