@@ -147,6 +147,34 @@ async function runStartupMigrations() {
       }
     }
 
+    // Ensure sms_log table exists for Kai SMS tracking
+    try {
+      await conn.execute(`
+        CREATE TABLE IF NOT EXISTS \`sms_log\` (
+          \`id\` INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+          \`organization_id\` INT NOT NULL,
+          \`student_id\` INT NULL,
+          \`recipient_name\` VARCHAR(255) NULL,
+          \`recipient_phone\` VARCHAR(30) NOT NULL,
+          \`message\` TEXT NOT NULL,
+          \`twilio_sid\` VARCHAR(50) NULL,
+          \`status\` ENUM('queued','sent','delivered','failed','undelivered','no_phone') NOT NULL DEFAULT 'queued',
+          \`error_message\` TEXT NULL,
+          \`sent_by\` VARCHAR(50) NULL DEFAULT 'kai',
+          \`bulk_filter\` VARCHAR(50) NULL,
+          \`sent_at\` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          \`delivered_at\` TIMESTAMP NULL,
+          INDEX \`idx_sms_log_org\` (\`organization_id\`),
+          INDEX \`idx_sms_log_student\` (\`student_id\`),
+          INDEX \`idx_sms_log_status\` (\`status\`),
+          INDEX \`idx_sms_log_sent_at\` (\`sent_at\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+      console.log('[Migration] ✓ sms_log table ensured');
+    } catch (smsLogErr: any) {
+      console.warn('[Migration] sms_log warning:', smsLogErr.message);
+    }
+
     await conn.end();
   } catch (err: any) {
     console.warn('[Migration] Startup migration warning (non-fatal):', err.message);

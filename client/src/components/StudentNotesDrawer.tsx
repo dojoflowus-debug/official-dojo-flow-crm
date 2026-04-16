@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, Save, Loader2, MessageSquare, TrendingUp, Users, Clock, AlertCircle, Heart, Flag, CheckCircle2, CreditCard, RefreshCw, XCircle, AlertTriangle } from 'lucide-react'
+import { X, Save, Loader2, MessageSquare, TrendingUp, Users, Clock, AlertCircle, Heart, Flag, CheckCircle2, CreditCard, RefreshCw, XCircle, AlertTriangle, Smartphone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -51,7 +51,7 @@ export function StudentNotesDrawer({
   isOpen,
   onClose,
 }: StudentNotesDrawerProps) {
-  const [activeTab, setActiveTab] = useState<'notes' | 'payments'>('notes')
+  const [activeTab, setActiveTab] = useState<'notes' | 'payments' | 'sms'>('notes')
   const [notes, setNotes] = useState<StudentNote[]>([])
   const [newNoteContent, setNewNoteContent] = useState('')
   const [selectedNoteType, setSelectedNoteType] = useState<NoteType>('General')
@@ -68,6 +68,12 @@ export function StudentNotesDrawer({
   const { data: billingData, isLoading: isBillingLoading } = trpc.tuitionBilling.getStudentBillingStatus.useQuery(
     { studentId },
     { enabled: isOpen && !!studentId && activeTab === 'payments' }
+  )
+
+  // Fetch SMS log for this student
+  const { data: smsLog, isLoading: isSmsLoading } = trpc.students.getSmsLog.useQuery(
+    { studentId },
+    { enabled: isOpen && !!studentId && activeTab === 'sms' }
   )
 
   // Add/update note mutation
@@ -224,6 +230,18 @@ export function StudentNotesDrawer({
           >
             <CreditCard className="w-4 h-4" />
             Payments
+          </button>
+          <button
+            onClick={() => setActiveTab('sms')}
+            className={cn(
+              'flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors pointer-events-auto',
+              activeTab === 'sms'
+                ? 'text-primary border-b-2 border-primary bg-primary/5'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+            )}
+          >
+            <Smartphone className="w-4 h-4" />
+            SMS
           </button>
         </div>
 
@@ -384,6 +402,82 @@ export function StudentNotesDrawer({
               </div>
             </div>
           </>
+        )}
+
+        {/* ── SMS LOG TAB ── */}
+        {activeTab === 'sms' && (
+          <div className="flex-1 overflow-y-auto min-h-0">
+            {isSmsLoading ? (
+              <div className="flex items-center justify-center py-16 text-muted-foreground">
+                <RefreshCw className="w-5 h-5 animate-spin mr-2" />
+                Loading SMS history...
+              </div>
+            ) : !smsLog || smsLog.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
+                <Smartphone className="w-12 h-12 mb-3 opacity-20" />
+                <p className="text-sm font-medium">No SMS messages yet</p>
+                <p className="text-xs mt-1 opacity-60">Messages Kai sends to this student will appear here.</p>
+              </div>
+            ) : (
+              <div className="p-6 space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  SMS History ({smsLog.length})
+                </h3>
+                {smsLog.map((sms: any) => {
+                  const isDelivered = sms.status === 'delivered'
+                  const isSent = sms.status === 'sent'
+                  const isFailed = sms.status === 'failed' || sms.status === 'undelivered'
+                  const isNoPhone = sms.status === 'no_phone'
+                  return (
+                    <div key={sms.id} className="bg-muted/40 rounded-lg p-4 border border-border/50 hover:border-border transition-colors">
+                      <div className="flex items-start gap-3">
+                        <div className={cn(
+                          'mt-0.5 flex-shrink-0',
+                          isDelivered ? 'text-green-500' : isSent ? 'text-blue-500' : isFailed || isNoPhone ? 'text-red-500' : 'text-yellow-500'
+                        )}>
+                          {isDelivered ? (
+                            <CheckCircle2 className="w-4 h-4" />
+                          ) : isFailed || isNoPhone ? (
+                            <XCircle className="w-4 h-4" />
+                          ) : (
+                            <Smartphone className="w-4 h-4" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-foreground leading-relaxed break-words">{sms.message}</p>
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <span className={cn(
+                              'text-xs font-semibold px-2 py-0.5 rounded-full',
+                              isDelivered ? 'bg-green-500/10 text-green-600' :
+                              isSent ? 'bg-blue-500/10 text-blue-600' :
+                              isFailed || isNoPhone ? 'bg-red-500/10 text-red-600' :
+                              'bg-yellow-500/10 text-yellow-600'
+                            )}>
+                              {sms.status}
+                            </span>
+                            {sms.bulkFilter && (
+                              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                                bulk: {sms.bulkFilter}
+                              </span>
+                            )}
+                            <span className="text-xs text-muted-foreground ml-auto">
+                              {formatDate(sms.sentAt)}
+                            </span>
+                          </div>
+                          {sms.errorMessage && (
+                            <p className="text-xs text-red-400 mt-1 truncate">{sms.errorMessage}</p>
+                          )}
+                          {sms.twilioSid && (
+                            <p className="text-xs font-mono text-muted-foreground/40 mt-1 truncate">{sms.twilioSid}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         )}
 
         {/* ── PAYMENTS TAB ── */}

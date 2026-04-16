@@ -2181,3 +2181,27 @@ export const kaiSupportTickets = mysqlTable("kai_support_tickets", {
   index("idx_kai_tickets_created").on(table.createdAt),
   index("idx_kai_tickets_number").on(table.ticketNumber),
 ]);
+
+// ─── SMS Log ──────────────────────────────────────────────────────────────────
+// Every outbound SMS sent by Kai is recorded here with delivery status
+export const smsLog = mysqlTable("sms_log", {
+  id: int().autoincrement().notNull().primaryKey(),
+  organizationId: int("organization_id").notNull(),
+  studentId: int("student_id"),
+  recipientName: varchar("recipient_name", { length: 255 }),
+  recipientPhone: varchar("recipient_phone", { length: 30 }).notNull(),
+  message: text("message").notNull(),
+  twilioSid: varchar("twilio_sid", { length: 50 }),
+  status: mysqlEnum("sms_status", ["queued", "sent", "delivered", "failed", "undelivered", "no_phone"]).default("queued").notNull(),
+  errorMessage: text("error_message"),
+  sentBy: varchar("sent_by", { length: 50 }).default("kai"),
+  bulkFilter: varchar("bulk_filter", { length: 50 }),
+  sentAt: timestamp("sent_at", { mode: "string" }).defaultNow().notNull(),
+  deliveredAt: timestamp("delivered_at", { mode: "string" }),
+},
+(table) => [
+  index("idx_sms_log_org").on(table.organizationId),
+  index("idx_sms_log_student").on(table.studentId),
+  index("idx_sms_log_status").on(table.status),
+  index("idx_sms_log_sent_at").on(table.sentAt),
+]);

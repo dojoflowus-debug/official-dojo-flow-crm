@@ -656,22 +656,67 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
         recipientName = recipientName || `${student.firstName} ${student.lastName}`;
       }
 
-      if (!phone) return { error: `No phone number on file for ${recipientName}. Cannot send SMS.` };
-
-      try {
-        const formatted = formatPhoneNumber(phone);
-        await sendSMS(formatted, args.message);
-        return {
-          success: true,
-          recipient: recipientName,
-          phone: formatted,
-          message: args.message,
-          sentAt: new Date().toISOString(),
-          summary: `SMS sent to ${recipientName} (${formatted})`,
-        };
-      } catch (err: any) {
-        return { error: `Failed to send SMS to ${recipientName}: ${err.message}` };
+      if (!phone) {
+        // Log the no-phone case
+        try {
+          const { getDb } = await import('./db');
+          const rawDb = getDb();
+          await rawDb.execute(
+            `INSERT INTO sms_log (organization_id, student_id, recipient_name, recipient_phone, message, status, sent_by) VALUES (?, ?, ?, ?, ?, 'no_phone', 'kai')`,
+            [orgId, args.studentId || null, recipientName, 'N/A', args.message]
+          );
+        } catch {}
+        return { error: `No phone number on file for ${recipientName}. Cannot send SMS.` };
       }
+      const formatted = formatPhoneNumber(phone);
+      let twilioSid: string | null = null;
+      let status: 'sent' | 'failed' = 'sent';
+      let errorMsg: string | null = null;
+      try {
+        // Call Twilio and capture the SID
+        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`;
+        const form = new URLSearchParams();
+        form.append('To', formatted);
+        form.append('From', process.env.TWILIO_PHONE_NUMBER || '');
+        form.append('Body', args.message);
+        const resp = await fetch(twilioUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${Buffer.from(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64')}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: form.toString(),
+        });
+        const twilioData = await resp.json() as any;
+        if (!resp.ok) throw new Error(twilioData.message || 'Twilio error');
+        twilioSid = twilioData.sid || null;
+      } catch (err: any) {
+        status = 'failed';
+        errorMsg = err.message;
+      }
+      // Write to sms_log
+      try {
+        const { getDb } = await import('./db');
+        const rawDb = getDb();
+        await rawDb.execute(
+          `INSERT INTO sms_log (organization_id, student_id, recipient_name, recipient_phone, message, twilio_sid, status, error_message, sent_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'kai')`,
+          [orgId, args.studentId || null, recipientName, formatted, args.message, twilioSid, status, errorMsg]
+        );
+      } catch (logErr: any) {
+        console.warn('[SMS Log] Failed to write log entry:', logErr.message);
+      }
+      if (status === 'failed') {
+        return { error: `Failed to send SMS to ${recipientName}: ${errorMsg}` };
+      }
+      return {
+        success: true,
+        recipient: recipientName,
+        phone: formatted,
+        message: args.message,
+        twilioSid,
+        sentAt: new Date().toISOString(),
+        summary: `SMS sent to ${recipientName} (${formatted})`,
+      };
     }
 
     case 'send_bulk_sms': {
@@ -2916,6 +2961,86 @@ export const appRouter = router({
           return { count: cnt };
         } catch {
           return { count: 0 };
+        }
+      }),
+
+    // Get SMS log entries for a specific student
+    getSmsLog: protectedProcedure
+      .input(z.object({ studentId: z.number(), limit: z.number().optional() }))
+      .query(async ({ input, ctx }) => {
+        const { getDb } = await import('./db');
+        const { sql } = await import('drizzle-orm');
+        const db = await getDb();
+        if (!db) return [];
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) return [];
+        try {
+          const limit = input.limit || 50;
+          const result = await db.execute(
+            sql`SELECT id, recipient_name, recipient_phone, message, twilio_sid, status, error_message, sent_by, bulk_filter, sent_at, delivered_at
+                FROM sms_log
+                WHERE organization_id = ${orgId} AND student_id = ${input.studentId}
+                ORDER BY sent_at DESC
+                LIMIT ${limit}`
+          ) as any;
+          const rows = result?.rows || result || [];
+          return rows.map((r: any) => ({
+            id: r.id ?? r[0],
+            recipientName: r.recipient_name ?? r[1],
+            recipientPhone: r.recipient_phone ?? r[2],
+            message: r.message ?? r[3],
+            twilioSid: r.twilio_sid ?? r[4],
+            status: r.status ?? r[5],
+            errorMessage: r.error_message ?? r[6],
+            sentBy: r.sent_by ?? r[7],
+            bulkFilter: r.bulk_filter ?? r[8],
+            sentAt: r.sent_at ?? r[9],
+            deliveredAt: r.delivered_at ?? r[10],
+          }));
+        } catch (e: any) {
+          console.warn('[getSmsLog] Error:', e.message);
+          return [];
+        }
+      }),
+
+    // Get org-wide SMS log (for admin view)
+    getOrgSmsLog: protectedProcedure
+      .input(z.object({ limit: z.number().optional(), status: z.string().optional() }))
+      .query(async ({ input, ctx }) => {
+        const { getDb } = await import('./db');
+        const { sql } = await import('drizzle-orm');
+        const db = await getDb();
+        if (!db) return [];
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) return [];
+        try {
+          const limit = input.limit || 100;
+          const statusFilter = input.status ? sql` AND status = ${input.status}` : sql``;
+          const result = await db.execute(
+            sql`SELECT id, student_id, recipient_name, recipient_phone, message, twilio_sid, status, error_message, sent_by, bulk_filter, sent_at, delivered_at
+                FROM sms_log
+                WHERE organization_id = ${orgId}${statusFilter}
+                ORDER BY sent_at DESC
+                LIMIT ${limit}`
+          ) as any;
+          const rows = result?.rows || result || [];
+          return rows.map((r: any) => ({
+            id: r.id ?? r[0],
+            studentId: r.student_id ?? r[1],
+            recipientName: r.recipient_name ?? r[2],
+            recipientPhone: r.recipient_phone ?? r[3],
+            message: r.message ?? r[4],
+            twilioSid: r.twilio_sid ?? r[5],
+            status: r.status ?? r[6],
+            errorMessage: r.error_message ?? r[7],
+            sentBy: r.sent_by ?? r[8],
+            bulkFilter: r.bulk_filter ?? r[9],
+            sentAt: r.sent_at ?? r[10],
+            deliveredAt: r.delivered_at ?? r[11],
+          }));
+        } catch (e: any) {
+          console.warn('[getOrgSmsLog] Error:', e.message);
+          return [];
         }
       }),
 
