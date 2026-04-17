@@ -367,7 +367,7 @@ export default function PaymentsDashboard() {
             </div>
           )}
 
-          {/* ── 2. Collection Rate (moved up) ── */
+          {/* ── 2. Collection Rate (moved up) ── */}
           <div
             className="bg-white rounded-2xl p-4 card-hover"
             style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.05)', border: '1px solid #ebebeb' }}
