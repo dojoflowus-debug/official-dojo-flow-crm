@@ -498,6 +498,15 @@ export default function PaymentsDashboard() {
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.studentName}</div>
                 <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 1 }}>{fmtTime(t.paidAt ?? t.createdAt)}</div>
               </div>
+              {/* Source badge */}
+              {(t as any).source && (
+                <span style={{
+                  fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
+                  background: (t as any).source === 'Stripe' ? '#ede9fe' : '#dbeafe',
+                  color: (t as any).source === 'Stripe' ? '#7c3aed' : '#1d4ed8',
+                  flexShrink: 0, letterSpacing: '0.02em',
+                }}>{(t as any).source}</span>
+              )}
               {/* Amount */}
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: (t.status === 'paid' || t.status === 'success') ? '#10b981' : '#ef4444' }}>

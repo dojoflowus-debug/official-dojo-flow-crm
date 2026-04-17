@@ -18,6 +18,7 @@ import {
   getRecentTransactions,
   getMonthlyRevenue,
 } from "./services/fluidpay";
+import { getStripeRecentCharges, getStripeMonthlyRevenue, getStripeAllTimeRevenue } from "./services/stripe";
 import type { TrpcContext } from "./_core/context";
 import type { Database } from "./db";
 
@@ -554,16 +555,14 @@ export const tuitionBillingRouter = router({
       const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 
-      // Fetch last 30 days of transactions from FluidPay
+      // Fetch last 30 days of transactions from FluidPay AND Stripe in parallel
       const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
       // Use a safe date formatter: strip milliseconds to produce YYYY-MM-DDTHH:MM:SSZ
       const toFpDate = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z');
-      const fpResult = await searchTransactions(
-        fpKey,
-        toFpDate(thirtyDaysAgo),
-        toFpDate(now),
-        500
-      );
+      const [fpResult, stripeCharges] = await Promise.all([
+        searchTransactions(fpKey, toFpDate(thirtyDaysAgo), toFpDate(now), 500),
+        getStripeRecentCharges(30),
+      ]);
       const allTxs = fpResult.data || [];
 
       // Settled (collected) transactions
@@ -571,20 +570,30 @@ export const tuitionBillingRouter = router({
       const declined = allTxs.filter(t => t.status === 'declined');
       const pending = allTxs.filter(t => t.status === 'pending_settlement' || t.status === 'authorized');
 
-      // Today collected
-      const todayCollected = settled
-        .filter(t => new Date(t.created_at) >= todayStart)
-        .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100;
+      // Stripe settled/failed charges
+      const stripeSettled = stripeCharges.filter(c => c.status === 'success');
+      const stripeFailed = stripeCharges.filter(c => c.status !== 'success' && c.status !== 'pending');
 
-      // Weekly revenue
-      const weeklyRevenue = settled
-        .filter(t => new Date(t.created_at) >= weekStart)
-        .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100;
+      // Today collected (FluidPay + Stripe)
+      const todayCollected =
+        settled.filter(t => new Date(t.created_at) >= todayStart)
+          .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100 +
+        stripeSettled.filter(c => new Date(c.createdAt) >= todayStart)
+          .reduce((s, c) => s + c.amountDollars, 0);
 
-      // Monthly revenue (MRR proxy)
-      const mrr = settled
-        .filter(t => new Date(t.created_at) >= monthStart)
-        .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100;
+      // Weekly revenue (FluidPay + Stripe)
+      const weeklyRevenue =
+        settled.filter(t => new Date(t.created_at) >= weekStart)
+          .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100 +
+        stripeSettled.filter(c => new Date(c.createdAt) >= weekStart)
+          .reduce((s, c) => s + c.amountDollars, 0);
+
+      // Monthly revenue (MRR proxy — FluidPay + Stripe)
+      const mrr =
+        settled.filter(t => new Date(t.created_at) >= monthStart)
+          .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100 +
+        stripeSettled.filter(c => new Date(c.createdAt) >= monthStart)
+          .reduce((s, c) => s + c.amountDollars, 0);
 
       // Pending total
       const pendingTotal = pending
@@ -647,12 +656,8 @@ export const tuitionBillingRouter = router({
         };
       });
 
-      // Recent transactions (last 30, most recent first)
-      const recentTxs = [...allTxs]
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, 30);
-
-      const transactions = recentTxs.map(t => {
+      // Recent transactions (last 30, most recent first) — FluidPay + Stripe merged
+      const fpTransactions = allTxs.map(t => {
         const billing = (t as any).billing_address || {};
         const firstName = billing.first_name || '';
         const lastName = billing.last_name || '';
@@ -676,22 +681,36 @@ export const tuitionBillingRouter = router({
           latitude: matched?.latitude || null,
           longitude: matched?.longitude || null,
           phone: matched?.phone || billing.phone || null,
+          source: 'FluidPay' as const,
         };
       });
 
-      // Collection trend: last 7 days
+      // Merge FluidPay + Stripe, sort by date, take top 50
+      const allMergedTxs = [...fpTransactions, ...stripeCharges]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 50);
+
+      const transactions = allMergedTxs;
+
+      // Collection trend: last 7 days (FluidPay + Stripe)
       const collectionTrend = [];
       for (let i = 6; i >= 0; i--) {
         const dayStart = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
         dayStart.setUTCHours(0, 0, 0, 0);
         const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
-        const dayTotal = settled
+        const fpDayTotal = settled
           .filter(t => {
             const d = new Date(t.created_at);
             return d >= dayStart && d < dayEnd;
           })
           .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100;
-        collectionTrend.push({ day: dayStart.toISOString().split('T')[0], total: dayTotal });
+        const stripeDayTotal = stripeSettled
+          .filter(c => {
+            const d = new Date(c.createdAt);
+            return d >= dayStart && d < dayEnd;
+          })
+          .reduce((s, c) => s + c.amountDollars, 0);
+        collectionTrend.push({ day: dayStart.toISOString().split('T')[0], total: fpDayTotal + stripeDayTotal });
       }
 
       // Map students: paid = green, declined = red
@@ -728,25 +747,30 @@ export const tuitionBillingRouter = router({
 
       // ── Collections Analytics ─────────────────────────────────────────────
 
-      // Fetch last month and previous month revenue in parallel
+      // Fetch last month and previous month revenue in parallel (FluidPay + Stripe)
       const lastMonthDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
       const prevMonthDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1));
 
-      const [lastMonthData, prevMonthData] = await Promise.all([
+      const [lastMonthData, prevMonthData, stripeLastMonth, stripePrevMonth] = await Promise.all([
         getMonthlyRevenue(fpKey, lastMonthDate.getUTCFullYear(), lastMonthDate.getUTCMonth() + 1),
         getMonthlyRevenue(fpKey, prevMonthDate.getUTCFullYear(), prevMonthDate.getUTCMonth() + 1),
+        getStripeMonthlyRevenue(lastMonthDate.getUTCFullYear(), lastMonthDate.getUTCMonth() + 1),
+        getStripeMonthlyRevenue(prevMonthDate.getUTCFullYear(), prevMonthDate.getUTCMonth() + 1),
       ]);
 
-      const lastMonthRevenue = lastMonthData.settledDollars;
-      const prevMonthRevenue = prevMonthData.settledDollars;
+      const lastMonthRevenue = lastMonthData.settledDollars + stripeLastMonth.totalDollars;
+      const prevMonthRevenue = prevMonthData.settledDollars + stripePrevMonth.totalDollars;
 
-      // All-time revenue: fetch from account inception (use a wide date range)
+      // All-time revenue: FluidPay (wide range) + Stripe all-time
       const allTimeStart = '2020-01-01T00:00:00Z';
-      const allTimeFp = await searchTransactions(fpKey, allTimeStart, toFpDate(now), 500);
+      const [allTimeFp, stripeAllTimeRevenue] = await Promise.all([
+        searchTransactions(fpKey, allTimeStart, toFpDate(now), 500),
+        getStripeAllTimeRevenue(),
+      ]);
       const allTimeTxs = allTimeFp.data || [];
       const allTimeRevenue = allTimeTxs
         .filter(t => t.status === 'settled' || t.status === 'partially_refunded')
-        .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100;
+        .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100 + stripeAllTimeRevenue;
 
       // Monthly growth %
       const monthlyGrowthPct = prevMonthRevenue > 0

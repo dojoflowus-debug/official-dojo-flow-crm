@@ -143,6 +143,95 @@ export async function getStripeMonthlyRevenue(year: number, month: number): Prom
 }
 
 /**
+ * Get all-time Stripe revenue total (paginate through all succeeded charges).
+ */
+export async function getStripeAllTimeRevenue(): Promise<number> {
+  const stripe = getStripeClient();
+  if (!stripe) return 0;
+  try {
+    let total = 0;
+    let hasMore = true;
+    let startingAfter: string | undefined = undefined;
+    while (hasMore) {
+      const params: Stripe.ChargeListParams = { limit: 100 };
+      if (startingAfter) params.starting_after = startingAfter;
+      const charges = await stripe.charges.list(params);
+      for (const c of charges.data) {
+        if (c.status === 'succeeded') total += c.amount;
+      }
+      hasMore = charges.has_more;
+      if (charges.data.length > 0) startingAfter = charges.data[charges.data.length - 1].id;
+    }
+    return total / 100;
+  } catch (_e) {
+    return 0;
+  }
+}
+
+/**
+ * Get recent Stripe charges (last N days) for the dashboard.
+ * Returns normalized transaction objects compatible with the FluidPay transaction shape.
+ */
+export async function getStripeRecentCharges(days: number = 30): Promise<Array<{
+  id: string;
+  studentName: string;
+  amountDollars: number;
+  status: string;
+  paidAt: string;
+  createdAt: string;
+  failureReason: string | null;
+  description: string;
+  transactionId: string;
+  photoUrl: null;
+  latitude: null;
+  longitude: null;
+  phone: string | null;
+  source: 'Stripe';
+}>> {
+  const stripe = getStripeClient();
+  if (!stripe) return [];
+
+  try {
+    const sinceTs = Math.floor((Date.now() - days * 24 * 60 * 60 * 1000) / 1000);
+    // Paginate up to 100 charges
+    const charges = await stripe.charges.list({
+      created: { gte: sinceTs },
+      limit: 100,
+      expand: ['data.customer'],
+    });
+
+    return charges.data.map(charge => {
+      const customer = charge.customer as Stripe.Customer | null;
+      const name = customer?.name ||
+        charge.billing_details?.name ||
+        (charge.metadata?.student_name as string | undefined) ||
+        'Stripe Member';
+      const status = charge.status === 'succeeded' ? 'success' :
+                     charge.status === 'pending' ? 'pending' : charge.status;
+      return {
+        id: charge.id,
+        studentName: name,
+        amountDollars: charge.amount / 100,
+        status,
+        paidAt: new Date(charge.created * 1000).toISOString(),
+        createdAt: new Date(charge.created * 1000).toISOString(),
+        failureReason: charge.failure_message || null,
+        description: charge.description || 'Tuition',
+        transactionId: charge.id,
+        photoUrl: null,
+        latitude: null,
+        longitude: null,
+        phone: null,
+        source: 'Stripe' as const,
+      };
+    });
+  } catch (err: any) {
+    console.error('[Stripe] Error fetching recent charges:', err.message);
+    return [];
+  }
+}
+
+/**
  * Validate that the Stripe key works by making a lightweight API call.
  */
 export async function validateStripeKey(): Promise<{ valid: boolean; error?: string }> {
