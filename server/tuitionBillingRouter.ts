@@ -536,6 +536,7 @@ export const tuitionBillingRouter = router({
 
       // ── Pull real-time data from FluidPay ──────────────────────────────
       const fpKey = await getFluidPayKey(db, orgId);
+      console.log('[PaymentsDashboard] orgId:', orgId, 'fpKey:', fpKey ? fpKey.slice(0,10)+'...' : 'NULL');
 
       if (!fpKey) {
         // No FluidPay key — return empty dashboard
@@ -554,12 +555,16 @@ export const tuitionBillingRouter = router({
 
       // Fetch last 30 days of transactions from FluidPay
       const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      // Use a safe date formatter: strip milliseconds to produce YYYY-MM-DDTHH:MM:SSZ
+      const toFpDate = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z');
+      console.log('[PaymentsDashboard] Fetching FluidPay txs from', toFpDate(thirtyDaysAgo), 'to', toFpDate(now));
       const fpResult = await searchTransactions(
         fpKey,
-        thirtyDaysAgo.toISOString().replace('.000Z', 'Z'),
-        now.toISOString().replace('.000Z', 'Z'),
+        toFpDate(thirtyDaysAgo),
+        toFpDate(now),
         500
       );
+      console.log('[PaymentsDashboard] FluidPay result:', fpResult?.status, 'count:', fpResult?.total_count, 'data:', fpResult?.data?.length);
       const allTxs = fpResult.data || [];
 
       // Settled (collected) transactions
