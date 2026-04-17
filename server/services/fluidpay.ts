@@ -4,7 +4,11 @@
  * Authentication: Authorization header with the API key (api_***).
  * Production: https://app.fluidpay.com
  * Sandbox:    https://sandbox.fluidpay.com
+ *
+ * NOTE: Uses axios instead of fetch — Node.js fetch is blocked in this environment.
  */
+
+import axios from 'axios';
 
 const FLUIDPAY_PROD_URL = 'https://app.fluidpay.com';
 const FLUIDPAY_SANDBOX_URL = 'https://sandbox.fluidpay.com';
@@ -53,31 +57,27 @@ export interface FluidPaySearchResponse {
  * Auto-detects whether it's a production or sandbox key.
  */
 export async function validateFluidPayKey(apiKey: string): Promise<{ valid: boolean; error?: string; baseUrl?: string }> {
-  // Try production first, then sandbox
   const urls = [FLUIDPAY_PROD_URL, FLUIDPAY_SANDBOX_URL];
-  for (let i = 0; i < urls.length; i++) {
-    const baseUrl = urls[i];
-    let response: Response;
+  for (const baseUrl of urls) {
     try {
-      response = await fetch(`${baseUrl}/api/transaction/search`, {
-        method: 'POST',
-        headers: {
-          'Authorization': apiKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ limit: 1 }),
-      });
-    } catch (_e) {
-      continue; // Network error — try next URL
+      const response = await axios.post(
+        `${baseUrl}/api/transaction/search`,
+        { limit: 1 },
+        { headers: { Authorization: apiKey, 'Content-Type': 'application/json' } }
+      );
+      if (response.status >= 200 && response.status < 300) {
+        return { valid: true, baseUrl };
+      }
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 401 || status === 403) {
+        continue; // Wrong environment — try the other one
+      }
+      if (status) {
+        return { valid: false, error: `FluidPay returned status ${status}` };
+      }
+      // Network error — try next URL
     }
-    if (response.ok) {
-      return { valid: true, baseUrl };
-    }
-    if (response.status !== 401 && response.status !== 403) {
-      const text = await response.text();
-      return { valid: false, error: `FluidPay returned status ${response.status}: ${text.slice(0, 200)}` };
-    }
-    // 401/403 means wrong environment — try the other one
   }
   return { valid: false, error: 'Invalid API key — authentication failed on both production and sandbox.' };
 }
@@ -92,27 +92,20 @@ export async function searchTransactions(
   limit = 100,
   baseUrl = FLUIDPAY_PROD_URL
 ): Promise<FluidPaySearchResponse> {
-  const response = await fetch(`${baseUrl}/api/transaction/search`, {
-    method: 'POST',
-    headers: {
-      'Authorization': apiKey,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
+  const response = await axios.post(
+    `${baseUrl}/api/transaction/search`,
+    {
       limit,
       date_range: {
         start_date: startDate,
         end_date: endDate,
       },
-    }),
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`FluidPay API error ${response.status}: ${text.slice(0, 300)}`);
-  }
-
-  return response.json();
+    },
+    {
+      headers: { Authorization: apiKey, 'Content-Type': 'application/json' },
+    }
+  );
+  return response.data as FluidPaySearchResponse;
 }
 
 /**
@@ -182,8 +175,8 @@ export async function getRecentTransactions(
 ): Promise<FluidPayTransaction[]> {
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const startDate = thirtyDaysAgo.toISOString().replace('.000Z', 'Z');
-  const endDate = now.toISOString().replace('.000Z', 'Z');
+  const startDate = thirtyDaysAgo.toISOString().replace(/\.\d{3}Z$/, 'Z');
+  const endDate = now.toISOString().replace(/\.\d{3}Z$/, 'Z');
 
   const result = await searchTransactions(apiKey, startDate, endDate, limit, baseUrl);
   return result.data || [];
@@ -295,10 +288,9 @@ export async function createFluidPayCustomer(
   baseUrl = FLUIDPAY_PROD_URL
 ): Promise<{ customerId: string; error?: string }> {
   try {
-    const response = await fetch(`${baseUrl}/api/customer`, {
-      method: 'POST',
-      headers: { 'Authorization': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    const response = await axios.post(
+      `${baseUrl}/api/customer`,
+      {
         description: `${studentData.firstName} ${studentData.lastName}`,
         payment_method: {},
         billing_address: {
@@ -307,9 +299,10 @@ export async function createFluidPayCustomer(
           email: studentData.email || '',
           phone: studentData.phone || '',
         },
-      }),
-    });
-    const data = await response.json() as any;
+      },
+      { headers: { Authorization: apiKey, 'Content-Type': 'application/json' } }
+    );
+    const data = response.data as any;
     if (data.status === 'success' && data.data?.id) {
       return { customerId: data.data.id };
     }
@@ -329,12 +322,12 @@ export async function addCardToFluidPayCustomer(
   baseUrl = FLUIDPAY_PROD_URL
 ): Promise<{ paymentMethodId: string; last4?: string; cardBrand?: string; error?: string }> {
   try {
-    const response = await fetch(`${baseUrl}/api/customer/${customerId}/payment-method/card`, {
-      method: 'POST',
-      headers: { 'Authorization': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ card_number: cardToken }),
-    });
-    const data = await response.json() as any;
+    const response = await axios.post(
+      `${baseUrl}/api/customer/${customerId}/payment-method/card`,
+      { card_number: cardToken },
+      { headers: { Authorization: apiKey, 'Content-Type': 'application/json' } }
+    );
+    const data = response.data as any;
     if (data.status === 'success' && data.data?.id) {
       return {
         paymentMethodId: data.data.id,
@@ -361,10 +354,9 @@ export async function chargeFluidPayCustomer(
   baseUrl = FLUIDPAY_PROD_URL
 ): Promise<FluidPayChargeResult> {
   try {
-    const response = await fetch(`${baseUrl}/api/transaction`, {
-      method: 'POST',
-      headers: { 'Authorization': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    const response = await axios.post(
+      `${baseUrl}/api/transaction`,
+      {
         type: 'sale',
         amount: amountCents,
         currency: 'usd',
@@ -377,9 +369,10 @@ export async function chargeFluidPayCustomer(
           },
         },
         email_receipt: false,
-      }),
-    });
-    const data = await response.json() as any;
+      },
+      { headers: { Authorization: apiKey, 'Content-Type': 'application/json' } }
+    );
+    const data = response.data as any;
     if (data.status === 'success' && data.data?.id) {
       return {
         success: true,
@@ -404,10 +397,11 @@ export async function getFluidPayCustomerPaymentMethods(
   baseUrl = FLUIDPAY_PROD_URL
 ): Promise<{ methods: any[]; error?: string }> {
   try {
-    const response = await fetch(`${baseUrl}/api/customer/${customerId}`, {
-      headers: { 'Authorization': apiKey },
-    });
-    const data = await response.json() as any;
+    const response = await axios.get(
+      `${baseUrl}/api/customer/${customerId}`,
+      { headers: { Authorization: apiKey } }
+    );
+    const data = response.data as any;
     if (data.status === 'success') {
       const methods: any[] = [];
       if (data.data?.payment_method?.card) {
@@ -429,12 +423,12 @@ export async function getFluidPayTokenizerKey(
   baseUrl = FLUIDPAY_PROD_URL
 ): Promise<{ tokenizerKey?: string; error?: string }> {
   try {
-    const response = await fetch(`${baseUrl}/api/transaction/tokenize`, {
-      method: 'POST',
-      headers: { 'Authorization': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'tokenize' }),
-    });
-    const data = await response.json() as any;
+    const response = await axios.post(
+      `${baseUrl}/api/transaction/tokenize`,
+      { type: 'tokenize' },
+      { headers: { Authorization: apiKey, 'Content-Type': 'application/json' } }
+    );
+    const data = response.data as any;
     if (data.status === 'success' && data.data?.token_id) {
       return { tokenizerKey: data.data.token_id };
     }
