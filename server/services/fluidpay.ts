@@ -416,6 +416,47 @@ export async function getFluidPayCustomerPaymentMethods(
 }
 
 /**
+ * Get the most recent transaction per customer_id for a list of customer IDs.
+ * Returns a map of customer_id -> { lastAmountCents, lastDate, lastStatus, cardLast4, cardBrand }
+ */
+export async function getCustomerBillingMap(
+  apiKey: string,
+  customerIds: string[],
+  baseUrl = FLUIDPAY_PROD_URL
+): Promise<Map<string, { lastAmountCents: number; lastDate: string; lastStatus: string; cardLast4?: string; cardBrand?: string; paymentSource: 'FluidPay' }>> {
+  const map = new Map<string, any>();
+  if (!customerIds.length) return map;
+  try {
+    // Fetch last 90 days of transactions and filter by customer_id
+    const now = new Date();
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    const startDate = ninetyDaysAgo.toISOString().replace(/\.\d{3}Z$/, 'Z');
+    const endDate = now.toISOString().replace(/\.\d{3}Z$/, 'Z');
+    const result = await searchTransactions(apiKey, startDate, endDate, 500, baseUrl);
+    const txns = result.data || [];
+    // Build map: customer_id -> most recent settled/pending sale
+    for (const t of txns) {
+      if (!t.customer_id || !customerIds.includes(t.customer_id)) continue;
+      if (t.type !== 'sale') continue;
+      const existing = map.get(t.customer_id);
+      const txDate = new Date(t.created_at).getTime();
+      const existingDate = existing ? new Date(existing.lastDate).getTime() : 0;
+      if (!existing || txDate > existingDate) {
+        map.set(t.customer_id, {
+          lastAmountCents: t.amount_settled || t.amount || 0,
+          lastDate: t.created_at,
+          lastStatus: t.status,
+          cardLast4: t.card?.masked_card?.slice(-4),
+          cardBrand: t.card?.card_type,
+          paymentSource: 'FluidPay' as const,
+        });
+      }
+    }
+  } catch (_e) { /* silently return empty map */ }
+  return map;
+}
+
+/**
  * Generate a FluidPay tokenizer key for hosted payment fields (secure card collection).
  */
 export async function getFluidPayTokenizerKey(

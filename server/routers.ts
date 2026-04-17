@@ -2838,8 +2838,52 @@ export const appRouter = router({
           .orderBy(sortFn(sortColumn))
           .limit(input.limit)
           .offset(offset);
-        
-        return { students: result, total };
+
+        // ── Attach billing info per student ───────────────────────────────
+        let studentsWithBilling: any[] = result;
+        if (result.length > 0) {
+          try {
+            const studentIds = result.map((s: any) => s.id).join(',');
+            const billingRows = await db.execute(
+              sql`SELECT sbe.student_id, sbe.status AS billing_status,
+                         sbe.next_billing_date, sbe.fluidpay_customer_id,
+                         sbe.card_last4, sbe.card_brand,
+                         tp.amount_cents, tp.frequency, tp.name AS plan_name
+                  FROM student_billing_enrollments sbe
+                  LEFT JOIN tuition_plans tp ON sbe.plan_id = tp.id
+                  WHERE sbe.student_id IN (${sql.raw(studentIds)})
+                    AND sbe.status IN ('active','past_due')
+                  ORDER BY sbe.updated_at DESC`
+            ) as any;
+            const billingArr: any[] = billingRows?.rows || billingRows || [];
+            const billingMap = new Map<number, any>();
+            for (const row of billingArr) {
+              const sid = Number(row.student_id);
+              if (!billingMap.has(sid)) billingMap.set(sid, row);
+            }
+            studentsWithBilling = result.map((s: any) => {
+              const b = billingMap.get(s.id);
+              if (!b) return { ...s, billing: null };
+              return {
+                ...s,
+                billing: {
+                  amountCents: b.amount_cents ? Number(b.amount_cents) : null,
+                  frequency: b.frequency || null,
+                  planName: b.plan_name || null,
+                  nextBillingDate: b.next_billing_date ? new Date(b.next_billing_date).toISOString() : null,
+                  billingStatus: b.billing_status || null,
+                  cardLast4: b.card_last4 || null,
+                  cardBrand: b.card_brand || null,
+                  paymentSource: b.fluidpay_customer_id ? 'FluidPay' : 'Stripe',
+                },
+              };
+            });
+          } catch (billingErr: any) {
+            console.warn('[getListWithFilters] Billing join failed:', billingErr?.message);
+          }
+        }
+
+        return { students: studentsWithBilling, total };
       }),
     
     // Get student analytics and KPI metrics

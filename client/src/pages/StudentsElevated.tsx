@@ -51,6 +51,17 @@ import {
   Award,
 } from 'lucide-react'
 
+interface StudentBilling {
+  amountCents: number | null
+  frequency: string | null
+  planName: string | null
+  nextBillingDate: string | null
+  billingStatus: string | null
+  cardLast4: string | null
+  cardBrand: string | null
+  paymentSource: 'FluidPay' | 'Stripe'
+}
+
 interface Student {
   id: number
   firstName: string
@@ -66,6 +77,8 @@ interface Student {
   createdAt?: string
   address?: string
   membershipStatus?: string | null
+  guardianName?: string | null
+  billing?: StudentBilling | null
 }
 
 // Belt color config
@@ -428,6 +441,145 @@ function StudentCardNew({
   )
 }
 
+// ── Helpers for billing display ──────────────────────────────────────────────
+function fmtAmount(cents: number | null | undefined): string {
+  if (!cents) return '—'
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(cents / 100)
+}
+function fmtDate(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+function fmtJoined(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })
+}
+
+// ── Members Table (MyDojo-style) ──────────────────────────────────────────────
+function MembersTable({ students, onRowClick }: { students: Student[]; onRowClick: (s: Student) => void }) {
+  if (students.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-48 gap-3">
+        <Users className="w-10 h-10 text-gray-300" />
+        <p className="text-gray-400 text-sm">No students found</p>
+      </div>
+    )
+  }
+  return (
+    <div className="w-full overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-gray-100 bg-gray-50">
+            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Member (Parent)</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Student</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Contact</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Program</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Belt</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Monthly Pmt</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Next Due</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Source</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Joined</th>
+          </tr>
+        </thead>
+        <tbody>
+          {students.map((s, i) => {
+            const belt = getBeltConfig(s.beltRank)
+            const beltLabel = getBeltLabel(s.beltRank)
+            const initials = `${s.firstName?.[0] || ''}${s.lastName?.[0] || ''}`.toUpperCase()
+            const parentName = s.guardianName || `${s.firstName} ${s.lastName}`
+            const isActive = s.status === 'Active'
+            const isCancelled = s.status === 'Inactive' || s.status === 'Cancelled'
+            const b = s.billing
+            return (
+              <tr
+                key={s.id}
+                onClick={() => onRowClick(s)}
+                className={`border-b border-gray-50 cursor-pointer transition-colors hover:bg-blue-50/40 ${
+                  i % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'
+                }`}
+              >
+                {/* Member (Parent) */}
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                      style={{ background: `linear-gradient(135deg, ${belt.color}cc, ${belt.color})` }}>
+                      {s.photoUrl ? (
+                        <img src={s.photoUrl} alt={initials} className="w-full h-full rounded-full object-cover" />
+                      ) : initials}
+                    </div>
+                    <span className="font-semibold text-gray-900 text-sm whitespace-nowrap">{parentName}</span>
+                  </div>
+                </td>
+                {/* Student */}
+                <td className="px-4 py-3">
+                  <span className="text-sm text-gray-700 font-medium">{s.firstName} {s.lastName}</span>
+                </td>
+                {/* Contact */}
+                <td className="px-4 py-3">
+                  <div className="text-xs text-gray-600">{s.email || '—'}</div>
+                  <div className="text-xs text-gray-400 mt-0.5">{s.phone || ''}</div>
+                </td>
+                {/* Program */}
+                <td className="px-4 py-3">
+                  <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded">{s.program || 'Foundation'}</span>
+                </td>
+                {/* Belt */}
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: belt.color, border: '1px solid rgba(0,0,0,0.15)' }} />
+                    <span className="text-xs text-gray-700">{beltLabel}</span>
+                  </div>
+                </td>
+                {/* Status */}
+                <td className="px-4 py-3">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    isActive ? 'bg-green-100 text-green-700' :
+                    isCancelled ? 'bg-red-100 text-red-600' :
+                    'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {s.status}
+                  </span>
+                </td>
+                {/* Monthly Payment */}
+                <td className="px-4 py-3">
+                  <span className="text-sm font-semibold text-gray-900">{fmtAmount(b?.amountCents)}</span>
+                  {b?.frequency && (
+                    <div className="text-[10px] text-gray-400 mt-0.5 capitalize">{b.frequency}</div>
+                  )}
+                </td>
+                {/* Next Due Date */}
+                <td className="px-4 py-3">
+                  <span className="text-xs text-gray-600">{fmtDate(b?.nextBillingDate)}</span>
+                </td>
+                {/* Payment Source */}
+                <td className="px-4 py-3">
+                  {b ? (
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${
+                      b.paymentSource === 'FluidPay'
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                        : 'bg-purple-50 text-purple-700 border border-purple-200'
+                    }`}>
+                      <CreditCard className="w-2.5 h-2.5" />
+                      {b.paymentSource}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-300">—</span>
+                  )}
+                </td>
+                {/* Joined */}
+                <td className="px-4 py-3">
+                  <span className="text-xs text-gray-500">{fmtJoined(s.createdAt)}</span>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 function StudentsElevatedContent() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -647,11 +799,13 @@ function StudentsElevatedContent() {
             <Users className="w-10 h-10 text-gray-300" />
             <p className="text-gray-400 text-sm">No students found</p>
           </div>
+        ) : viewMode === 'list' ? (
+          <MembersTable
+            students={displayedStudents}
+            onRowClick={(s) => navigate(`/students/${s.id}`)}
+          />
         ) : (
-          <div className={viewMode === 'grid'
-            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'
-            : 'flex flex-col gap-3'
-          }>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {displayedStudents.map(student => (
               <StudentCardNew
                 key={student.id}
