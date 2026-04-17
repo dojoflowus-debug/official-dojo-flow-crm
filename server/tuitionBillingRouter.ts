@@ -14,6 +14,8 @@ import {
   addCardToFluidPayCustomer,
   chargeFluidPayCustomer,
   getFluidPayTokenizerKey,
+  searchTransactions,
+  getRecentTransactions,
 } from "./services/fluidpay";
 import type { TrpcContext } from "./_core/context";
 import type { Database } from "./db";
@@ -532,127 +534,186 @@ export const tuitionBillingRouter = router({
       const orgId = await resolveOrgId(ctx, db);
       if (!orgId) return null;
 
-      // ── student_tuition: camelCase cols, amount in dollars (not cents) ──
-      // status values: 'paid', 'pending', 'overdue'
-      // Org filter: join students table to get organizationId
+      // ── Pull real-time data from FluidPay ──────────────────────────────
+      const fpKey = await getFluidPayKey(db, orgId);
 
-      const todayRows = await rawQuery(db,
-        `SELECT COALESCE(SUM(st.amount),0) as total
-         FROM student_tuition st
-         JOIN students s ON st.studentId = s.id
-         WHERE s.organizationId = ? AND st.status = 'paid' AND DATE(st.paidDate) = CURDATE()`,
-        [orgId]);
-      const todayCollected = Number(todayRows[0]?.total) || 0;
+      if (!fpKey) {
+        // No FluidPay key — return empty dashboard
+        return {
+          todayCollected: 0, weeklyRevenue: 0, mrr: 0, pendingTotal: 0,
+          collectionEfficiency: 100, overdueAccounts: [], overdueCount: 0,
+          overdueTotal: 0, transactions: [], collectionTrend: [],
+          paidMapStudents: [], unpaidMapStudents: [],
+        };
+      }
 
-      const weekRows = await rawQuery(db,
-        `SELECT COALESCE(SUM(st.amount),0) as total
-         FROM student_tuition st
-         JOIN students s ON st.studentId = s.id
-         WHERE s.organizationId = ? AND st.status = 'paid'
-           AND st.paidDate >= DATE_SUB(NOW(), INTERVAL 7 DAY)`,
-        [orgId]);
-      const weeklyRevenue = Number(weekRows[0]?.total) || 0;
+      const now = new Date();
+      const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+      const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 
-      // MRR: sum of all active tuition plan amounts for this org (amount_cents, snake_case)
-      const mrrRows = await rawQuery(db,
-        `SELECT COALESCE(SUM(tp.amount_cents),0) as total
-         FROM tuition_plans tp
-         WHERE tp.organization_id = ? AND tp.is_active = 1`,
-        [orgId]);
-      const mrr = (Number(mrrRows[0]?.total) || 0) / 100;
+      // Fetch last 30 days of transactions from FluidPay
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const fpResult = await searchTransactions(
+        fpKey,
+        thirtyDaysAgo.toISOString().replace('.000Z', 'Z'),
+        now.toISOString().replace('.000Z', 'Z'),
+        500
+      );
+      const allTxs = fpResult.data || [];
 
-      // Collection efficiency: paid / (paid + overdue) in last 30 days
-      const effRows = await rawQuery(db,
-        `SELECT
-           COUNT(CASE WHEN st.status='paid' THEN 1 END) as s,
-           COUNT(CASE WHEN st.status='overdue' THEN 1 END) as f
-         FROM student_tuition st
-         JOIN students s ON st.studentId = s.id
-         WHERE s.organizationId = ? AND st.createdAt >= DATE_SUB(NOW(), INTERVAL 30 DAY)`,
-        [orgId]);
-      const sc = Number(effRows[0]?.s) || 0;
-      const fc = Number(effRows[0]?.f) || 0;
-      const collectionEfficiency = (sc + fc) > 0 ? Math.round((sc / (sc + fc)) * 100) : 100;
+      // Settled (collected) transactions
+      const settled = allTxs.filter(t => t.status === 'settled' || t.status === 'partially_refunded');
+      const declined = allTxs.filter(t => t.status === 'declined');
+      const pending = allTxs.filter(t => t.status === 'pending_settlement' || t.status === 'authorized');
 
-      // Overdue accounts: overdue status OR pending past due date
-      const overdueRows = await rawQuery(db,
-        `SELECT st.id as tid, st.studentId, st.amount, st.dueDate, st.status,
-                s.firstName, s.lastName, s.phone, s.latitude, s.longitude, s.photoUrl,
-                DATEDIFF(NOW(), st.dueDate) as days_late
-         FROM student_tuition st
-         JOIN students s ON st.studentId = s.id
-         WHERE s.organizationId = ?
-           AND (st.status = 'overdue' OR (st.status = 'pending' AND st.dueDate < NOW()))
-         ORDER BY days_late DESC LIMIT 50`,
-        [orgId]);
-      const overdueAccounts = overdueRows.map((r: any) => ({
-        enrollmentId: r.tid,
-        studentId: r.studentId,
-        studentName: `${r.firstName} ${r.lastName}`,
-        phone: r.phone,
-        amountDollars: Number(r.amount) || 0,
-        planName: 'Tuition',
-        frequency: 'monthly',
-        daysLate: Math.max(0, Number(r.days_late) || 0),
-        retryCount: 0,
-        lastDeclinedAt: null,
-        latitude: r.latitude,
-        longitude: r.longitude,
-        photoUrl: r.photoUrl,
-      }));
+      // Today collected
+      const todayCollected = settled
+        .filter(t => new Date(t.created_at) >= todayStart)
+        .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100;
 
-      // Pending amount (pending not yet overdue)
-      const pendingRows = await rawQuery(db,
-        `SELECT COALESCE(SUM(st.amount),0) as total
-         FROM student_tuition st
-         JOIN students s ON st.studentId = s.id
-         WHERE s.organizationId = ? AND st.status = 'pending' AND st.dueDate >= NOW()`,
-        [orgId]);
-      const pendingTotal = Number(pendingRows[0]?.total) || 0;
+      // Weekly revenue
+      const weeklyRevenue = settled
+        .filter(t => new Date(t.created_at) >= weekStart)
+        .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100;
 
-      // Recent transactions
-      const txRows = await rawQuery(db,
-        `SELECT st.id, st.amount, st.status, st.paidDate, st.createdAt,
-                st.notes, st.paymentMethod,
-                s.firstName, s.lastName, s.photoUrl, s.latitude, s.longitude, s.phone
-         FROM student_tuition st
-         JOIN students s ON st.studentId = s.id
-         WHERE s.organizationId = ? ORDER BY st.updatedAt DESC LIMIT 30`,
+      // Monthly revenue (MRR proxy)
+      const mrr = settled
+        .filter(t => new Date(t.created_at) >= monthStart)
+        .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100;
+
+      // Pending total
+      const pendingTotal = pending
+        .reduce((s, t) => s + (t.amount || 0), 0) / 100;
+
+      // Collection efficiency
+      const totalAttempts = settled.length + declined.length;
+      const collectionEfficiency = totalAttempts > 0 ? Math.round((settled.length / totalAttempts) * 100) : 100;
+
+      // Overdue = declined transactions (unique customers, most recent per customer)
+      const declinedByCustomer = new Map<string, typeof declined[0]>();
+      for (const t of declined) {
+        const key = t.customer_id || t.id;
+        const existing = declinedByCustomer.get(key);
+        if (!existing || new Date(t.created_at) > new Date(existing.created_at)) {
+          declinedByCustomer.set(key, t);
+        }
+      }
+
+      // Match declined FluidPay customers to students in DB
+      const allStudents = await rawQuery(db,
+        `SELECT id, firstName, lastName, phone, email, latitude, longitude, photoUrl
+         FROM students WHERE organizationId = ?`,
         [orgId]);
-      const transactions = txRows.map((r: any) => ({
-        id: r.id,
-        studentName: `${r.firstName} ${r.lastName}`,
-        amountDollars: Number(r.amount) || 0,
-        status: r.status === 'paid' ? 'success' : r.status,
-        paidAt: r.paidDate,
-        createdAt: r.createdAt,
-        failureReason: null,
-        description: r.notes || r.paymentMethod || 'Tuition',
-        transactionId: null,
-        photoUrl: r.photoUrl,
-        latitude: r.latitude,
-        longitude: r.longitude,
-        phone: r.phone,
-      }));
+
+      const overdueAccounts = Array.from(declinedByCustomer.values()).map((t, i) => {
+        const billing = (t as any).billing_address || {};
+        const firstName = billing.first_name || '';
+        const lastName = billing.last_name || '';
+        const fullName = `${firstName} ${lastName}`.trim() || 'Unknown';
+        // Try to match to a student record
+        const matched = allStudents.find((s: any) =>
+          (s.firstName?.toLowerCase() === firstName.toLowerCase() &&
+           s.lastName?.toLowerCase() === lastName.toLowerCase()) ||
+          (billing.email && s.email?.toLowerCase() === billing.email.toLowerCase())
+        );
+        const daysLate = Math.floor((now.getTime() - new Date(t.created_at).getTime()) / (1000 * 60 * 60 * 24));
+        return {
+          enrollmentId: t.id,
+          studentId: matched?.id || null,
+          studentName: fullName,
+          phone: matched?.phone || billing.phone || null,
+          amountDollars: (t.amount || 0) / 100,
+          planName: t.description || 'Tuition',
+          frequency: 'monthly',
+          daysLate,
+          retryCount: 0,
+          lastDeclinedAt: t.created_at,
+          latitude: matched?.latitude || null,
+          longitude: matched?.longitude || null,
+          photoUrl: matched?.photoUrl || null,
+          fluidpayTxId: t.id,
+        };
+      });
+
+      // Recent transactions (last 30, most recent first)
+      const recentTxs = [...allTxs]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 30);
+
+      const transactions = recentTxs.map(t => {
+        const billing = (t as any).billing_address || {};
+        const firstName = billing.first_name || '';
+        const lastName = billing.last_name || '';
+        const fullName = `${firstName} ${lastName}`.trim() || 'Unknown';
+        const matched = allStudents.find((s: any) =>
+          (s.firstName?.toLowerCase() === firstName.toLowerCase() &&
+           s.lastName?.toLowerCase() === lastName.toLowerCase()) ||
+          (billing.email && s.email?.toLowerCase() === billing.email.toLowerCase())
+        );
+        return {
+          id: t.id,
+          studentName: fullName,
+          amountDollars: (t.amount || 0) / 100,
+          status: t.status === 'settled' ? 'success' : t.status,
+          paidAt: t.settled_at || t.created_at,
+          createdAt: t.created_at,
+          failureReason: (t as any).response || null,
+          description: t.description || 'Tuition',
+          transactionId: t.id,
+          photoUrl: matched?.photoUrl || null,
+          latitude: matched?.latitude || null,
+          longitude: matched?.longitude || null,
+          phone: matched?.phone || billing.phone || null,
+        };
+      });
 
       // Collection trend: last 7 days
-      const trendRows = await rawQuery(db,
-        `SELECT DATE(st.paidDate) as day, COALESCE(SUM(st.amount),0) as total
-         FROM student_tuition st
-         JOIN students s ON st.studentId = s.id
-         WHERE s.organizationId = ? AND st.status = 'paid'
-           AND st.paidDate >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-         GROUP BY DATE(st.paidDate) ORDER BY day`,
-        [orgId]);
+      const collectionTrend = [];
+      for (let i = 6; i >= 0; i--) {
+        const dayStart = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+        dayStart.setUTCHours(0, 0, 0, 0);
+        const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+        const dayTotal = settled
+          .filter(t => {
+            const d = new Date(t.created_at);
+            return d >= dayStart && d < dayEnd;
+          })
+          .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100;
+        collectionTrend.push({ day: dayStart.toISOString().split('T')[0], total: dayTotal });
+      }
 
-      // Map: paid students with location
-      const paidMapRows = await rawQuery(db,
-        `SELECT DISTINCT s.id, s.firstName as first_name, s.lastName as last_name, s.latitude, s.longitude
-         FROM student_tuition st JOIN students s ON st.studentId = s.id
-         WHERE s.organizationId = ? AND st.status = 'paid'
-           AND s.latitude IS NOT NULL AND s.longitude IS NOT NULL
-           AND st.paidDate >= DATE_SUB(NOW(), INTERVAL 30 DAY)`,
-        [orgId]);
+      // Map students: paid = green, declined = red
+      const paidCustomerIds = new Set(settled.map(t => t.customer_id).filter(Boolean));
+      const declinedCustomerIds = new Set(declined.map(t => t.customer_id).filter(Boolean));
+
+      const paidMapStudents = allStudents
+        .filter((s: any) => s.latitude && s.longitude)
+        .filter((s: any) => {
+          // Mark as paid if they have a settled transaction in last 30 days
+          return settled.some(t => {
+            const b = (t as any).billing_address || {};
+            return b.first_name?.toLowerCase() === s.firstName?.toLowerCase() &&
+                   b.last_name?.toLowerCase() === s.lastName?.toLowerCase();
+          });
+        })
+        .map((s: any) => ({
+          id: s.id,
+          name: `${s.firstName} ${s.lastName}`,
+          latitude: s.latitude,
+          longitude: s.longitude,
+          isPaid: true,
+        }));
+
+      const unpaidMapStudents = overdueAccounts
+        .filter(a => a.latitude && a.longitude)
+        .map(a => ({
+          id: a.enrollmentId,
+          name: a.studentName,
+          latitude: a.latitude,
+          longitude: a.longitude,
+           isPaid: false,
+        }));
 
       return {
         todayCollected,
@@ -664,17 +725,11 @@ export const tuitionBillingRouter = router({
         overdueCount: overdueAccounts.length,
         overdueTotal: overdueAccounts.reduce((sum: number, a: any) => sum + a.amountDollars, 0),
         transactions,
-        collectionTrend: trendRows.map((r: any) => ({ day: r.day, total: Number(r.total) || 0 })),
-        paidMapStudents: paidMapRows.map((r: any) => ({
-          id: r.id,
-          name: `${r.first_name} ${r.last_name}`,
-          latitude: r.latitude,
-          longitude: r.longitude,
-          isPaid: true,
-        })),
+        collectionTrend,
+        paidMapStudents,
+        unpaidMapStudents,
       };
     }),
-
   // ── Collect All: charge + SMS all overdue students ─────────────────────────
 
   collectAll: protectedProcedure

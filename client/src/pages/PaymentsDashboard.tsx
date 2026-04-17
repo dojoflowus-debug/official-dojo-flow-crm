@@ -78,7 +78,10 @@ export default function PaymentsDashboard() {
   const overdueTotal = dash?.overdueTotal ?? 0
   const collectedTotal = dash?.weeklyRevenue ?? 0
   const pendingTotal = dash?.pendingTotal ?? 0
-  const mapStudents = dash?.paidMapStudents ?? []
+  const mapStudents = [
+    ...(dash?.paidMapStudents ?? []).map((s: any) => ({ ...s, isPaid: true })),
+    ...(dash?.unpaidMapStudents ?? []).map((s: any) => ({ ...s, isPaid: false })),
+  ]
   // Build trend from collectionTrend array (day + total) or fall back to zeros
   const trendData = (() => {
     const trend = dash?.collectionTrend ?? []
