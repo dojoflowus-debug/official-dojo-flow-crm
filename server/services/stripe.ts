@@ -9,7 +9,7 @@ import Stripe from 'stripe';
 function getStripeClient(): Stripe | null {
   const key = process.env.MYDOJO_STRIPE_SECRET_KEY;
   if (!key) return null;
-  return new Stripe(key, { apiVersion: '2024-06-20' });
+  return new Stripe(key, { apiVersion: '2024-06-20', timeout: 10000, maxNetworkRetries: 2 });
 }
 
 export interface StripeCustomerBilling {

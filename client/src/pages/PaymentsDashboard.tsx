@@ -76,7 +76,7 @@ export default function PaymentsDashboard() {
   const overdue = dash?.overdueAccounts ?? []
   const transactions = dash?.transactions ?? []
   const overdueTotal = dash?.overdueTotal ?? 0
-  const collectedTotal = dash?.weeklyRevenue ?? 0
+  const collectedTotal = dash?.mrr ?? 0   // 30-day combined FluidPay + Stripe
   const pendingTotal = dash?.pendingTotal ?? 0
   const mapStudents = [
     ...(dash?.paidMapStudents ?? []).map((s: any) => ({ ...s, isPaid: true })),
