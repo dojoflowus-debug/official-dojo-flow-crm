@@ -529,6 +529,7 @@ export const tuitionBillingRouter = router({
   // Payments command center dashboard
   getPaymentsDashboard: protectedProcedure
     .query(async ({ ctx }) => {
+      try {
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
       const orgId = await resolveOrgId(ctx, db);
@@ -603,10 +604,16 @@ export const tuitionBillingRouter = router({
       }
 
       // Match declined FluidPay customers to students in DB
-      const allStudents = await rawQuery(db,
-        `SELECT id, firstName, lastName, phone, email, latitude, longitude, photoUrl
-         FROM students WHERE organizationId = ?`,
-        [orgId]);
+      const allStudents = await db.select({
+        id: students.id,
+        firstName: students.firstName,
+        lastName: students.lastName,
+        phone: students.phone,
+        email: students.email,
+        latitude: students.latitude,
+        longitude: students.longitude,
+        photoUrl: students.photoUrl,
+      }).from(students).where(eq(students.organizationId as any, orgId));
 
       const overdueAccounts = Array.from(declinedByCustomer.values()).map((t, i) => {
         const billing = (t as any).billing_address || {};
@@ -731,6 +738,10 @@ export const tuitionBillingRouter = router({
         paidMapStudents,
         unpaidMapStudents,
       };
+      } catch (err: any) {
+        console.error('[PaymentsDashboard] Error:', err?.message);
+        throw err;
+      }
     }),
   // ── Collect All: charge + SMS all overdue students ─────────────────────────
 
