@@ -60,6 +60,8 @@ interface StudentBilling {
   cardLast4: string | null
   cardBrand: string | null
   paymentSource: 'FluidPay' | 'Stripe'
+  lastPaymentDate?: string | null
+  lastPaymentAmountCents?: number | null
 }
 
 interface Student {

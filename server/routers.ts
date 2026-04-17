@@ -2883,6 +2883,40 @@ export const appRouter = router({
           }
         }
 
+        // ── Overlay Stripe billing data for students not in DB billing ────
+        try {
+          const { getStripeCustomerBillingMap } = await import('./services/stripe');
+          const stripeMap = await getStripeCustomerBillingMap();
+          if (stripeMap.size > 0) {
+            studentsWithBilling = studentsWithBilling.map((s: any) => {
+              // Skip if already has billing from DB
+              if (s.billing?.amountCents) return s;
+              // Try to match by email first, then by name
+              const email = s.email?.toLowerCase();
+              const name = `${s.firstName || ''} ${s.lastName || ''}`.trim().toLowerCase();
+              const stripeBilling = (email && stripeMap.get(email)) || stripeMap.get(`name:${name}`);
+              if (!stripeBilling) return s;
+              return {
+                ...s,
+                billing: {
+                  amountCents: stripeBilling.amountCents,
+                  frequency: stripeBilling.interval,
+                  planName: 'Stripe Subscription',
+                  nextBillingDate: stripeBilling.nextBillingDate,
+                  billingStatus: stripeBilling.subscriptionStatus,
+                  cardLast4: null,
+                  cardBrand: null,
+                  paymentSource: 'Stripe' as const,
+                  lastPaymentDate: stripeBilling.lastPaymentDate,
+                  lastPaymentAmountCents: stripeBilling.lastPaymentAmountCents,
+                },
+              };
+            });
+          }
+        } catch (stripeErr: any) {
+          console.warn('[getListWithFilters] Stripe overlay failed:', stripeErr?.message);
+        }
+
         return { students: studentsWithBilling, total };
       }),
     
