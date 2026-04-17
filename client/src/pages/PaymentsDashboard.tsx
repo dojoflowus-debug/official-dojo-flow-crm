@@ -178,6 +178,87 @@ export default function PaymentsDashboard() {
         </div>
       </div>
 
+      {/* ── Collections Analytics ─────────────────────────────────────────── */}
+      {dash?.analytics && (() => {
+        const a = dash.analytics
+        const growthPositive = a.monthlyGrowthPct >= 0
+        return (
+          <div style={{ margin: '16px 24px 0', background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px 20px' }}>
+            {/* Section header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Collections Analytics</span>
+              <span style={{ fontSize: 11, color: '#9ca3af' }}>Live · {a.lastMonthName}</span>
+            </div>
+            {/* Metric rows */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 1px', background: '#f3f4f6', borderRadius: 8, overflow: 'hidden' }}>
+              {/* Last Month Revenue */}
+              <div style={{ background: '#fff', padding: '12px 16px' }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Last Month</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: '#111827', letterSpacing: '-0.3px' }}>{fmt(a.lastMonthRevenue)}</div>
+                <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>{a.lastMonthName}</div>
+              </div>
+              {/* Previous Month Revenue */}
+              <div style={{ background: '#fff', padding: '12px 16px' }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Prev Month</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: '#111827', letterSpacing: '-0.3px' }}>{fmt(a.prevMonthRevenue)}</div>
+                <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>{a.prevMonthName}</div>
+              </div>
+              {/* All-Time Revenue */}
+              <div style={{ background: '#fff', padding: '12px 16px' }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>All-Time</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: '#111827', letterSpacing: '-0.3px' }}>{fmt(a.allTimeRevenue)}</div>
+                <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>Lifetime collected</div>
+              </div>
+              {/* Monthly Growth */}
+              <div style={{ background: '#fff', padding: '12px 16px' }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>MoM Growth</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: growthPositive ? '#10b981' : '#ef4444', letterSpacing: '-0.3px' }}>
+                  {growthPositive ? '+' : ''}{a.monthlyGrowthPct}%
+                </div>
+                <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>vs prev month</div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div style={{ height: 1, background: '#f3f4f6', margin: '12px 0' }} />
+
+            {/* Operational metrics row */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 1px', background: '#f3f4f6', borderRadius: 8, overflow: 'hidden' }}>
+              {/* Avg Tuition */}
+              <div style={{ background: '#fff', padding: '12px 16px' }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Avg Tuition</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: '#111827', letterSpacing: '-0.3px' }}>{fmt(a.avgTuition)}</div>
+                <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>{a.payingStudentCount} paying students</div>
+              </div>
+              {/* Payment Compliance */}
+              <div style={{ background: '#fff', padding: '12px 16px' }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Compliance</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: a.paymentCompliancePct >= 80 ? '#10b981' : a.paymentCompliancePct >= 60 ? '#f59e0b' : '#ef4444', letterSpacing: '-0.3px' }}>
+                  {a.paymentCompliancePct}%
+                </div>
+                <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>paying / active</div>
+              </div>
+              {/* Retention Rate */}
+              <div style={{ background: '#fff', padding: '12px 16px' }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Retention</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: a.retentionRate >= 90 ? '#10b981' : a.retentionRate >= 75 ? '#f59e0b' : '#ef4444', letterSpacing: '-0.3px' }}>
+                  {a.retentionRate}%
+                </div>
+                <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>active this month</div>
+              </div>
+              {/* Quit Rate */}
+              <div style={{ background: '#fff', padding: '12px 16px' }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Quit Rate</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: a.quitRate === 0 ? '#10b981' : a.quitRate <= 5 ? '#f59e0b' : '#ef4444', letterSpacing: '-0.3px' }}>
+                  {a.quitRate}%
+                </div>
+                <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>overdue / active</div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* ── Collect result banner ─────────────────────────────────────────── */}
       {collectResult && (
         <div style={{ margin: '12px 24px 0', padding: '10px 16px', background: '#d1fae5', border: '1px solid #6ee7b7', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

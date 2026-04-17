@@ -16,6 +16,7 @@ import {
   getFluidPayTokenizerKey,
   searchTransactions,
   getRecentTransactions,
+  getMonthlyRevenue,
 } from "./services/fluidpay";
 import type { TrpcContext } from "./_core/context";
 import type { Database } from "./db";
@@ -613,6 +614,7 @@ export const tuitionBillingRouter = router({
         latitude: students.latitude,
         longitude: students.longitude,
         photoUrl: students.photoUrl,
+        createdAt: students.createdAt,
       }).from(students).where(eq(students.organizationId as any, orgId));
 
       const overdueAccounts = Array.from(declinedByCustomer.values()).map((t, i) => {
@@ -724,6 +726,68 @@ export const tuitionBillingRouter = router({
            isPaid: false,
         }));
 
+      // ── Collections Analytics ─────────────────────────────────────────────
+
+      // Fetch last month and previous month revenue in parallel
+      const lastMonthDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+      const prevMonthDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1));
+
+      const [lastMonthData, prevMonthData] = await Promise.all([
+        getMonthlyRevenue(fpKey, lastMonthDate.getUTCFullYear(), lastMonthDate.getUTCMonth() + 1),
+        getMonthlyRevenue(fpKey, prevMonthDate.getUTCFullYear(), prevMonthDate.getUTCMonth() + 1),
+      ]);
+
+      const lastMonthRevenue = lastMonthData.settledDollars;
+      const prevMonthRevenue = prevMonthData.settledDollars;
+
+      // All-time revenue: fetch from account inception (use a wide date range)
+      const allTimeStart = '2020-01-01T00:00:00Z';
+      const allTimeFp = await searchTransactions(fpKey, allTimeStart, toFpDate(now), 500);
+      const allTimeTxs = allTimeFp.data || [];
+      const allTimeRevenue = allTimeTxs
+        .filter(t => t.status === 'settled' || t.status === 'partially_refunded')
+        .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100;
+
+      // Monthly growth %
+      const monthlyGrowthPct = prevMonthRevenue > 0
+        ? Math.round(((lastMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100 * 10) / 10
+        : lastMonthRevenue > 0 ? 100 : 0;
+
+      // Average Tuition: this month collected / unique paying students this month
+      const thisMonthSettled = settled.filter(t => new Date(t.created_at) >= monthStart);
+      const payingStudentIds = new Set(
+        thisMonthSettled.map(t => (t as any).customer_id).filter(Boolean)
+      );
+      const payingStudentCount = payingStudentIds.size || 1; // avoid div by 0
+      const avgTuition = mrr > 0 ? Math.round((mrr / payingStudentCount) * 100) / 100 : 0;
+
+      // Student counts for compliance and retention
+      const totalActiveStudents = allStudents.length;
+
+      // Payment Compliance: paying students / total active students * 100
+      // "Paying" = had a settled transaction this month
+      const paymentCompliancePct = totalActiveStudents > 0
+        ? Math.round((payingStudentIds.size / totalActiveStudents) * 100 * 10) / 10
+        : 0;
+
+      // Retention Rate: students active at end of month / students active at start of month
+      // Proxy: (total active now - new students this month) / total active now * 100
+      const newThisMonth = allStudents.filter((s: any) => {
+        const created = s.createdAt ? new Date(s.createdAt) : null;
+        return created && created >= monthStart;
+      }).length;
+      const startOfMonthCount = totalActiveStudents - newThisMonth;
+      const retentionRate = startOfMonthCount > 0
+        ? Math.round(((totalActiveStudents - newThisMonth) / startOfMonthCount) * 100 * 10) / 10
+        : 100;
+
+      // Quit Rate: canceled students this period / starting students
+      // We use declined-only customers as a proxy for "at risk of quitting"
+      // Real quit rate requires a cancellation table; use 0 if not available
+      const quitRate = startOfMonthCount > 0
+        ? Math.round((overdueAccounts.length / Math.max(startOfMonthCount, 1)) * 100 * 10) / 10
+        : 0;
+
       return {
         todayCollected,
         weeklyRevenue,
@@ -737,6 +801,21 @@ export const tuitionBillingRouter = router({
         collectionTrend,
         paidMapStudents,
         unpaidMapStudents,
+        // Collections Analytics
+        analytics: {
+          lastMonthRevenue,
+          prevMonthRevenue,
+          allTimeRevenue,
+          monthlyGrowthPct,
+          avgTuition,
+          paymentCompliancePct,
+          retentionRate,
+          quitRate,
+          totalActiveStudents,
+          payingStudentCount: payingStudentIds.size,
+          lastMonthName: lastMonthData.month,
+          prevMonthName: prevMonthData.month,
+        },
       };
       } catch (err: any) {
         console.error('[PaymentsDashboard] Error:', err?.message);

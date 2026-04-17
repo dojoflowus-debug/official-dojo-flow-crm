@@ -9465,3 +9465,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Build tRPC procedure: get payments by student (status, dates, retry count)
 - [ ] Build Payments tab UI in student detail panel (transaction table with success/decline/retry info)
 - [ ] Show payment date, decline date, retry count, amount, and status badge per transaction
+
+## Collections Analytics Section (Apr 17, 2026)
+- [x] Backend: compute lastMonthRevenue, prevMonthRevenue, allTimeRevenue, monthlyGrowthPct
+- [x] Backend: compute avgTuition (total monthly collected / paying students)
+- [x] Backend: compute paymentCompliancePct (paying students / total active students * 100)
+- [x] Backend: compute retentionRate (active end of month / active start of month * 100)
+- [x] Backend: compute quitRate (canceled students / starting students * 100)
+- [x] Frontend: Collections Analytics section on Payments dashboard (compact horizontal Stripe-style layout)
