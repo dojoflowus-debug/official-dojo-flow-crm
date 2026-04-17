@@ -4,7 +4,7 @@ import { trpc } from '@/lib/trpc'
 import { useTheme } from '@/contexts/ThemeContext'
 import {
   Phone, MessageSquare, CreditCard, X, ChevronRight,
-  RefreshCw, TrendingUp, MoreHorizontal, ArrowUpRight,
+  RefreshCw, MoreHorizontal, ArrowUpRight, CheckCircle2, AlertCircle,
 } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
@@ -188,6 +188,20 @@ export default function PaymentsDashboard() {
     refetchInterval: 60_000,
   })
   const chargeStudent = trpc.tuitionBilling.chargeStudentTuition.useMutation({ onSuccess: () => refetch() })
+  const [collectAllResult, setCollectAllResult] = useState<{ message: string; charged: number; smsSent: number; totalCollected: number } | null>(null)
+  const [collectAllError, setCollectAllError] = useState<string | null>(null)
+  const collectAll = trpc.tuitionBilling.collectAll.useMutation({
+    onSuccess: (data) => {
+      setCollectAllResult(data.summary)
+      setCollectAllError(null)
+      refetch()
+      setTimeout(() => setCollectAllResult(null), 8000)
+    },
+    onError: (err) => {
+      setCollectAllError(err.message)
+      setTimeout(() => setCollectAllError(null), 6000)
+    },
+  })
 
   const overdueAccounts: OverdueAccount[] = data?.overdueAccounts ?? []
   const transactions: Transaction[] = data?.transactions ?? []
@@ -303,19 +317,57 @@ export default function PaymentsDashboard() {
               </p>
             </div>
             <button
-              onClick={() => overdueAccounts.forEach(a => chargeStudent.mutate({ enrollmentId: a.enrollmentId }))}
-              className="collect-btn flex items-center gap-2 px-5 py-3 rounded-2xl font-bold text-white text-sm"
+              onClick={() => collectAll.mutate({})}
+              disabled={collectAll.isPending}
+              className="collect-btn flex items-center gap-2 px-5 py-3 rounded-2xl font-bold text-white text-sm disabled:opacity-70"
               style={{
                 background: 'linear-gradient(135deg, #22c55e, #16a34a)',
                 boxShadow: '0 4px 16px rgba(34,197,94,0.45)',
               }}
             >
-              Collect All
-              <ChevronRight className="w-4 h-4" />
+              {collectAll.isPending ? (
+                <><RefreshCw className="w-4 h-4 animate-spin" />Processing…</>
+              ) : (
+                <>Collect All<ChevronRight className="w-4 h-4" /></>
+              )}
             </button>
           </div>
 
-          {/* ── 2. Collection Rate (moved up) ── */}
+          {/* ── Collect All Result Toast ── */}
+          {collectAllResult && (
+            <div
+              className="flex items-start gap-3 rounded-2xl px-4 py-3"
+              style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}
+            >
+              <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-green-800">Collection run complete</p>
+                <p className="text-xs text-green-700 mt-0.5">{collectAllResult.message}</p>
+                <div className="flex gap-4 mt-2">
+                  <span className="text-xs font-semibold text-green-700">✓ {collectAllResult.charged} charged</span>
+                  <span className="text-xs font-semibold text-blue-600">✉ {collectAllResult.smsSent} SMS sent</span>
+                  <span className="text-xs font-semibold text-green-800">${collectAllResult.totalCollected.toFixed(2)} collected</span>
+                </div>
+              </div>
+              <button onClick={() => setCollectAllResult(null)} className="ml-auto p-1 hover:bg-green-100 rounded-full btn-press">
+                <X className="w-4 h-4 text-green-400" />
+              </button>
+            </div>
+          )}
+          {collectAllError && (
+            <div
+              className="flex items-start gap-3 rounded-2xl px-4 py-3"
+              style={{ background: '#fef2f2', border: '1px solid #fecaca' }}
+            >
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-700">{collectAllError}</p>
+              <button onClick={() => setCollectAllError(null)} className="ml-auto p-1 hover:bg-red-100 rounded-full btn-press">
+                <X className="w-4 h-4 text-red-400" />
+              </button>
+            </div>
+          )}
+
+          {/* ── 2. Collection Rate (moved up) ── */
           <div
             className="bg-white rounded-2xl p-4 card-hover"
             style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.05)', border: '1px solid #ebebeb' }}
@@ -568,11 +620,12 @@ export default function PaymentsDashboard() {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <button
-                      onClick={() => overdueAccounts.forEach(a => chargeStudent.mutate({ enrollmentId: a.enrollmentId }))}
-                      className="kai-collect-btn py-3 rounded-2xl text-sm font-bold text-white btn-press"
+                      onClick={() => collectAll.mutate({})}
+                      disabled={collectAll.isPending}
+                      className="kai-collect-btn py-3 rounded-2xl text-sm font-bold text-white btn-press disabled:opacity-70"
                       style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}
                     >
-                      Collect All
+                      {collectAll.isPending ? 'Processing…' : 'Collect All'}
                     </button>
                     <button
                       className="py-3 rounded-2xl text-sm font-semibold text-gray-600 bg-gray-50 border border-gray-200 btn-press hover:bg-gray-100 transition-colors"

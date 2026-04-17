@@ -636,6 +636,156 @@ export const tuitionBillingRouter = router({
         })),
       };
     }),
+
+  // ── Collect All: charge + SMS all overdue students ─────────────────────────
+
+  collectAll: protectedProcedure
+    .input(z.object({
+      message: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error('Database not initialized');
+      const orgId = await resolveOrgId(ctx, db);
+      if (!orgId) throw new Error('No organization found');
+      const fpKey = await getFluidPayKey(db, orgId);
+
+      // Fetch all past_due enrollments with student info
+      const overdueRows = await rawQuery(db, `
+        SELECT e.id as enrollment_id, e.student_id, e.fluidpay_customer_id, e.fluidpay_payment_method_id,
+               e.retry_count, p.amount_cents, p.name as plan_name,
+               s.first_name, s.last_name, s.phone
+        FROM student_billing_enrollments e
+        JOIN tuition_plans p ON e.plan_id = p.id
+        JOIN students s ON e.student_id = s.id
+        WHERE e.organization_id = ? AND e.status = 'past_due'
+      `, [orgId]);
+
+      const results: Array<{
+        studentId: number;
+        studentName: string;
+        chargeStatus: 'success' | 'failed' | 'skipped';
+        chargeError?: string;
+        smsStatus: 'sent' | 'failed' | 'no_phone' | 'skipped';
+        smsError?: string;
+        amountDollars: number;
+      }> = [];
+
+      const smsMessage = input.message ||
+        `Hi, this is a reminder that your tuition payment is overdue. Please update your payment method or contact us. Thank you!`;
+
+      for (const row of overdueRows) {
+        const studentName = `${row.first_name} ${row.last_name}`;
+        const amountDollars = row.amount_cents / 100;
+        let chargeStatus: 'success' | 'failed' | 'skipped' = 'skipped';
+        let chargeError: string | undefined;
+        let smsStatus: 'sent' | 'failed' | 'no_phone' | 'skipped' = 'skipped';
+        let smsError: string | undefined;
+
+        // 1. Attempt charge via FluidPay
+        if (fpKey && row.fluidpay_customer_id && row.fluidpay_payment_method_id) {
+          try {
+            const description = `Tuition - ${row.plan_name} - ${studentName}`;
+            await rawQuery(db,
+              `INSERT INTO student_tuition_payments (enrollment_id, student_id, organization_id, amount_cents, status, description)
+               VALUES (?, ?, ?, ?, 'pending', ?)`,
+              [row.enrollment_id, row.student_id, orgId, row.amount_cents, description]
+            );
+            const payRec = await rawQuery(db,
+              `SELECT id FROM student_tuition_payments WHERE student_id = ? AND organization_id = ? ORDER BY id DESC LIMIT 1`,
+              [row.student_id, orgId]
+            );
+            const paymentId = payRec[0]?.id;
+            const chargeResult = await chargeFluidPayCustomer(
+              fpKey,
+              row.fluidpay_customer_id,
+              row.fluidpay_payment_method_id,
+              row.amount_cents,
+              description
+            );
+            const now = new Date().toISOString().slice(0, 19);
+            if (chargeResult.success) {
+              chargeStatus = 'success';
+              await rawQuery(db,
+                `UPDATE student_tuition_payments SET status='success', transaction_id=?, paid_at=? WHERE id=?`,
+                [chargeResult.transactionId || null, now, paymentId]
+              );
+              await rawQuery(db,
+                `UPDATE student_billing_enrollments SET status='active', retry_count=0, last_declined_at=NULL WHERE id=?`,
+                [row.enrollment_id]
+              );
+            } else {
+              chargeStatus = 'failed';
+              chargeError = chargeResult.error || 'Charge declined';
+              await rawQuery(db,
+                `UPDATE student_tuition_payments SET status='failed', failure_reason=?, declined_at=? WHERE id=?`,
+                [chargeError, now, paymentId]
+              );
+              await rawQuery(db,
+                `UPDATE student_billing_enrollments SET retry_count=retry_count+1, last_declined_at=? WHERE id=?`,
+                [now, row.enrollment_id]
+              );
+            }
+          } catch (err: any) {
+            chargeStatus = 'failed';
+            chargeError = err.message;
+          }
+        }
+
+        // 2. Send SMS reminder via Twilio
+        if (row.phone) {
+          try {
+            const { formatPhoneNumber } = await import('./services/twilio.js');
+            const formatted = formatPhoneNumber(row.phone);
+            const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`;
+            const form = new URLSearchParams();
+            form.append('To', formatted);
+            form.append('From', process.env.TWILIO_PHONE_NUMBER || '');
+            form.append('Body', smsMessage);
+            const resp = await fetch(twilioUrl, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Basic ${Buffer.from(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64')}`,
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: form.toString(),
+            });
+            const twilioData = await resp.json() as any;
+            if (!resp.ok) throw new Error(twilioData.message || 'Twilio error');
+            smsStatus = 'sent';
+            try {
+              await rawQuery(db,
+                `INSERT INTO sms_log (organization_id, student_id, recipient_name, recipient_phone, message, status, twilio_sid, sent_by, filter_tag)
+                 VALUES (?, ?, ?, ?, ?, 'sent', ?, 'collect_all', 'overdue')`,
+                [orgId, row.student_id, studentName, formatted, smsMessage, twilioData.sid || null]
+              );
+            } catch {}
+          } catch (err: any) {
+            smsStatus = 'failed';
+            smsError = err.message;
+          }
+        } else {
+          smsStatus = 'no_phone';
+        }
+
+        results.push({ studentId: row.student_id, studentName, chargeStatus, chargeError, smsStatus, smsError, amountDollars });
+      }
+
+      const charged = results.filter(r => r.chargeStatus === 'success').length;
+      const smsSent = results.filter(r => r.smsStatus === 'sent').length;
+      const totalCollected = results.filter(r => r.chargeStatus === 'success').reduce((s, r) => s + r.amountDollars, 0);
+
+      return {
+        results,
+        summary: {
+          total: results.length,
+          charged,
+          smsSent,
+          totalCollected,
+          message: `Processed ${results.length} overdue accounts: ${charged} charged ($${totalCollected.toFixed(2)} collected), ${smsSent} SMS reminders sent.`,
+        },
+      };
+    }),
 });
 
 export type TuitionBillingRouter = typeof tuitionBillingRouter;
