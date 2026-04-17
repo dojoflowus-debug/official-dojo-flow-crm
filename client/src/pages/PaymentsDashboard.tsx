@@ -73,14 +73,20 @@ export default function PaymentsDashboard() {
   })
 
   // ── Derived values ────────────────────────────────────────────────────────
-  const overdue = dash?.overdueStudents ?? []
-  const transactions = dash?.recentTransactions ?? []
+  const overdue = dash?.overdueAccounts ?? []
+  const transactions = dash?.transactions ?? []
   const overdueTotal = dash?.overdueTotal ?? 0
-  const collectedTotal = dash?.collectedTotal ?? 0
+  const collectedTotal = dash?.weeklyRevenue ?? 0
   const pendingTotal = dash?.pendingTotal ?? 0
-  const mapStudents = dash?.mapStudents ?? []
-  const trendRaw: number[] = dash?.weeklyTrend ?? [0,0,0,0,0,0,0,0]
-  const trendData = DAYS.map((d, i) => ({ day: d, value: trendRaw[i] ?? 0 }))
+  const mapStudents = dash?.paidMapStudents ?? []
+  // Build trend from collectionTrend array (day + total) or fall back to zeros
+  const trendData = (() => {
+    const trend = dash?.collectionTrend ?? []
+    return DAYS.map((d, i) => {
+      const entry = trend[trend.length - 7 + i]
+      return { day: d, value: entry ? Number(entry.total) : 0 }
+    })
+  })()
 
   function handleCollectAll() {
     setCollectingAll(true)
@@ -240,7 +246,7 @@ export default function PaymentsDashboard() {
                 </div>
                 {/* Amount */}
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#ef4444' }}>{fmt(s.amountOverdue)} overdue</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#ef4444' }}>{fmt(s.amountDollars)} overdue</div>
                   <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 1 }}>{s.daysLate} days late</div>
                 </div>
                 {/* Collect button */}
@@ -343,7 +349,7 @@ export default function PaymentsDashboard() {
                       icon={s.hasBillingIssue ? redIcon : greenIcon}
                     >
                       <Popup>
-                        <div style={{ fontSize: 12, fontWeight: 600 }}>{s.name}</div>
+                        <div style={{ fontSize: 12, fontWeight: 600 }}>{s.name ?? s.studentName}</div>
                         <div style={{ fontSize: 11, color: s.hasBillingIssue ? '#ef4444' : '#10b981' }}>
                           {s.hasBillingIssue ? 'Overdue' : 'Paid'}
                         </div>
@@ -399,7 +405,7 @@ export default function PaymentsDashboard() {
                 <span style={{
                   position: 'absolute', bottom: 0, right: 0,
                   width: 8, height: 8, borderRadius: '50%',
-                  background: t.status === 'paid' ? '#10b981' : '#ef4444',
+                  background: (t.status === 'paid' || t.status === 'success') ? '#10b981' : '#ef4444',
                   border: '1.5px solid #fff',
                 }} />
               </div>
@@ -410,8 +416,8 @@ export default function PaymentsDashboard() {
               </div>
               {/* Amount */}
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: t.status === 'paid' ? '#10b981' : '#ef4444' }}>
-                  {t.status === 'paid' ? '+' : ''}{fmtFull(t.amount)}
+                <div style={{ fontSize: 13, fontWeight: 700, color: (t.status === 'paid' || t.status === 'success') ? '#10b981' : '#ef4444' }}>
+                  {t.status === 'success' || t.status === 'paid' ? '+' : ''}{fmtFull(t.amountDollars)}
                 </div>
                 <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 1 }}>{fmtTime(t.paidAt ?? t.createdAt)}</div>
               </div>
