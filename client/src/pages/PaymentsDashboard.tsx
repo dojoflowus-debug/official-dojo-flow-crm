@@ -60,7 +60,7 @@ export default function PaymentsDashboard() {
   const [collectResult, setCollectResult] = useState<string | null>(null)
 
   // ── tRPC queries ─────────────────────────────────────────────────────────
-  const { data: dash } = trpc.tuitionBilling.getPaymentsDashboard.useQuery(undefined, { refetchInterval: 60_000 })
+  const { data: dash, isLoading: dashLoading } = trpc.tuitionBilling.getPaymentsDashboard.useQuery(undefined, { refetchInterval: 60_000 })
   const collectAllMut = trpc.tuitionBilling.collectAll.useMutation({
     onSuccess: (res: any) => {
       setCollectResult(`Charged ${res.charged}/${res.total} · ${res.smsSent} SMS sent · ${fmt(res.totalCollected)} collected`)
@@ -158,7 +158,11 @@ export default function PaymentsDashboard() {
             <AlertTriangle style={{ width: 14, height: 14, color: '#ef4444' }} />
             <span style={{ fontSize: 12, fontWeight: 600, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Outstanding</span>
           </div>
-          <div style={{ fontSize: 30, fontWeight: 700, color: '#ef4444', letterSpacing: '-0.5px' }}>{fmt(overdueTotal)}</div>
+          {dashLoading ? (
+            <div style={{ height: 36, width: 80, background: '#f3f4f6', borderRadius: 6, animation: 'pulse 1.5s ease-in-out infinite' }} />
+          ) : (
+            <div style={{ fontSize: 30, fontWeight: 700, color: '#ef4444', letterSpacing: '-0.5px' }}>{fmt(overdueTotal)}</div>
+          )}
         </div>
         {/* Collected */}
         <div style={{ background: '#fff', padding: '20px 24px', borderLeft: '1px solid #e5e7eb', borderRight: '1px solid #e5e7eb' }}>
@@ -166,7 +170,11 @@ export default function PaymentsDashboard() {
             <CheckCircle2 style={{ width: 14, height: 14, color: '#10b981' }} />
             <span style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Collected</span>
           </div>
-          <div style={{ fontSize: 30, fontWeight: 700, color: '#111827', letterSpacing: '-0.5px' }}>{fmt(collectedTotal)}</div>
+          {dashLoading ? (
+            <div style={{ height: 36, width: 80, background: '#f3f4f6', borderRadius: 6, animation: 'pulse 1.5s ease-in-out infinite' }} />
+          ) : (
+            <div style={{ fontSize: 30, fontWeight: 700, color: '#111827', letterSpacing: '-0.5px' }}>{fmt(collectedTotal)}</div>
+          )}
         </div>
         {/* Pending */}
         <div style={{ background: '#fff', padding: '20px 24px' }}>
@@ -174,12 +182,28 @@ export default function PaymentsDashboard() {
             <Clock style={{ width: 14, height: 14, color: '#f59e0b' }} />
             <span style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pending</span>
           </div>
-          <div style={{ fontSize: 30, fontWeight: 700, color: '#111827', letterSpacing: '-0.5px' }}>{fmt(pendingTotal)}</div>
+          {dashLoading ? (
+            <div style={{ height: 36, width: 80, background: '#f3f4f6', borderRadius: 6, animation: 'pulse 1.5s ease-in-out infinite' }} />
+          ) : (
+            <div style={{ fontSize: 30, fontWeight: 700, color: '#111827', letterSpacing: '-0.5px' }}>{fmt(pendingTotal)}</div>
+          )}
         </div>
       </div>
 
       {/* ── Collections Analytics ─────────────────────────────────────────── */}
-      {dash?.analytics && (() => {
+      {dashLoading && (
+        <div style={{ margin: '16px 24px 0', background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px 20px' }}>
+          <div style={{ display: 'flex', gap: 16 }}>
+            {[...Array(4)].map((_, i) => (
+              <div key={i} style={{ flex: 1 }}>
+                <div style={{ height: 12, width: '60%', background: '#f3f4f6', borderRadius: 4, marginBottom: 8, animation: 'pulse 1.5s ease-in-out infinite' }} />
+                <div style={{ height: 24, width: '80%', background: '#f3f4f6', borderRadius: 4, animation: 'pulse 1.5s ease-in-out infinite' }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {!dashLoading && dash?.analytics && (() => {
         const a = dash.analytics
         const growthPositive = a.monthlyGrowthPct >= 0
         return (

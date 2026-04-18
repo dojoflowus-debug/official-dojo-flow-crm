@@ -62,6 +62,223 @@ function calcNextBillingDate(frequency: string, from: Date = new Date()): Date {
   return next;
 }
 
+// ─── Dashboard Cache ────────────────────────────────────────────────────────
+// Per-org in-memory cache so the dashboard returns instantly on repeat visits.
+// Data is served from cache immediately; a background refresh runs every 60s.
+const dashboardCache = new Map<number, { data: any; fetchedAt: number }>();
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds
+const inFlight = new Map<number, Promise<any>>(); // prevent duplicate parallel fetches
+
+async function computeDashboard(db: Database, orgId: number, fpKey: string): Promise<any> {
+  const now = new Date();
+  const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const toFpDate = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z');
+
+  // Fetch last 30 days of transactions from FluidPay AND Stripe in parallel
+  const [fpResult, stripeCharges] = await Promise.all([
+    searchTransactions(fpKey, toFpDate(thirtyDaysAgo), toFpDate(now), 500),
+    getStripeRecentCharges(30),
+  ]);
+  const allTxs = fpResult.data || [];
+
+  const settled = allTxs.filter((t: any) => t.status === 'settled' || t.status === 'partially_refunded');
+  const declined = allTxs.filter((t: any) => t.status === 'declined');
+  const pending = allTxs.filter((t: any) => t.status === 'pending_settlement' || t.status === 'authorized');
+
+  const stripeSettled = stripeCharges.filter((c: any) => c.status === 'success');
+
+  const todayCollected =
+    settled.filter((t: any) => new Date(t.created_at) >= todayStart)
+      .reduce((s: number, t: any) => s + (t.amount_settled || t.amount || 0), 0) / 100 +
+    stripeSettled.filter((c: any) => new Date(c.createdAt) >= todayStart)
+      .reduce((s: number, c: any) => s + c.amountDollars, 0);
+
+  const weeklyRevenue =
+    settled.filter((t: any) => new Date(t.created_at) >= weekStart)
+      .reduce((s: number, t: any) => s + (t.amount_settled || t.amount || 0), 0) / 100 +
+    stripeSettled.filter((c: any) => new Date(c.createdAt) >= weekStart)
+      .reduce((s: number, c: any) => s + c.amountDollars, 0);
+
+  const mrr =
+    settled.filter((t: any) => new Date(t.created_at) >= monthStart)
+      .reduce((s: number, t: any) => s + (t.amount_settled || t.amount || 0), 0) / 100 +
+    stripeSettled.filter((c: any) => new Date(c.createdAt) >= monthStart)
+      .reduce((s: number, c: any) => s + c.amountDollars, 0);
+
+  const pendingTotal = pending.reduce((s: number, t: any) => s + (t.amount || 0), 0) / 100;
+
+  const totalAttempts = settled.length + declined.length;
+  const collectionEfficiency = totalAttempts > 0 ? Math.round((settled.length / totalAttempts) * 100) : 100;
+
+  const declinedByCustomer = new Map<string, any>();
+  for (const t of declined) {
+    const key = (t as any).customer_id || (t as any).id;
+    const existing = declinedByCustomer.get(key);
+    if (!existing || new Date((t as any).created_at) > new Date(existing.created_at)) {
+      declinedByCustomer.set(key, t);
+    }
+  }
+
+  const allStudents = await db.select({
+    id: students.id,
+    firstName: students.firstName,
+    lastName: students.lastName,
+    phone: students.phone,
+    email: students.email,
+    latitude: students.latitude,
+    longitude: students.longitude,
+    photoUrl: students.photoUrl,
+    createdAt: students.createdAt,
+  }).from(students).where(eq(students.organizationId as any, orgId));
+
+  const overdueAccounts = Array.from(declinedByCustomer.values()).map((t: any) => {
+    const billing = t.billing_address || {};
+    const firstName = billing.first_name || '';
+    const lastName = billing.last_name || '';
+    const fullName = `${firstName} ${lastName}`.trim() || 'Unknown';
+    const matched = allStudents.find((s: any) =>
+      (s.firstName?.toLowerCase() === firstName.toLowerCase() &&
+       s.lastName?.toLowerCase() === lastName.toLowerCase()) ||
+      (billing.email && s.email?.toLowerCase() === billing.email.toLowerCase())
+    );
+    const daysLate = Math.floor((now.getTime() - new Date(t.created_at).getTime()) / (1000 * 60 * 60 * 24));
+    return {
+      enrollmentId: t.id,
+      studentId: matched?.id || null,
+      studentName: fullName,
+      phone: matched?.phone || billing.phone || null,
+      amountDollars: (t.amount || 0) / 100,
+      planName: t.description || 'Tuition',
+      frequency: 'monthly',
+      daysLate,
+      retryCount: 0,
+      lastDeclinedAt: t.created_at,
+      latitude: matched?.latitude || null,
+      longitude: matched?.longitude || null,
+      photoUrl: matched?.photoUrl || null,
+      fluidpayTxId: t.id,
+    };
+  });
+
+  const fpTransactions = allTxs.map((t: any) => {
+    const billing = t.billing_address || {};
+    const firstName = billing.first_name || '';
+    const lastName = billing.last_name || '';
+    const fullName = `${firstName} ${lastName}`.trim() || 'Unknown';
+    const matched = allStudents.find((s: any) =>
+      (s.firstName?.toLowerCase() === firstName.toLowerCase() &&
+       s.lastName?.toLowerCase() === lastName.toLowerCase()) ||
+      (billing.email && s.email?.toLowerCase() === billing.email.toLowerCase())
+    );
+    return {
+      id: t.id,
+      studentName: fullName,
+      amountDollars: (t.amount || 0) / 100,
+      status: t.status === 'settled' ? 'success' : t.status,
+      paidAt: t.settled_at || t.created_at,
+      createdAt: t.created_at,
+      failureReason: t.response || null,
+      description: t.description || 'Tuition',
+      transactionId: t.id,
+      photoUrl: matched?.photoUrl || null,
+      latitude: matched?.latitude || null,
+      longitude: matched?.longitude || null,
+      phone: matched?.phone || billing.phone || null,
+      source: 'FluidPay' as const,
+    };
+  });
+
+  const transactions = [...fpTransactions, ...stripeCharges]
+    .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 50);
+
+  const collectionTrend = [];
+  for (let i = 6; i >= 0; i--) {
+    const dayStart = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+    dayStart.setUTCHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+    const fpDayTotal = settled
+      .filter((t: any) => { const d = new Date(t.created_at); return d >= dayStart && d < dayEnd; })
+      .reduce((s: number, t: any) => s + (t.amount_settled || t.amount || 0), 0) / 100;
+    const stripeDayTotal = stripeSettled
+      .filter((c: any) => { const d = new Date(c.createdAt); return d >= dayStart && d < dayEnd; })
+      .reduce((s: number, c: any) => s + c.amountDollars, 0);
+    collectionTrend.push({ day: dayStart.toISOString().split('T')[0], total: fpDayTotal + stripeDayTotal });
+  }
+
+  const paidMapStudents = allStudents
+    .filter((s: any) => s.latitude && s.longitude)
+    .filter((s: any) => settled.some((t: any) => {
+      const b = t.billing_address || {};
+      return b.first_name?.toLowerCase() === s.firstName?.toLowerCase() &&
+             b.last_name?.toLowerCase() === s.lastName?.toLowerCase();
+    }))
+    .map((s: any) => ({ id: s.id, name: `${s.firstName} ${s.lastName}`, latitude: s.latitude, longitude: s.longitude, isPaid: true }));
+
+  const unpaidMapStudents = overdueAccounts
+    .filter((a: any) => a.latitude && a.longitude)
+    .map((a: any) => ({ id: a.enrollmentId, name: a.studentName, latitude: a.latitude, longitude: a.longitude, isPaid: false }));
+
+  // ── Collections Analytics ─────────────────────────────────────────────────
+  const lastMonthDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+  const prevMonthDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1));
+
+  const [lastMonthData, prevMonthData, stripeLastMonth, stripePrevMonth, allTimeFp, stripeAllTimeRevenue] = await Promise.all([
+    getMonthlyRevenue(fpKey, lastMonthDate.getUTCFullYear(), lastMonthDate.getUTCMonth() + 1),
+    getMonthlyRevenue(fpKey, prevMonthDate.getUTCFullYear(), prevMonthDate.getUTCMonth() + 1),
+    getStripeMonthlyRevenue(lastMonthDate.getUTCFullYear(), lastMonthDate.getUTCMonth() + 1),
+    getStripeMonthlyRevenue(prevMonthDate.getUTCFullYear(), prevMonthDate.getUTCMonth() + 1),
+    searchTransactions(fpKey, '2020-01-01T00:00:00Z', toFpDate(now), 500),
+    getStripeAllTimeRevenue(),
+  ]);
+
+  const lastMonthRevenue = lastMonthData.settledDollars + stripeLastMonth.totalDollars;
+  const prevMonthRevenue = prevMonthData.settledDollars + stripePrevMonth.totalDollars;
+  const allTimeTxs = allTimeFp.data || [];
+  const allTimeRevenue = allTimeTxs
+    .filter((t: any) => t.status === 'settled' || t.status === 'partially_refunded')
+    .reduce((s: number, t: any) => s + (t.amount_settled || t.amount || 0), 0) / 100 + stripeAllTimeRevenue;
+
+  const monthlyGrowthPct = prevMonthRevenue > 0
+    ? Math.round(((lastMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100 * 10) / 10
+    : lastMonthRevenue > 0 ? 100 : 0;
+
+  const thisMonthSettled = settled.filter((t: any) => new Date(t.created_at) >= monthStart);
+  const payingStudentIds = new Set(thisMonthSettled.map((t: any) => t.customer_id).filter(Boolean));
+  const payingStudentCount = payingStudentIds.size || 1;
+  const avgTuition = mrr > 0 ? Math.round((mrr / payingStudentCount) * 100) / 100 : 0;
+
+  const totalActiveStudents = allStudents.length;
+  const paymentCompliancePct = totalActiveStudents > 0
+    ? Math.round((payingStudentIds.size / totalActiveStudents) * 100 * 10) / 10 : 0;
+
+  const newThisMonth = allStudents.filter((s: any) => {
+    const created = s.createdAt ? new Date(s.createdAt) : null;
+    return created && created >= monthStart;
+  }).length;
+  const startOfMonthCount = totalActiveStudents - newThisMonth;
+  const retentionRate = startOfMonthCount > 0
+    ? Math.round(((totalActiveStudents - newThisMonth) / startOfMonthCount) * 100 * 10) / 10 : 100;
+  const quitRate = startOfMonthCount > 0
+    ? Math.round((overdueAccounts.length / Math.max(startOfMonthCount, 1)) * 100 * 10) / 10 : 0;
+
+  return {
+    todayCollected, weeklyRevenue, mrr, pendingTotal, collectionEfficiency,
+    overdueAccounts, overdueCount: overdueAccounts.length,
+    overdueTotal: overdueAccounts.reduce((sum: number, a: any) => sum + a.amountDollars, 0),
+    transactions, collectionTrend, paidMapStudents, unpaidMapStudents,
+    analytics: {
+      lastMonthRevenue, prevMonthRevenue, allTimeRevenue, monthlyGrowthPct,
+      avgTuition, paymentCompliancePct, retentionRate, quitRate,
+      totalActiveStudents, payingStudentCount: payingStudentIds.size,
+      lastMonthName: lastMonthData.month, prevMonthName: prevMonthData.month,
+    },
+  };
+}
+
 // ─── Router ──────────────────────────────────────────────────────────────────
 
 export const tuitionBillingRouter = router({
@@ -537,7 +754,7 @@ export const tuitionBillingRouter = router({
       const orgId = await resolveOrgId(ctx, db);
       if (!orgId) return null;
 
-      // ── Pull real-time data from FluidPay ──────────────────────────────
+      // ── Pull real-time data from FluidPay ───────────────────────────────────────
       const fpKey = await getFluidPayKey(db, orgId);
 
       if (!fpKey) {
@@ -550,302 +767,44 @@ export const tuitionBillingRouter = router({
         };
       }
 
-      const now = new Date();
-      const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-      const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+      // ── Cache-first: return stale data immediately, refresh in background ─────
+      const cached = dashboardCache.get(orgId);
+      const isStale = !cached || (Date.now() - cached.fetchedAt > CACHE_TTL_MS);
 
-      // Fetch last 30 days of transactions from FluidPay AND Stripe in parallel
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      // Use a safe date formatter: strip milliseconds to produce YYYY-MM-DDTHH:MM:SSZ
-      const toFpDate = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z');
-      const [fpResult, stripeCharges] = await Promise.all([
-        searchTransactions(fpKey, toFpDate(thirtyDaysAgo), toFpDate(now), 500),
-        getStripeRecentCharges(30),
-      ]);
-      const allTxs = fpResult.data || [];
-
-      // Settled (collected) transactions
-      const settled = allTxs.filter(t => t.status === 'settled' || t.status === 'partially_refunded');
-      const declined = allTxs.filter(t => t.status === 'declined');
-      const pending = allTxs.filter(t => t.status === 'pending_settlement' || t.status === 'authorized');
-
-      // Stripe settled/failed charges
-      const stripeSettled = stripeCharges.filter(c => c.status === 'success');
-      const stripeFailed = stripeCharges.filter(c => c.status !== 'success' && c.status !== 'pending');
-
-      // Today collected (FluidPay + Stripe)
-      const todayCollected =
-        settled.filter(t => new Date(t.created_at) >= todayStart)
-          .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100 +
-        stripeSettled.filter(c => new Date(c.createdAt) >= todayStart)
-          .reduce((s, c) => s + c.amountDollars, 0);
-
-      // Weekly revenue (FluidPay + Stripe)
-      const weeklyRevenue =
-        settled.filter(t => new Date(t.created_at) >= weekStart)
-          .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100 +
-        stripeSettled.filter(c => new Date(c.createdAt) >= weekStart)
-          .reduce((s, c) => s + c.amountDollars, 0);
-
-      // Monthly revenue (MRR proxy — FluidPay + Stripe)
-      const mrr =
-        settled.filter(t => new Date(t.created_at) >= monthStart)
-          .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100 +
-        stripeSettled.filter(c => new Date(c.createdAt) >= monthStart)
-          .reduce((s, c) => s + c.amountDollars, 0);
-
-      // Pending total
-      const pendingTotal = pending
-        .reduce((s, t) => s + (t.amount || 0), 0) / 100;
-
-      // Collection efficiency
-      const totalAttempts = settled.length + declined.length;
-      const collectionEfficiency = totalAttempts > 0 ? Math.round((settled.length / totalAttempts) * 100) : 100;
-
-      // Overdue = declined transactions (unique customers, most recent per customer)
-      const declinedByCustomer = new Map<string, typeof declined[0]>();
-      for (const t of declined) {
-        const key = t.customer_id || t.id;
-        const existing = declinedByCustomer.get(key);
-        if (!existing || new Date(t.created_at) > new Date(existing.created_at)) {
-          declinedByCustomer.set(key, t);
-        }
+      if (cached && isStale && !inFlight.has(orgId)) {
+        // Serve stale data now, kick off background refresh
+        const refreshPromise = computeDashboard(db, orgId, fpKey).then(result => {
+          dashboardCache.set(orgId, { data: result, fetchedAt: Date.now() });
+          inFlight.delete(orgId);
+        }).catch(() => inFlight.delete(orgId));
+        inFlight.set(orgId, refreshPromise);
+        return cached.data;
       }
 
-      // Match declined FluidPay customers to students in DB
-      const allStudents = await db.select({
-        id: students.id,
-        firstName: students.firstName,
-        lastName: students.lastName,
-        phone: students.phone,
-        email: students.email,
-        latitude: students.latitude,
-        longitude: students.longitude,
-        photoUrl: students.photoUrl,
-        createdAt: students.createdAt,
-      }).from(students).where(eq(students.organizationId as any, orgId));
-
-      const overdueAccounts = Array.from(declinedByCustomer.values()).map((t, i) => {
-        const billing = (t as any).billing_address || {};
-        const firstName = billing.first_name || '';
-        const lastName = billing.last_name || '';
-        const fullName = `${firstName} ${lastName}`.trim() || 'Unknown';
-        // Try to match to a student record
-        const matched = allStudents.find((s: any) =>
-          (s.firstName?.toLowerCase() === firstName.toLowerCase() &&
-           s.lastName?.toLowerCase() === lastName.toLowerCase()) ||
-          (billing.email && s.email?.toLowerCase() === billing.email.toLowerCase())
-        );
-        const daysLate = Math.floor((now.getTime() - new Date(t.created_at).getTime()) / (1000 * 60 * 60 * 24));
-        return {
-          enrollmentId: t.id,
-          studentId: matched?.id || null,
-          studentName: fullName,
-          phone: matched?.phone || billing.phone || null,
-          amountDollars: (t.amount || 0) / 100,
-          planName: t.description || 'Tuition',
-          frequency: 'monthly',
-          daysLate,
-          retryCount: 0,
-          lastDeclinedAt: t.created_at,
-          latitude: matched?.latitude || null,
-          longitude: matched?.longitude || null,
-          photoUrl: matched?.photoUrl || null,
-          fluidpayTxId: t.id,
-        };
-      });
-
-      // Recent transactions (last 30, most recent first) — FluidPay + Stripe merged
-      const fpTransactions = allTxs.map(t => {
-        const billing = (t as any).billing_address || {};
-        const firstName = billing.first_name || '';
-        const lastName = billing.last_name || '';
-        const fullName = `${firstName} ${lastName}`.trim() || 'Unknown';
-        const matched = allStudents.find((s: any) =>
-          (s.firstName?.toLowerCase() === firstName.toLowerCase() &&
-           s.lastName?.toLowerCase() === lastName.toLowerCase()) ||
-          (billing.email && s.email?.toLowerCase() === billing.email.toLowerCase())
-        );
-        return {
-          id: t.id,
-          studentName: fullName,
-          amountDollars: (t.amount || 0) / 100,
-          status: t.status === 'settled' ? 'success' : t.status,
-          paidAt: t.settled_at || t.created_at,
-          createdAt: t.created_at,
-          failureReason: (t as any).response || null,
-          description: t.description || 'Tuition',
-          transactionId: t.id,
-          photoUrl: matched?.photoUrl || null,
-          latitude: matched?.latitude || null,
-          longitude: matched?.longitude || null,
-          phone: matched?.phone || billing.phone || null,
-          source: 'FluidPay' as const,
-        };
-      });
-
-      // Merge FluidPay + Stripe, sort by date, take top 50
-      const allMergedTxs = [...fpTransactions, ...stripeCharges]
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 50);
-
-      const transactions = allMergedTxs;
-
-      // Collection trend: last 7 days (FluidPay + Stripe)
-      const collectionTrend = [];
-      for (let i = 6; i >= 0; i--) {
-        const dayStart = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-        dayStart.setUTCHours(0, 0, 0, 0);
-        const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
-        const fpDayTotal = settled
-          .filter(t => {
-            const d = new Date(t.created_at);
-            return d >= dayStart && d < dayEnd;
-          })
-          .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100;
-        const stripeDayTotal = stripeSettled
-          .filter(c => {
-            const d = new Date(c.createdAt);
-            return d >= dayStart && d < dayEnd;
-          })
-          .reduce((s, c) => s + c.amountDollars, 0);
-        collectionTrend.push({ day: dayStart.toISOString().split('T')[0], total: fpDayTotal + stripeDayTotal });
+      if (cached && !isStale) {
+        // Cache is fresh — return immediately
+        return cached.data;
       }
 
-      // Map students: paid = green, declined = red
-      const paidCustomerIds = new Set(settled.map(t => t.customer_id).filter(Boolean));
-      const declinedCustomerIds = new Set(declined.map(t => t.customer_id).filter(Boolean));
+      // No cache yet — compute now (first load)
+      if (!inFlight.has(orgId)) {
+        const p = computeDashboard(db, orgId, fpKey).then(result => {
+          dashboardCache.set(orgId, { data: result, fetchedAt: Date.now() });
+          inFlight.delete(orgId);
+          return result;
+        }).catch(err => { inFlight.delete(orgId); throw err; });
+        inFlight.set(orgId, p);
+      }
+      const result = await inFlight.get(orgId)!;
+      return result;
 
-      const paidMapStudents = allStudents
-        .filter((s: any) => s.latitude && s.longitude)
-        .filter((s: any) => {
-          // Mark as paid if they have a settled transaction in last 30 days
-          return settled.some(t => {
-            const b = (t as any).billing_address || {};
-            return b.first_name?.toLowerCase() === s.firstName?.toLowerCase() &&
-                   b.last_name?.toLowerCase() === s.lastName?.toLowerCase();
-          });
-        })
-        .map((s: any) => ({
-          id: s.id,
-          name: `${s.firstName} ${s.lastName}`,
-          latitude: s.latitude,
-          longitude: s.longitude,
-          isPaid: true,
-        }));
-
-      const unpaidMapStudents = overdueAccounts
-        .filter(a => a.latitude && a.longitude)
-        .map(a => ({
-          id: a.enrollmentId,
-          name: a.studentName,
-          latitude: a.latitude,
-          longitude: a.longitude,
-           isPaid: false,
-        }));
-
-      // ── Collections Analytics ─────────────────────────────────────────────
-
-      // Fetch last month and previous month revenue in parallel (FluidPay + Stripe)
-      const lastMonthDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
-      const prevMonthDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1));
-
-      const [lastMonthData, prevMonthData, stripeLastMonth, stripePrevMonth] = await Promise.all([
-        getMonthlyRevenue(fpKey, lastMonthDate.getUTCFullYear(), lastMonthDate.getUTCMonth() + 1),
-        getMonthlyRevenue(fpKey, prevMonthDate.getUTCFullYear(), prevMonthDate.getUTCMonth() + 1),
-        getStripeMonthlyRevenue(lastMonthDate.getUTCFullYear(), lastMonthDate.getUTCMonth() + 1),
-        getStripeMonthlyRevenue(prevMonthDate.getUTCFullYear(), prevMonthDate.getUTCMonth() + 1),
-      ]);
-
-      const lastMonthRevenue = lastMonthData.settledDollars + stripeLastMonth.totalDollars;
-      const prevMonthRevenue = prevMonthData.settledDollars + stripePrevMonth.totalDollars;
-
-      // All-time revenue: FluidPay (wide range) + Stripe all-time
-      const allTimeStart = '2020-01-01T00:00:00Z';
-      const [allTimeFp, stripeAllTimeRevenue] = await Promise.all([
-        searchTransactions(fpKey, allTimeStart, toFpDate(now), 500),
-        getStripeAllTimeRevenue(),
-      ]);
-      const allTimeTxs = allTimeFp.data || [];
-      const allTimeRevenue = allTimeTxs
-        .filter(t => t.status === 'settled' || t.status === 'partially_refunded')
-        .reduce((s, t) => s + (t.amount_settled || t.amount || 0), 0) / 100 + stripeAllTimeRevenue;
-
-      // Monthly growth %
-      const monthlyGrowthPct = prevMonthRevenue > 0
-        ? Math.round(((lastMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100 * 10) / 10
-        : lastMonthRevenue > 0 ? 100 : 0;
-
-      // Average Tuition: this month collected / unique paying students this month
-      const thisMonthSettled = settled.filter(t => new Date(t.created_at) >= monthStart);
-      const payingStudentIds = new Set(
-        thisMonthSettled.map(t => (t as any).customer_id).filter(Boolean)
-      );
-      const payingStudentCount = payingStudentIds.size || 1; // avoid div by 0
-      const avgTuition = mrr > 0 ? Math.round((mrr / payingStudentCount) * 100) / 100 : 0;
-
-      // Student counts for compliance and retention
-      const totalActiveStudents = allStudents.length;
-
-      // Payment Compliance: paying students / total active students * 100
-      // "Paying" = had a settled transaction this month
-      const paymentCompliancePct = totalActiveStudents > 0
-        ? Math.round((payingStudentIds.size / totalActiveStudents) * 100 * 10) / 10
-        : 0;
-
-      // Retention Rate: students active at end of month / students active at start of month
-      // Proxy: (total active now - new students this month) / total active now * 100
-      const newThisMonth = allStudents.filter((s: any) => {
-        const created = s.createdAt ? new Date(s.createdAt) : null;
-        return created && created >= monthStart;
-      }).length;
-      const startOfMonthCount = totalActiveStudents - newThisMonth;
-      const retentionRate = startOfMonthCount > 0
-        ? Math.round(((totalActiveStudents - newThisMonth) / startOfMonthCount) * 100 * 10) / 10
-        : 100;
-
-      // Quit Rate: canceled students this period / starting students
-      // We use declined-only customers as a proxy for "at risk of quitting"
-      // Real quit rate requires a cancellation table; use 0 if not available
-      const quitRate = startOfMonthCount > 0
-        ? Math.round((overdueAccounts.length / Math.max(startOfMonthCount, 1)) * 100 * 10) / 10
-        : 0;
-
-      return {
-        todayCollected,
-        weeklyRevenue,
-        mrr,
-        pendingTotal,
-        collectionEfficiency,
-        overdueAccounts,
-        overdueCount: overdueAccounts.length,
-        overdueTotal: overdueAccounts.reduce((sum: number, a: any) => sum + a.amountDollars, 0),
-        transactions,
-        collectionTrend,
-        paidMapStudents,
-        unpaidMapStudents,
-        // Collections Analytics
-        analytics: {
-          lastMonthRevenue,
-          prevMonthRevenue,
-          allTimeRevenue,
-          monthlyGrowthPct,
-          avgTuition,
-          paymentCompliancePct,
-          retentionRate,
-          quitRate,
-          totalActiveStudents,
-          payingStudentCount: payingStudentIds.size,
-          lastMonthName: lastMonthData.month,
-          prevMonthName: prevMonthData.month,
-        },
-      };
       } catch (err: any) {
         console.error('[PaymentsDashboard] Error:', err?.message);
         throw err;
       }
     }),
+
+
   // ── Collect All: charge + SMS all overdue students ─────────────────────────
 
   collectAll: protectedProcedure
