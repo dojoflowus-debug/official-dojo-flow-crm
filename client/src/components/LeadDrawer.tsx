@@ -15,12 +15,16 @@ import {
   Users,
   Megaphone,
   History,
-  Info
+  Info,
+  Check,
+  AlertCircle,
+  Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trpc } from '@/lib/trpc';
 import LeadActivityTimeline from './LeadActivityTimeline';
 import KaiSalesCoach from './KaiSalesCoach';
+
 
 interface Lead {
   id: number;
@@ -45,6 +49,7 @@ interface LeadDrawerProps {
   onDelete?: () => void;
   stages: { id: string; label: string }[];
   currentStage: string;
+  onOpenScheduler?: () => void;
 }
 
 // Source icon mapping
@@ -57,7 +62,23 @@ const sourceIcons: Record<string, React.ElementType> = {
   'Instagram': Megaphone,
 };
 
-type TabType = 'details' | 'activity' | 'kai_coach';
+type TabType = 'details' | 'activity' | 'appointments' | 'kai_coach';
+
+const STATUS_BADGE: Record<string, { label: string; color: string }> = {
+  scheduled: { label: 'Scheduled', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+  confirmed: { label: 'Confirmed', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' },
+  showed: { label: 'Showed', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+  no_show: { label: 'No Show', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+  cancelled: { label: 'Cancelled', color: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' },
+};
+
+function formatTime(t?: string | null): string {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+}
 
 export default function LeadDrawer({ 
   lead, 
@@ -66,10 +87,20 @@ export default function LeadDrawer({
   onMoveToStage,
   onDelete,
   stages,
-  currentStage
+  currentStage,
+  onOpenScheduler
 }: LeadDrawerProps) {
   const [showStageMenu, setShowStageMenu] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('details');
+
+  // Appointments query
+  const { data: appointments = [], refetch: refetchAppointments } = trpc.leads.getAppointments.useQuery(
+    { leadId: lead?.id ?? 0 },
+    { enabled: !!lead?.id && isOpen }
+  );
+  const updateApptStatus = trpc.leads.updateAppointmentStatus.useMutation({
+    onSuccess: () => refetchAppointments(),
+  });
 
   // Add activity mutation for logging actions
   const addActivityMutation = trpc.leads.addActivity.useMutation();
@@ -207,6 +238,22 @@ export default function LeadDrawer({
           >
             <History className="w-4 h-4" />
             Activity
+          </button>
+          <button
+            onClick={() => setActiveTab('appointments')}
+            className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'appointments'
+                ? 'border-[#E53935] text-[#E53935]'
+                : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+            }`}
+          >
+            <Calendar className="w-4 h-4" />
+            Appts
+            {appointments.length > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#E53935] text-white text-[10px] font-bold flex items-center justify-center">
+                {appointments.length}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab('kai_coach')}
@@ -388,6 +435,98 @@ export default function LeadDrawer({
           ) : activeTab === 'activity' ? (
             /* Activity Tab */
             <LeadActivityTimeline leadId={lead.id} leadName={fullName} />
+          ) : activeTab === 'appointments' ? (
+            /* Appointments Tab */
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Scheduled Appointments</h4>
+                <Button
+                  size="sm"
+                  onClick={() => onOpenScheduler?.()}
+                  className="bg-[#E53935] hover:bg-[#C62828] text-white h-8 px-3 text-xs"
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  Schedule
+                </Button>
+              </div>
+              {appointments.length === 0 ? (
+                <div className="text-center py-12">
+                  <Calendar className="w-12 h-12 mx-auto mb-3 text-slate-300 dark:text-slate-600" />
+                  <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">No appointments yet</p>
+                  <p className="text-slate-400 dark:text-slate-500 text-xs mt-1 mb-4">Schedule an intro class for this lead</p>
+                  <Button
+                    onClick={() => onOpenScheduler?.()}
+                    className="bg-[#E53935] hover:bg-[#C62828] text-white"
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Schedule Intro Class
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {appointments.map((appt: any) => {
+                    const badge = STATUS_BADGE[appt.status] || STATUS_BADGE.scheduled;
+                    const apptDate = new Date(appt.scheduled_date + 'T00:00:00');
+                    return (
+                      <div key={appt.id} className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-100 dark:border-slate-700">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badge.color}`}>
+                                {badge.label}
+                              </span>
+                            </div>
+                            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
+                              {appt.class_name || 'Class'}
+                            </p>
+                            <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 dark:text-slate-400">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                {apptDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                              </span>
+                              {appt.startTime && (
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {formatTime(appt.startTime)}
+                                </span>
+                              )}
+                            </div>
+                            {appt.booked_by_name && (
+                              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                                Booked by {appt.booked_by_name}
+                              </p>
+                            )}
+                          </div>
+                          {/* Status actions */}
+                          {appt.status === 'scheduled' || appt.status === 'confirmed' ? (
+                            <div className="flex gap-1 flex-shrink-0">
+                              <button
+                                onClick={() => updateApptStatus.mutate({ appointmentId: appt.id, status: 'showed' })}
+                                title="Mark as Showed"
+                                className="w-7 h-7 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center hover:bg-green-200 transition-colors"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => updateApptStatus.mutate({ appointmentId: appt.id, status: 'no_show' })}
+                                title="Mark as No Show"
+                                className="w-7 h-7 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-500 dark:text-red-400 flex items-center justify-center hover:bg-red-200 transition-colors"
+                              >
+                                <AlertCircle className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                        {appt.notes && (
+                          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 italic">{appt.notes}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+            </div>
           ) : (
             /* Kai Coach Tab */
             <KaiSalesCoach

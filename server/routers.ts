@@ -2201,6 +2201,86 @@ export const appRouter = router({
           updatedAt: lead.updatedAt,
         }));
       }),
+
+    // ── Appointment Scheduling ─────────────────────────────────────────────
+    getSchedulableClasses: protectedProcedure
+      .input(z.object({
+        dayOfWeek: z.string().optional(),
+        program: z.string().optional(),
+      }).optional())
+      .query(async ({ ctx, input }) => {
+        const { getPool } = await import('./db');
+        const pool = getPool();
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) return [];
+        let query = `SELECT id, name, dayOfWeek, startTime, endTime, instructor, capacity, enrolled, program, level, room, duration_minutes as duration FROM classes WHERE isActive=1 AND organizationId=?`;
+        const params: any[] = [orgId];
+        if (input?.dayOfWeek) { query += ` AND dayOfWeek=?`; params.push(input.dayOfWeek); }
+        if (input?.program) { query += ` AND program=?`; params.push(input.program); }
+        query += ` ORDER BY FIELD(dayOfWeek,'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'), startTime, name`;
+        const [rows] = await pool.query(query, params);
+        return rows as any[];
+      }),
+
+    scheduleAppointment: protectedProcedure
+      .input(z.object({
+        leadId: z.number(),
+        classId: z.number(),
+        scheduledDate: z.string(),
+        scheduledTime: z.string().optional(),
+        bookedByName: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { getPool } = await import('./db');
+        const { getDb } = await import('./db');
+        const { leads } = await import('../drizzle/schema');
+        const { eq } = await import('drizzle-orm');
+        const pool = getPool();
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) throw new Error('No organization');
+        const [result] = await pool.query(
+          `INSERT INTO lead_appointments (lead_id, class_id, organization_id, scheduled_date, scheduled_time, booked_by_user_id, booked_by_name, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'scheduled')`,
+          [input.leadId, input.classId, orgId, input.scheduledDate, input.scheduledTime || null, (ctx.user as any)?.id || null, input.bookedByName || (ctx.user as any)?.firstName || 'Staff', input.notes || null]
+        );
+        await db.update(leads)
+          .set({ status: 'Intro Scheduled', updatedAt: new Date().toISOString() })
+          .where(eq(leads.id, input.leadId));
+        return { success: true, appointmentId: (result as any).insertId };
+      }),
+
+    getAppointments: protectedProcedure
+      .input(z.object({ leadId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const { getPool } = await import('./db');
+        const pool = getPool();
+        const [rows] = await pool.query(
+          `SELECT la.*, c.name as class_name, c.dayOfWeek, c.startTime, c.endTime, c.instructor, c.program, c.level, c.room
+           FROM lead_appointments la
+           LEFT JOIN classes c ON la.class_id = c.id
+           WHERE la.lead_id = ? AND la.organization_id = ?
+           ORDER BY la.scheduled_date DESC, la.created_at DESC`,
+          [input.leadId, ctx.currentOrganizationId]
+        );
+        return rows as any[];
+      }),
+
+    updateAppointmentStatus: protectedProcedure
+      .input(z.object({
+        appointmentId: z.number(),
+        status: z.enum(['scheduled','confirmed','showed','no_show','cancelled']),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { getPool } = await import('./db');
+        const pool = getPool();
+        await pool.query(
+          `UPDATE lead_appointments SET status = ?, updated_at = NOW() WHERE id = ? AND organization_id = ?`,
+          [input.status, input.appointmentId, ctx.currentOrganizationId]
+        );
+        return { success: true };
+      }),
   }),
   
   students: router({

@@ -23,6 +23,7 @@ import {
 import LeadSourceSettings from '@/components/LeadSourceSettings'
 import { KaiLeadCaptureSection } from '@/components/KaiLeadCaptureSection'
 import MyDojoSyncModal from '@/components/MyDojoSyncModal'
+import ScheduleAppointmentModal from '@/components/ScheduleAppointmentModal'
 
 // Stage mapping from old to new
 const stageMapping: Record<string, string> = {
@@ -68,6 +69,8 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
   const [showMyDojoSync, setShowMyDojoSync] = useState(false)
   const [selectedLead, setSelectedLead] = useState<any>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [scheduleModalLead, setScheduleModalLead] = useState<any>(null)
+  const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [isResolveMode, setIsResolveMode] = useState(false)
   const [activeFilter, setActiveFilter] = useState<'new' | 'aging' | 'value' | 'alerts' | null>(null)
   const [newLead, setNewLead] = useState({
@@ -415,8 +418,8 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
                 if (lead.phone) window.location.href = `sms:${lead.phone}`
               }}
               onSchedule={(lead) => {
-                setSelectedLead(lead)
-                setIsDrawerOpen(true)
+                setScheduleModalLead(lead)
+                setShowScheduleModal(true)
               }}
               onStatusChange={(leadId, newStatus) => {
                 updateStatus.mutate({ id: leadId, status: newStatus })
@@ -446,6 +449,18 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
           onDelete={handleDeleteLead}
           stages={oldStages}
           currentStage={selectedLead?.status || 'new_lead'}
+          onOpenScheduler={() => {
+            setScheduleModalLead(selectedLead);
+            setShowScheduleModal(true);
+          }}
+        />
+
+        {/* Schedule Appointment Modal */}
+        <ScheduleAppointmentModal
+          lead={scheduleModalLead}
+          isOpen={showScheduleModal}
+          onClose={() => { setShowScheduleModal(false); setScheduleModalLead(null); }}
+          onScheduled={() => { setShowScheduleModal(false); setScheduleModalLead(null); refetch(); }}
         />
 
         {/* Lead Source Settings Modal */}
