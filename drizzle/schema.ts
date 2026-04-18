@@ -515,6 +515,7 @@ export const dojoSettings = mysqlTable("dojo_settings", {
 	kioskFeatureFlags: text(),
 	fluidpayApiKey: varchar({ length: 500 }),
 	fluidpayMerchantId: varchar({ length: 255 }),
+	fluidpayPublicKey: varchar({ length: 255 }),
 });
 
 export const enrollments = mysqlTable("enrollments", {

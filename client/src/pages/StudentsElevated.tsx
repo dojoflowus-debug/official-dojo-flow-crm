@@ -28,6 +28,7 @@ import {
 // Components
 import StudentMap from '@/components/StudentMap'
 import { StudentNotesDrawer } from '@/components/StudentNotesDrawer'
+import EnrollStudentModal from '@/components/EnrollStudentModal'
 
 // Icons
 import {
@@ -458,7 +459,7 @@ function fmtJoined(iso: string | null | undefined): string {
 }
 
 // ── Members Table (MyDojo-style) ──────────────────────────────────────────────
-function MembersTable({ students, onRowClick }: { students: Student[]; onRowClick: (s: Student) => void }) {
+function MembersTable({ students, onRowClick, onEnroll }: { students: Student[]; onRowClick: (s: Student) => void; onEnroll?: (s: Student) => void }) {
   if (students.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-48 gap-3">
@@ -482,6 +483,7 @@ function MembersTable({ students, onRowClick }: { students: Student[]; onRowClic
             <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Next Due</th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Source</th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Joined</th>
+            <th className="px-4 py-3"></th>
           </tr>
         </thead>
         <tbody>
@@ -573,6 +575,23 @@ function MembersTable({ students, onRowClick }: { students: Student[]; onRowClic
                 <td className="px-4 py-3">
                   <span className="text-xs text-gray-500">{fmtJoined(s.createdAt)}</span>
                 </td>
+                {/* Enroll Action */}
+                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                  {!s.billing && onEnroll ? (
+                    <button
+                      onClick={() => onEnroll(s)}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap"
+                    >
+                      <CreditCard className="w-3 h-3" />
+                      Enroll
+                    </button>
+                  ) : s.billing ? (
+                    <span className="text-[10px] text-green-600 font-medium flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+                      Active
+                    </span>
+                  ) : null}
+                </td>
               </tr>
             )
           })}
@@ -594,6 +613,7 @@ function StudentsElevatedContent() {
   const [showNotesDrawer, setShowNotesDrawer] = useState(false)
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [enrollStudent, setEnrollStudent] = useState<Student | null>(null)
   const [newStudentForm, setNewStudentForm] = useState({
     firstName: '',
     lastName: '',
@@ -805,6 +825,7 @@ function StudentsElevatedContent() {
           <MembersTable
             students={displayedStudents}
             onRowClick={(s) => navigate(`/students/${s.id}`)}
+            onEnroll={(s) => setEnrollStudent(s)}
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -900,6 +921,18 @@ function StudentsElevatedContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Enroll Student Modal */}
+      <EnrollStudentModal
+        open={!!enrollStudent}
+        onClose={() => setEnrollStudent(null)}
+        studentId={enrollStudent?.id ?? 0}
+        studentName={enrollStudent ? `${enrollStudent.firstName} ${enrollStudent.lastName}` : ''}
+        onSuccess={() => {
+          setEnrollStudent(null)
+          studentsQuery.refetch()
+        }}
+      />
 
       {/* Delete Confirmation */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>

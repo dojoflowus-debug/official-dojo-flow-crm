@@ -6,7 +6,7 @@
 
 import { z } from "zod";
 import { protectedProcedure, router } from "./_core/trpc";
-import { getDb } from "./db";
+import { getDb, getPool } from "./db";
 import { dojoSettings, students } from "../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import {
@@ -45,9 +45,13 @@ async function getFluidPayKey(db: Database, orgId: number): Promise<string | nul
   return (settings[0] as any)?.fluidpayApiKey || null;
 }
 
-async function rawQuery(db: Database, sql: string, params: any[] = []): Promise<any[]> {
-  const result = await (db as any).execute(sql, params);
-  return Array.isArray(result[0]) ? result[0] : (Array.isArray(result) ? result : []);
+async function rawQuery(_db: Database, sql: string, params: any[] = []): Promise<any[]> {
+  // Use the mysql2 pool directly (bypasses Drizzle's sql-template requirement)
+  // The pool is patched to use query() which accepts plain SQL strings with ? params
+  const pool = getPool();
+  if (!pool) throw new Error('Database pool not initialized');
+  const [rows] = await (pool as any).query(sql, params);
+  return Array.isArray(rows) ? rows : [];
 }
 
 function calcNextBillingDate(frequency: string, from: Date = new Date()): Date {
@@ -421,8 +425,14 @@ export const tuitionBillingRouter = router({
       );
 
       const student = studentRows[0];
+      // Fetch the newly created enrollment ID
+      const newEnrollment = await rawQuery(db,
+        `SELECT id FROM student_billing_enrollments WHERE student_id = ? AND plan_id = ? AND status = 'active' ORDER BY id DESC LIMIT 1`,
+        [input.studentId, input.planId]
+      );
       return {
         success: true,
+        enrollmentId: newEnrollment[0]?.id || null,
         message: `${student.firstName} ${student.lastName} enrolled in "${plan.name}" ($${(plan.amount_cents / 100).toFixed(2)}/${plan.frequency})`,
         planName: plan.name,
         amountDollars: plan.amount_cents / 100,
@@ -507,10 +517,14 @@ export const tuitionBillingRouter = router({
       if (!db) throw new Error("Database not initialized");
       const orgId = await resolveOrgId(ctx, db);
       if (!orgId) throw new Error("No organization found");
-      const fpKey = await getFluidPayKey(db, orgId);
-      if (!fpKey) return { error: "FluidPay not connected for this organization" };
-      const result = await getFluidPayTokenizerKey(fpKey);
-      return result;
+      // Use rawQuery to get fluidpay_public_key (column added manually, not yet in Drizzle schema)
+      const rows = await rawQuery(db,
+        `SELECT fluidpay_public_key FROM dojo_settings WHERE organizationId = ? LIMIT 1`,
+        [orgId]
+      );
+      const publicKey = rows[0]?.fluidpay_public_key;
+      if (!publicKey) return { error: "FluidPay public key not configured for this organization" };
+      return { tokenizerKey: publicKey };
     }),
 
   saveStudentCard: protectedProcedure

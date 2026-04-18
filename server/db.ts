@@ -43,6 +43,10 @@ function createTiDBCompatiblePool(url: string): mysql.Pool {
 }
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
+export function getPool(): mysql.Pool | null {
+  return _pool;
+}
+
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
