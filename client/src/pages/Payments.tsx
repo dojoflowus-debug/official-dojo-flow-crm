@@ -1,4 +1,13 @@
 import { useState, useMemo } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { trpc } from '@/lib/trpc';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -32,6 +41,11 @@ import {
   XCircle,
   AlertCircle,
   Zap,
+  Play,
+  Users,
+  BadgeCheck,
+  Ban,
+  SkipForward,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -156,6 +170,25 @@ export default function Payments() {
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 15;
 
+  // ── Run Billing state ──────────────────────────────────────────────────────
+  const [showRunBillingConfirm, setShowRunBillingConfirm] = useState(false);
+  const [showRunBillingResults, setShowRunBillingResults] = useState(false);
+  const [billingResults, setBillingResults] = useState<any>(null);
+  const { toast } = useToast();
+
+  const runBillingMutation = trpc.tuitionBilling.runBillingForAll.useMutation({
+    onSuccess: (data) => {
+      setBillingResults(data);
+      setShowRunBillingConfirm(false);
+      setShowRunBillingResults(true);
+      refetchAll();
+    },
+    onError: (err) => {
+      toast({ title: 'Billing Run Failed', description: err.message, variant: 'destructive' });
+      setShowRunBillingConfirm(false);
+    },
+  });
+
   const dateRange = useMemo(() => getDateRange(datePreset), [datePreset]);
 
   // ── data fetching ──────────────────────────────────────────────────────────
@@ -243,6 +276,14 @@ export default function Payments() {
           <p className={`text-sm ${textSecondary}`}>Live FluidPay transaction data for your dojo</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            onClick={() => setShowRunBillingConfirm(true)}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white border-0 shadow-md"
+          >
+            <Play className="w-4 h-4 mr-1.5" />
+            Run Billing
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -597,6 +638,163 @@ export default function Payments() {
       <p className={`text-xs ${textSecondary} mt-4 text-center`}>
         Data sourced live from FluidPay · Amounts in USD
       </p>
+
+      {/* ── Run Billing Confirmation Dialog ── */}
+      <Dialog open={showRunBillingConfirm} onOpenChange={setShowRunBillingConfirm}>
+        <DialogContent className={isDark ? 'bg-zinc-900 border-zinc-700 text-white' : ''}>
+          <DialogHeader>
+            <DialogTitle className={`flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                <Play className="w-4 h-4 text-emerald-500" />
+              </div>
+              Run Billing for All Students
+            </DialogTitle>
+            <DialogDescription className={isDark ? 'text-zinc-400' : ''}>
+              This will charge all active enrollments that have a card on file. Students without a card will be skipped.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className={`rounded-xl p-4 my-2 ${isDark ? 'bg-zinc-800/60' : 'bg-gray-50 border border-gray-200'}`}>
+            <div className="flex items-start gap-3">
+              <Users className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>What happens when you click Confirm:</p>
+                <ul className={`text-sm mt-1.5 space-y-1 ${isDark ? 'text-zinc-400' : 'text-gray-600'}`}>
+                  <li>• All active enrollments with a card on file will be charged</li>
+                  <li>• Failed charges will be marked as <span className="text-amber-500 font-medium">past_due</span></li>
+                  <li>• Next billing dates will be updated for successful charges</li>
+                  <li>• A full results report will be shown after</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowRunBillingConfirm(false)}
+              className={isDark ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800' : ''}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => runBillingMutation.mutate({ dryRun: false })}
+              disabled={runBillingMutation.isPending}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              {runBillingMutation.isPending ? (
+                <><RefreshCw className="w-4 h-4 mr-1.5 animate-spin" /> Charging... </>
+              ) : (
+                <><Play className="w-4 h-4 mr-1.5" /> Confirm & Charge All</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Run Billing Results Modal ── */}
+      <Dialog open={showRunBillingResults} onOpenChange={setShowRunBillingResults}>
+        <DialogContent className={`max-w-2xl max-h-[80vh] overflow-hidden flex flex-col ${isDark ? 'bg-zinc-900 border-zinc-700 text-white' : ''}`}>
+          <DialogHeader>
+            <DialogTitle className={`flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                <BadgeCheck className="w-4 h-4 text-emerald-500" />
+              </div>
+              Billing Run Complete
+            </DialogTitle>
+          </DialogHeader>
+
+          {billingResults && (
+            <>
+              {/* Summary stats */}
+              <div className="grid grid-cols-3 gap-3 my-2">
+                <div className={`rounded-xl p-3 text-center ${isDark ? 'bg-zinc-800' : 'bg-emerald-50 border border-emerald-100'}`}>
+                  <p className="text-2xl font-bold text-emerald-500">{billingResults.summary.succeeded}</p>
+                  <p className={`text-xs mt-0.5 ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>Charged</p>
+                </div>
+                <div className={`rounded-xl p-3 text-center ${isDark ? 'bg-zinc-800' : 'bg-red-50 border border-red-100'}`}>
+                  <p className="text-2xl font-bold text-red-500">{billingResults.summary.failed}</p>
+                  <p className={`text-xs mt-0.5 ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>Failed</p>
+                </div>
+                <div className={`rounded-xl p-3 text-center ${isDark ? 'bg-zinc-800' : 'bg-gray-50 border border-gray-200'}`}>
+                  <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {fmt(billingResults.summary.totalCollected)}
+                  </p>
+                  <p className={`text-xs mt-0.5 ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>Total Collected</p>
+                </div>
+              </div>
+
+              {/* Per-student results */}
+              <div className="overflow-y-auto flex-1 rounded-xl border ${isDark ? 'border-zinc-800' : 'border-gray-200'}">
+                {billingResults.results.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <Users className={`w-10 h-10 mx-auto mb-2 ${isDark ? 'text-zinc-600' : 'text-gray-300'}`} />
+                    <p className={`font-medium ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>No active enrollments with cards on file</p>
+                    <p className={`text-sm mt-1 ${isDark ? 'text-zinc-600' : 'text-gray-400'}`}>Enroll students and add cards to run billing.</p>
+                  </div>
+                ) : (
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className={`border-b ${isDark ? 'border-zinc-800 bg-zinc-900/50' : 'border-gray-200 bg-gray-50'}`}>
+                        <th className={`px-4 py-2.5 text-left text-xs font-medium ${isDark ? 'text-zinc-500' : 'text-gray-500'}`}>Student</th>
+                        <th className={`px-4 py-2.5 text-left text-xs font-medium ${isDark ? 'text-zinc-500' : 'text-gray-500'}`}>Plan</th>
+                        <th className={`px-4 py-2.5 text-left text-xs font-medium ${isDark ? 'text-zinc-500' : 'text-gray-500'}`}>Card</th>
+                        <th className={`px-4 py-2.5 text-right text-xs font-medium ${isDark ? 'text-zinc-500' : 'text-gray-500'}`}>Amount</th>
+                        <th className={`px-4 py-2.5 text-center text-xs font-medium ${isDark ? 'text-zinc-500' : 'text-gray-500'}`}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y ${isDark ? 'divide-zinc-800' : 'divide-gray-100'}">
+                      {billingResults.results.map((r: any, i: number) => (
+                        <tr key={i} className={isDark ? 'hover:bg-zinc-800/40' : 'hover:bg-gray-50'}>
+                          <td className={`px-4 py-3 font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{r.studentName}</td>
+                          <td className={`px-4 py-3 text-xs ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>{r.planName}</td>
+                          <td className={`px-4 py-3 text-xs font-mono ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>
+                            {r.cardLast4 ? `···· ${r.cardLast4}` : '—'}
+                          </td>
+                          <td className={`px-4 py-3 text-right font-semibold ${r.chargeStatus === 'success' ? 'text-emerald-500' : isDark ? 'text-zinc-400' : 'text-gray-600'}`}>
+                            {fmt(r.amountDollars)}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {r.chargeStatus === 'success' && (
+                              <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-400/10">
+                                <CheckCircle className="w-3 h-3" /> Charged
+                              </span>
+                            )}
+                            {r.chargeStatus === 'failed' && (
+                              <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-400/10" title={r.chargeError}>
+                                <Ban className="w-3 h-3" /> Failed
+                              </span>
+                            )}
+                            {r.chargeStatus === 'skipped' && (
+                              <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full text-gray-500 bg-gray-100 dark:text-zinc-400 dark:bg-zinc-800">
+                                <SkipForward className="w-3 h-3" /> Skipped
+                              </span>
+                            )}
+                            {r.chargeStatus === 'dry_run' && (
+                              <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-400/10">
+                                <Zap className="w-3 h-3" /> Preview
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </>
+          )}
+
+          <DialogFooter>
+            <Button
+              onClick={() => setShowRunBillingResults(false)}
+              className={isDark ? 'bg-zinc-700 hover:bg-zinc-600 text-white' : ''}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

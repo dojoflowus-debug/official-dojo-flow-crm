@@ -821,6 +821,146 @@ export const tuitionBillingRouter = router({
 
   // ── Collect All: charge + SMS all overdue students ─────────────────────────
 
+  // ── Run Billing for All Active Enrollments ────────────────────────────────
+  runBillingForAll: protectedProcedure
+    .input(z.object({
+      dryRun: z.boolean().optional().default(false),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error('Database not initialized');
+      const orgId = await resolveOrgId(ctx, db);
+      if (!orgId) throw new Error('No organization found');
+      const fpKey = await getFluidPayKey(db, orgId);
+      if (!fpKey) throw new Error('FluidPay not connected. Please connect FluidPay in Settings first.');
+
+      // Fetch ALL active enrollments that have a card on file
+      const activeRows = await rawQuery(db, `
+        SELECT e.id as enrollment_id, e.student_id, e.fluidpay_customer_id, e.fluidpay_payment_method_id,
+               e.card_last4, e.card_brand, e.next_billing_date, e.frequency,
+               p.amount_cents, p.name as plan_name,
+               s.firstName as first_name, s.lastName as last_name, s.phone
+        FROM student_billing_enrollments e
+        JOIN tuition_plans p ON e.plan_id = p.id
+        JOIN students s ON e.student_id = s.id
+        WHERE e.organization_id = ? AND e.status = 'active'
+          AND e.fluidpay_customer_id IS NOT NULL
+          AND e.fluidpay_payment_method_id IS NOT NULL
+      `, [orgId]);
+
+      const results: Array<{
+        studentId: number;
+        studentName: string;
+        planName: string;
+        amountDollars: number;
+        cardLast4: string | null;
+        chargeStatus: 'success' | 'failed' | 'skipped' | 'dry_run';
+        chargeError?: string;
+        transactionId?: string;
+      }> = [];
+
+      for (const row of activeRows) {
+        const studentName = `${row.first_name} ${row.last_name}`;
+        const amountDollars = row.amount_cents / 100;
+        const description = `Tuition - ${row.plan_name} - ${studentName}`;
+
+        if (input.dryRun) {
+          results.push({
+            studentId: row.student_id,
+            studentName,
+            planName: row.plan_name,
+            amountDollars,
+            cardLast4: row.card_last4 || null,
+            chargeStatus: 'dry_run',
+          });
+          continue;
+        }
+
+        let chargeStatus: 'success' | 'failed' | 'skipped' = 'skipped';
+        let chargeError: string | undefined;
+        let transactionId: string | undefined;
+
+        try {
+          // Create pending payment record
+          await rawQuery(db,
+            `INSERT INTO student_tuition_payments (enrollment_id, student_id, organization_id, amount_cents, status, description)
+             VALUES (?, ?, ?, ?, 'pending', ?)`,
+            [row.enrollment_id, row.student_id, orgId, row.amount_cents, description]
+          );
+          const payRec = await rawQuery(db,
+            `SELECT id FROM student_tuition_payments WHERE student_id = ? AND organization_id = ? ORDER BY id DESC LIMIT 1`,
+            [row.student_id, orgId]
+          );
+          const paymentId = payRec[0]?.id;
+
+          const chargeResult = await chargeFluidPayCustomer(
+            fpKey,
+            row.fluidpay_customer_id,
+            row.fluidpay_payment_method_id,
+            row.amount_cents,
+            description
+          );
+
+          const now = new Date().toISOString().slice(0, 19);
+          if (chargeResult.success) {
+            chargeStatus = 'success';
+            transactionId = chargeResult.transactionId;
+            await rawQuery(db,
+              `UPDATE student_tuition_payments SET status='success', fluidpay_transaction_id=?, fluidpay_customer_id=?, paid_at=? WHERE id=?`,
+              [chargeResult.transactionId, row.fluidpay_customer_id, now, paymentId]
+            );
+            const nextBilling = calcNextBillingDate(row.frequency);
+            await rawQuery(db,
+              `UPDATE student_billing_enrollments SET next_billing_date=? WHERE id=?`,
+              [nextBilling.toISOString().slice(0, 19), row.enrollment_id]
+            );
+          } else {
+            chargeStatus = 'failed';
+            chargeError = chargeResult.error || 'Charge declined';
+            await rawQuery(db,
+              `UPDATE student_tuition_payments SET status='failed', failure_reason=?, declined_at=? WHERE id=?`,
+              [chargeError, now, paymentId]
+            );
+            await rawQuery(db,
+              `UPDATE student_billing_enrollments SET status='past_due', retry_count=retry_count+1, last_declined_at=? WHERE id=?`,
+              [now, row.enrollment_id]
+            );
+          }
+        } catch (err: any) {
+          chargeStatus = 'failed';
+          chargeError = err.message;
+        }
+
+        results.push({
+          studentId: row.student_id,
+          studentName,
+          planName: row.plan_name,
+          amountDollars,
+          cardLast4: row.card_last4 || null,
+          chargeStatus,
+          chargeError,
+          transactionId,
+        });
+      }
+
+      const succeeded = results.filter(r => r.chargeStatus === 'success');
+      const failed = results.filter(r => r.chargeStatus === 'failed');
+      const skipped = results.filter(r => r.chargeStatus === 'skipped');
+      const totalCollected = succeeded.reduce((s, r) => s + r.amountDollars, 0);
+
+      return {
+        results,
+        summary: {
+          total: results.length,
+          succeeded: succeeded.length,
+          failed: failed.length,
+          skipped: skipped.length,
+          totalCollected,
+          dryRun: input.dryRun || false,
+        },
+      };
+    }),
+
   collectAll: protectedProcedure
     .input(z.object({
       message: z.string().optional(),
