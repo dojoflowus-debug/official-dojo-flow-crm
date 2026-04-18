@@ -554,8 +554,8 @@ function StudentCommandProfile() {
           {/* Billing & Tuition Section */}
           {student && (
             <div>
-              <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <span className="text-red-400">💳</span> Billing & Tuition
+              <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+                <span className="text-red-500">💳</span> Billing & Tuition
               </h2>
               <StudentBillingTab
                 studentId={studentId}
