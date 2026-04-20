@@ -4,6 +4,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import Breadcrumb from '@/components/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -1169,15 +1170,25 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
     }
   };
 
-  const handleDeleteClass = async (classId: number) => {  if (!confirm('Are you sure you want to delete this class?')) {
-      return;
-    }
+  const handleDeleteClass = (classId: number) => {
+    setDeleteConfirmId(classId);
+    setIsDeleteDialogOpen(true);
+  };
 
+  const confirmDeleteClass = async () => {
+    if (!deleteConfirmId) return;
+    const classId = deleteConfirmId;
+    setIsDeleteDialogOpen(false);
+    setDeleteConfirmId(null);
     try {
+      const orgId = localStorage.getItem('dojo_active_org_id') || '';
       const response = await fetch(`${API_URL}/classes/${classId}`, {
         method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          ...(orgId ? { 'x-organization-id': orgId } : {}),
+        },
       });
-
       if (response.ok) {
         toast.success('Class deleted successfully!');
         fetchClasses();
@@ -1195,6 +1206,10 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   // ── Program detail panel state ──────────────────────────────────────────
   const [selectedProgramPanel, setSelectedProgramPanel] = useState<string | null>(null);
   const [isProgramPanelOpen, setIsProgramPanelOpen] = useState(false);
+
+  // ── Delete confirmation state ─────────────────────────────────────────────
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // ── New UI state for redesigned layout ──────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
@@ -2273,6 +2288,27 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
           })()}
         </SheetContent>
       </Sheet>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Class</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this class? This action cannot be undone and will remove the class from the schedule.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setIsDeleteDialogOpen(false); setDeleteConfirmId(null); }}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteClass}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete Class
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </ManagementLayout>
   );
