@@ -2243,7 +2243,7 @@ export const appRouter = router({
         if (!orgId) throw new Error('No organization');
         const [result] = await pool.query(
           `INSERT INTO lead_appointments (lead_id, class_id, organization_id, scheduled_date, scheduled_time, booked_by_user_id, booked_by_name, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'scheduled')`,
-          [input.leadId, input.classId, orgId, input.scheduledDate, input.scheduledTime || null, (ctx.user as any)?.id || null, input.bookedByName || (ctx.user as any)?.firstName || 'Staff', input.notes || null]
+          [input.leadId, input.classId, orgId, input.scheduledDate, input.scheduledTime || null, (ctx.user as any)?.id || null, input.bookedByName || null, input.notes || null]
         );
         await db.update(leads)
           .set({ status: 'Intro Scheduled', updatedAt: new Date().toISOString() })
@@ -2280,6 +2280,23 @@ export const appRouter = router({
           [input.status, input.appointmentId, ctx.currentOrganizationId]
         );
         return { success: true };
+      }),
+
+    getStaffMembers: protectedProcedure
+      .query(async ({ ctx }) => {
+        const { getPool } = await import('./db');
+        const pool = getPool();
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) return [];
+        const [rows] = await pool.query(
+          `SELECT id, name, role FROM staff_pins WHERE is_active = 1 AND (organization_id = ? OR organization_id IS NULL) ORDER BY name ASC`,
+          [orgId]
+        ) as any;
+        return (rows as any[]).map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          role: r.role || 'staff',
+        }));
       }),
   }),
   
