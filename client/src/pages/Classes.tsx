@@ -2070,7 +2070,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
 
       {/* ── PROGRAM DETAIL SIDE PANEL ──────────────────────────────────────── */}
       <Sheet open={isProgramPanelOpen} onOpenChange={setIsProgramPanelOpen}>
-        <SheetContent side="right" className={`w-full sm:max-w-xl p-0 flex flex-col ${isDarkMode ? 'bg-[#111113] border-white/10' : 'bg-white border-gray-200'}`}>
+        <SheetContent side="right" className={`w-full sm:max-w-xl p-0 flex flex-col ${isDarkMode ? 'bg-[#111113] border-white/10' : 'bg-white border-gray-200'}`} style={{ top: '64px', height: 'calc(100vh - 64px)' }}>
           {(() => {
             const panelClasses = selectedProgramPanel
               ? classes.filter(c => getProgram(c) === selectedProgramPanel)
@@ -2080,8 +2080,8 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
             const instructorName = firstClass ? (firstClass.instructor || firstClass.instructorName || '') : '';
             return (
               <>
-                {/* Panel Header */}
-                <div className={`px-6 py-5 border-b flex items-start justify-between ${isDarkMode ? 'border-white/10' : 'border-gray-100'}`}>
+                {/* Panel Header - sticky so always visible */}
+                <div className={`px-6 py-5 border-b flex items-start justify-between flex-shrink-0 ${isDarkMode ? 'border-white/10' : 'border-gray-100'}`}>
                   <div className="flex items-center gap-3">
                     <div className={`w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0 ${
                       ['bg-red-600', 'bg-gray-700', 'bg-gray-800', 'bg-gray-600', 'bg-gray-700', 'bg-gray-600', 'bg-gray-800'][
@@ -2124,7 +2124,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                 </div>
 
                 {/* Stats bar */}
-                <div className={`px-6 py-3 border-b flex items-center gap-6 ${isDarkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50/60'}`}>
+                <div className={`px-6 py-3 border-b flex items-center gap-6 flex-shrink-0 ${isDarkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50/60'}`}>
                   <div>
                     <p className={`text-xs ${isDarkMode ? 'text-white/40' : 'text-gray-400'}`}>Time Slots</p>
                     <p className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{panelClasses.length}</p>
