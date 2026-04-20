@@ -324,20 +324,30 @@ const ClassForm = ({
       <div className="space-y-5">
         <div>
           <Label htmlFor="program" className="text-base font-medium mb-2 block">Program</Label>
-          <CustomSelect
-            id="program"
-            value={formData.program}
-            onChange={(value) => onProgramChange(value)}
-            options={[
-              ...(programs.length === 0 ? [{ value: '', label: 'No programs yet', disabled: true }] : []),
-              ...programs.map((program) => ({
-                value: program.name,
-                label: `${program.name} ${program.price ? `($${(program.price / 100).toFixed(0)}/mo)` : ''}`
-              }))
-            ]}
-            placeholder="Select program"
-            isDark={isDark}
-          />
+          {(() => {
+            // Build program options: use Programs table if populated, else derive from existing class names
+            const programOptions = programs.length > 0
+              ? programs.map((program) => ({
+                  value: program.name,
+                  label: `${program.name} ${program.price ? `($${(program.price / 100).toFixed(0)}/mo)` : ''}`
+                }))
+              : Array.from(new Set(existingClasses.map(c => c.name || c.program).filter(Boolean)))
+                  .sort()
+                  .map(name => ({ value: name, label: name }));
+            return (
+              <CustomSelect
+                id="program"
+                value={formData.program}
+                onChange={(value) => onProgramChange(value)}
+                options={[
+                  ...(programOptions.length === 0 ? [{ value: '', label: 'No programs yet', disabled: true }] : []),
+                  ...programOptions
+                ]}
+                placeholder="Select program"
+                isDark={isDark}
+              />
+            );
+          })()}
         </div>
 
         <div>
@@ -788,7 +798,9 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   // Update instructors state when data changes
   useEffect(() => {
     if (instructorsData) {
-      setInstructors(instructorsData);
+      // getInstructors returns { instructors: [...] } - extract the array
+      const arr = (instructorsData as any).instructors || instructorsData;
+      setInstructors(Array.isArray(arr) ? arr : []);
     }
   }, [instructorsData]);
 
