@@ -261,6 +261,7 @@ export const classesRouter = router({
       recurringPattern: z.enum(['weekly', 'biweekly', 'monthly', 'one_time']).optional(),
       notes: z.string().optional(),
       isActive: z.number().optional(),
+      imageUrl: z.string().optional().nullable(),
     }))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) {

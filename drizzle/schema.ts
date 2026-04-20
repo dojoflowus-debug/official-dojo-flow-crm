@@ -329,6 +329,7 @@ export const classes = mysqlTable("classes", {
 	duration: int('duration_minutes').default(60).notNull(),
 	recurringPattern: mysqlEnum('recurring_pattern', ['weekly','biweekly','monthly','one_time']).default('weekly'),
 	notes: text('class_notes'),
+	imageUrl: varchar('image_url', { length: 500 }),
 });
 
 export const conversations = mysqlTable("conversations", {

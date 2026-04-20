@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import ManagementLayout from '@/components/ManagementLayout';
 import { useTheme } from '@/contexts/ThemeContext';
 import Breadcrumb from '@/components/Breadcrumb';
@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Calendar, Clock, Users, User, MapPin, Edit, Trash2, LayoutGrid, Eye, CheckCircle, DollarSign, ChevronDown, ChevronUp, AlertCircle, GraduationCap, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Calendar, Clock, Users, User, MapPin, Edit, Trash2, LayoutGrid, Eye, CheckCircle, DollarSign, ChevronDown, ChevronUp, AlertCircle, GraduationCap, ArrowUpDown, ArrowUp, ArrowDown, Upload, Camera, Printer } from 'lucide-react';
 import { CustomSelect } from '@/components/CustomSelect';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -1206,6 +1207,51 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   // ── Program detail panel state ──────────────────────────────────────────
   const [selectedProgramPanel, setSelectedProgramPanel] = useState<string | null>(null);
   const [isProgramPanelOpen, setIsProgramPanelOpen] = useState(false);
+  // Icon picker state
+  const [iconPickerOpen, setIconPickerOpen] = useState<string | null>(null); // programName
+  const [iconUploading, setIconUploading] = useState(false);
+  const iconFileInputRef = useRef<HTMLInputElement>(null);
+  const updateClassMutation = trpc.classes.update.useMutation({
+    onSuccess: () => { refetchClasses(); },
+  });
+  // Preset martial arts icons
+  const PRESET_ICONS = [
+    '🥋', '🥊', '🤼', '🏋️', '⚔️', '🛡️', '🎯', '🔥', '⭐', '🦅', '🐉', '🏆'
+  ];
+  const handleIconUpload = async (programName: string, file: File) => {
+    setIconUploading(true);
+    try {
+      const orgId = localStorage.getItem('dojo_active_org_id');
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', headers: { 'x-organization-id': orgId || '' }, body: formData });
+      const data = await res.json();
+      const url = data.url || data.fileUrl;
+      if (url) {
+        // Update all classes in this program group
+        const programClasses = (classes as any[]).filter(c => (c.program || c.name) === programName);
+        for (const cls of programClasses) {
+          await updateClassMutation.mutateAsync({ id: cls.id, imageUrl: url });
+        }
+        toast.success('Class icon updated!');
+        setIconPickerOpen(null);
+      }
+    } catch (e) {
+      toast.error('Failed to upload icon');
+    } finally {
+      setIconUploading(false);
+    }
+  };
+  const handlePresetIcon = async (programName: string, emoji: string) => {
+    // Store emoji as a special URL prefix
+    const emojiUrl = `emoji:${emoji}`;
+    const programClasses = (classes as any[]).filter(c => (c.program || c.name) === programName);
+    for (const cls of programClasses) {
+      await updateClassMutation.mutateAsync({ id: cls.id, imageUrl: emojiUrl });
+    }
+    toast.success('Class icon updated!');
+    setIconPickerOpen(null);
+  };
 
   // ── Delete confirmation state ─────────────────────────────────────────────
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
@@ -1294,30 +1340,42 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
 
   // Helper: get duration in minutes from a class
   const getDuration = (c: any): string => {
-    // Use the duration field from DB if available
-    if (c.duration && c.duration > 0) return `${c.duration} min`;
+    const parseMin = (t: string) => {
+      const m = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (!m) return 0;
+      let h = parseInt(m[1]); const min = parseInt(m[2]); const ap = m[3].toUpperCase();
+      if (ap === 'PM' && h !== 12) h += 12;
+      if (ap === 'AM' && h === 12) h = 0;
+      return h * 60 + min;
+    };
+    // Helper: format minutes into human-friendly string
+    const fmtMins = (diff: number) => {
+      if (diff >= 120) {
+        const h = Math.floor(diff / 60);
+        const m = diff % 60;
+        return m > 0 ? `${h} hr ${m} min` : `${h} hr`;
+      }
+      return `${diff} min`;
+    };
+    // 1. Try to parse from time string like "4:00 PM - 5:00 PM" (most accurate)
+    if (c.time) {
+      const parts = c.time.split(' - ');
+      if (parts.length === 2) {
+        const diff = parseMin(parts[1]) - parseMin(parts[0]);
+        if (diff > 0) return fmtMins(diff);
+      }
+    }
+    // 2. Try startTime/endTime fields (24h format like "10:00"/"10:30")
     if (c.startTime && c.endTime) {
       const [sh, sm] = c.startTime.split(':').map(Number);
       const [eh, em] = c.endTime.split(':').map(Number);
       const mins = (eh * 60 + em) - (sh * 60 + sm);
       if (mins > 0) return `${mins} min`;
     }
-    // Try to parse from time string like "4:00 PM - 5:00 PM"
-    if (c.time) {
-      const parts = c.time.split(' - ');
-      if (parts.length === 2) {
-        const parseMin = (t: string) => {
-          const m = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
-          if (!m) return 0;
-          let h = parseInt(m[1]); const min = parseInt(m[2]); const ap = m[3].toUpperCase();
-          if (ap === 'PM' && h !== 12) h += 12;
-          if (ap === 'AM' && h === 12) h = 0;
-          return h * 60 + min;
-        };
-        const diff = parseMin(parts[1]) - parseMin(parts[0]);
-        if (diff > 0) return `${diff} min`;
-      }
-    }
+    // 3. Fall back to stored duration field only if it's not the default 60
+    if (c.duration && c.duration > 0 && c.duration !== 60) return `${c.duration} min`;
+    // 4. Last resort: use stored duration (even if 60)
+    if (c.duration && c.duration > 0) return `${c.duration} min`;
     return '';
   };
 
@@ -1702,14 +1760,84 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                           }
                         }}
                       >
-                        {/* Program icon */}
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-white ${
-                          ['bg-gray-700', 'bg-gray-600', 'bg-gray-800', 'bg-gray-500', 'bg-gray-700', 'bg-gray-600', 'bg-gray-800'][
-                            programName.charCodeAt(0) % 7
-                          ]
-                        }`}>
-                          {getProgramInitial(programName)}
-                        </div>
+                        {/* Program icon with picker */}
+                        {(() => {
+                          const iconUrl = firstClass?.imageUrl;
+                          const isEmoji = iconUrl?.startsWith('emoji:');
+                          const isPhoto = iconUrl && !isEmoji;
+                          const bgColors = ['bg-gray-700', 'bg-gray-600', 'bg-gray-800', 'bg-gray-500', 'bg-gray-700', 'bg-gray-600', 'bg-gray-800'];
+                          const bgColor = bgColors[programName.charCodeAt(0) % 7];
+                          return (
+                            <Popover open={iconPickerOpen === programName} onOpenChange={(open) => {
+                              if (!open) setIconPickerOpen(null);
+                            }}>
+                              <PopoverTrigger asChild>
+                                <div
+                                  className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-white relative group cursor-pointer overflow-hidden ${isPhoto ? '' : bgColor}`}
+                                  onClick={(e) => { e.stopPropagation(); setIconPickerOpen(programName); }}
+                                  title="Change icon"
+                                >
+                                  {isPhoto ? (
+                                    <img src={iconUrl} alt={programName} className="w-full h-full object-cover" />
+                                  ) : isEmoji ? (
+                                    <span className="text-xl">{iconUrl.replace('emoji:', '')}</span>
+                                  ) : (
+                                    getProgramInitial(programName)
+                                  )}
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-full">
+                                    <Camera className="w-4 h-4 text-white" />
+                                  </div>
+                                </div>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-64 p-3" align="start" onClick={(e) => e.stopPropagation()}>
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Choose Icon</p>
+                                <div className="grid grid-cols-6 gap-1 mb-3">
+                                  {PRESET_ICONS.map((icon) => (
+                                    <button
+                                      key={icon}
+                                      className="w-9 h-9 rounded-lg flex items-center justify-center text-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                                      onClick={() => handlePresetIcon(programName, icon)}
+                                    >
+                                      {icon}
+                                    </button>
+                                  ))}
+                                </div>
+                                <div className="border-t pt-2">
+                                  <input
+                                    ref={iconFileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) handleIconUpload(programName, file);
+                                    }}
+                                  />
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full text-xs"
+                                    disabled={iconUploading}
+                                    onClick={() => iconFileInputRef.current?.click()}
+                                  >
+                                    <Upload className="w-3.5 h-3.5 mr-1.5" />
+                                    {iconUploading ? 'Uploading...' : 'Upload Photo'}
+                                  </Button>
+                                  {iconUrl && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="w-full text-xs text-gray-400 mt-1"
+                                      onClick={() => handlePresetIcon(programName, '')}
+                                    >
+                                      Remove icon
+                                    </Button>
+                                  )}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          );
+                        })()}
 
                         {/* Program info */}
                         <div className="w-36 flex-shrink-0">
