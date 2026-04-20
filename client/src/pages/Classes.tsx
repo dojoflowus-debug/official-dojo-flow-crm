@@ -1163,6 +1163,139 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
 
   // ClassForm now defined outside component
 
+  // ── New UI state for redesigned layout ──────────────────────────────────
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterProgram, setFilterProgram] = useState('all');
+  const [filterInstructor, setFilterInstructor] = useState('all');
+  const [filterDay, setFilterDay] = useState('all');
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [selectedWeekDay, setSelectedWeekDay] = useState<string | null>(null);
+  const [expandedPrograms, setExpandedPrograms] = useState<Record<string, boolean>>({});
+
+  // Week days for the week selector
+  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  // Map full day names to abbreviations (dayOfWeek in DB can be 'Monday', 'Tuesday', etc.)
+  const dayAbbrevMap: Record<string, string> = {
+    'monday': 'Mon', 'tuesday': 'Tue', 'wednesday': 'Wed', 'thursday': 'Thu',
+    'friday': 'Fri', 'saturday': 'Sat', 'sunday': 'Sun',
+    'mon': 'Mon', 'tue': 'Tue', 'wed': 'Wed', 'thu': 'Thu',
+    'fri': 'Fri', 'sat': 'Sat', 'sun': 'Sun'
+  };
+
+  // Normalize a dayOfWeek string to abbreviation
+  const normDay = (d: string) => dayAbbrevMap[d.toLowerCase().trim()] || d.trim();
+
+  // Get normalized days array from a class
+  const getClassDays = (c: any): string[] => {
+    const raw = c.dayOfWeek || c.day_of_week || c.schedule || '';
+    return raw.split(/[,\/]/).map((d: string) => normDay(d)).filter(Boolean);
+  };
+
+  // Get count of classes per day (dayOfWeek field is the primary field from DB schema)
+  const classesPerDay = weekDays.reduce((acc, day) => {
+    acc[day] = classes.filter(c => getClassDays(c).includes(day)).length;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Format time from 24h to 12h (reuse existing formatTime)
+  const formatTimeSlot = (timeStr: string) => {
+    if (!timeStr) return '';
+    // If already in 12h format (contains AM/PM), return as-is
+    if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr.split(' - ')[0];
+    const [hours, minutes] = timeStr.split(':');
+    const h = parseInt(hours);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${minutes} ${ampm}`;
+  };
+
+  // Get program name for a class: use program field if set, otherwise use name (class name IS the program)
+  const getProgram = (c: any): string => c.program || c.type || c.name || 'Uncategorized';
+
+  // Get unique programs from classes
+  const programNames = Array.from(new Set(classes.map(c => getProgram(c)).filter(Boolean)));
+
+  // Filter classes based on search + filters
+  const filteredClasses = classes.filter(c => {
+    const name = (c.name || '').toLowerCase();
+    const program = getProgram(c).toLowerCase();
+    const instructor = (c.instructor || '').toLowerCase();
+    const classDays = getClassDays(c);
+
+    if (searchQuery && !name.includes(searchQuery.toLowerCase()) && !program.includes(searchQuery.toLowerCase())) return false;
+    if (filterProgram !== 'all' && getProgram(c) !== filterProgram) return false;
+    if (filterInstructor !== 'all' && instructor !== filterInstructor.toLowerCase()) return false;
+    if (filterDay !== 'all' && !classDays.includes(filterDay)) return false;
+    if (selectedWeekDay && !classDays.includes(selectedWeekDay)) return false;
+    return true;
+  });
+
+  // Group filtered classes by program name
+  const groupedByProgram = filteredClasses.reduce((acc, c) => {
+    const prog = getProgram(c);
+    if (!acc[prog]) acc[prog] = [];
+    acc[prog].push(c);
+    return acc;
+  }, {} as Record<string, typeof classes>);
+
+  // Toggle expanded state for a program
+  const toggleProgramExpand = (prog: string) => {
+    setExpandedPrograms(prev => ({ ...prev, [prog]: !prev[prog] }));
+  };
+
+  // Helper: get duration in minutes from a class
+  const getDuration = (c: any): string => {
+    // Use the duration field from DB if available
+    if (c.duration && c.duration > 0) return `${c.duration} min`;
+    if (c.startTime && c.endTime) {
+      const [sh, sm] = c.startTime.split(':').map(Number);
+      const [eh, em] = c.endTime.split(':').map(Number);
+      const mins = (eh * 60 + em) - (sh * 60 + sm);
+      if (mins > 0) return `${mins} min`;
+    }
+    // Try to parse from time string like "4:00 PM - 5:00 PM"
+    if (c.time) {
+      const parts = c.time.split(' - ');
+      if (parts.length === 2) {
+        const parseMin = (t: string) => {
+          const m = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
+          if (!m) return 0;
+          let h = parseInt(m[1]); const min = parseInt(m[2]); const ap = m[3].toUpperCase();
+          if (ap === 'PM' && h !== 12) h += 12;
+          if (ap === 'AM' && h === 12) h = 0;
+          return h * 60 + min;
+        };
+        const diff = parseMin(parts[1]) - parseMin(parts[0]);
+        if (diff > 0) return `${diff} min`;
+      }
+    }
+    return '';
+  };
+
+  // Helper: get age range display (ageMin/ageMax are the camelCase fields from DB)
+  const getAgeRange = (c: any): string => {
+    const min = c.ageMin || c.age_min;
+    const max = c.ageMax || c.age_max;
+    if (min && max) return `Ages ${min}–${max}`;
+    if (min) return `Ages ${min}+`;
+    if (max) return `Up to ${max}`;
+    return '';
+  };
+
+  // Helper: get start time display for a class (time field is 'HH:MM AM - HH:MM PM' format in DB)
+  const getStartTimeDisplay = (c: any): string => {
+    if (c.time) {
+      const parts = c.time.split(' - ');
+      return parts[0]?.trim() || '';
+    }
+    if (c.startTime) return formatTime(c.startTime);
+    return '';
+  };
+
+  // Get program icon letter
+  const getProgramInitial = (name: string) => name.charAt(0).toUpperCase();
+
   return (
     <ManagementLayout>
       {/* Breadcrumb Navigation */}
@@ -1175,96 +1308,499 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
         />
       </div>
 
-      <div className={`p-6 min-h-[calc(100vh-120px)] ${isDarkMode ? 'bg-[#0F1115]' : 'bg-background'}`}>
+      <div className={`p-6 pb-24 min-h-[calc(100vh-120px)] ${isDarkMode ? 'bg-[#0F1115]' : 'bg-[#F8F8FA]'}`}>
         <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Class Schedule</h1>
-            <p className="text-muted-foreground">Manage your dojo's class schedule and enrollment</p>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            {/* Sorting Controls */}
-            <div className="flex items-center gap-2">
-              <Select value={sortBy} onValueChange={(value: 'name' | 'createdAt' | 'dayOfWeek') => setSortBy(value)}>
-                <SelectTrigger className="w-[140px] h-9">
-                  <ArrowUpDown className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="createdAt">Date Created</SelectItem>
-                  <SelectItem value="name">Class Name</SelectItem>
-                  <SelectItem value="dayOfWeek">Day of Week</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
-              >
-                {sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
-              </Button>
+
+          {/* ── HEADER ────────────────────────────────────────────────────── */}
+          <div className="flex flex-col md:flex-row md:items-start justify-between mb-6 gap-4">
+            <div>
+              <h1 className={`text-2xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Class Schedule
+              </h1>
+              <p className={`text-sm mt-1 ${isDarkMode ? 'text-white/50' : 'text-gray-500'}`}>
+                Explore classes and find the perfect time to train
+              </p>
             </div>
-            
-            <div className="flex items-center gap-2">
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Bulk selection controls */}
               {classes.length > 0 && (
                 <>
                   <Button
                     variant={isSelectionMode ? "default" : "outline"}
+                    size="sm"
                     onClick={() => {
                       setIsSelectionMode(!isSelectionMode);
                       setSelectedClassIds([]);
                     }}
-                    className="flex items-center gap-2"
+                    className="h-9 text-sm"
                   >
-                    {isSelectionMode ? 'Cancel Selection' : 'Select Multiple'}
+                    {isSelectionMode ? 'Cancel' : 'Select'}
                   </Button>
-                  
                   {isSelectionMode && (
                     <>
-                      <Button
-                        variant="outline"
-                        onClick={toggleSelectAll}
-                        className="flex items-center gap-2"
-                      >
+                      <Button variant="outline" size="sm" onClick={toggleSelectAll} className="h-9 text-sm">
                         {selectedClassIds.length === classes.length ? 'Deselect All' : 'Select All'}
                       </Button>
-                      
                       <Button
                         variant="destructive"
+                        size="sm"
                         onClick={handleBulkDelete}
                         disabled={selectedClassIds.length === 0 || bulkDeleteMutation.isLoading}
-                        className="flex items-center gap-2"
+                        className="h-9 text-sm"
                       >
-                        <Trash2 className="h-4 w-4" />
-                        Delete Selected ({selectedClassIds.length})
+                        <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                        Delete ({selectedClassIds.length})
                       </Button>
                     </>
                   )}
                 </>
               )}
+
+              {/* Add New Class button — triggers Dialog */}
+              <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    className="h-9 text-sm font-medium bg-red-500 hover:bg-red-600 text-white border-0"
+                    style={{ backgroundColor: '#ef4444' }}
+                  >
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    Add New Class
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-visible flex flex-col">
+                  <DialogHeader className="flex-shrink-0">
+                    <DialogTitle>Add Class Time</DialogTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Create a recurring class time under an existing program.
+                    </p>
+                  </DialogHeader>
+                  <div className="px-2 overflow-y-auto flex-1 min-h-0">
+                    <ClassForm
+                      formData={formData}
+                      handleInputChange={handleInputChange}
+                      handleSelectChange={handleSelectChange}
+                      handleDayToggle={handleDayToggle}
+                      instructors={instructors}
+                      programs={programs}
+                      existingClasses={classes}
+                      editingClassId={null}
+                      onProgramChange={handleProgramChange}
+                      onSubmit={handleAddClass}
+                      submitText="Add Class Time"
+                      onCancel={() => { setIsAddModalOpen(false); resetForm(); }}
+                      floorPlansData={floorPlansData}
+                      showAdvanced={showAdvanced}
+                      setShowAdvanced={setShowAdvanced}
+                      timeError={timeError}
+                      isDark={isDarkMode}
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
-          <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <Plus className="h-5 w-5" />
-                Add New Class
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-visible flex flex-col">
-              <DialogHeader className="flex-shrink-0">
-                <DialogTitle>Add Class Time</DialogTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Create a recurring class time under an existing program.
+          {/* ── KPI STRIP ─────────────────────────────────────────────────── */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            {/* Total Classes */}
+            <div className={`rounded-xl border p-4 flex items-center justify-between ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-white border-gray-200'}`}>
+              <div>
+                <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-white/50' : 'text-gray-500'}`}>Total Classes</p>
+                <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{stats.totalClasses}</p>
+              </div>
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-red-500/10">
+                <Calendar className="h-4.5 w-4.5 text-red-500" style={{ width: 18, height: 18 }} />
+              </div>
+            </div>
+            {/* Active Students */}
+            <div className={`rounded-xl border p-4 flex items-center justify-between ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-white border-gray-200'}`}>
+              <div>
+                <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-white/50' : 'text-gray-500'}`}>Active Students</p>
+                <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{stats.totalStudents}</p>
+              </div>
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-green-500/10">
+                <Users className="h-4.5 w-4.5 text-green-500" style={{ width: 18, height: 18 }} />
+              </div>
+            </div>
+            {/* Open Spots */}
+            <div className={`rounded-xl border p-4 flex items-center justify-between ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-white border-gray-200'}`}>
+              <div>
+                <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-white/50' : 'text-gray-500'}`}>Open Spots</p>
+                <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {classes.reduce((sum, c) => sum + Math.max(0, (c.capacity || 0) - (c.enrolled || 0)), 0)}
                 </p>
+              </div>
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-blue-500/10">
+                <User className="h-4.5 w-4.5 text-blue-500" style={{ width: 18, height: 18 }} />
+              </div>
+            </div>
+            {/* Active Instructors */}
+            <div className={`rounded-xl border p-4 flex items-center justify-between ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-white border-gray-200'}`}>
+              <div>
+                <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-white/50' : 'text-gray-500'}`}>Active Instructors</p>
+                <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{stats.activeInstructors || instructors.length}</p>
+              </div>
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-purple-500/10">
+                <User className="h-4.5 w-4.5 text-purple-500" style={{ width: 18, height: 18 }} />
+              </div>
+            </div>
+          </div>
+
+          {/* ── FILTER BAR ────────────────────────────────────────────────── */}
+          <div className={`rounded-xl border p-3 mb-5 flex flex-wrap items-center gap-2 ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-white border-gray-200'}`}>
+            {/* Search */}
+            <div className="relative flex-1 min-w-[180px]">
+              <svg className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDarkMode ? 'text-white/30' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search classes..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className={`w-full pl-9 pr-3 h-9 text-sm rounded-lg border outline-none transition-colors ${
+                  isDarkMode
+                    ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-white/20'
+                    : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-gray-300'
+                }`}
+              />
+            </div>
+
+            {/* Program filter */}
+            <select
+              value={filterProgram}
+              onChange={e => setFilterProgram(e.target.value)}
+              className={`h-9 px-3 text-sm rounded-lg border outline-none cursor-pointer ${
+                isDarkMode
+                  ? 'bg-white/5 border-white/10 text-white'
+                  : 'bg-gray-50 border-gray-200 text-gray-700'
+              }`}
+            >
+              <option value="all">All Programs</option>
+              {programNames.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+
+            {/* Instructor filter */}
+            <select
+              value={filterInstructor}
+              onChange={e => setFilterInstructor(e.target.value)}
+              className={`h-9 px-3 text-sm rounded-lg border outline-none cursor-pointer ${
+                isDarkMode
+                  ? 'bg-white/5 border-white/10 text-white'
+                  : 'bg-gray-50 border-gray-200 text-gray-700'
+              }`}
+            >
+              <option value="all">All Instructors</option>
+              {instructors.map(i => <option key={i.id} value={i.name.toLowerCase()}>{i.name}</option>)}
+            </select>
+
+            {/* Day filter */}
+            <select
+              value={filterDay}
+              onChange={e => setFilterDay(e.target.value)}
+              className={`h-9 px-3 text-sm rounded-lg border outline-none cursor-pointer ${
+                isDarkMode
+                  ? 'bg-white/5 border-white/10 text-white'
+                  : 'bg-gray-50 border-gray-200 text-gray-700'
+              }`}
+            >
+              <option value="all">All Days</option>
+              {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+
+            {/* View toggle */}
+            <div className={`flex items-center rounded-lg border overflow-hidden ml-auto ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`flex items-center gap-1.5 px-3 h-9 text-sm font-medium transition-colors ${
+                  viewMode === 'list'
+                    ? isDarkMode ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-900'
+                    : isDarkMode ? 'text-white/50 hover:text-white' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+                List View
+              </button>
+              <button
+                onClick={() => setViewMode('calendar')}
+                className={`flex items-center gap-1.5 px-3 h-9 text-sm font-medium transition-colors border-l ${
+                  viewMode === 'calendar'
+                    ? isDarkMode ? 'bg-red-500/20 text-red-400 border-white/10' : 'bg-red-50 text-red-600 border-gray-200'
+                    : isDarkMode ? 'text-white/50 hover:text-white border-white/10' : 'text-gray-500 hover:text-gray-700 border-gray-200'
+                }`}
+              >
+                <Calendar className="w-4 h-4" />
+                Calendar View
+              </button>
+            </div>
+          </div>
+
+          {/* ── WEEK SELECTOR ─────────────────────────────────────────────── */}
+          <div className="mb-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>This Week</h2>
+              {selectedWeekDay && (
+                <button
+                  onClick={() => setSelectedWeekDay(null)}
+                  className={`text-xs font-medium ${isDarkMode ? 'text-white/40 hover:text-white/70' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  Show all days
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-7 gap-2">
+              {weekDays.map(day => {
+                const count = classesPerDay[day] || 0;
+                const isSelected = selectedWeekDay === day;
+                return (
+                  <button
+                    key={day}
+                    onClick={() => setSelectedWeekDay(isSelected ? null : day)}
+                    className={`rounded-xl border py-3 px-1 text-center transition-all ${
+                      isSelected
+                        ? 'border-red-500 bg-red-500/10'
+                        : isDarkMode
+                          ? 'border-white/10 bg-[#18181A] hover:border-white/20'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                    }`}
+                  >
+                    <p className={`text-xs font-medium mb-1 ${
+                      isSelected ? 'text-red-500' : isDarkMode ? 'text-white/60' : 'text-gray-500'
+                    }`}>{day}</p>
+                    <p className={`text-base font-bold ${
+                      isSelected ? 'text-red-500' : isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>{count}</p>
+                    <p className={`text-[10px] ${
+                      isSelected ? 'text-red-400' : isDarkMode ? 'text-white/30' : 'text-gray-400'
+                    }`}>{count === 1 ? 'class' : 'classes'}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── CALENDAR VIEW (OverallSchedule) ───────────────────────────── */}
+          {viewMode === 'calendar' && !loading && classes.length > 0 && (
+            <div className="mb-6">
+              <OverallSchedule
+                classes={classes}
+                isDark={isDarkMode}
+                onClassClick={handleEditClass}
+                dojoSettings={dojoSettings}
+              />
+            </div>
+          )}
+
+          {/* ── PROGRAM-GROUPED LIST ──────────────────────────────────────── */}
+          {viewMode === 'list' && (
+            <>
+              {/* Section header */}
+              <div className="flex items-center justify-between mb-3">
+                <h2 className={`text-base font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {filterProgram !== 'all' ? filterProgram : 'All Programs'}
+                </h2>
+                <span className={`text-sm ${isDarkMode ? 'text-white/40' : 'text-gray-400'}`}>
+                  {filteredClasses.length} {filteredClasses.length === 1 ? 'class' : 'classes'} available
+                </span>
+              </div>
+
+              {loading ? (
+                <div className={`rounded-xl border p-12 text-center ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-white border-gray-200'}`}>
+                  <p className={`text-sm ${isDarkMode ? 'text-white/40' : 'text-gray-400'}`}>Loading classes...</p>
+                </div>
+              ) : filteredClasses.length === 0 ? (
+                <div className={`rounded-xl border p-12 text-center ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-white border-gray-200'}`}>
+                  <Calendar className={`h-10 w-10 mx-auto mb-3 ${isDarkMode ? 'text-white/20' : 'text-gray-300'}`} />
+                  <h3 className={`text-base font-semibold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {classes.length === 0 ? 'No Classes Yet' : 'No classes match your filters'}
+                  </h3>
+                  <p className={`text-sm mb-4 ${isDarkMode ? 'text-white/40' : 'text-gray-400'}`}>
+                    {classes.length === 0 ? 'Get started by adding your first class' : 'Try adjusting your search or filters'}
+                  </p>
+                  {classes.length === 0 && (
+                    <Button size="sm" onClick={() => setIsAddModalOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Your First Class
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className={`rounded-xl border overflow-hidden divide-y ${isDarkMode ? 'bg-[#18181A] border-white/10 divide-white/[0.06]' : 'bg-white border-gray-200 divide-gray-100'}`}>
+                  {Object.entries(groupedByProgram).map(([programName, programClasses]) => {
+                    const isExpanded = expandedPrograms[programName];
+                    const visibleSlots = isExpanded ? programClasses : programClasses.slice(0, 3);
+                    const hasMore = programClasses.length > 3;
+                    // Use first class for program-level info
+                    const firstClass = programClasses[0];
+                    const ageRange = getAgeRange(firstClass);
+                    const duration = getDuration(firstClass);
+                    const instructorName = firstClass.instructor || firstClass.instructorName || '';
+
+                    return (
+                      <div
+                        key={programName}
+                        className={`flex items-center gap-4 px-5 py-4 transition-colors ${
+                          isSelectionMode ? '' : 'hover:bg-opacity-50'
+                        } ${isDarkMode ? 'hover:bg-white/[0.02]' : 'hover:bg-gray-50/60'}`}
+                      >
+                        {/* Program icon */}
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-white ${
+                          ['bg-gray-700', 'bg-gray-600', 'bg-gray-800', 'bg-gray-500', 'bg-gray-700', 'bg-gray-600', 'bg-gray-800'][
+                            programName.charCodeAt(0) % 7
+                          ]
+                        }`}>
+                          {getProgramInitial(programName)}
+                        </div>
+
+                        {/* Program info */}
+                        <div className="w-36 flex-shrink-0">
+                          <p className={`text-sm font-semibold leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                            {programName}
+                          </p>
+                          {ageRange && (
+                            <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-white/40' : 'text-gray-400'}`}>{ageRange}</p>
+                          )}
+                        </div>
+
+                        {/* Instructor */}
+                        <div className="w-40 flex-shrink-0 hidden md:flex items-center gap-1.5">
+                          <User className={`w-3.5 h-3.5 flex-shrink-0 ${isDarkMode ? 'text-white/30' : 'text-gray-400'}`} />
+                          <span className={`text-xs truncate ${isDarkMode ? 'text-white/50' : 'text-gray-500'}`}>
+                            {instructorName || '—'}
+                          </span>
+                        </div>
+
+                        {/* Duration */}
+                        {duration && (
+                          <div className="w-14 flex-shrink-0 hidden lg:block">
+                            <span className={`text-xs ${isDarkMode ? 'text-white/40' : 'text-gray-400'}`}>{duration}</span>
+                          </div>
+                        )}
+
+                        {/* Time slot buttons */}
+                        <div className="flex items-center gap-2 flex-1 flex-wrap">
+                          {visibleSlots.map((cls) => {
+                            const timeDisplay = getStartTimeDisplay(cls);
+                            const isFull = !cls.is_unlimited_capacity && cls.enrolled >= cls.capacity;
+                            const isSelected = isSelectionMode && selectedClassIds.includes(cls.id);
+                            return (
+                              <button
+                                key={cls.id}
+                                onClick={() => {
+                                  if (isSelectionMode) {
+                                    toggleClassSelection(cls.id);
+                                  } else {
+                                    handleEditClass(cls);
+                                  }
+                                }}
+                                className={`h-8 px-3 rounded-lg text-xs font-medium border transition-all ${
+                                  isSelected
+                                    ? 'bg-red-500 text-white border-red-500'
+                                    : isFull
+                                      ? isDarkMode
+                                        ? 'bg-white/5 border-white/10 text-white/30 cursor-not-allowed'
+                                        : 'bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed'
+                                      : isDarkMode
+                                        ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20'
+                                        : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 shadow-sm'
+                                }`}
+                              >
+                                {timeDisplay || cls.time?.split(' - ')[0] || 'TBD'}
+                              </button>
+                            );
+                          })}
+
+                          {hasMore && !isExpanded && (
+                            <button
+                              onClick={() => toggleProgramExpand(programName)}
+                              className={`h-8 px-3 rounded-lg text-xs font-medium border transition-all ${
+                                isDarkMode
+                                  ? 'border-white/10 text-white/40 hover:text-white/70 hover:border-white/20'
+                                  : 'border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300'
+                              }`}
+                            >
+                              +{programClasses.length - 3} more
+                            </button>
+                          )}
+                          {isExpanded && (
+                            <button
+                              onClick={() => toggleProgramExpand(programName)}
+                              className={`h-8 px-3 rounded-lg text-xs font-medium border transition-all ${
+                                isDarkMode
+                                  ? 'border-white/10 text-white/40 hover:text-white/70'
+                                  : 'border-gray-200 text-gray-400 hover:text-gray-600'
+                              }`}
+                            >
+                              Show less
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
+                          {/* Floor plan / instructor view for Kickboxing */}
+                          {programName === 'Kickboxing' && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0"
+                                onClick={() => {
+                                  setSelectedClassForFloorPlan(firstClass);
+                                  setIsFloorPlanModalOpen(true);
+                                }}
+                                title="Configure Floor Plan"
+                              >
+                                <LayoutGrid className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0"
+                                onClick={() => window.open(`/instructor-view/${firstClass.id}`, '_blank')}
+                                title="Instructor View"
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                              </Button>
+                            </>
+                          )}
+                          {/* Manage enrollments */}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            title="Manage Enrollments"
+                            onClick={() => {
+                              setSelectedClassForEnrollment(firstClass);
+                              setIsEnrollmentModalOpen(true);
+                            }}
+                          >
+                            <Users className="h-3.5 w-3.5" />
+                          </Button>
+                          {/* Chevron */}
+                          <ChevronDown className={`h-4 w-4 ${isDarkMode ? 'text-white/20' : 'text-gray-300'}`} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ── EDIT MODAL ────────────────────────────────────────────────── */}
+          <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-visible flex flex-col">
+              <DialogHeader className="flex-shrink-0">
+                <DialogTitle>Edit Class Time</DialogTitle>
+                <p className="text-sm text-muted-foreground mt-1">Update the class time details.</p>
               </DialogHeader>
-              <div className="px-2 overflow-y-auto flex-1 min-h-0">
-                  <ClassForm 
+              <div className="flex gap-6 overflow-y-auto flex-1 min-h-0">
+                <div className="flex-[3] min-w-0">
+                  <ClassForm
                     formData={formData}
                     handleInputChange={handleInputChange}
                     handleSelectChange={handleSelectChange}
@@ -1272,649 +1808,240 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                     instructors={instructors}
                     programs={programs}
                     existingClasses={classes}
-                    editingClassId={null}
+                    editingClassId={editingClass?.id}
                     onProgramChange={handleProgramChange}
-                    onSubmit={handleAddClass}
-                    submitText="Add Class Time"
-                    onCancel={() => {
-                      setIsAddModalOpen(false);
-                      resetForm();
-                    }}
+                    onSubmit={handleUpdateClass}
+                    submitText="Update Class Time"
+                    onCancel={() => { setIsEditModalOpen(false); setEditingClass(null); resetForm(); }}
                     floorPlansData={floorPlansData}
                     showAdvanced={showAdvanced}
                     setShowAdvanced={setShowAdvanced}
                     timeError={timeError}
                     isDark={isDarkMode}
                   />
+                </div>
+                <div className="hidden md:block flex-[2] min-w-0">
+                  <LandscapePreviewCard formData={formData} programs={programs} instructors={instructors} isDark={isDarkMode} />
+                </div>
               </div>
             </DialogContent>
           </Dialog>
-        </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card'}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground text-sm">Total Classes</p>
-                <p className="text-3xl font-bold mt-1">{stats.totalClasses}</p>
-              </div>
-              <div className="p-3 bg-primary/10 rounded-lg">
-                <Calendar className="h-8 w-8 text-primary" />
-              </div>
-            </div>
-          </div>
-
-          <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card'}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground text-sm">Total Students</p>
-                <p className="text-3xl font-bold mt-1">{stats.totalStudents}</p>
-              </div>
-              <div className="p-3 bg-green-500/10 rounded-lg">
-                <Users className="h-8 w-8 text-green-500" />
-              </div>
-            </div>
-          </div>
-
-          <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card'}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground text-sm">Avg Class Size</p>
-                <p className="text-3xl font-bold mt-1">{stats.avgClassSize}</p>
-              </div>
-              <div className="p-3 bg-blue-500/10 rounded-lg">
-                <User className="h-8 w-8 text-blue-500" />
-              </div>
-            </div>
-          </div>
-
-          <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card'}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground text-sm">Active Instructors</p>
-                <p className="text-3xl font-bold mt-1">{stats.activeInstructors}</p>
-              </div>
-              <div className="p-3 bg-purple-500/10 rounded-lg">
-                <User className="h-8 w-8 text-purple-500" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Overall Schedule - Master Grid */}
-        {!loading && classes.length > 0 && (
-          <OverallSchedule
-            classes={classes}
-            isDark={isDarkMode}
-            onClassClick={handleEditClass}
-            dojoSettings={dojoSettings}
-          />
-        )}
-
-        {/* Classes Grid */}
-        {loading ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Loading classes...</p>
-          </div>
-        ) : classes.length === 0 ? (
-          <div className={`text-center py-12 rounded-lg border ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card'}`}>
-            <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No Classes Yet</h3>
-            <p className="text-muted-foreground mb-4">Get started by adding your first class</p>
-            <Button onClick={() => setIsAddModalOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Your First Class
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...classes].sort((a, b) => {
-              // Day of week order mapping
-              const dayOrder = { 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6, 'Sun': 7 };
-              
-              let comparison = 0;
-              
-              if (sortBy === 'name') {
-                comparison = (a.name || '').localeCompare(b.name || '');
-              } else if (sortBy === 'createdAt') {
-                const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-                const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-                comparison = dateA - dateB;
-              } else if (sortBy === 'dayOfWeek') {
-                const dayA = a.day_of_week || a.schedule || '';
-                const dayB = b.day_of_week || b.schedule || '';
-                const orderA = dayOrder[dayA] || 8;
-                const orderB = dayOrder[dayB] || 8;
-                comparison = orderA - orderB;
-              }
-              
-              return sortOrder === 'asc' ? comparison : -comparison;
-            }).map((classItem) => (
-              <div key={classItem.id} id={`class-${classItem.id}`} className={`p-6 rounded-lg border hover:border-primary transition-all duration-300 relative ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card'} ${isSelectionMode && selectedClassIds.includes(classItem.id) ? 'ring-2 ring-primary' : ''}`}>
-                {isSelectionMode && (
-                  <div className="absolute top-4 left-4">
-                    <input
-                      type="checkbox"
-                      checked={selectedClassIds.includes(classItem.id)}
-                      onChange={() => toggleClassSelection(classItem.id)}
-                      className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                    />
+          {/* ── SUCCESS MODAL ─────────────────────────────────────────────── */}
+          <Dialog open={isSuccessModalOpen} onOpenChange={setIsSuccessModalOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
+                    <CheckCircle className="w-10 h-10 text-green-600 dark:text-green-400" />
                   </div>
-                )}
-                <div className={`flex items-start justify-between mb-4 ${isSelectionMode ? 'ml-8' : ''}`}>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-1">{classItem.name}</h3>
-                    <span className="inline-block px-2 py-1 text-xs rounded bg-primary/10 text-primary">
-                      {classItem.level}
-                    </span>
-                  </div>
-                  <div className="flex gap-1">
-                    {/* Show Floor Plan button for Kickboxing classes */}
-                    {classItem.type === 'Kickboxing' && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setSelectedClassForFloorPlan(classItem);
-                            setIsFloorPlanModalOpen(true);
-                          }}
-                          title="Configure Floor Plan"
-                        >
-                          <LayoutGrid className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => window.open(`/instructor-view/${classItem.id}`, '_blank')}
-                          title="Instructor View - Bag Assignments"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleEditClass(classItem)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleDeleteClass(classItem.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <DialogTitle className="text-xl">Class Created Successfully!</DialogTitle>
                 </div>
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <User className="h-4 w-4" />
-                    <span>{classItem.instructor}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>
-                      {(() => {
-                        const days = classItem.day_of_week || classItem.schedule || '';
-                        // If it contains commas, it's a multi-day class - format it nicely
-                        if (days.includes(',')) {
-                          return days.split(',').map(d => d.trim()).join(', ');
-                        }
-                        return days;
-                      })()}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    <span>{classItem.time}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
-                    <span>Main Dojo</span>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Enrollment</span>
-                    <span className="text-sm font-semibold">
-                      {classItem.enrolled || 0} / {classItem.is_unlimited_capacity ? '∞' : classItem.capacity}
-                    </span>
-                  </div>
-                  <div className="mt-2 bg-secondary rounded-full h-2">
-                    <div
-                      className="bg-primary h-2 rounded-full transition-all"
-                      style={{
-                        width: classItem.is_unlimited_capacity 
-                          ? '0%' 
-                          : `${Math.min(((classItem.enrolled || 0) / classItem.capacity) * 100, 100)}%`
-                      }}
-                    />
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full mt-2"
-                    onClick={() => {
-                      setSelectedClassForEnrollment(classItem);
-                      setIsEnrollmentModalOpen(true);
-                    }}
-                  >
-                    <Users className="h-4 w-4 mr-2" />
-                    Manage Enrollments
-                  </Button>
-                </div>
-
-                {classItem.monthly_cost && (
-                  <div className="mt-4 text-center">
-                    <span className="text-2xl font-bold text-primary">
-                      ${classItem.monthly_cost}
-                    </span>
-                    <span className="text-sm text-muted-foreground">/month</span>
-                  </div>
-                )}
-
-                {/* Creation timestamp */}
-                {classItem.createdAt && (
-                  <div className="mt-3 pt-3 border-t border-dashed border-muted-foreground/20">
-                    <p className="text-xs text-muted-foreground/60 text-center">
-                      Created {new Date(classItem.createdAt).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })} at {new Date(classItem.createdAt).toLocaleTimeString('en-US', {
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        hour12: true
-                      })}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Edit Modal */}
-        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-visible flex flex-col">
-            <DialogHeader className="flex-shrink-0">
-              <DialogTitle>Edit Class Time</DialogTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Update the class time details.
-              </p>
-            </DialogHeader>
-            <div className="flex gap-6 overflow-y-auto flex-1 min-h-0">
-              {/* Form - Left side (60%) */}
-              <div className="flex-[3] min-w-0">
-                <ClassForm 
-                  formData={formData}
-                  handleInputChange={handleInputChange}
-                  handleSelectChange={handleSelectChange}
-                  handleDayToggle={handleDayToggle}
-                  instructors={instructors}
-                  programs={programs}
-                  existingClasses={classes}
-                  editingClassId={editingClass?.id}
-                  onProgramChange={handleProgramChange}
-                  onSubmit={handleUpdateClass}
-                  submitText="Update Class Time"
-                  onCancel={() => {
-                    setIsEditModalOpen(false);
-                    setEditingClass(null);
-                    resetForm();
-                  }}
-                  floorPlansData={floorPlansData}
-                  showAdvanced={showAdvanced}
-                  setShowAdvanced={setShowAdvanced}
-                  timeError={timeError}
-                  isDark={isDarkMode}
-                />
-              </div>
-              {/* Preview - Right side (40%) - Hidden on mobile */}
-              <div className="hidden md:block flex-[2] min-w-0">
-                <LandscapePreviewCard formData={formData} programs={programs} instructors={instructors} isDark={isDarkMode} />
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-        
-        {/* Floor Plan Manager Modal */}
-        {/* Success Confirmation Modal */}
-        <Dialog open={isSuccessModalOpen} onOpenChange={setIsSuccessModalOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
-                  <CheckCircle className="w-10 h-10 text-green-600 dark:text-green-400" />
-                </div>
-                <DialogTitle className="text-xl">Class Created Successfully!</DialogTitle>
-              </div>
-            </DialogHeader>
-            
-            {createdClass && (
-              <div className="space-y-4 mt-4">
-                <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-[#18181A] border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
-                  <h3 className="font-semibold text-lg mb-3">
-                    {createdClass.name || `${createdClass.program}${createdClass.level ? ' ' + createdClass.level : ''}`}
-                  </h3>
-                  
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Program:</span>
-                      <span className="font-medium">{createdClass.program || 'Not set'}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Level:</span>
-                      <span className="font-medium">{createdClass.level || 'All Levels'}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Instructor:</span>
-                      <span className="font-medium">{createdClass.instructor}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Time:</span>
-                      <span className="font-medium">
-                        {createdClass.startTime && createdClass.endTime 
-                          ? `${createdClass.startTime} - ${createdClass.endTime}`
-                          : 'Not set'
-                        }
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Days:</span>
-                      <span className="font-medium">
-                        {Array.isArray(createdClass.days) ? createdClass.days.join(', ') : 'Not set'}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Capacity:</span>
-                      <span className="font-medium">{createdClass.capacity} students</span>
-                    </div>
-                    
-                    {(createdClass.ageMin || createdClass.ageMax) && (
+              </DialogHeader>
+              {createdClass && (
+                <div className="space-y-4 mt-4">
+                  <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-[#18181A] border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
+                    <h3 className="font-semibold text-lg mb-3">
+                      {createdClass.name || `${createdClass.program}${createdClass.level ? ' ' + createdClass.level : ''}`}
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Program:</span>
+                        <span className="font-medium">{createdClass.program || 'Not set'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Level:</span>
+                        <span className="font-medium">{createdClass.level || 'All Levels'}</span>
+                      </div>
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Ages:</span>
+                        <span className="text-muted-foreground">Instructor:</span>
+                        <span className="font-medium">{createdClass.instructor}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Time:</span>
                         <span className="font-medium">
-                          {createdClass.ageMin && createdClass.ageMax 
-                            ? `${createdClass.ageMin} - ${createdClass.ageMax}`
-                            : createdClass.ageMin 
-                              ? `${createdClass.ageMin}+`
-                              : `Up to ${createdClass.ageMax}`
-                          }
+                          {createdClass.startTime && createdClass.endTime
+                            ? `${createdClass.startTime} - ${createdClass.endTime}`
+                            : 'Not set'}
                         </span>
                       </div>
-                    )}
-                    
-                    {createdClass.room && (
                       <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Room:</span>
-                        <span className="font-medium">{createdClass.room}</span>
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Days:</span>
+                        <span className="font-medium">
+                          {Array.isArray(createdClass.days) ? createdClass.days.join(', ') : 'Not set'}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                  
-                  {createdClass.description && (
-                    <div className="mt-3 pt-3 border-t border-border">
-                      <p className="text-sm text-muted-foreground">{createdClass.description}</p>
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Capacity:</span>
+                        <span className="font-medium">{createdClass.capacity} students</span>
+                      </div>
                     </div>
-                  )}
-                </div>
-                
-                <div className="flex gap-3">
-                  <Button 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => setIsSuccessModalOpen(false)}
-                  >
-                    Close
-                  </Button>
-                  {createdClass.id && (
-                    <Button 
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => {
-                        setIsSuccessModalOpen(false);
-                        // Scroll to the class in the list
-                        const classElement = document.getElementById(`class-${createdClass.id}`);
-                        if (classElement) {
-                          classElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                          classElement.classList.add('ring-2', 'ring-primary');
-                          setTimeout(() => classElement.classList.remove('ring-2', 'ring-primary'), 2000);
-                        }
-                      }}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Class
-                    </Button>
-                  )}
-                  <Button 
-                    className="flex-1"
-                    onClick={() => {
-                      setIsSuccessModalOpen(false);
-                      setIsAddModalOpen(true);
-                    }}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Another
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {selectedClassForFloorPlan && (
-          <FloorPlanManager
-            classId={selectedClassForFloorPlan.id}
-            className={selectedClassForFloorPlan.name}
-            isOpen={isFloorPlanModalOpen}
-            onClose={() => {
-              setIsFloorPlanModalOpen(false);
-              setSelectedClassForFloorPlan(null);
-            }}
-          />
-        )}
-
-        {/* Enrollment Management Modal */}
-        <Dialog open={isEnrollmentModalOpen} onOpenChange={(open) => {
-          setIsEnrollmentModalOpen(open);
-          if (!open) {
-            setSelectedClassForEnrollment(null);
-            setEnrollmentSearchQuery('');
-          }
-        }}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-visible flex flex-col">
-            <DialogHeader className="flex-shrink-0">
-              <DialogTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Manage Enrollments - {selectedClassForEnrollment?.name}
-              </DialogTitle>
-              <p className="text-sm text-muted-foreground">
-                {selectedClassForEnrollment?.day_of_week} • {selectedClassForEnrollment?.time}
-              </p>
-            </DialogHeader>
-
-            <div className="space-y-4 overflow-y-auto flex-1 min-h-0">
-              {/* Search */}
-              <Input
-                placeholder="Search students..."
-                value={enrollmentSearchQuery}
-                onChange={(e) => setEnrollmentSearchQuery(e.target.value)}
-              />
-
-              {/* Student List */}
-              <div className="border rounded-lg divide-y max-h-[400px] overflow-y-auto">
-                {allStudents
-                  .filter(s => 
-                    `${s.firstName} ${s.lastName}`.toLowerCase().includes(enrollmentSearchQuery.toLowerCase())
-                  )
-                  .sort((a, b) => {
-                    // Sort: Enrolled first, then Suggested, then others
-                    const aEnrolled = enrolledStudentIds.includes(a.id);
-                    const bEnrolled = enrolledStudentIds.includes(b.id);
-                    if (aEnrolled !== bEnrolled) return aEnrolled ? -1 : 1;
-                    
-                    const className = selectedClassForEnrollment?.name?.toLowerCase() || '';
-                    const aProgram = (a.program || '').toLowerCase();
-                    const bProgram = (b.program || '').toLowerCase();
-                    const aSuggested = (
-                      (aProgram.includes('little') && className.includes('little ninja')) ||
-                      (aProgram.includes('kids') && (className.includes('kids') || className.includes('family'))) ||
-                      (aProgram.includes('teen') && className.includes('teen')) ||
-                      (aProgram.includes('adult') && (className.includes('adult') || className.includes('cardio') || className.includes('sparring'))) ||
-                      (aProgram.includes('dragon') && (className.includes('little ninja') || className.includes('kids'))) ||
-                      (aProgram.includes('karate') && (className.includes('kids') || className.includes('beginner') || className.includes('intermediate')))
-                    );
-                    const bSuggested = (
-                      (bProgram.includes('little') && className.includes('little ninja')) ||
-                      (bProgram.includes('kids') && (className.includes('kids') || className.includes('family'))) ||
-                      (bProgram.includes('teen') && className.includes('teen')) ||
-                      (bProgram.includes('adult') && (className.includes('adult') || className.includes('cardio') || className.includes('sparring'))) ||
-                      (bProgram.includes('dragon') && (className.includes('little ninja') || className.includes('kids'))) ||
-                      (bProgram.includes('karate') && (className.includes('kids') || className.includes('beginner') || className.includes('intermediate')))
-                    );
-                    if (aSuggested !== bSuggested) return aSuggested ? -1 : 1;
-                    return 0;
-                  })
-                  .map(student => {
-                    const isEnrolled = enrolledStudentIds.includes(student.id);
-                    // Program-to-class matching logic
-                    const className = selectedClassForEnrollment?.name?.toLowerCase() || '';
-                    const studentProgram = (student.program || '').toLowerCase();
-                    const isSuggested = (
-                      (studentProgram.includes('little') && className.includes('little ninja')) ||
-                      (studentProgram.includes('kids') && (className.includes('kids') || className.includes('family'))) ||
-                      (studentProgram.includes('teen') && className.includes('teen')) ||
-                      (studentProgram.includes('adult') && (className.includes('adult') || className.includes('cardio') || className.includes('sparring'))) ||
-                      (studentProgram.includes('dragon') && (className.includes('little ninja') || className.includes('kids'))) ||
-                      (studentProgram.includes('competition') && (className.includes('sparring') || className.includes('leadership'))) ||
-                      (studentProgram.includes('jiu-jitsu') && (className.includes('adult') || className.includes('sparring'))) ||
-                      (studentProgram.includes('muay thai') && (className.includes('adult') || className.includes('cardio') || className.includes('kickboxing'))) ||
-                      (studentProgram.includes('karate') && (className.includes('adult') || className.includes('kids') || className.includes('beginner') || className.includes('intermediate')))
-                    );
-                    return (
-                      <div
-                        key={student.id}
-                        className={`flex items-center justify-between p-3 hover:bg-muted/50 ${isSuggested && !isEnrolled ? 'bg-green-500/10 border-l-2 border-l-green-500' : ''}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          {student.photoUrl ? (
-                            <img
-                              src={student.photoUrl}
-                              alt={student.firstName}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <User className="h-5 w-5 text-primary" />
-                            </div>
-                          )}
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium">{student.firstName} {student.lastName}</p>
-                              {isSuggested && !isEnrolled && (
-                                <span className="text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full font-medium">
-                                  Suggested
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-muted-foreground">{student.program || 'No program'}</p>
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant={isEnrolled ? 'destructive' : 'default'}
-                          disabled={enrollmentLoading}
-                          onClick={async () => {
-                            setEnrollmentLoading(true);
-                            try {
-                              if (isEnrolled) {
-                                // Unenroll
-                                const response = await fetch('/api/trpc/studentPortal.unenrollFromClass', {
-                                  method: 'POST',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({
-                                    json: {
-                                      studentId: student.id,
-                                      classId: selectedClassForEnrollment.id
-                                    }
-                                  })
-                                });
-                                if (response.ok) {
-                                  setEnrolledStudentIds(prev => prev.filter(id => id !== student.id));
-                                  toast.success(`${student.firstName} unenrolled from class`);
-                                  fetchClasses(); // Refresh enrollment counts
-                                }
-                              } else {
-                                // Enroll
-                                const response = await fetch('/api/trpc/studentPortal.enrollInClass', {
-                                  method: 'POST',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({
-                                    json: {
-                                      studentId: student.id,
-                                      classId: selectedClassForEnrollment.id
-                                    }
-                                  })
-                                });
-                                if (response.ok) {
-                                  setEnrolledStudentIds(prev => [...prev, student.id]);
-                                  toast.success(`${student.firstName} enrolled in class`);
-                                  fetchClasses(); // Refresh enrollment counts
-                                }
-                              }
-                            } catch (error) {
-                              toast.error('Failed to update enrollment');
-                            } finally {
-                              setEnrollmentLoading(false);
-                            }
-                          }}
-                        >
-                          {isEnrolled ? 'Remove' : 'Enroll'}
-                        </Button>
-                      </div>
-                    );
-                  })}
-                {allStudents.length === 0 && (
-                  <div className="p-8 text-center text-muted-foreground">
-                    No students found. Add students first.
                   </div>
-                )}
-              </div>
+                  <div className="flex gap-3">
+                    <Button variant="outline" className="flex-1" onClick={() => setIsSuccessModalOpen(false)}>Close</Button>
+                    <Button className="flex-1" onClick={() => { setIsSuccessModalOpen(false); setIsAddModalOpen(true); }}>
+                      <Plus className="w-4 h-4 mr-2" />Add Another
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
 
-              <div className="flex justify-between items-center pt-2 border-t">
+          {/* ── FLOOR PLAN MODAL ──────────────────────────────────────────── */}
+          {selectedClassForFloorPlan && (
+            <FloorPlanManager
+              classId={selectedClassForFloorPlan.id}
+              className={selectedClassForFloorPlan.name}
+              isOpen={isFloorPlanModalOpen}
+              onClose={() => { setIsFloorPlanModalOpen(false); setSelectedClassForFloorPlan(null); }}
+            />
+          )}
+
+          {/* ── ENROLLMENT MODAL ──────────────────────────────────────────── */}
+          <Dialog open={isEnrollmentModalOpen} onOpenChange={(open) => {
+            setIsEnrollmentModalOpen(open);
+            if (!open) { setSelectedClassForEnrollment(null); setEnrollmentSearchQuery(''); }
+          }}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-visible flex flex-col">
+              <DialogHeader className="flex-shrink-0">
+                <DialogTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Manage Enrollments - {selectedClassForEnrollment?.name}
+                </DialogTitle>
                 <p className="text-sm text-muted-foreground">
-                  {enrolledStudentIds.length} student{enrolledStudentIds.length !== 1 ? 's' : ''} enrolled
+                  {selectedClassForEnrollment?.day_of_week} • {selectedClassForEnrollment?.time}
                 </p>
-                <Button variant="outline" onClick={() => setIsEnrollmentModalOpen(false)}>
-                  Done
-                </Button>
+              </DialogHeader>
+              <div className="space-y-4 overflow-y-auto flex-1 min-h-0">
+                <Input
+                  placeholder="Search students..."
+                  value={enrollmentSearchQuery}
+                  onChange={(e) => setEnrollmentSearchQuery(e.target.value)}
+                />
+                <div className="border rounded-lg divide-y max-h-[400px] overflow-y-auto">
+                  {allStudents
+                    .filter(s => `${s.firstName} ${s.lastName}`.toLowerCase().includes(enrollmentSearchQuery.toLowerCase()))
+                    .sort((a, b) => {
+                      const aEnrolled = enrolledStudentIds.includes(a.id);
+                      const bEnrolled = enrolledStudentIds.includes(b.id);
+                      if (aEnrolled !== bEnrolled) return aEnrolled ? -1 : 1;
+                      const className = selectedClassForEnrollment?.name?.toLowerCase() || '';
+                      const aProgram = (a.program || '').toLowerCase();
+                      const bProgram = (b.program || '').toLowerCase();
+                      const aSuggested = (
+                        (aProgram.includes('little') && className.includes('little ninja')) ||
+                        (aProgram.includes('kids') && (className.includes('kids') || className.includes('family'))) ||
+                        (aProgram.includes('teen') && className.includes('teen')) ||
+                        (aProgram.includes('adult') && (className.includes('adult') || className.includes('cardio') || className.includes('sparring'))) ||
+                        (aProgram.includes('dragon') && (className.includes('little ninja') || className.includes('kids'))) ||
+                        (aProgram.includes('karate') && (className.includes('kids') || className.includes('beginner') || className.includes('intermediate')))
+                      );
+                      const bSuggested = (
+                        (bProgram.includes('little') && className.includes('little ninja')) ||
+                        (bProgram.includes('kids') && (className.includes('kids') || className.includes('family'))) ||
+                        (bProgram.includes('teen') && className.includes('teen')) ||
+                        (bProgram.includes('adult') && (className.includes('adult') || className.includes('cardio') || className.includes('sparring'))) ||
+                        (bProgram.includes('dragon') && (className.includes('little ninja') || className.includes('kids'))) ||
+                        (bProgram.includes('karate') && (className.includes('kids') || className.includes('beginner') || className.includes('intermediate')))
+                      );
+                      if (aSuggested !== bSuggested) return aSuggested ? -1 : 1;
+                      return 0;
+                    })
+                    .map(student => {
+                      const isEnrolled = enrolledStudentIds.includes(student.id);
+                      const className = selectedClassForEnrollment?.name?.toLowerCase() || '';
+                      const studentProgram = (student.program || '').toLowerCase();
+                      const isSuggested = (
+                        (studentProgram.includes('little') && className.includes('little ninja')) ||
+                        (studentProgram.includes('kids') && (className.includes('kids') || className.includes('family'))) ||
+                        (studentProgram.includes('teen') && className.includes('teen')) ||
+                        (studentProgram.includes('adult') && (className.includes('adult') || className.includes('cardio') || className.includes('sparring'))) ||
+                        (studentProgram.includes('dragon') && (className.includes('little ninja') || className.includes('kids'))) ||
+                        (studentProgram.includes('competition') && (className.includes('sparring') || className.includes('leadership'))) ||
+                        (studentProgram.includes('jiu-jitsu') && (className.includes('adult') || className.includes('sparring'))) ||
+                        (studentProgram.includes('muay thai') && (className.includes('adult') || className.includes('cardio') || className.includes('kickboxing'))) ||
+                        (studentProgram.includes('karate') && (className.includes('adult') || className.includes('kids') || className.includes('beginner') || className.includes('intermediate')))
+                      );
+                      return (
+                        <div
+                          key={student.id}
+                          className={`flex items-center justify-between p-3 hover:bg-muted/50 ${isSuggested && !isEnrolled ? 'bg-green-500/10 border-l-2 border-l-green-500' : ''}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            {student.photoUrl ? (
+                              <img src={student.photoUrl} alt={student.firstName} className="w-10 h-10 rounded-full object-cover" />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                <User className="h-5 w-5 text-primary" />
+                              </div>
+                            )}
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium">{student.firstName} {student.lastName}</p>
+                                {isSuggested && !isEnrolled && (
+                                  <span className="text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full font-medium">Suggested</span>
+                                )}
+                              </div>
+                              <p className="text-sm text-muted-foreground">{student.program || 'No program'}</p>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant={isEnrolled ? 'destructive' : 'default'}
+                            disabled={enrollmentLoading}
+                            onClick={async () => {
+                              setEnrollmentLoading(true);
+                              try {
+                                if (isEnrolled) {
+                                  const response = await fetch('/api/trpc/studentPortal.unenrollFromClass', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ json: { studentId: student.id, classId: selectedClassForEnrollment.id } })
+                                  });
+                                  if (response.ok) { setEnrolledStudentIds(prev => prev.filter(id => id !== student.id)); toast.success(`${student.firstName} unenrolled from class`); fetchClasses(); }
+                                } else {
+                                  const response = await fetch('/api/trpc/studentPortal.enrollInClass', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ json: { studentId: student.id, classId: selectedClassForEnrollment.id } })
+                                  });
+                                  if (response.ok) { setEnrolledStudentIds(prev => [...prev, student.id]); toast.success(`${student.firstName} enrolled in class`); fetchClasses(); }
+                                }
+                              } catch (error) {
+                                toast.error('Failed to update enrollment');
+                              } finally {
+                                setEnrollmentLoading(false);
+                              }
+                            }}
+                          >
+                            {isEnrolled ? 'Remove' : 'Enroll'}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  {allStudents.length === 0 && (
+                    <div className="p-8 text-center text-muted-foreground">No students found. Add students first.</div>
+                  )}
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t">
+                  <p className="text-sm text-muted-foreground">
+                    {enrolledStudentIds.length} student{enrolledStudentIds.length !== 1 ? 's' : ''} enrolled
+                  </p>
+                  <Button variant="outline" onClick={() => setIsEnrollmentModalOpen(false)}>Done</Button>
+                </div>
               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+
         </div>
       </div>
     </ManagementLayout>
   );
 }
-
