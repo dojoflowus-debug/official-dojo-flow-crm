@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import FloorPlanManager from '../components/FloorPlanManagerNew';
 import OverallSchedule from '@/components/OverallSchedule';
+import { PrintableSchedule } from '@/components/PrintableSchedule';
 import { trpc } from '@/lib/trpc';
 
 const API_URL = '/api';  // Use relative path to work from any device
@@ -1386,6 +1387,8 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                 </>
               )}
 
+              {/* Print Schedule button */}
+              <PrintableSchedule classes={classes} organizationName="DojoFlow" />
               {/* Add New Class button — triggers Dialog */}
               <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
                 <DialogTrigger asChild>
