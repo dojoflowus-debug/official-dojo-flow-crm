@@ -619,7 +619,7 @@ const ClassForm = ({
         <Button type="button" variant="ghost" onClick={onCancel} className="h-9 px-4">
           Cancel
         </Button>
-        <Button type="submit" disabled={formData.days.length === 0 || !formData.program} className="h-9 px-5">
+        <Button type="submit" disabled={formData.days.length === 0} className="h-9 px-5">
           {submitText}
         </Button>
       </div>
@@ -978,9 +978,17 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   const handleEditClass = (classItem) => {
     setEditingClass(classItem);
     
-    // Parse schedule string into days array
-    const scheduleStr = classItem.day_of_week || classItem.schedule || '';
-    const daysArray = scheduleStr.split(',').map(d => d.trim()).filter(d => d);
+    // Parse schedule string into days array (dayOfWeek is the DB field name)
+    const scheduleStr = classItem.dayOfWeek || classItem.day_of_week || classItem.schedule || '';
+    // Normalize full day names to abbreviations for the form
+    const dayFullToAbbrev: Record<string, string> = {
+      'monday': 'Mon', 'tuesday': 'Tue', 'wednesday': 'Wed', 'thursday': 'Thu',
+      'friday': 'Fri', 'saturday': 'Sat', 'sunday': 'Sun'
+    };
+    const daysArray = scheduleStr.split(/[,\/]/).map(d => {
+      const trimmed = d.trim();
+      return dayFullToAbbrev[trimmed.toLowerCase()] || trimmed;
+    }).filter(d => d);
     
     // Parse time string into start and end times
     const timeStr = classItem.time || '';
@@ -1000,6 +1008,10 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
       if (matchedProgram) {
         programName = matchedProgram.name;
       }
+    }
+    // If still no program found, use the class name itself as the program (class name IS the program)
+    if (!programName && classItem.name) {
+      programName = classItem.name;
     }
     
     // Try to extract level from the name (e.g., "Kids Beginner" -> level: "Beginner")
@@ -1038,9 +1050,9 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
       endTime: endTime,
       room: classItem.room || 'Main Dojo',
       capacity: classItem.capacity?.toString() || '20',
-      ageMin: classItem.age_min?.toString() || '',
-      ageMax: classItem.age_max?.toString() || '',
-      monthlyCost: classItem.monthly_cost?.toString() || '',
+      ageMin: (classItem.ageMin || classItem.age_min)?.toString() || '',
+      ageMax: (classItem.ageMax || classItem.age_max)?.toString() || '',
+      monthlyCost: (classItem.monthlyCost || classItem.monthly_cost)?.toString() || '',
       description: classItem.description || ''
     });
     setIsEditModalOpen(true);
