@@ -928,10 +928,13 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
     const displayName = formData.name || `${formData.program}${formData.level ? ' ' + formData.level : ''} – ${schedule}`;
     
     try {
+      const orgId = localStorage.getItem('dojo_active_org_id') || '';
       const response = await fetch(`${API_URL}/classes`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          ...(orgId ? { 'x-organization-id': orgId } : {}),
         },
         body: JSON.stringify({
           name: displayName,

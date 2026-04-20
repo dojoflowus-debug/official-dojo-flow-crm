@@ -958,6 +958,14 @@ async function startServer() {
           // Invalid session data, ignore
         }
       }
+      // Fallback: check x-organization-id header (same as tRPC context)
+      if (!organizationId) {
+        const headerOrgId = req.headers['x-organization-id'];
+        if (headerOrgId) {
+          const parsed = parseInt(String(headerOrgId), 10);
+          if (!isNaN(parsed)) organizationId = parsed;
+        }
+      }
       
       console.log(`[Classes API] Creating class:`, { name, type, level, instructor, schedule, time, organizationId });
       
