@@ -200,8 +200,8 @@ export default function ScheduleAppointmentPage() {
     { id: Number(leadId) },
     { enabled: !!leadId }
   );
-  const { data: classesRaw = [], isLoading: classesLoading } = trpc.getClasses.useQuery();
-  const { data: staffList = [] } = trpc.getStaff.useQuery();
+  const { data: classesRaw = [], isLoading: classesLoading } = trpc.classes.getAll.useQuery();
+  const { data: staffList = [] } = trpc.classes.getInstructors.useQuery();
   const scheduleMutation = trpc.scheduleAppointment.useMutation();
 
   // Deduplicate classes by name
@@ -692,7 +692,7 @@ export default function ScheduleAppointmentPage() {
                       </div>
                     ) : (
                       (staffList as any[]).map((s: any) => {
-                        const name = `${s.first_name || ''} ${s.last_name || ''}`.trim() || s.email || 'Staff';
+                        const name = s.name || `${s.first_name || ''} ${s.last_name || ''}`.trim() || s.email || 'Staff';
                         const isSel = bookedByStaffId === s.id;
                         return (
                           <button
