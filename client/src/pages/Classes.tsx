@@ -916,8 +916,8 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   const handleAddClass = async (e) => {
     e.preventDefault();
     
-    // Validate time
-    if (formData.startTime >= formData.endTime) {
+    // Validate time (only if both times are provided)
+    if (formData.startTime && formData.endTime && formData.startTime >= formData.endTime) {
       setTimeError('End time must be after start time');
       return;
     }
@@ -1080,8 +1080,8 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   const handleUpdateClass = async (e) => {
     e.preventDefault();
     
-    // Validate time
-    if (formData.startTime >= formData.endTime) {
+    // Validate time (only if both times are provided)
+    if (formData.startTime && formData.endTime && formData.startTime >= formData.endTime) {
       setTimeError('End time must be after start time');
       return;
     }
@@ -1094,10 +1094,13 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
     const displayName = formData.name || `${formData.program}${formData.level ? ' ' + formData.level : ''} – ${schedule}`;
     
     try {
+      const orgId = localStorage.getItem('dojo_active_org_id') || '';
       const response = await fetch(`${API_URL}/classes/${editingClass.id}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'x-organization-id': orgId,
         },
         body: JSON.stringify({
           name: displayName,
@@ -2377,7 +2380,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                                   title="Edit this time slot"
                                   onClick={() => {
                                     setIsProgramPanelOpen(false);
-                                    handleEditClass(cls);
+                                    setTimeout(() => handleEditClass(cls), 200);
                                   }}
                                 >
                                   <Edit className="h-3.5 w-3.5" />
