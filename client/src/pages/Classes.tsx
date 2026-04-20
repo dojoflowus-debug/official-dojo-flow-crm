@@ -1388,7 +1388,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
               )}
 
               {/* Print Schedule button */}
-              <PrintableSchedule classes={classes} organizationName="DojoFlow" />
+              <PrintableSchedule classes={classes} />
               {/* Add New Class button — triggers Dialog */}
               <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
                 <DialogTrigger asChild>

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { trpc } from '@/lib/trpc';
 
 interface ClassItem {
   id: number;
@@ -19,7 +19,6 @@ interface ClassItem {
 
 interface PrintableScheduleProps {
   classes: ClassItem[];
-  organizationName?: string;
 }
 
 const DAY_ORDER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -97,41 +96,50 @@ function getDuration(c: ClassItem): string {
   return '';
 }
 
-// Sort classes by start time (earliest first)
-function sortByTime(classes: ClassItem[]): ClassItem[] {
-  return [...classes].sort((a, b) => {
-    const ta = getStartTime(a);
-    const tb = getStartTime(b);
-    const toMin = (t: string) => {
-      const m = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
-      if (!m) return 0;
-      let h = parseInt(m[1]);
-      const min = parseInt(m[2]);
-      const ap = m[3].toUpperCase();
-      if (ap === 'PM' && h !== 12) h += 12;
-      if (ap === 'AM' && h === 12) h = 0;
-      return h * 60 + min;
-    };
-    return toMin(ta) - toMin(tb);
-  });
+// Convert image URL to base64 for embedding in print window
+async function imageUrlToBase64(url: string): Promise<string> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return '';
+  }
 }
 
-export function PrintableSchedule({ classes, organizationName }: PrintableScheduleProps) {
-  const printRef = useRef<HTMLDivElement>(null);
+export function PrintableSchedule({ classes }: PrintableScheduleProps) {
+  // Fetch school profile for name and logo
+  const { data: profile } = trpc.schoolProfile.get.useQuery();
 
-  const handlePrint = () => {
-    const printContent = printRef.current;
-    if (!printContent) return;
+  const schoolName = profile?.schoolName || profile?.displayName || 'Class Schedule';
+  // Prefer light logo for printing on white paper
+  const logoUrl = profile?.logoLightUrl || profile?.logoDarkUrl || null;
 
-    const printWindow = window.open('', '_blank', 'width=900,height=700');
+  const handlePrint = async () => {
+    const printWindow = window.open('', '_blank', 'width=960,height=720');
     if (!printWindow) return;
 
     const today = new Date().toLocaleDateString('en-US', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     });
 
+    // Convert logo to base64 so it works in the isolated print window
+    let logoBase64 = '';
+    if (logoUrl) {
+      logoBase64 = await imageUrlToBase64(logoUrl);
+    }
+
     // Build schedule data grouped by day
-    const scheduleByDay: Record<string, { program: string; time: string; endTime: string; instructor: string; duration: string; capacity: string; room: string; ages: string }[]> = {};
+    const scheduleByDay: Record<string, {
+      program: string; time: string; endTime: string;
+      instructor: string; duration: string; capacity: string;
+      room: string; ages: string;
+    }[]> = {};
     DAY_ORDER.forEach(day => { scheduleByDay[day] = []; });
 
     classes.forEach(c => {
@@ -151,7 +159,7 @@ export function PrintableSchedule({ classes, organizationName }: PrintableSchedu
       });
     });
 
-    // Sort each day's classes by time
+    // Sort each day's classes by start time
     DAY_ORDER.forEach(day => {
       scheduleByDay[day].sort((a, b) => {
         const toMin = (t: string) => {
@@ -170,11 +178,16 @@ export function PrintableSchedule({ classes, organizationName }: PrintableSchedu
 
     const activeDays = DAY_ORDER.filter(day => scheduleByDay[day].length > 0);
 
+    // Logo HTML — show image if available, otherwise show styled school name initial
+    const logoHtml = logoBase64
+      ? `<img src="${logoBase64}" alt="${schoolName} logo" style="height:52px;max-width:180px;object-fit:contain;display:block;" />`
+      : `<div style="width:52px;height:52px;border-radius:8px;background:#ef4444;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;letter-spacing:-1px;">${schoolName.charAt(0).toUpperCase()}</div>`;
+
     const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>${organizationName || 'DojoFlow'} — Class Schedule</title>
+  <title>${schoolName} — Class Schedule</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -182,127 +195,171 @@ export function PrintableSchedule({ classes, organizationName }: PrintableSchedu
       font-size: 11px;
       color: #111;
       background: #fff;
-      padding: 24px 28px;
+      padding: 28px 32px;
     }
-    /* ── Header ── */
+
+    /* ── Branded Header ── */
     .print-header {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
-      border-bottom: 2px solid #111;
-      padding-bottom: 12px;
-      margin-bottom: 20px;
+      padding-bottom: 16px;
+      margin-bottom: 6px;
+      border-bottom: 3px solid #ef4444;
     }
-    .print-header h1 {
-      font-size: 22px;
-      font-weight: 700;
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .header-text h1 {
+      font-size: 20px;
+      font-weight: 800;
       letter-spacing: -0.5px;
       color: #111;
+      line-height: 1.1;
     }
-    .print-header .subtitle {
-      font-size: 12px;
-      color: #555;
-      margin-top: 3px;
+    .header-text .tagline {
+      font-size: 11px;
+      color: #ef4444;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-top: 2px;
     }
-    .print-header .meta {
+    .header-right {
       text-align: right;
       font-size: 10px;
       color: #666;
-      line-height: 1.6;
+      line-height: 1.7;
     }
-    .print-header .meta strong {
-      display: block;
+    .header-right .date-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #999;
+    }
+    .header-right .date-value {
       font-size: 11px;
+      font-weight: 600;
       color: #333;
     }
+    .header-right .total-badge {
+      display: inline-block;
+      background: #ef4444;
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+      margin-top: 4px;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── Summary strip ── */
+    .summary-strip {
+      display: flex;
+      gap: 0;
+      margin: 14px 0 18px;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .summary-item {
+      flex: 1;
+      text-align: center;
+      padding: 8px 4px;
+      border-right: 1px solid #e8e8e8;
+    }
+    .summary-item:last-child { border-right: none; }
+    .summary-item .num {
+      font-size: 17px;
+      font-weight: 800;
+      color: #111;
+      line-height: 1;
+    }
+    .summary-item .label {
+      font-size: 8.5px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-top: 2px;
+    }
+    .summary-item.total-item { background: #fef2f2; }
+    .summary-item.total-item .num { color: #ef4444; }
+
     /* ── Day Section ── */
     .day-section {
-      margin-bottom: 18px;
+      margin-bottom: 16px;
       page-break-inside: avoid;
     }
     .day-heading {
       background: #111;
       color: #fff;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       letter-spacing: 0.8px;
       text-transform: uppercase;
       padding: 5px 10px;
-      border-radius: 3px 3px 0 0;
+      border-radius: 4px 4px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
+    .day-heading .count-badge {
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      padding: 1px 8px;
+      font-size: 9px;
+      font-weight: 600;
+    }
+
     /* ── Table ── */
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 10.5px;
+      font-size: 10px;
     }
     thead th {
-      background: #f4f4f4;
-      border: 1px solid #ddd;
+      background: #f6f6f6;
+      border: 1px solid #e0e0e0;
       padding: 5px 8px;
       text-align: left;
-      font-weight: 600;
-      color: #444;
-      font-size: 9.5px;
+      font-weight: 700;
+      color: #555;
+      font-size: 8.5px;
       text-transform: uppercase;
-      letter-spacing: 0.4px;
+      letter-spacing: 0.5px;
     }
-    tbody tr {
-      border-bottom: 1px solid #eee;
-    }
-    tbody tr:nth-child(even) {
-      background: #fafafa;
-    }
+    tbody tr { border-bottom: 1px solid #eee; }
+    tbody tr:nth-child(even) { background: #fafafa; }
     tbody td {
       padding: 6px 8px;
-      border: 1px solid #e8e8e8;
+      border: 1px solid #ebebeb;
       vertical-align: middle;
       color: #222;
     }
-    .program-name {
-      font-weight: 600;
-      color: #111;
-    }
-    .time-range {
-      font-weight: 600;
-      color: #c0392b;
-      white-space: nowrap;
-    }
-    .instructor-name {
-      color: #333;
-    }
-    .meta-pill {
-      display: inline-block;
-      background: #f0f0f0;
-      border-radius: 3px;
-      padding: 1px 5px;
-      font-size: 9px;
-      color: #555;
-      margin-right: 3px;
-    }
+    .program-name { font-weight: 700; color: #111; }
+    .time-range { font-weight: 700; color: #c0392b; white-space: nowrap; }
+    .instructor-name { color: #444; }
+
     /* ── Footer ── */
     .print-footer {
-      margin-top: 24px;
+      margin-top: 20px;
       padding-top: 10px;
-      border-top: 1px solid #ddd;
+      border-top: 1px solid #e0e0e0;
       display: flex;
       justify-content: space-between;
-      font-size: 9px;
-      color: #888;
+      align-items: center;
+      font-size: 8.5px;
+      color: #aaa;
     }
-    /* ── Summary strip ── */
-    .summary-strip {
-      display: flex;
-      gap: 24px;
-      margin-bottom: 18px;
-      padding: 10px 14px;
-      background: #f8f8f8;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
+    .print-footer .powered {
+      font-size: 8px;
+      color: #ccc;
+      letter-spacing: 0.3px;
     }
-    .summary-item { text-align: center; }
-    .summary-item .num { font-size: 18px; font-weight: 700; color: #111; }
-    .summary-item .label { font-size: 9px; color: #666; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 1px; }
+
     @media print {
       body { padding: 16px 20px; }
       .day-section { page-break-inside: avoid; }
@@ -310,18 +367,24 @@ export function PrintableSchedule({ classes, organizationName }: PrintableSchedu
   </style>
 </head>
 <body>
+
+  <!-- ── Branded Header ── -->
   <div class="print-header">
-    <div>
-      <h1>${organizationName || 'Class Schedule'}</h1>
-      <div class="subtitle">Weekly Class Schedule — All Programs</div>
+    <div class="header-left">
+      ${logoHtml}
+      <div class="header-text">
+        <h1>${schoolName}</h1>
+        <div class="tagline">Weekly Class Schedule</div>
+      </div>
     </div>
-    <div class="meta">
-      <strong>Printed on</strong>
-      ${today}
-      <br>Total Classes: ${classes.length}
+    <div class="header-right">
+      <div class="date-label">Printed on</div>
+      <div class="date-value">${today}</div>
+      <div class="total-badge">${classes.length} Total Classes</div>
     </div>
   </div>
 
+  <!-- ── Day Summary Strip ── -->
   <div class="summary-strip">
     ${activeDays.map(day => `
       <div class="summary-item">
@@ -329,15 +392,19 @@ export function PrintableSchedule({ classes, organizationName }: PrintableSchedu
         <div class="label">${DAY_FULL[day]}</div>
       </div>
     `).join('')}
-    <div class="summary-item" style="margin-left:auto">
+    <div class="summary-item total-item">
       <div class="num">${classes.length}</div>
-      <div class="label">Total Slots</div>
+      <div class="label">Total</div>
     </div>
   </div>
 
+  <!-- ── Schedule by Day ── -->
   ${activeDays.map(day => `
     <div class="day-section">
-      <div class="day-heading">${DAY_FULL[day]} &mdash; ${scheduleByDay[day].length} class${scheduleByDay[day].length !== 1 ? 'es' : ''}</div>
+      <div class="day-heading">
+        <span>${DAY_FULL[day]}</span>
+        <span class="count-badge">${scheduleByDay[day].length} class${scheduleByDay[day].length !== 1 ? 'es' : ''}</span>
+      </div>
       <table>
         <thead>
           <tr>
@@ -347,18 +414,18 @@ export function PrintableSchedule({ classes, organizationName }: PrintableSchedu
             <th style="width:10%">Duration</th>
             <th style="width:10%">Capacity</th>
             <th style="width:10%">Ages</th>
-            <th style="width:14%">Room</th>
+            <th style="width:14%">Room / Mat</th>
           </tr>
         </thead>
         <tbody>
           ${scheduleByDay[day].map(row => `
             <tr>
               <td class="program-name">${row.program}</td>
-              <td class="time-range">${row.time}${row.endTime ? ' – ' + row.endTime : ''}</td>
+              <td class="time-range">${row.time}${row.endTime ? ' &ndash; ' + row.endTime : ''}</td>
               <td class="instructor-name">${row.instructor}</td>
-              <td>${row.duration || '—'}</td>
+              <td>${row.duration || '&mdash;'}</td>
               <td>${row.capacity}</td>
-              <td>${row.ages || '—'}</td>
+              <td>${row.ages || '&mdash;'}</td>
               <td>${row.room}</td>
             </tr>
           `).join('')}
@@ -367,25 +434,29 @@ export function PrintableSchedule({ classes, organizationName }: PrintableSchedu
     </div>
   `).join('')}
 
+  <!-- ── Footer ── -->
   <div class="print-footer">
-    <span>Generated by DojoFlow &mdash; ${organizationName || ''}</span>
+    <span>${schoolName} &mdash; All rights reserved</span>
+    <span class="powered">Powered by DojoFlow</span>
     <span>${today}</span>
   </div>
+
 </body>
 </html>`;
 
     printWindow.document.write(html);
     printWindow.document.close();
     printWindow.focus();
+    // Wait for logo image to load before printing
     setTimeout(() => {
       printWindow.print();
-    }, 500);
+    }, logoBase64 ? 800 : 400);
   };
 
   return (
     <button
       onClick={handlePrint}
-      className="h-9 px-3 text-sm font-medium rounded-lg border flex items-center gap-1.5 transition-colors"
+      className="h-9 px-3 text-sm font-medium rounded-lg border flex items-center gap-1.5 transition-colors hover:bg-gray-50"
       style={{
         borderColor: '#e0e0e0',
         background: '#fff',
