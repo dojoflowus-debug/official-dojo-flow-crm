@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import ManagementLayout from '@/components/ManagementLayout';
 import { useTheme } from '@/contexts/ThemeContext';
 import Breadcrumb from '@/components/Breadcrumb';
@@ -23,7 +23,7 @@ import {
 import LeadSourceSettings from '@/components/LeadSourceSettings'
 import { KaiLeadCaptureSection } from '@/components/KaiLeadCaptureSection'
 import MyDojoSyncModal from '@/components/MyDojoSyncModal'
-import ScheduleAppointmentModal from '@/components/ScheduleAppointmentModal'
+// ScheduleAppointmentModal replaced by full-page ScheduleAppointmentPage
 
 // Stage mapping from old to new
 const stageMapping: Record<string, string> = {
@@ -69,6 +69,7 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
   const [showMyDojoSync, setShowMyDojoSync] = useState(false)
   const [selectedLead, setSelectedLead] = useState<any>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const navigate = useNavigate()
   const [scheduleModalLead, setScheduleModalLead] = useState<any>(null)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [isResolveMode, setIsResolveMode] = useState(false)
@@ -418,8 +419,7 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
                 if (lead.phone) window.location.href = `sms:${lead.phone}`
               }}
               onSchedule={(lead) => {
-                setScheduleModalLead(lead)
-                setShowScheduleModal(true)
+                navigate(`/leads/${lead.id}/schedule`)
               }}
               onStatusChange={(leadId, newStatus) => {
                 updateStatus.mutate({ id: leadId, status: newStatus })
@@ -450,18 +450,12 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
           stages={oldStages}
           currentStage={selectedLead?.status || 'new_lead'}
           onOpenScheduler={() => {
-            setScheduleModalLead(selectedLead);
-            setShowScheduleModal(true);
+            if (selectedLead) navigate(`/leads/${selectedLead.id}/schedule`);
           }}
         />
 
         {/* Schedule Appointment Modal */}
-        <ScheduleAppointmentModal
-          lead={scheduleModalLead}
-          isOpen={showScheduleModal}
-          onClose={() => { setShowScheduleModal(false); setScheduleModalLead(null); }}
-          onScheduled={() => { setShowScheduleModal(false); setScheduleModalLead(null); refetch(); }}
-        />
+        {/* Scheduler is now a full-page route: /leads/:leadId/schedule */}
 
         {/* Lead Source Settings Modal */}
         <LeadSourceSettings 

@@ -54,6 +54,7 @@ const StudentsElevated = lazy(() => import("../pages/StudentsElevated"));
 const StudentCommandProfile = lazy(() => import("../pages/StudentCommandProfile"));
 const StudentPortal = lazy(() => import("../pages/StudentPortal"));
 const Leads = lazy(() => import("../pages/Leads"));
+const ScheduleAppointmentPage = lazy(() => import("../pages/ScheduleAppointmentPage"));
 const TestData = lazy(() => import("../pages/TestData"));
 const SimpleDashboard = lazy(() => import("../pages/SimpleDashboard"));
 const DataDashboard = lazy(() => import("../pages/DataDashboard"));
@@ -265,6 +266,7 @@ export const appRoutes: RouteConfig[] = [
   { path: "/students-split", element: <StudentsSplitScreen />, label: "Students Split" },
   { path: "/student-portal", element: <ProtectedRoute><StudentPortal /></ProtectedRoute>, label: "Student Portal" },
   { path: "/leads", element: <AppShell><Leads /></AppShell>, label: "Leads" },
+  { path: "/leads/:leadId/schedule", element: <AppShell><ScheduleAppointmentPage /></AppShell>, label: "Schedule Appointment" },
   { path: "/test-data", element: <TestData />, label: "Test Data" },
   { path: "/classes", element: <AppShell><Classes /></AppShell>, label: "Classes" },
 
