@@ -333,21 +333,21 @@ export default function ScheduleAppointmentPage() {
   return (
     <div
       className="min-h-screen"
-      style={{ background: pageBg, padding: '40px 32px 80px' }}
+      style={{ background: pageBg, padding: '24px 24px 80px' }}
     >
       {/* ── Page Header ─────────────────────────────────────────────────── */}
-      <div className="max-w-5xl mx-auto">
+      <div className="w-full max-w-none">
         {/* Back button */}
         <button
           onClick={() => navigate('/leads')}
-          className="flex items-center gap-1.5 text-sm mb-6 hover:opacity-70 transition-opacity"
+          className="flex items-center gap-1.5 text-xs mb-4 hover:opacity-70 transition-opacity"
           style={{ color: labelColor }}
         >
           <ChevronLeft className="w-4 h-4" />
           Back to Leads
         </button>
 
-        <h1 className="text-3xl font-bold mb-1" style={{ color: titleColor }}>
+        <h1 className="text-xl font-bold mb-1" style={{ color: titleColor }}>
           Schedule an Appointment
         </h1>
         <p className="text-sm mb-8" style={{ color: subtitleColor }}>
@@ -356,7 +356,7 @@ export default function ScheduleAppointmentPage() {
         </p>
 
         {/* ── Step Breadcrumb ──────────────────────────────────────────── */}
-        <div className="flex items-center mb-10">
+        <div className="flex items-center mb-8">
           {steps.map((s, i) => {
             const done = s.num < currentStep;
             const active = s.num === currentStep;
@@ -364,7 +364,7 @@ export default function ScheduleAppointmentPage() {
               <div key={s.num} className="flex items-center flex-1">
                 <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
                   <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all"
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all"
                     style={{
                       background: done || active ? stepActiveBg : stepInactiveBg,
                       color: done || active ? stepActiveText : stepInactiveText,
@@ -373,7 +373,7 @@ export default function ScheduleAppointmentPage() {
                     {done ? <Check className="w-4 h-4" /> : s.num}
                   </div>
                   <span
-                    className="text-xs font-medium whitespace-nowrap"
+                    className="text-xs font-medium whitespace-nowrap mt-0.5"
                     style={{
                       color: active ? '#E53935' : done ? labelColor : stepInactiveText,
                     }}
@@ -398,20 +398,21 @@ export default function ScheduleAppointmentPage() {
           style={{
             background: cardBg,
             border: `1px solid ${cardBorder}`,
-            boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.06)',
+            boxShadow: isDark ? 'none' : '0 1px 4px rgba(0,0,0,0.07)',
           }}
         >
-          <div className="grid grid-cols-3" style={{ minHeight: 560 }}>
+          <div className="grid grid-cols-3" style={{ minHeight: 580 }}>
 
             {/* ── LEFT: Select Appointment Type ─────────────────────── */}
-            <div
-              className="p-8"
-              style={{ borderRight: `1px solid ${dividerColor}` }}
-            >
-              <h2 className="text-lg font-semibold mb-1" style={{ color: titleColor }}>
-                1. Select Appointment Type
+          <div
+            className="p-5"
+            style={{ borderRight: `1px solid ${dividerColor}` }}
+          >
+              <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: labelColor }}>Step 1</p>
+              <h2 className="text-sm font-semibold mb-1" style={{ color: titleColor }}>
+                Select Appointment Type
               </h2>
-              <p className="text-sm mb-6" style={{ color: subtitleColor }}>
+              <p className="text-xs mb-5" style={{ color: subtitleColor }}>
                 Choose the type of appointment you'd like to schedule.
               </p>
 
@@ -517,14 +518,15 @@ export default function ScheduleAppointmentPage() {
             </div>
 
             {/* ── CENTER: Calendar + Time Slots ─────────────────────── */}
-            <div
-              className="p-8"
-              style={{ borderRight: `1px solid ${dividerColor}` }}
-            >
-              <h2 className="text-lg font-semibold mb-1" style={{ color: titleColor }}>
-                2. Choose Date &amp; Time
+          <div
+            className="p-5"
+            style={{ borderRight: `1px solid ${dividerColor}` }}
+          >
+              <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: labelColor }}>Step 2</p>
+              <h2 className="text-sm font-semibold mb-1" style={{ color: titleColor }}>
+                Choose Date &amp; Time
               </h2>
-              <p className="text-sm mb-6" style={{ color: subtitleColor }}>
+              <p className="text-xs mb-5" style={{ color: subtitleColor }}>
                 Select a date and time that works for you.
               </p>
 
@@ -584,11 +586,12 @@ export default function ScheduleAppointmentPage() {
             </div>
 
             {/* ── RIGHT: Appointment Details ────────────────────────── */}
-            <div className="p-8 flex flex-col">
-              <h2 className="text-lg font-semibold mb-1" style={{ color: titleColor }}>
-                3. Appointment Details
+            <div className="p-5 flex flex-col">
+              <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: labelColor }}>Step 3</p>
+              <h2 className="text-sm font-semibold mb-1" style={{ color: titleColor }}>
+                Appointment Details
               </h2>
-              <p className="text-sm mb-6" style={{ color: subtitleColor }}>
+              <p className="text-xs mb-5" style={{ color: subtitleColor }}>
                 Review your selection.
               </p>
 
