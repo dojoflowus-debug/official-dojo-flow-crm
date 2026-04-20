@@ -347,7 +347,7 @@ export default function ScheduleAppointmentPage() {
           Back to Leads
         </button>
 
-        <h1 className="text-xl font-bold mb-1" style={{ color: titleColor }}>
+        <h1 className="font-bold mb-1" style={{ color: titleColor, fontSize: '22px', lineHeight: '1.2' }}>
           Schedule an Appointment
         </h1>
         <p className="text-sm mb-8" style={{ color: subtitleColor }}>
@@ -408,9 +408,8 @@ export default function ScheduleAppointmentPage() {
             className="p-5"
             style={{ borderRight: `1px solid ${dividerColor}` }}
           >
-              <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: labelColor }}>Step 1</p>
-              <h2 className="text-sm font-semibold mb-1" style={{ color: titleColor }}>
-                Select Appointment Type
+              <h2 className="font-semibold mb-1" style={{ color: titleColor, fontSize: '14px' }}>
+                1. Select Appointment Type
               </h2>
               <p className="text-xs mb-5" style={{ color: subtitleColor }}>
                 Choose the type of appointment you'd like to schedule.
@@ -522,9 +521,8 @@ export default function ScheduleAppointmentPage() {
             className="p-5"
             style={{ borderRight: `1px solid ${dividerColor}` }}
           >
-              <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: labelColor }}>Step 2</p>
-              <h2 className="text-sm font-semibold mb-1" style={{ color: titleColor }}>
-                Choose Date &amp; Time
+              <h2 className="font-semibold mb-1" style={{ color: titleColor, fontSize: '14px' }}>
+                2. Choose Date &amp; Time
               </h2>
               <p className="text-xs mb-5" style={{ color: subtitleColor }}>
                 Select a date and time that works for you.
@@ -587,9 +585,8 @@ export default function ScheduleAppointmentPage() {
 
             {/* ── RIGHT: Appointment Details ────────────────────────── */}
             <div className="p-5 flex flex-col">
-              <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: labelColor }}>Step 3</p>
-              <h2 className="text-sm font-semibold mb-1" style={{ color: titleColor }}>
-                Appointment Details
+              <h2 className="font-semibold mb-1" style={{ color: titleColor, fontSize: '14px' }}>
+                3. Appointment Details
               </h2>
               <p className="text-xs mb-5" style={{ color: subtitleColor }}>
                 Review your selection.
