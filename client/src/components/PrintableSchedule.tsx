@@ -96,94 +96,60 @@ function getDuration(c: ClassItem): string {
   return '';
 }
 
-// Convert image URL to base64 for embedding in print window
-async function imageUrlToBase64(url: string): Promise<string> {
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    return '';
-  }
-}
+function buildScheduleHtml(
+  classes: ClassItem[],
+  schoolName: string,
+  logoBase64: string,
+  today: string
+): string {
+  const scheduleByDay: Record<string, {
+    program: string; time: string; endTime: string;
+    instructor: string; duration: string; capacity: string;
+    room: string; ages: string;
+  }[]> = {};
+  DAY_ORDER.forEach(day => { scheduleByDay[day] = []; });
 
-export function PrintableSchedule({ classes }: PrintableScheduleProps) {
-  // Fetch school profile for name and logo
-  const { data: profile } = trpc.schoolProfile.get.useQuery();
-
-  const schoolName = profile?.schoolName || profile?.displayName || 'Class Schedule';
-  // Prefer light logo for printing on white paper
-  const logoUrl = profile?.logoLightUrl || profile?.logoDarkUrl || null;
-
-  const handlePrint = async () => {
-    const printWindow = window.open('', '_blank', 'width=960,height=720');
-    if (!printWindow) return;
-
-    const today = new Date().toLocaleDateString('en-US', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-    });
-
-    // Convert logo to base64 so it works in the isolated print window
-    let logoBase64 = '';
-    if (logoUrl) {
-      logoBase64 = await imageUrlToBase64(logoUrl);
-    }
-
-    // Build schedule data grouped by day
-    const scheduleByDay: Record<string, {
-      program: string; time: string; endTime: string;
-      instructor: string; duration: string; capacity: string;
-      room: string; ages: string;
-    }[]> = {};
-    DAY_ORDER.forEach(day => { scheduleByDay[day] = []; });
-
-    classes.forEach(c => {
-      const days = getClassDays(c);
-      days.forEach(day => {
-        if (!scheduleByDay[day]) scheduleByDay[day] = [];
-        scheduleByDay[day].push({
-          program: getProgram(c),
-          time: getStartTime(c),
-          endTime: getEndTime(c),
-          instructor: c.instructor || '—',
-          duration: getDuration(c),
-          capacity: c.capacity ? `${c.capacity}` : '—',
-          room: c.room || '—',
-          ages: getAgeRange(c),
-        });
+  classes.forEach(c => {
+    const days = getClassDays(c);
+    days.forEach(day => {
+      if (!scheduleByDay[day]) scheduleByDay[day] = [];
+      scheduleByDay[day].push({
+        program: getProgram(c),
+        time: getStartTime(c),
+        endTime: getEndTime(c),
+        instructor: c.instructor || '—',
+        duration: getDuration(c),
+        capacity: c.capacity ? `${c.capacity}` : '—',
+        room: c.room || '—',
+        ages: getAgeRange(c),
       });
     });
+  });
 
-    // Sort each day's classes by start time
-    DAY_ORDER.forEach(day => {
-      scheduleByDay[day].sort((a, b) => {
-        const toMin = (t: string) => {
-          const m = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
-          if (!m) return 0;
-          let h = parseInt(m[1]);
-          const min = parseInt(m[2]);
-          const ap = m[3].toUpperCase();
-          if (ap === 'PM' && h !== 12) h += 12;
-          if (ap === 'AM' && h === 12) h = 0;
-          return h * 60 + min;
-        };
-        return toMin(a.time) - toMin(b.time);
-      });
+  // Sort each day's classes by start time
+  DAY_ORDER.forEach(day => {
+    scheduleByDay[day].sort((a, b) => {
+      const toMin = (t: string) => {
+        const m = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
+        if (!m) return 0;
+        let h = parseInt(m[1]);
+        const min = parseInt(m[2]);
+        const ap = m[3].toUpperCase();
+        if (ap === 'PM' && h !== 12) h += 12;
+        if (ap === 'AM' && h === 12) h = 0;
+        return h * 60 + min;
+      };
+      return toMin(a.time) - toMin(b.time);
     });
+  });
 
-    const activeDays = DAY_ORDER.filter(day => scheduleByDay[day].length > 0);
+  const activeDays = DAY_ORDER.filter(day => scheduleByDay[day].length > 0);
 
-    // Logo HTML — show image if available, otherwise show styled school name initial
-    const logoHtml = logoBase64
-      ? `<img src="${logoBase64}" alt="${schoolName} logo" style="height:52px;max-width:180px;object-fit:contain;display:block;" />`
-      : `<div style="width:52px;height:52px;border-radius:8px;background:#ef4444;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;letter-spacing:-1px;">${schoolName.charAt(0).toUpperCase()}</div>`;
+  const logoHtml = logoBase64
+    ? `<img src="${logoBase64}" alt="${schoolName} logo" style="height:52px;max-width:180px;object-fit:contain;display:block;" />`
+    : `<div style="width:52px;height:52px;border-radius:8px;background:#ef4444;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;">${schoolName.charAt(0).toUpperCase()}</div>`;
 
-    const html = `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -197,8 +163,6 @@ export function PrintableSchedule({ classes }: PrintableScheduleProps) {
       background: #fff;
       padding: 28px 32px;
     }
-
-    /* ── Branded Header ── */
     .print-header {
       display: flex;
       align-items: center;
@@ -207,168 +171,35 @@ export function PrintableSchedule({ classes }: PrintableScheduleProps) {
       margin-bottom: 6px;
       border-bottom: 3px solid #ef4444;
     }
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-    .header-text h1 {
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      color: #111;
-      line-height: 1.1;
-    }
-    .header-text .tagline {
-      font-size: 11px;
-      color: #ef4444;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-    .header-right {
-      text-align: right;
-      font-size: 10px;
-      color: #666;
-      line-height: 1.7;
-    }
-    .header-right .date-label {
-      font-size: 9px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #999;
-    }
-    .header-right .date-value {
-      font-size: 11px;
-      font-weight: 600;
-      color: #333;
-    }
-    .header-right .total-badge {
-      display: inline-block;
-      background: #ef4444;
-      color: #fff;
-      font-size: 9px;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 10px;
-      margin-top: 4px;
-      letter-spacing: 0.3px;
-    }
-
-    /* ── Summary strip ── */
-    .summary-strip {
-      display: flex;
-      gap: 0;
-      margin: 14px 0 18px;
-      border: 1px solid #e8e8e8;
-      border-radius: 6px;
-      overflow: hidden;
-    }
-    .summary-item {
-      flex: 1;
-      text-align: center;
-      padding: 8px 4px;
-      border-right: 1px solid #e8e8e8;
-    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .header-text h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: #111; line-height: 1.1; }
+    .header-text .tagline { font-size: 11px; color: #ef4444; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 2px; }
+    .header-right { text-align: right; font-size: 10px; color: #666; line-height: 1.7; }
+    .header-right .date-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #999; }
+    .header-right .date-value { font-size: 11px; font-weight: 600; color: #333; }
+    .header-right .total-badge { display: inline-block; background: #ef4444; color: #fff; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px; margin-top: 4px; }
+    .summary-strip { display: flex; gap: 0; margin: 14px 0 18px; border: 1px solid #e8e8e8; border-radius: 6px; overflow: hidden; }
+    .summary-item { flex: 1; text-align: center; padding: 8px 4px; border-right: 1px solid #e8e8e8; }
     .summary-item:last-child { border-right: none; }
-    .summary-item .num {
-      font-size: 17px;
-      font-weight: 800;
-      color: #111;
-      line-height: 1;
-    }
-    .summary-item .label {
-      font-size: 8.5px;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-      margin-top: 2px;
-    }
+    .summary-item .num { font-size: 17px; font-weight: 800; color: #111; line-height: 1; }
+    .summary-item .label { font-size: 8.5px; color: #888; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px; }
     .summary-item.total-item { background: #fef2f2; }
     .summary-item.total-item .num { color: #ef4444; }
-
-    /* ── Day Section ── */
-    .day-section {
-      margin-bottom: 16px;
-      page-break-inside: avoid;
-    }
-    .day-heading {
-      background: #111;
-      color: #fff;
-      font-size: 10.5px;
-      font-weight: 700;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      padding: 5px 10px;
-      border-radius: 4px 4px 0 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .day-heading .count-badge {
-      background: rgba(255,255,255,0.2);
-      border-radius: 10px;
-      padding: 1px 8px;
-      font-size: 9px;
-      font-weight: 600;
-    }
-
-    /* ── Table ── */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 10px;
-    }
-    thead th {
-      background: #f6f6f6;
-      border: 1px solid #e0e0e0;
-      padding: 5px 8px;
-      text-align: left;
-      font-weight: 700;
-      color: #555;
-      font-size: 8.5px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+    .day-section { margin-bottom: 16px; page-break-inside: avoid; }
+    .day-heading { background: #111; color: #fff; font-size: 10.5px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; padding: 5px 10px; border-radius: 4px 4px 0 0; display: flex; align-items: center; justify-content: space-between; }
+    .day-heading .count-badge { background: rgba(255,255,255,0.2); border-radius: 10px; padding: 1px 8px; font-size: 9px; font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; font-size: 10px; }
+    thead th { background: #f6f6f6; border: 1px solid #e0e0e0; padding: 5px 8px; text-align: left; font-weight: 700; color: #555; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.5px; }
     tbody tr { border-bottom: 1px solid #eee; }
     tbody tr:nth-child(even) { background: #fafafa; }
-    tbody td {
-      padding: 6px 8px;
-      border: 1px solid #ebebeb;
-      vertical-align: middle;
-      color: #222;
-    }
+    tbody td { padding: 6px 8px; border: 1px solid #ebebeb; vertical-align: middle; color: #222; }
     .program-name { font-weight: 700; color: #111; }
     .time-range { font-weight: 700; color: #c0392b; white-space: nowrap; }
-    .instructor-name { color: #444; }
-
-    /* ── Footer ── */
-    .print-footer {
-      margin-top: 20px;
-      padding-top: 10px;
-      border-top: 1px solid #e0e0e0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 8.5px;
-      color: #aaa;
-    }
-    .print-footer .powered {
-      font-size: 8px;
-      color: #ccc;
-      letter-spacing: 0.3px;
-    }
-
-    @media print {
-      body { padding: 16px 20px; }
-      .day-section { page-break-inside: avoid; }
-    }
+    .print-footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; font-size: 8.5px; color: #aaa; }
+    @media print { body { padding: 16px 20px; } .day-section { page-break-inside: avoid; } }
   </style>
 </head>
 <body>
-
-  <!-- ── Branded Header ── -->
   <div class="print-header">
     <div class="header-left">
       ${logoHtml}
@@ -384,7 +215,6 @@ export function PrintableSchedule({ classes }: PrintableScheduleProps) {
     </div>
   </div>
 
-  <!-- ── Day Summary Strip ── -->
   <div class="summary-strip">
     ${activeDays.map(day => `
       <div class="summary-item">
@@ -398,7 +228,6 @@ export function PrintableSchedule({ classes }: PrintableScheduleProps) {
     </div>
   </div>
 
-  <!-- ── Schedule by Day ── -->
   ${activeDays.map(day => `
     <div class="day-section">
       <div class="day-heading">
@@ -422,7 +251,7 @@ export function PrintableSchedule({ classes }: PrintableScheduleProps) {
             <tr>
               <td class="program-name">${row.program}</td>
               <td class="time-range">${row.time}${row.endTime ? ' &ndash; ' + row.endTime : ''}</td>
-              <td class="instructor-name">${row.instructor}</td>
+              <td>${row.instructor}</td>
               <td>${row.duration || '&mdash;'}</td>
               <td>${row.capacity}</td>
               <td>${row.ages || '&mdash;'}</td>
@@ -434,23 +263,76 @@ export function PrintableSchedule({ classes }: PrintableScheduleProps) {
     </div>
   `).join('')}
 
-  <!-- ── Footer ── -->
   <div class="print-footer">
     <span>${schoolName} &mdash; All rights reserved</span>
-    <span class="powered">Powered by DojoFlow</span>
+    <span style="font-size:8px;color:#ccc;">Powered by DojoFlow</span>
     <span>${today}</span>
   </div>
-
 </body>
 </html>`;
+}
 
-    printWindow.document.write(html);
+export function PrintableSchedule({ classes }: PrintableScheduleProps) {
+  const { data: profile } = trpc.schoolProfile.get.useQuery();
+
+  const schoolName = profile?.schoolName || profile?.displayName || 'Class Schedule';
+  const logoUrl = (profile as any)?.logoLightUrl || (profile as any)?.logoDarkUrl || null;
+
+  const handlePrint = () => {
+    const today = new Date().toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    });
+
+    // Open the window SYNCHRONOUSLY first (required to avoid popup blocker)
+    const printWindow = window.open('', '_blank', 'width=960,height=720');
+    if (!printWindow) {
+      alert('Please allow popups for this site to use the Print Schedule feature.');
+      return;
+    }
+
+    // Show a loading state immediately
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>Loading...</title></head><body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;color:#666;">
+      <div style="text-align:center">
+        <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Preparing schedule...</div>
+        <div style="font-size:13px;">This will open the print dialog automatically.</div>
+      </div>
+    </body></html>`);
     printWindow.document.close();
-    printWindow.focus();
-    // Wait for logo image to load before printing
-    setTimeout(() => {
-      printWindow.print();
-    }, logoBase64 ? 800 : 400);
+
+    // Now do the async work (logo fetch) and update the window
+    const doRender = async () => {
+      let logoBase64 = '';
+      if (logoUrl) {
+        try {
+          const response = await fetch(logoUrl);
+          const blob = await response.blob();
+          logoBase64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        } catch {
+          // Logo fetch failed — use fallback initial badge
+          logoBase64 = '';
+        }
+      }
+
+      const html = buildScheduleHtml(classes, schoolName, logoBase64, today);
+
+      // Replace the loading content with the real schedule
+      printWindow.document.open();
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.focus();
+
+      // Trigger print after content loads
+      setTimeout(() => {
+        printWindow.print();
+      }, 600);
+    };
+
+    doRender();
   };
 
   return (
