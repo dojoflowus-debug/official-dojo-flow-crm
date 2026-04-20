@@ -4,6 +4,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import Breadcrumb from '@/components/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -1175,6 +1176,10 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
 
   // ClassForm now defined outside component
 
+  // ── Program detail panel state ──────────────────────────────────────────
+  const [selectedProgramPanel, setSelectedProgramPanel] = useState<string | null>(null);
+  const [isProgramPanelOpen, setIsProgramPanelOpen] = useState(false);
+
   // ── New UI state for redesigned layout ──────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
   const [filterProgram, setFilterProgram] = useState('all');
@@ -1654,9 +1659,15 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                     return (
                       <div
                         key={programName}
-                        className={`flex items-center gap-4 px-5 py-4 transition-colors ${
+                        className={`flex items-center gap-4 px-5 py-4 transition-colors cursor-pointer ${
                           isSelectionMode ? '' : 'hover:bg-opacity-50'
-                        } ${isDarkMode ? 'hover:bg-white/[0.02]' : 'hover:bg-gray-50/60'}`}
+                        } ${isDarkMode ? 'hover:bg-white/[0.04]' : 'hover:bg-gray-50'}`}
+                        onClick={() => {
+                          if (!isSelectionMode) {
+                            setSelectedProgramPanel(programName);
+                            setIsProgramPanelOpen(true);
+                          }
+                        }}
                       >
                         {/* Program icon */}
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-white ${
@@ -1701,11 +1712,13 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                             return (
                               <button
                                 key={cls.id}
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   if (isSelectionMode) {
                                     toggleClassSelection(cls.id);
                                   } else {
-                                    handleEditClass(cls);
+                                    setSelectedProgramPanel(programName);
+                                    setIsProgramPanelOpen(true);
                                   }
                                 }}
                                 className={`h-8 px-3 rounded-lg text-xs font-medium border transition-all ${
@@ -1752,7 +1765,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                         </div>
 
                         {/* Action buttons */}
-                        <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
+                        <div className="flex items-center gap-1 flex-shrink-0 ml-auto" onClick={e => e.stopPropagation()}>
                           {/* Floor plan / instructor view for Kickboxing */}
                           {programName === 'Kickboxing' && (
                             <>
@@ -2054,6 +2067,195 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
 
         </div>
       </div>
+
+      {/* ── PROGRAM DETAIL SIDE PANEL ──────────────────────────────────────── */}
+      <Sheet open={isProgramPanelOpen} onOpenChange={setIsProgramPanelOpen}>
+        <SheetContent side="right" className={`w-full sm:max-w-xl p-0 flex flex-col ${isDarkMode ? 'bg-[#111113] border-white/10' : 'bg-white border-gray-200'}`}>
+          {(() => {
+            const panelClasses = selectedProgramPanel
+              ? classes.filter(c => getProgram(c) === selectedProgramPanel)
+              : [];
+            const firstClass = panelClasses[0];
+            const ageRange = firstClass ? getAgeRange(firstClass) : '';
+            const instructorName = firstClass ? (firstClass.instructor || firstClass.instructorName || '') : '';
+            return (
+              <>
+                {/* Panel Header */}
+                <div className={`px-6 py-5 border-b flex items-start justify-between ${isDarkMode ? 'border-white/10' : 'border-gray-100'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0 ${
+                      ['bg-red-600', 'bg-gray-700', 'bg-gray-800', 'bg-gray-600', 'bg-gray-700', 'bg-gray-600', 'bg-gray-800'][
+                        (selectedProgramPanel?.charCodeAt(0) || 0) % 7
+                      ]
+                    }`}>
+                      {selectedProgramPanel?.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h2 className={`text-lg font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {selectedProgramPanel}
+                      </h2>
+                      <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-white/40' : 'text-gray-400'}`}>
+                        {[ageRange, instructorName].filter(Boolean).join(' · ')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      className="h-8 px-3 bg-red-500 hover:bg-red-600 text-white text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsProgramPanelOpen(false);
+                        // Pre-fill program name and open Add modal
+                        setFormData(prev => ({ ...prev, program: selectedProgramPanel || '', name: selectedProgramPanel || '' }));
+                        setIsAddModalOpen(true);
+                      }}
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" />
+                      Add Time Slot
+                    </Button>
+                    <SheetClose asChild>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Close</span>
+                        ✕
+                      </Button>
+                    </SheetClose>
+                  </div>
+                </div>
+
+                {/* Stats bar */}
+                <div className={`px-6 py-3 border-b flex items-center gap-6 ${isDarkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50/60'}`}>
+                  <div>
+                    <p className={`text-xs ${isDarkMode ? 'text-white/40' : 'text-gray-400'}`}>Time Slots</p>
+                    <p className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{panelClasses.length}</p>
+                  </div>
+                  <div>
+                    <p className={`text-xs ${isDarkMode ? 'text-white/40' : 'text-gray-400'}`}>Total Capacity</p>
+                    <p className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {panelClasses.reduce((s, c) => s + (c.capacity || 0), 0)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className={`text-xs ${isDarkMode ? 'text-white/40' : 'text-gray-400'}`}>Enrolled</p>
+                    <p className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {panelClasses.reduce((s, c) => s + (c.enrolled || 0), 0)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className={`text-xs ${isDarkMode ? 'text-white/40' : 'text-gray-400'}`}>Open Spots</p>
+                    <p className={`text-lg font-bold text-green-500`}>
+                      {panelClasses.reduce((s, c) => s + Math.max(0, (c.capacity || 0) - (c.enrolled || 0)), 0)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Class instances list */}
+                <div className="flex-1 overflow-y-auto">
+                  {panelClasses.length === 0 ? (
+                    <div className={`flex flex-col items-center justify-center h-40 ${isDarkMode ? 'text-white/30' : 'text-gray-400'}`}>
+                      <Calendar className="h-8 w-8 mb-2 opacity-40" />
+                      <p className="text-sm">No class instances yet</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y">
+                      {panelClasses.map((cls) => {
+                        const timeStr = cls.time || '';
+                        const dayStr = cls.dayOfWeek || cls.day_of_week || cls.schedule || '';
+                        const enrolled = cls.enrolled || 0;
+                        const capacity = cls.capacity || 0;
+                        const isFull = !cls.is_unlimited_capacity && enrolled >= capacity;
+                        const fillPct = capacity > 0 ? Math.min(100, Math.round((enrolled / capacity) * 100)) : 0;
+                        return (
+                          <div
+                            key={cls.id}
+                            className={`px-6 py-4 ${isDarkMode ? 'border-white/5 hover:bg-white/[0.02]' : 'border-gray-100 hover:bg-gray-50/60'} transition-colors`}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0">
+                                {/* Day & Time */}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                    {dayStr}
+                                  </span>
+                                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                    isDarkMode ? 'bg-white/10 text-white/70' : 'bg-gray-100 text-gray-600'
+                                  }`}>
+                                    {timeStr}
+                                  </span>
+                                  {isFull && (
+                                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-red-500/10 text-red-500">Full</span>
+                                  )}
+                                </div>
+                                {/* Instructor */}
+                                {(cls.instructor || cls.instructorName) && (
+                                  <p className={`text-xs mt-1 ${isDarkMode ? 'text-white/40' : 'text-gray-400'}`}>
+                                    {cls.instructor || cls.instructorName}
+                                  </p>
+                                )}
+                                {/* Capacity bar */}
+                                <div className="mt-2 flex items-center gap-2">
+                                  <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-white/10' : 'bg-gray-100'}`}>
+                                    <div
+                                      className={`h-full rounded-full transition-all ${
+                                        fillPct >= 90 ? 'bg-red-500' : fillPct >= 60 ? 'bg-amber-500' : 'bg-green-500'
+                                      }`}
+                                      style={{ width: `${fillPct}%` }}
+                                    />
+                                  </div>
+                                  <span className={`text-xs flex-shrink-0 ${isDarkMode ? 'text-white/40' : 'text-gray-400'}`}>
+                                    {enrolled}/{capacity}
+                                  </span>
+                                </div>
+                              </div>
+                              {/* Actions */}
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0"
+                                  title="Edit this time slot"
+                                  onClick={() => {
+                                    setIsProgramPanelOpen(false);
+                                    handleEditClass(cls);
+                                  }}
+                                >
+                                  <Edit className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                  title="Delete this time slot"
+                                  onClick={() => handleDeleteClass(cls.id)}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0"
+                                  title="Manage Enrollments"
+                                  onClick={() => {
+                                    setSelectedClassForEnrollment(cls);
+                                    setIsEnrollmentModalOpen(true);
+                                  }}
+                                >
+                                  <Users className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
+
     </ManagementLayout>
   );
 }
