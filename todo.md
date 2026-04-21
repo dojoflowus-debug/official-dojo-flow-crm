@@ -9473,3 +9473,19 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Backend: compute retentionRate (active end of month / active start of month * 100)
 - [x] Backend: compute quitRate (canceled students / starting students * 100)
 - [x] Frontend: Collections Analytics section on Payments dashboard (compact horizontal Stripe-style layout)
+
+## Phase 17: Students Page Redesign - Clean Table Layout (Current)
+- [x] Replace current card/grid view with clean table layout matching reference design
+- [x] Add stat cards: Total, Active, Pending, Inactive
+- [x] Add search bar + All Programs + All Statuses filter dropdowns
+- [x] Build table with columns: Member (Parent), Student, Contact, Program, Belt, Age, Status, Joined
+- [x] Show guardian name in Member column, student name in Student column
+- [x] Show email + phone stacked in Contact column
+- [x] Show belt rank with colored dot indicator in Belt column
+- [x] Calculate and show age from dateOfBirth in Age column
+- [x] Show status badge (Active/Inactive/Cancelled) in Status column
+- [x] Show join date in Joined column
+- [x] Add 3-dot action menu per row
+- [ ] Add Parent-Submitted Child Profiles section at bottom
+- [x] Keep Add Student button and pagination
+- [ ] Delete test students (Test Student x2, Direct Test)
