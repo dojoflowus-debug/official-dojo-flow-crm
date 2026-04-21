@@ -2401,6 +2401,28 @@ export const appRouter = router({
 
         return { success: true, convertedCount };
       }),
+
+    // Returns the count of leads that have been converted to students (status = 'Enrolled')
+    getEnrolledCount: protectedProcedure
+      .input(z.void())
+      .query(async ({ ctx }) => {
+        const { getDb } = await import("./db");
+        const { leads } = await import("../drizzle/schema");
+        const { eq, and: andCount, count } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) return { count: 0 };
+
+        const result = await db
+          .select({ total: count() })
+          .from(leads)
+          .where(andCount(eq(leads.organizationId, orgId), eq(leads.status, 'Enrolled')));
+
+        return { count: result[0]?.total ?? 0 };
+      }),
   }),
   
   students: router({

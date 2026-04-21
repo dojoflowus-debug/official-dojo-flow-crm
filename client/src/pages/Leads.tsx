@@ -19,7 +19,8 @@ import {
   Focus,
   Sparkles,
   RefreshCw,
-  UserCheck
+  UserCheck,
+  GraduationCap
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import LeadSourceSettings from '@/components/LeadSourceSettings'
@@ -89,6 +90,7 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
 
   // tRPC queries and mutations
   const { data: leads, isLoading, refetch } = trpc.leads.getByStatus.useQuery()
+  const { data: enrolledData } = trpc.leads.getEnrolledCount.useQuery()
   const createLead = trpc.leads.create.useMutation({
     onSuccess: () => {
       refetch()
@@ -244,9 +246,25 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
           <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h1 className={`text-2xl md:text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-                  Leads
-                </h1>
+                <div className="flex items-center gap-3">
+                  <h1 className={`text-2xl md:text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+                    Leads
+                  </h1>
+                  {/* Enrolled Students badge */}
+                  {enrolledData !== undefined && (
+                    <div
+                      title="Total leads converted to enrolled students"
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                        isDarkMode
+                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25'
+                          : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      }`}
+                    >
+                      <GraduationCap className="w-3.5 h-3.5" />
+                      <span>{enrolledData.count} Enrolled</span>
+                    </div>
+                  )}
+                </div>
                 <p className={`text-sm mt-0.5 ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>
                   Your revenue funnel • Command center
                 </p>

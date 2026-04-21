@@ -23,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AppShell } from "@/components/AppShell";
+import AppShell from "@/components/AppShell";
 
 function maskKey(key: string) {
   if (!key) return "";
