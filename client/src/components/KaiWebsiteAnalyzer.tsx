@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { trpc } from '../lib/trpc';
-import { Globe, Loader2, CheckCircle, XCircle, ChevronDown, ChevronUp, Save, X, MapPin, Phone, Mail, Calendar, Users, Briefcase, AlertCircle } from 'lucide-react';
+import {
+  Globe, Loader2, CheckCircle, ChevronDown, ChevronUp,
+  Save, X, MapPin, Phone, Calendar, Users, Briefcase,
+  AlertCircle, RefreshCw, ArrowRight, Sparkles
+} from 'lucide-react';
 
 interface AnalyzedData {
   schoolName?: string | null;
@@ -39,59 +43,114 @@ interface AnalyzedData {
     specialties?: string | null;
     certifications?: string | null;
   }>;
-  socialLinks?: {
-    facebook?: string | null;
-    instagram?: string | null;
-    youtube?: string | null;
-    twitter?: string | null;
-  };
   confidence?: {
     overall: 'high' | 'medium' | 'low';
     notes: string;
   };
 }
 
+// Map of field keys to their display labels
+const FIELD_LABELS: Record<string, string> = {
+  schoolName: 'School Name',
+  displayName: 'Display Name',
+  tagline: 'Tagline',
+  phone: 'Phone',
+  email: 'Email',
+  website: 'Website',
+  addressStreet: 'Street',
+  addressCity: 'City',
+  addressState: 'State',
+  addressPostal: 'Postal Code',
+  addressCountry: 'Country',
+  logoUrl: 'Logo URL',
+  brandColorPrimary: 'Brand Color',
+  timezone: 'Timezone',
+  programs: 'Programs',
+  classes: 'Class Schedule',
+  instructors: 'Instructors',
+};
+
 interface Props {
   onClose: () => void;
   initialUrl?: string;
+  rescanMode?: boolean; // When true, fetch current profile and show diff
 }
 
 type Step = 'input' | 'analyzing' | 'review' | 'saving' | 'done';
+type ChangeStatus = 'new' | 'changed' | 'unchanged' | 'empty';
 
-export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '' }: Props) {
+interface FieldDiff {
+  status: ChangeStatus;
+  oldValue?: string | null;
+  newValue?: string | null;
+}
+
+export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMode = false }: Props) {
   const [url, setUrl] = useState(initialUrl);
   const [step, setStep] = useState<Step>('input');
   const [data, setData] = useState<AnalyzedData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['identity', 'contact', 'address']));
-  const [saveResults, setSaveResults] = useState<string[]>([]);
-
-  // Selected fields to save (user can deselect)
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(['identity', 'contact', 'address'])
+  );
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [saveResults, setSaveResults] = useState<string[]>([]);
+  const [fieldDiffs, setFieldDiffs] = useState<Record<string, FieldDiff>>({});
+  const [changedCount, setChangedCount] = useState(0);
+
+  // Fetch current school profile for diffing
+  const { data: currentProfile } = trpc.schoolProfile.get.useQuery(undefined, {
+    enabled: rescanMode || step === 'review',
+  });
 
   const analyzeMutation = trpc.kai.analyzeSchoolWebsite.useMutation({
     onSuccess: (result) => {
       setData(result.data);
-      // Auto-select all non-null fields
-      const autoSelected = new Set<string>();
       const d = result.data;
-      if (d.schoolName) autoSelected.add('schoolName');
-      if (d.displayName) autoSelected.add('displayName');
-      if (d.tagline) autoSelected.add('tagline');
-      if (d.phone) autoSelected.add('phone');
-      if (d.email) autoSelected.add('email');
-      if (d.website) autoSelected.add('website');
-      if (d.addressStreet) autoSelected.add('addressStreet');
-      if (d.addressCity) autoSelected.add('addressCity');
-      if (d.addressState) autoSelected.add('addressState');
-      if (d.addressPostal) autoSelected.add('addressPostal');
-      if (d.addressCountry) autoSelected.add('addressCountry');
-      if (d.logoUrl) autoSelected.add('logoUrl');
-      if (d.brandColorPrimary) autoSelected.add('brandColorPrimary');
-      if (d.timezone) autoSelected.add('timezone');
-      if (d.programs?.length) autoSelected.add('programs');
-      if (d.classes?.length) autoSelected.add('classes');
-      if (d.instructors?.length) autoSelected.add('instructors');
+
+      // Build diff map against current profile
+      const diffs: Record<string, FieldDiff> = {};
+      let changes = 0;
+
+      const scalarFields: Array<keyof AnalyzedData> = [
+        'schoolName', 'displayName', 'tagline', 'phone', 'email', 'website',
+        'addressStreet', 'addressCity', 'addressState', 'addressPostal', 'addressCountry',
+        'logoUrl', 'brandColorPrimary', 'timezone',
+      ];
+
+      const autoSelected = new Set<string>();
+
+      for (const field of scalarFields) {
+        const newVal = d[field] as string | null | undefined;
+        const oldVal = currentProfile ? (currentProfile as any)[field] as string | null | undefined : undefined;
+
+        if (!newVal) {
+          diffs[field] = { status: 'empty' };
+          continue;
+        }
+
+        if (!oldVal) {
+          diffs[field] = { status: 'new', newValue: newVal };
+          autoSelected.add(field);
+          changes++;
+        } else if (oldVal !== newVal) {
+          diffs[field] = { status: 'changed', oldValue: oldVal, newValue: newVal };
+          autoSelected.add(field);
+          changes++;
+        } else {
+          diffs[field] = { status: 'unchanged', oldValue: oldVal, newValue: newVal };
+          // Don't auto-select unchanged fields in rescan mode
+          if (!rescanMode) autoSelected.add(field);
+        }
+      }
+
+      // Always auto-select programs/classes/instructors if present
+      if (d.programs?.length) { autoSelected.add('programs'); diffs['programs'] = { status: 'new' }; changes++; }
+      if (d.classes?.length) { autoSelected.add('classes'); diffs['classes'] = { status: 'new' }; changes++; }
+      if (d.instructors?.length) { autoSelected.add('instructors'); diffs['instructors'] = { status: 'new' }; changes++; }
+
+      setFieldDiffs(diffs);
+      setChangedCount(changes);
       setSelected(autoSelected);
       setStep('review');
     },
@@ -111,6 +170,13 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '' }: Props) 
       setStep('review');
     },
   });
+
+  // If rescanMode and we have a website in the profile, pre-fill the URL
+  useEffect(() => {
+    if (rescanMode && currentProfile?.website && !url) {
+      setUrl(currentProfile.website);
+    }
+  }, [rescanMode, currentProfile]);
 
   const handleAnalyze = () => {
     if (!url.trim()) return;
@@ -161,10 +227,29 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '' }: Props) 
     });
   };
 
-  const confidenceColor = {
-    high: 'text-green-400',
-    medium: 'text-yellow-400',
-    low: 'text-red-400',
+  const confidenceColor = { high: 'text-green-400', medium: 'text-yellow-400', low: 'text-red-400' };
+
+  const getDiffBadge = (fieldKey: string) => {
+    const diff = fieldDiffs[fieldKey];
+    if (!diff || diff.status === 'empty') return null;
+    if (diff.status === 'new') return (
+      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400 uppercase tracking-wide">New</span>
+    );
+    if (diff.status === 'changed') return (
+      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 uppercase tracking-wide">Changed</span>
+    );
+    if (diff.status === 'unchanged') return (
+      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-white/5 text-white/30 uppercase tracking-wide">Same</span>
+    );
+    return null;
+  };
+
+  const getDiffRowClass = (fieldKey: string) => {
+    const diff = fieldDiffs[fieldKey];
+    if (!diff) return '';
+    if (diff.status === 'new') return 'bg-green-500/5 border-l-2 border-green-500/40 pl-2 rounded-r-lg';
+    if (diff.status === 'changed') return 'bg-amber-500/5 border-l-2 border-amber-500/40 pl-2 rounded-r-lg';
+    return '';
   };
 
   return (
@@ -174,11 +259,17 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '' }: Props) 
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <Globe className="w-5 h-5 text-white" />
+              {rescanMode ? <RefreshCw className="w-5 h-5 text-white" /> : <Globe className="w-5 h-5 text-white" />}
             </div>
             <div>
-              <h2 className="text-white font-semibold text-base">Kai Website Analyzer</h2>
-              <p className="text-white/40 text-xs">Auto-populate your school info from your website</p>
+              <h2 className="text-white font-semibold text-base">
+                {rescanMode ? 'Re-scan Website' : 'Kai Website Analyzer'}
+              </h2>
+              <p className="text-white/40 text-xs">
+                {rescanMode
+                  ? 'Detect changes since your last scan and update your profile'
+                  : 'Auto-populate your school info from your website'}
+              </p>
             </div>
           </div>
           <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
@@ -192,8 +283,16 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '' }: Props) 
           {/* Step: Input */}
           {(step === 'input' || step === 'analyzing') && (
             <div className="space-y-4">
+              {rescanMode && currentProfile?.website && (
+                <div className="flex items-center gap-2 text-sm text-white/50 bg-white/5 rounded-xl px-4 py-3">
+                  <Globe className="w-4 h-4 text-white/30 flex-shrink-0" />
+                  <span>Last saved website: <span className="text-blue-400">{currentProfile.website}</span></span>
+                </div>
+              )}
               <p className="text-white/60 text-sm leading-relaxed">
-                Enter your school's website URL and Kai will scan it to extract your school name, address, phone, logo, programs, class schedules, instructors, and more — then save everything directly to DojoFlow.
+                {rescanMode
+                  ? 'Kai will re-scan your website and highlight any fields that have changed since your last scan.'
+                  : 'Enter your school\'s website URL and Kai will scan it to extract your school name, address, phone, logo, programs, class schedules, instructors, and more.'}
               </p>
               <div className="flex gap-3">
                 <input
@@ -211,15 +310,11 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '' }: Props) 
                   className="px-5 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-40 transition-all flex items-center gap-2"
                 >
                   {step === 'analyzing' ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Analyzing...
-                    </>
+                    <><Loader2 className="w-4 h-4 animate-spin" />Scanning...</>
+                  ) : rescanMode ? (
+                    <><RefreshCw className="w-4 h-4" />Re-scan</>
                   ) : (
-                    <>
-                      <Globe className="w-4 h-4" />
-                      Analyze
-                    </>
+                    <><Globe className="w-4 h-4" />Analyze</>
                   )}
                 </button>
               </div>
@@ -228,8 +323,12 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '' }: Props) 
                   <div className="flex items-center gap-3">
                     <Loader2 className="w-5 h-5 text-blue-400 animate-spin flex-shrink-0" />
                     <div>
-                      <p className="text-blue-300 text-sm font-medium">Scanning website...</p>
-                      <p className="text-blue-400/60 text-xs mt-0.5">Kai is reading your website and extracting school information. This may take 10–20 seconds.</p>
+                      <p className="text-blue-300 text-sm font-medium">
+                        {rescanMode ? 'Re-scanning website...' : 'Scanning website...'}
+                      </p>
+                      <p className="text-blue-400/60 text-xs mt-0.5">
+                        Kai is reading your website and extracting school information. This may take 10–20 seconds.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -246,20 +345,56 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '' }: Props) 
           {/* Step: Review */}
           {(step === 'review' || step === 'saving') && data && (
             <div className="space-y-4">
-              {/* Confidence badge */}
-              {data.confidence && (
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-white/40">Confidence:</span>
-                  <span className={`font-medium capitalize ${confidenceColor[data.confidence.overall]}`}>
-                    {data.confidence.overall}
-                  </span>
-                  <span className="text-white/30">—</span>
-                  <span className="text-white/40 text-xs">{data.confidence.notes}</span>
+              {/* Summary bar */}
+              <div className="flex items-center gap-3 flex-wrap">
+                {data.confidence && (
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <span className="text-white/40">Confidence:</span>
+                    <span className={`font-medium capitalize ${confidenceColor[data.confidence.overall]}`}>
+                      {data.confidence.overall}
+                    </span>
+                  </div>
+                )}
+                {rescanMode && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-white/30 text-xs">|</span>
+                    {changedCount > 0 ? (
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="text-amber-400 text-sm font-medium">{changedCount} change{changedCount !== 1 ? 's' : ''} detected</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle className="w-3.5 h-3.5 text-green-400" />
+                        <span className="text-green-400 text-sm">No changes detected</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Legend for rescan mode */}
+              {rescanMode && changedCount > 0 && (
+                <div className="flex items-center gap-4 text-xs text-white/40 bg-white/3 rounded-xl px-4 py-2.5">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-green-400" />
+                    <span>New field</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-amber-400" />
+                    <span>Changed</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-white/20" />
+                    <span>Unchanged</span>
+                  </div>
                 </div>
               )}
 
               <p className="text-white/50 text-xs">
-                Review the extracted data below. Uncheck any fields you don't want to save, then click <strong className="text-white/70">Save to DojoFlow</strong>.
+                {rescanMode
+                  ? 'Changed and new fields are pre-selected. Uncheck any you don\'t want to update.'
+                  : 'Review the extracted data. Uncheck any fields you don\'t want to save.'}
               </p>
 
               {/* Identity Section */}
@@ -270,21 +405,51 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '' }: Props) 
                 onToggle={() => toggleSection('identity')}
               >
                 {data.logoUrl && (
-                  <FieldRow label="Logo" fieldKey="logoUrl" selected={selected} onToggle={toggleField}>
+                  <FieldRow label="Logo" fieldKey="logoUrl" selected={selected} onToggle={toggleField}
+                    badge={getDiffBadge('logoUrl')} rowClass={getDiffRowClass('logoUrl')}>
                     <img src={data.logoUrl} alt="Logo" className="h-8 object-contain rounded" onError={e => (e.currentTarget.style.display = 'none')} />
-                    <span className="text-white/40 text-xs truncate max-w-[200px]">{data.logoUrl}</span>
+                    <span className="text-white/40 text-xs truncate max-w-[180px]">{data.logoUrl}</span>
                   </FieldRow>
                 )}
-                {data.schoolName && <FieldRow label="School Name" fieldKey="schoolName" selected={selected} onToggle={toggleField}><span className="text-white text-sm">{data.schoolName}</span></FieldRow>}
-                {data.displayName && <FieldRow label="Display Name" fieldKey="displayName" selected={selected} onToggle={toggleField}><span className="text-white text-sm">{data.displayName}</span></FieldRow>}
-                {data.tagline && <FieldRow label="Tagline" fieldKey="tagline" selected={selected} onToggle={toggleField}><span className="text-white/70 text-sm italic">"{data.tagline}"</span></FieldRow>}
+                {data.schoolName && (
+                  <FieldRow label="School Name" fieldKey="schoolName" selected={selected} onToggle={toggleField}
+                    badge={getDiffBadge('schoolName')} rowClass={getDiffRowClass('schoolName')}>
+                    {rescanMode && fieldDiffs['schoolName']?.status === 'changed' ? (
+                      <DiffValue old={fieldDiffs['schoolName'].oldValue} next={data.schoolName} />
+                    ) : (
+                      <span className="text-white text-sm">{data.schoolName}</span>
+                    )}
+                  </FieldRow>
+                )}
+                {data.displayName && (
+                  <FieldRow label="Display Name" fieldKey="displayName" selected={selected} onToggle={toggleField}
+                    badge={getDiffBadge('displayName')} rowClass={getDiffRowClass('displayName')}>
+                    {rescanMode && fieldDiffs['displayName']?.status === 'changed' ? (
+                      <DiffValue old={fieldDiffs['displayName'].oldValue} next={data.displayName} />
+                    ) : (
+                      <span className="text-white text-sm">{data.displayName}</span>
+                    )}
+                  </FieldRow>
+                )}
+                {data.tagline && (
+                  <FieldRow label="Tagline" fieldKey="tagline" selected={selected} onToggle={toggleField}
+                    badge={getDiffBadge('tagline')} rowClass={getDiffRowClass('tagline')}>
+                    <span className="text-white/70 text-sm italic">"{data.tagline}"</span>
+                  </FieldRow>
+                )}
                 {data.brandColorPrimary && (
-                  <FieldRow label="Brand Color" fieldKey="brandColorPrimary" selected={selected} onToggle={toggleField}>
+                  <FieldRow label="Brand Color" fieldKey="brandColorPrimary" selected={selected} onToggle={toggleField}
+                    badge={getDiffBadge('brandColorPrimary')} rowClass={getDiffRowClass('brandColorPrimary')}>
                     <div className="w-5 h-5 rounded-full border border-white/20" style={{ backgroundColor: data.brandColorPrimary }} />
                     <span className="text-white/70 text-sm">{data.brandColorPrimary}</span>
                   </FieldRow>
                 )}
-                {data.timezone && <FieldRow label="Timezone" fieldKey="timezone" selected={selected} onToggle={toggleField}><span className="text-white/70 text-sm">{data.timezone}</span></FieldRow>}
+                {data.timezone && (
+                  <FieldRow label="Timezone" fieldKey="timezone" selected={selected} onToggle={toggleField}
+                    badge={getDiffBadge('timezone')} rowClass={getDiffRowClass('timezone')}>
+                    <span className="text-white/70 text-sm">{data.timezone}</span>
+                  </FieldRow>
+                )}
               </Section>
 
               {/* Contact Section */}
@@ -294,9 +459,32 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '' }: Props) 
                 expanded={expandedSections.has('contact')}
                 onToggle={() => toggleSection('contact')}
               >
-                {data.phone && <FieldRow label="Phone" fieldKey="phone" selected={selected} onToggle={toggleField}><span className="text-white text-sm">{data.phone}</span></FieldRow>}
-                {data.email && <FieldRow label="Email" fieldKey="email" selected={selected} onToggle={toggleField}><span className="text-white text-sm">{data.email}</span></FieldRow>}
-                {data.website && <FieldRow label="Website" fieldKey="website" selected={selected} onToggle={toggleField}><span className="text-blue-400 text-sm">{data.website}</span></FieldRow>}
+                {data.phone && (
+                  <FieldRow label="Phone" fieldKey="phone" selected={selected} onToggle={toggleField}
+                    badge={getDiffBadge('phone')} rowClass={getDiffRowClass('phone')}>
+                    {rescanMode && fieldDiffs['phone']?.status === 'changed' ? (
+                      <DiffValue old={fieldDiffs['phone'].oldValue} next={data.phone} />
+                    ) : (
+                      <span className="text-white text-sm">{data.phone}</span>
+                    )}
+                  </FieldRow>
+                )}
+                {data.email && (
+                  <FieldRow label="Email" fieldKey="email" selected={selected} onToggle={toggleField}
+                    badge={getDiffBadge('email')} rowClass={getDiffRowClass('email')}>
+                    {rescanMode && fieldDiffs['email']?.status === 'changed' ? (
+                      <DiffValue old={fieldDiffs['email'].oldValue} next={data.email} />
+                    ) : (
+                      <span className="text-white text-sm">{data.email}</span>
+                    )}
+                  </FieldRow>
+                )}
+                {data.website && (
+                  <FieldRow label="Website" fieldKey="website" selected={selected} onToggle={toggleField}
+                    badge={getDiffBadge('website')} rowClass={getDiffRowClass('website')}>
+                    <span className="text-blue-400 text-sm">{data.website}</span>
+                  </FieldRow>
+                )}
               </Section>
 
               {/* Address Section */}
@@ -306,11 +494,40 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '' }: Props) 
                 expanded={expandedSections.has('address')}
                 onToggle={() => toggleSection('address')}
               >
-                {data.addressStreet && <FieldRow label="Street" fieldKey="addressStreet" selected={selected} onToggle={toggleField}><span className="text-white text-sm">{data.addressStreet}</span></FieldRow>}
-                {data.addressCity && <FieldRow label="City" fieldKey="addressCity" selected={selected} onToggle={toggleField}><span className="text-white text-sm">{data.addressCity}</span></FieldRow>}
-                {data.addressState && <FieldRow label="State" fieldKey="addressState" selected={selected} onToggle={toggleField}><span className="text-white text-sm">{data.addressState}</span></FieldRow>}
-                {data.addressPostal && <FieldRow label="Postal" fieldKey="addressPostal" selected={selected} onToggle={toggleField}><span className="text-white text-sm">{data.addressPostal}</span></FieldRow>}
-                {data.addressCountry && <FieldRow label="Country" fieldKey="addressCountry" selected={selected} onToggle={toggleField}><span className="text-white text-sm">{data.addressCountry}</span></FieldRow>}
+                {data.addressStreet && (
+                  <FieldRow label="Street" fieldKey="addressStreet" selected={selected} onToggle={toggleField}
+                    badge={getDiffBadge('addressStreet')} rowClass={getDiffRowClass('addressStreet')}>
+                    {rescanMode && fieldDiffs['addressStreet']?.status === 'changed' ? (
+                      <DiffValue old={fieldDiffs['addressStreet'].oldValue} next={data.addressStreet} />
+                    ) : (
+                      <span className="text-white text-sm">{data.addressStreet}</span>
+                    )}
+                  </FieldRow>
+                )}
+                {data.addressCity && (
+                  <FieldRow label="City" fieldKey="addressCity" selected={selected} onToggle={toggleField}
+                    badge={getDiffBadge('addressCity')} rowClass={getDiffRowClass('addressCity')}>
+                    <span className="text-white text-sm">{data.addressCity}</span>
+                  </FieldRow>
+                )}
+                {data.addressState && (
+                  <FieldRow label="State" fieldKey="addressState" selected={selected} onToggle={toggleField}
+                    badge={getDiffBadge('addressState')} rowClass={getDiffRowClass('addressState')}>
+                    <span className="text-white text-sm">{data.addressState}</span>
+                  </FieldRow>
+                )}
+                {data.addressPostal && (
+                  <FieldRow label="Postal" fieldKey="addressPostal" selected={selected} onToggle={toggleField}
+                    badge={getDiffBadge('addressPostal')} rowClass={getDiffRowClass('addressPostal')}>
+                    <span className="text-white text-sm">{data.addressPostal}</span>
+                  </FieldRow>
+                )}
+                {data.addressCountry && (
+                  <FieldRow label="Country" fieldKey="addressCountry" selected={selected} onToggle={toggleField}
+                    badge={getDiffBadge('addressCountry')} rowClass={getDiffRowClass('addressCountry')}>
+                    <span className="text-white text-sm">{data.addressCountry}</span>
+                  </FieldRow>
+                )}
               </Section>
 
               {/* Programs */}
@@ -322,13 +539,10 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '' }: Props) 
                   onToggle={() => toggleSection('programs')}
                 >
                   <div className="flex items-center gap-3 py-2">
-                    <input
-                      type="checkbox"
-                      checked={selected.has('programs')}
-                      onChange={() => toggleField('programs')}
-                      className="w-4 h-4 rounded accent-blue-500"
-                    />
+                    <input type="checkbox" checked={selected.has('programs')} onChange={() => toggleField('programs')}
+                      className="w-4 h-4 rounded accent-blue-500" />
                     <span className="text-white/50 text-xs">Save all {data.programs.length} programs</span>
+                    {getDiffBadge('programs')}
                   </div>
                   <div className="space-y-2 mt-1">
                     {data.programs.map((p, i) => (
@@ -352,13 +566,10 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '' }: Props) 
                   onToggle={() => toggleSection('classes')}
                 >
                   <div className="flex items-center gap-3 py-2">
-                    <input
-                      type="checkbox"
-                      checked={selected.has('classes')}
-                      onChange={() => toggleField('classes')}
-                      className="w-4 h-4 rounded accent-blue-500"
-                    />
+                    <input type="checkbox" checked={selected.has('classes')} onChange={() => toggleField('classes')}
+                      className="w-4 h-4 rounded accent-blue-500" />
                     <span className="text-white/50 text-xs">Save all {data.classes.length} classes</span>
+                    {getDiffBadge('classes')}
                   </div>
                   <div className="space-y-2 mt-1">
                     {data.classes.map((c, i) => (
@@ -388,13 +599,10 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '' }: Props) 
                   onToggle={() => toggleSection('instructors')}
                 >
                   <div className="flex items-center gap-3 py-2">
-                    <input
-                      type="checkbox"
-                      checked={selected.has('instructors')}
-                      onChange={() => toggleField('instructors')}
-                      className="w-4 h-4 rounded accent-blue-500"
-                    />
+                    <input type="checkbox" checked={selected.has('instructors')} onChange={() => toggleField('instructors')}
+                      className="w-4 h-4 rounded accent-blue-500" />
                     <span className="text-white/50 text-xs">Save all {data.instructors.length} instructors</span>
+                    {getDiffBadge('instructors')}
                   </div>
                   <div className="space-y-2 mt-1">
                     {data.instructors.map((inst, i) => (
@@ -424,8 +632,14 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '' }: Props) 
                 <CheckCircle className="w-8 h-8 text-green-400" />
               </div>
               <div>
-                <h3 className="text-white font-semibold text-lg">All Done!</h3>
-                <p className="text-white/50 text-sm mt-1">Your school information has been saved to DojoFlow.</p>
+                <h3 className="text-white font-semibold text-lg">
+                  {rescanMode ? 'Profile Updated!' : 'All Done!'}
+                </h3>
+                <p className="text-white/50 text-sm mt-1">
+                  {rescanMode
+                    ? 'Your school profile has been updated with the latest information.'
+                    : 'Your school information has been saved to DojoFlow.'}
+                </p>
               </div>
               <div className="bg-white/5 rounded-xl p-4 text-left space-y-2">
                 {saveResults.map((r, i) => (
@@ -456,14 +670,12 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '' }: Props) 
                 className="px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-40 transition-all flex items-center gap-2"
               >
                 {step === 'saving' ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Saving...
-                  </>
+                  <><Loader2 className="w-4 h-4 animate-spin" />Saving...</>
                 ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    Save {selected.size} field{selected.size !== 1 ? 's' : ''} to DojoFlow
+                  <><Save className="w-4 h-4" />
+                    {rescanMode
+                      ? `Apply ${selected.size} update${selected.size !== 1 ? 's' : ''}`
+                      : `Save ${selected.size} field${selected.size !== 1 ? 's' : ''} to DojoFlow`}
                   </>
                 )}
               </button>
@@ -489,7 +701,18 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '' }: Props) 
   );
 }
 
-// Helper components
+// Diff value display — shows old → new with arrow
+function DiffValue({ old: oldVal, next: newVal }: { old?: string | null; next?: string | null }) {
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      <span className="text-white/30 text-sm line-through">{oldVal}</span>
+      <ArrowRight className="w-3 h-3 text-amber-400 flex-shrink-0" />
+      <span className="text-amber-300 text-sm font-medium">{newVal}</span>
+    </div>
+  );
+}
+
+// Section accordion
 function Section({
   title, icon, expanded, onToggle, children,
 }: {
@@ -516,17 +739,20 @@ function Section({
   );
 }
 
+// Field row with checkbox, label, badge, and children
 function FieldRow({
-  label, fieldKey, selected, onToggle, children,
+  label, fieldKey, selected, onToggle, children, badge, rowClass = '',
 }: {
   label: string;
   fieldKey: string;
   selected: Set<string>;
   onToggle: (key: string) => void;
   children: React.ReactNode;
+  badge?: React.ReactNode;
+  rowClass?: string;
 }) {
   return (
-    <div className="flex items-center gap-3 py-1.5">
+    <div className={`flex items-center gap-3 py-1.5 ${rowClass}`}>
       <input
         type="checkbox"
         checked={selected.has(fieldKey)}
@@ -535,6 +761,7 @@ function FieldRow({
       />
       <span className="text-white/40 text-xs w-24 flex-shrink-0">{label}</span>
       <div className="flex items-center gap-2 flex-1 min-w-0">{children}</div>
+      {badge && <div className="flex-shrink-0">{badge}</div>}
     </div>
   );
 }

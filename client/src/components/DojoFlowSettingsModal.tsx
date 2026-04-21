@@ -135,6 +135,8 @@ export default function DojoFlowSettingsModal({ isOpen, onClose, initialSection 
   const [selectedSection, setSelectedSection] = useState<SectionId>(initialSection as SectionId)
   const [expandedSections, setExpandedSections] = useState<Set<SectionId>>(new Set(['payments', 'processors']))
   const [showWebsiteAnalyzerInSettings, setShowWebsiteAnalyzerInSettings] = useState(false)
+  const [websiteAnalyzerRescanMode, setWebsiteAnalyzerRescanMode] = useState(false)
+  const { data: schoolProfile } = trpc.schoolProfile.get.useQuery(undefined, { enabled: selectedSection === 'school-profile' })
 
   // Handle ESC key
   useEffect(() => {
@@ -244,19 +246,35 @@ export default function DojoFlowSettingsModal({ isOpen, onClose, initialSection 
                   <div>
                     <p className="text-white font-medium text-sm">Auto-populate from your website</p>
                     <p className="text-zinc-400 text-xs mt-0.5">Kai will scan your school website and fill in your name, address, phone, logo, programs, schedules, and more automatically.</p>
+                    {schoolProfile?.website && (
+                      <p className="text-zinc-500 text-xs mt-1">Last saved: <span className="text-blue-400">{schoolProfile.website}</span></p>
+                    )}
                   </div>
                 </div>
-                <button
-                  onClick={() => setShowWebsiteAnalyzerInSettings(true)}
-                  className="flex-shrink-0 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-xs font-medium hover:opacity-90 transition-all whitespace-nowrap"
-                >
-                  Scan Website
-                </button>
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => { setWebsiteAnalyzerRescanMode(false); setShowWebsiteAnalyzerInSettings(true); }}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-xs font-medium hover:opacity-90 transition-all whitespace-nowrap"
+                  >
+                    Scan Website
+                  </button>
+                  {schoolProfile?.website && (
+                    <button
+                      onClick={() => { setWebsiteAnalyzerRescanMode(true); setShowWebsiteAnalyzerInSettings(true); }}
+                      className="px-4 py-2 bg-white/8 hover:bg-white/12 text-white/70 hover:text-white border border-white/10 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 justify-center"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      Re-scan
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
             {showWebsiteAnalyzerInSettings && (
               <KaiWebsiteAnalyzer
-                onClose={() => setShowWebsiteAnalyzerInSettings(false)}
+                rescanMode={websiteAnalyzerRescanMode}
+                initialUrl={websiteAnalyzerRescanMode ? (schoolProfile?.website ?? '') : ''}
+                onClose={() => { setShowWebsiteAnalyzerInSettings(false); setWebsiteAnalyzerRescanMode(false); }}
               />
             )}
           </div>
