@@ -3730,8 +3730,96 @@ export const appRouter = router({
         return { success: true, message: 'Deletion request denied' };
       }),
 
-  }),
+    // ── Secure delete: Step 1 — generate a 6-digit code ──────────────────────
+    generateDeleteCode: protectedProcedure
+      .input(z.object({
+        studentId: z.number(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import('./db');
+        const { eq, and, gt } = await import('drizzle-orm');
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) throw new Error('No organization context');
 
+        // Ensure table exists (safe for first-time use)
+        await db.execute(
+          `CREATE TABLE IF NOT EXISTS student_delete_codes (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            organization_id INT NOT NULL,
+            student_id INT NOT NULL,
+            code VARCHAR(6) NOT NULL,
+            expires_at TIMESTAMP NOT NULL,
+            is_used TINYINT NOT NULL DEFAULT 0,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_sdc_org_student (organization_id, student_id),
+            INDEX idx_sdc_expires (expires_at)
+          )` as any
+        );
+
+        // Generate a cryptographically random 6-digit code
+        const code = String(Math.floor(100000 + Math.random() * 900000));
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        const expiresAtStr = expiresAt.toISOString().slice(0, 19).replace('T', ' ');
+
+        // Invalidate any existing unused codes for this student
+        await db.execute(
+          `UPDATE student_delete_codes SET is_used = 1
+           WHERE organization_id = ${orgId} AND student_id = ${input.studentId} AND is_used = 0` as any
+        );
+
+        // Insert the new code
+        await db.execute(
+          `INSERT INTO student_delete_codes (organization_id, student_id, code, expires_at)
+           VALUES (${orgId}, ${input.studentId}, '${code}', '${expiresAtStr}')` as any
+        );
+
+        return { success: true, code, expiresAt: expiresAtStr };
+      }),
+
+    // ── Secure delete: Step 2 — verify code and delete student ───────────────
+    verifyAndDelete: protectedProcedure
+      .input(z.object({
+        studentId: z.number(),
+        code: z.string().length(6),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import('./db');
+        const { students } = await import('../drizzle/schema');
+        const { eq } = await import('drizzle-orm');
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) throw new Error('No organization context');
+
+        // Look up the code — must be unused and not expired
+        const [rows]: any = await db.execute(
+          `SELECT id FROM student_delete_codes
+           WHERE organization_id = ${orgId}
+             AND student_id = ${input.studentId}
+             AND code = '${input.code}'
+             AND is_used = 0
+             AND expires_at > NOW()
+           LIMIT 1` as any
+        );
+
+        const match = Array.isArray(rows) ? rows[0] : null;
+        if (!match) {
+          throw new Error('Invalid or expired verification code. Please generate a new code.');
+        }
+
+        // Mark code as used
+        await db.execute(
+          `UPDATE student_delete_codes SET is_used = 1 WHERE id = ${match.id}` as any
+        );
+
+        // Delete the student
+        await db.delete(students).where(eq(students.id, input.studentId));
+
+        return { success: true };
+      }),
+  }),
   kai: router({
     // Get all conversations for the current user (excludes soft-deleted)
     getConversations: protectedProcedure

@@ -26,6 +26,7 @@ import {
 import { AddStudentModal } from '@/components/AddStudentModalContent';
 import { StudentNotesDrawer } from '@/components/StudentNotesDrawer';
 import { StudentEditDrawer } from '@/components/StudentEditDrawer';
+import { DeleteStudentModal } from '@/components/DeleteStudentModal';
 
 // Icons
 import {
@@ -121,6 +122,8 @@ function StudentsDashboard() {
   const [showDrawer, setShowDrawer] = useState(false);
   const [showEditDrawer, setShowEditDrawer] = useState(false);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
 
   useEffect(() => {
     const filterParam = searchParams.get('filter');
@@ -376,6 +379,15 @@ function StudentsDashboard() {
                           }}>
                             <Users className="w-4 h-4 mr-2" /> Notes
                           </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                            onClick={() => {
+                              setStudentToDelete(student);
+                              setShowDeleteModal(true);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" /> Delete Student
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -491,6 +503,22 @@ function StudentsDashboard() {
           handleRefresh();
         }}
       />
+      {/* Secure Delete Modal */}
+      {studentToDelete && (
+        <DeleteStudentModal
+          open={showDeleteModal}
+          onOpenChange={(open) => {
+            setShowDeleteModal(open);
+            if (!open) setStudentToDelete(null);
+          }}
+          studentId={studentToDelete.id}
+          studentName={`${studentToDelete.firstName} ${studentToDelete.lastName}`}
+          onDeleted={() => {
+            setStudentToDelete(null);
+            handleRefresh();
+          }}
+        />
+      )}
     </div>
   );
 }

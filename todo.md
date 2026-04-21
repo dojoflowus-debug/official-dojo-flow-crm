@@ -9489,3 +9489,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Add Parent-Submitted Child Profiles section at bottom
 - [x] Keep Add Student button and pagination
 - [ ] Delete test students (Test Student x2, Direct Test)
+
+## Phase 18: Secure Delete Student (6-Digit Verification Code)
+- [x] Backend: students.generateDeleteCode mutation — creates a 6-digit code tied to orgId + studentId, expires in 10 minutes, stored in DB
+- [x] Backend: students.verifyAndDelete mutation — verifies code matches, then hard-deletes the student record
+- [x] DB: add delete_verification_codes table (id, org_id, student_id, code, expires_at, used)
+- [x] Frontend: DeleteStudentModal component — Step 1: show student name + "Generate Code" button; Step 2: input 6-digit code + confirm delete
+- [x] Frontend: Wire "Delete Student" option in the 3-dot action menu on the Students table
+- [x] Show code expiry countdown (10 min) in the modal
+- [x] Show success toast and refresh list after deletion
+- [x] Test end-to-end: generate code, enter wrong code (should fail), enter correct code (should delete)
