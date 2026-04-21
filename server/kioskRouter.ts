@@ -940,7 +940,7 @@ export const kioskRouter = router({
       const { students } = await import("../drizzle/schema");
       const { like, or, and } = await import("drizzle-orm");
       return ctx.db
-        .select({ id: students.id, firstName: students.firstName, lastName: students.lastName, program: students.program })
+        .select({ id: students.id, firstName: students.firstName, lastName: students.lastName, program: students.program, beltRank: students.beltRank })
         .from(students)
         .where(
           and(
@@ -1134,6 +1134,141 @@ export const kioskRouter = router({
         .update(ds)
         .set({ kioskFeatureFlags: JSON.stringify(input.flags) })
         .where(eq(ds.organizationId, input.orgId));
+      return { success: true };
+    }),
+
+  /**
+   * Create a lead from the kiosk new student flow (public)
+   */
+  createKioskLead: publicProcedure
+    .input(z.object({
+      orgId: z.number(),
+      firstName: z.string(),
+      lastName: z.string().optional(),
+      phone: z.string().optional(),
+      email: z.string().optional(),
+      interestedProgram: z.string().optional(),
+      source: z.string().default('Kiosk'),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+      const { leads } = await import('../drizzle/schema');
+      const now = new Date().toISOString();
+      await ctx.db.insert(leads).values({
+        organizationId: input.orgId,
+        firstName: input.firstName,
+        lastName: input.lastName || '',
+        phone: input.phone || null,
+        email: input.email || null,
+        interestedProgram: input.interestedProgram || null,
+        source: input.source,
+        status: 'New Lead',
+        createdAt: now,
+        updatedAt: now,
+      });
+      return { success: true };
+    }),
+
+  /**
+   * Get kiosk analytics: check-ins per day, new leads from kiosk, peak hours
+   */
+  getKioskAnalytics: protectedProcedure
+    .input(z.object({ orgId: z.number(), days: z.number().default(30) }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+      const { studentAttendance, leads } = await import('../drizzle/schema');
+      const { and, gte, sql: sqlExpr, desc } = await import('drizzle-orm');
+      const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+      // Daily check-ins (last N days)
+      const checkIns = await ctx.db
+        .select({
+          date: sqlExpr<string>`DATE(${studentAttendance.classDate})`,
+          count: sqlExpr<number>`COUNT(*)`,
+        })
+        .from(studentAttendance)
+        .where(gte(studentAttendance.classDate, since))
+        .groupBy(sqlExpr`DATE(${studentAttendance.classDate})`)
+        .orderBy(sqlExpr`DATE(${studentAttendance.classDate})`);
+
+      // Kiosk leads (last N days)
+      const kioskLeads = await ctx.db
+        .select({
+          date: sqlExpr<string>`DATE(${leads.createdAt})`,
+          count: sqlExpr<number>`COUNT(*)`,
+        })
+        .from(leads)
+        .where(and(
+          eq(leads.organizationId, input.orgId),
+          eq(leads.source, 'Kiosk'),
+          gte(leads.createdAt, since)
+        ))
+        .groupBy(sqlExpr`DATE(${leads.createdAt})`)
+        .orderBy(sqlExpr`DATE(${leads.createdAt})`);
+
+      // Peak hours (hour of day with most check-ins)
+      const peakHours = await ctx.db
+        .select({
+          hour: sqlExpr<number>`HOUR(${studentAttendance.checkedInAt})`,
+          count: sqlExpr<number>`COUNT(*)`,
+        })
+        .from(studentAttendance)
+        .where(gte(studentAttendance.classDate, since))
+        .groupBy(sqlExpr`HOUR(${studentAttendance.checkedInAt})`)
+        .orderBy(desc(sqlExpr`COUNT(*)`));
+
+      // Total stats
+      const totalCheckIns = checkIns.reduce((s, r) => s + Number(r.count), 0);
+      const totalKioskLeads = kioskLeads.reduce((s, r) => s + Number(r.count), 0);
+      const topHour = peakHours[0]?.hour ?? null;
+
+      return {
+        checkInsPerDay: checkIns.map(r => ({ date: r.date, count: Number(r.count) })),
+        kioskLeadsPerDay: kioskLeads.map(r => ({ date: r.date, count: Number(r.count) })),
+        peakHours: peakHours.slice(0, 5).map(r => ({ hour: Number(r.hour), count: Number(r.count) })),
+        totalCheckIns,
+        totalKioskLeads,
+        topHour,
+      };
+    }),
+
+  /**
+   * Book a trial class from the kiosk (public)
+   */
+  bookTrialClass: publicProcedure
+    .input(z.object({
+      orgId: z.number(),
+      firstName: z.string(),
+      lastName: z.string().optional(),
+      phone: z.string(),
+      email: z.string().optional(),
+      classId: z.number().optional(),
+      preferredDate: z.string().optional(),
+      preferredTime: z.string().optional(),
+      program: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+      const { leads } = await import('../drizzle/schema');
+      const now = new Date().toISOString();
+      const notes = [
+        input.preferredDate ? `Preferred date: ${input.preferredDate}` : null,
+        input.preferredTime ? `Preferred time: ${input.preferredTime}` : null,
+        input.classId ? `Class ID: ${input.classId}` : null,
+      ].filter(Boolean).join(' | ');
+      await ctx.db.insert(leads).values({
+        organizationId: input.orgId,
+        firstName: input.firstName,
+        lastName: input.lastName || '',
+        phone: input.phone,
+        email: input.email || null,
+        interestedProgram: input.program || 'Free Trial',
+        source: 'Kiosk Trial',
+        status: 'Trial Scheduled',
+        notes: notes || null,
+        createdAt: now,
+        updatedAt: now,
+      });
       return { success: true };
     }),
 });

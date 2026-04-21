@@ -87,6 +87,7 @@ const OwnerCommandCenter = lazy(() => import("../pages/OwnerCommandCenter").then
 const WebhookSettings = lazy(() => import("../pages/WebhookSettings"));
 const ApiKeysSettings = lazy(() => import("../pages/ApiKeysSettings"));
 const KioskSettings = lazy(() => import("../pages/KioskSettings"));
+const KioskAnalytics = lazy(() => import("../pages/KioskAnalytics"));
 
 const KioskStudio = lazy(() => import("../pages/KioskStudio"));
 const KioskStudioBuilder2 = lazy(() => import("../pages/KioskStudioBuilder2"));
@@ -311,6 +312,7 @@ export const appRoutes: RouteConfig[] = [
   { path: "/settings/webhooks", element: <WebhookSettings />, label: "Webhook Settings" },
   { path: "/settings/api-keys", element: <ApiKeysSettings />, label: "API Keys" },
   { path: "/settings/kiosk", element: <KioskSettings />, label: "Kiosk Settings" },
+  { path: "/kiosk-analytics", element: <AppShell><ProtectedRoute><KioskAnalytics /></ProtectedRoute></AppShell>, label: "Kiosk Analytics" },
   { path: "/settings/kiosk/studio", element: <ProtectedRoute><KioskStudioBuilder2 /></ProtectedRoute>, label: "Kiosk Studio" },
   { path: "/kiosk-studio-builder/:locationId", element: <ProtectedRoute><KioskStudioBuilder2 /></ProtectedRoute>, label: "Kiosk Studio Builder" },
 

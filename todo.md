@@ -9525,3 +9525,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Fix LeadSettings.tsx placeholder text "Welcome to MyDojo" — use org name dynamically
 - [ ] Build Integrations hub page with connector cards: GoHighLevel, Mindbody, Zen Planner, Custom Webhook
 - [ ] Each connector card shows: logo, name, description, "Connect" / "Connected" status, API key input
+
+## Kiosk Enhancements (Phase 18)
+- [x] Animated check-in celebration (confetti/fireworks with student name)
+- [x] Belt rank display on check-in success screen
+- [x] Digital waiver signing in new student flow (finger-draw signature)
+- [x] Trial class booking flow on kiosk (pick class time, book free trial)
+- [x] QR code check-in (students scan QR from phone)
+- [x] Kiosk URL + QR code generator in Kiosk Settings
+- [x] Kiosk analytics dashboard in CRM (check-ins/day, new leads, peak hours)
+- [x] Multi-language support on kiosk (English/Spanish toggle)

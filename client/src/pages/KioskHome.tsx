@@ -14,6 +14,9 @@ import { useNavigate } from 'react-router-dom';
 import { Lock, Flame, Users, Clock, Star, Gamepad2, Ticket, UserPlus } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/hooks/useAuth';
+import KioskCheckInCelebration from '@/components/KioskCheckInCelebration';
+import KioskTrialBooking from '@/components/KioskTrialBooking';
+import { type KioskLang, t as kt, LANG_LABELS } from '@/lib/kioskI18n';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -175,7 +178,7 @@ interface CheckInModalProps {
 
 function CheckInModal({ orgId, onClose }: CheckInModalProps) {
   const [query, setQuery] = useState('');
-  const [confirmed, setConfirmed] = useState<string | null>(null);
+  const [celebStudent, setCelebStudent] = useState<{ name: string; beltRank?: string | null } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const searchQuery = trpc.kiosk.searchStudentsByOrg.useQuery(
@@ -188,31 +191,23 @@ function CheckInModal({ orgId, onClose }: CheckInModalProps) {
     inputRef.current?.focus();
   }, []);
 
-  async function handleCheckIn(studentId: number, name: string) {
+  async function handleCheckIn(studentId: number, name: string, beltRank?: string | null) {
     try {
       await checkIn.mutateAsync({ orgId, studentId });
-      setConfirmed(name);
-      setTimeout(onClose, 3000);
+      setCelebStudent({ name, beltRank });
     } catch {
       // ignore
     }
   }
 
-  if (confirmed) {
+  if (celebStudent) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md">
-        <div className="text-center">
-          <div className="text-9xl mb-6">🥋</div>
-          <h2
-            className="text-7xl font-black text-white mb-4 uppercase tracking-widest"
-            style={{ textShadow: '0 0 40px rgba(220,38,38,0.8), 0 0 80px rgba(220,38,38,0.4)' }}
-          >
-            CHECKED IN!
-          </h2>
-          <p className="text-4xl text-red-400 font-black mb-3">{confirmed}</p>
-          <p className="text-xl text-white/50 mt-4 tracking-wider">Train hard. See you on the mat! 🔥</p>
-        </div>
-      </div>
+      <KioskCheckInCelebration
+        studentName={celebStudent.name}
+        beltRank={celebStudent.beltRank}
+        onDismiss={onClose}
+        duration={4500}
+      />
     );
   }
 
@@ -259,7 +254,7 @@ function CheckInModal({ orgId, onClose }: CheckInModalProps) {
           {((searchQuery.data as any[]) || []).map((s: any) => (
             <button
               key={s.id}
-              onClick={() => handleCheckIn(s.id, `${s.firstName} ${s.lastName || ''}`.trim())}
+              onClick={() => handleCheckIn(s.id, `${s.firstName} ${s.lastName || ''}`.trim(), s.beltRank)}
               className="w-full flex items-center gap-4 rounded-2xl px-5 py-3 transition-all active:scale-95"
               style={{
                 background: 'rgba(255,255,255,0.04)',
@@ -272,10 +267,15 @@ function CheckInModal({ orgId, onClose }: CheckInModalProps) {
               >
                 {initials(`${s.firstName} ${s.lastName || ''}`)}
               </div>
-              <div className="text-left">
+              <div className="text-left flex-1">
                 <p className="text-white font-bold">{s.firstName} {s.lastName}</p>
                 {s.program && <p className="text-gray-500 text-sm">{s.program}</p>}
               </div>
+              {s.beltRank && (
+                <span className="text-xs font-bold px-2 py-1 rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}>
+                  {s.beltRank}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -298,6 +298,8 @@ export default function KioskHome() {
   const { user } = useAuth();
   const orgId = (user as any)?.activeOrgId || 1;
   const [showCheckIn, setShowCheckIn] = useState(false);
+  const [showTrialBooking, setShowTrialBooking] = useState(false);
+  const [lang, setLang] = useState<KioskLang>('en');
   const [now, setNow] = useState(new Date());
   const [pulse, setPulse] = useState(false);
 
@@ -483,7 +485,7 @@ export default function KioskHome() {
             letterSpacing: '0.1em',
           }}
         >
-          🔥 TAP TO CHECK IN 🔥
+          {kt(lang, 'tapToCheckIn')}
         </button>
 
         {/* ── Action buttons ── */}
@@ -503,7 +505,7 @@ export default function KioskHome() {
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.2)' }}>
                     <Ticket className="w-4 h-4 text-red-400" />
                   </div>
-                  <span className="font-black text-white uppercase tracking-wider text-sm">Buy a Day Pass</span>
+                  <span className="font-black text-white uppercase tracking-wider text-sm">{kt(lang, 'buyDayPass')}</span>
                 </div>
                 <span className="text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}>
                   Walk-ins Welcome
@@ -526,13 +528,34 @@ export default function KioskHome() {
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(5,150,105,0.15)', border: '1px solid rgba(5,150,105,0.2)' }}>
                     <UserPlus className="w-4 h-4 text-emerald-400" />
                   </div>
-                  <span className="font-black text-white uppercase tracking-wider text-sm">Enroll Now</span>
+                  <span className="font-black text-white uppercase tracking-wider text-sm">{kt(lang, 'enrollNow')}</span>
                 </div>
                 <span className="text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #059669, #047857)', color: '#fff', boxShadow: '0 0 12px rgba(5,150,105,0.4)' }}>
                   Start Today
                 </span>
               </button>
             )}
+            {/* Trial Booking Button */}
+            <button
+              onClick={() => setShowTrialBooking(true)}
+              className="w-full flex items-center justify-between rounded-2xl px-5 py-4 transition-all active:scale-95"
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(251,191,36,0.2)',
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.2)' }}>
+                  <Star className="w-4 h-4 text-yellow-400" />
+                </div>
+                  <span className="font-black text-white uppercase tracking-wider text-sm">{kt(lang, 'bookFreeTrial')}</span>
+              </div>
+              <span className="text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #d97706, #b45309)', color: '#fff', boxShadow: '0 0 12px rgba(217,119,6,0.4)' }}>
+                No Commitment
+              </span>
+            </button>
 
             {flags.showArcadeGames && (
               <button
@@ -549,7 +572,7 @@ export default function KioskHome() {
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(147,51,234,0.15)', border: '1px solid rgba(147,51,234,0.2)' }}>
                     <Gamepad2 className="w-4 h-4 text-purple-400" />
                   </div>
-                  <span className="font-black text-white uppercase tracking-wider text-sm">Play Arcade Games</span>
+                  <span className="font-black text-white uppercase tracking-wider text-sm">{kt(lang, 'playArcadeGames')}</span>
                 </div>
                 <span className="text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', boxShadow: '0 0 12px rgba(124,58,237,0.4)' }}>
                   4 Games
@@ -664,12 +687,50 @@ export default function KioskHome() {
           title="Lock kiosk"
         >
           <Lock className="w-5 h-5" />
-          <span className="text-xs tracking-widest uppercase">LOCK</span>
+          <span className="text-xs tracking-widest uppercase">{kt(lang, 'lockKiosk')}</span>
         </button>
       )}
 
+      {/* Language Switcher */}
+      <div className="fixed bottom-4 left-4 z-40 flex gap-1">
+        {(Object.keys(LANG_LABELS) as KioskLang[]).map(l => (
+          <button
+            key={l}
+            onClick={() => setLang(l)}
+            className="px-2 py-1 rounded-lg text-xs font-bold transition-all"
+            style={{
+              background: lang === l ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${lang === l ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.1)'}`,
+              color: lang === l ? '#fff' : 'rgba(255,255,255,0.4)',
+            }}
+          >
+            {LANG_LABELS[l]}
+          </button>
+        ))}
+      </div>
       {showCheckIn && (
         <CheckInModal orgId={orgId} onClose={() => setShowCheckIn(false)} />
+      )}
+      {showTrialBooking && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md overflow-y-auto py-8"
+          onClick={() => setShowTrialBooking(false)}
+        >
+          <div
+            className="w-full max-w-2xl mx-4 rounded-3xl p-8 shadow-2xl"
+            style={{
+              background: 'linear-gradient(135deg, rgba(20,10,0,0.97) 0%, rgba(5,0,0,0.99) 100%)',
+              border: '1px solid rgba(251,191,36,0.3)',
+              boxShadow: '0 0 60px rgba(251,191,36,0.15), 0 25px 50px rgba(0,0,0,0.8)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <KioskTrialBooking
+              onBack={() => setShowTrialBooking(false)}
+              onDone={() => setShowTrialBooking(false)}
+            />
+          </div>
+        </div>
       )}
 
       <style>{`
