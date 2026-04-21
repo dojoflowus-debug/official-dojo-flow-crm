@@ -9516,3 +9516,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Show "Converted to Student" badge on matched lead cards
 - [ ] Run batch conversion on deploy to clean up existing duplicates
 - [ ] Test end-to-end and save checkpoint
+
+## Phase 21: SaaS De-Personalization & Integrations Hub
+- [ ] Remove "MyDojo Sync" button from Leads page toolbar — replace with generic "Integrations" button
+- [ ] Rename MyDojoSyncModal to generic IntegrationsModal
+- [ ] Rewrite WebhookSettings.tsx as generic "Lead Capture & Integrations" page (remove all MyDojo branding)
+- [ ] Fix LeadCapture.tsx hardcoded locationName="MyDojo" — use org name from context
+- [ ] Fix LeadSettings.tsx placeholder text "Welcome to MyDojo" — use org name dynamically
+- [ ] Build Integrations hub page with connector cards: GoHighLevel, Mindbody, Zen Planner, Custom Webhook
+- [ ] Each connector card shows: logo, name, description, "Connect" / "Connected" status, API key input

@@ -54,7 +54,7 @@ export const LeadCapture: React.FC = () => {
         <KaiChatStateful
           organizationId={organizationId}
           locationId={locationId}
-          locationName="MyDojo"
+          locationName="Your School"
           embedded={true}
         />
       </div>

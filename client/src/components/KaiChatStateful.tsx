@@ -82,7 +82,7 @@ const isLightColor = (hexColor: string): boolean => {
 export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
   organizationId,
   locationSlug,
-  locationName = 'MyDojo',
+  locationName = 'Our School',
   locationId,
   embedded = false,
 }) => {
@@ -98,7 +98,7 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
   const [state, setState] = useState<ConversationState>({
     ...initialState,
     locationSlug: locationSlug || null,
-    locationName: locationName || 'MyDojo',
+    locationName: locationName || 'Our School',
     locationId: locationId || null,
   });
   // Derive showCalendar from stage instead of using separate state

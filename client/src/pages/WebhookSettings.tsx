@@ -19,11 +19,11 @@ export default function WebhookSettings() {
   const [kioskTestResult, setKioskTestResult] = useState<any>(null);
 
   const baseUrl = window.location.origin;
-  const webhookUrl = `${baseUrl}/api/webhooks/mydojo/lead`;
-  const appointmentWebhookUrl = `${baseUrl}/api/webhooks/mydojo`;
-  const kioskSyncBase = `${baseUrl}/api/mydojo/sync`;
+  const webhookUrl = `${baseUrl}/api/webhooks/lead`;
+  const appointmentWebhookUrl = `${baseUrl}/api/webhooks/lead`;
+  const kioskSyncBase = `${baseUrl}/api/public/sync`;
 
-  // Fetch the widget API key (used as the MyDojo webhook auth key)
+  // Fetch the widget API key (used as the webhook auth key)
   const { data: widgetKeyData, isLoading: keyLoading, refetch: refetchKey } =
     trpc.settings.getWidgetKey.useQuery(undefined, { retry: false });
 
@@ -47,7 +47,7 @@ export default function WebhookSettings() {
   };
 
   const handleRegenerateKey = () => {
-    if (!confirm("Regenerate API key? Your existing MyDojo integration will need to be updated with the new key.")) return;
+    if (!confirm("Regenerate API key? Your existing integrations will need to be updated with the new key.")) return;
     setIsRegenerating(true);
     regenerateKeyMutation.mutate();
   };
@@ -60,7 +60,7 @@ export default function WebhookSettings() {
     setTestStatus("loading");
     setTestResult("");
     try {
-      const response = await fetch("/api/webhooks/mydojo/lead", {
+      const response = await fetch("/api/webhooks/lead", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -69,9 +69,9 @@ export default function WebhookSettings() {
         body: JSON.stringify({
           firstName: "Test",
           lastName: "Lead",
-          email: `test-${Date.now()}@mydojo-test.com`,
+          email: `test-${Date.now()}@dojoflow-test.com`,
           phone: "5551234567",
-          source: "MyDojo Website (Test)",
+          source: "Website (Test)",
           program: "Martial Arts",
         }),
       });
@@ -92,7 +92,7 @@ export default function WebhookSettings() {
     }
   };
 
-  const htmlFormSnippet = `<!-- MyDojo Lead Form — paste on your landing page -->
+  const htmlFormSnippet = `<!-- DojoFlow Lead Form — paste on your landing page -->
 <form id="dojo-lead-form">
   <input type="text" name="firstName" placeholder="First Name" required />
   <input type="text" name="lastName" placeholder="Last Name" />
@@ -111,7 +111,7 @@ export default function WebhookSettings() {
 document.getElementById('dojo-lead-form').addEventListener('submit', async function(e) {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(this));
-  data.source = 'MyDojo Website';
+  data.source = 'Website';
   const res = await fetch('${webhookUrl}', {
     method: 'POST',
     headers: {
@@ -142,7 +142,7 @@ async function sendLeadToDojoFlow(leadData) {
       email: leadData.email,
       phone: leadData.phone,
       program: leadData.program,
-      source: 'MyDojo Website'
+      source: 'Website'
     })
   });
   return response.json();
@@ -161,7 +161,7 @@ async function sendLeadToDojoFlow(leadData) {
   "email": "{{Email}}",
   "phone": "{{Phone}}",
   "program": "{{Program}}",
-  "source": "MyDojo Website"
+  "source": "Website"
 }`;
 
   return (
@@ -170,9 +170,9 @@ async function sendLeadToDojoFlow(leadData) {
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">MyDojo Lead Sync</h1>
+            <h1 className="text-3xl font-bold mb-2">Lead Capture & Integrations</h1>
             <p className="text-gray-400">
-              Automatically capture leads from your MyDojo website and landing pages into DojoFlow's pipeline.
+              Automatically capture leads from your website and landing pages into DojoFlow's pipeline.
             </p>
           </div>
           <Badge className="bg-green-600 text-white flex items-center gap-1.5 px-3 py-1.5">
@@ -211,7 +211,7 @@ async function sendLeadToDojoFlow(leadData) {
                   Step 1 — Webhook Endpoint URL
                 </CardTitle>
                 <CardDescription>
-                  Use this URL in your MyDojo form, landing page, or Zapier/Make.com automation.
+                  Use this URL in your form, landing page, or Zapier/Make.com automation.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -354,7 +354,7 @@ async function sendLeadToDojoFlow(leadData) {
                         { field: "email", req: "Yes*", desc: "Email address (*required if no phone)" },
                         { field: "phone", req: "Yes*", desc: "Phone number (*required if no email)" },
                         { field: "program", req: "No", desc: "Interested program (e.g. 'Kids Karate')" },
-                        { field: "source", req: "No", desc: "Lead source label (default: 'MyDojo Website')" },
+                        { field: "source", req: "No", desc: "Lead source label (default: 'Website')" },
                         { field: "notes", req: "No", desc: "Additional notes or message from the form" },
                       ].map(({ field, req, desc }) => (
                         <tr key={field}>
@@ -382,7 +382,7 @@ async function sendLeadToDojoFlow(leadData) {
             <Card className="bg-zinc-900 border-zinc-800">
               <CardHeader>
                 <CardTitle className="text-white">HTML Form + JavaScript</CardTitle>
-                <CardDescription>Paste this into any HTML page on your MyDojo website.</CardDescription>
+                <CardDescription>Paste this into any HTML page on your website.</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="relative">
@@ -513,9 +513,9 @@ async function sendLeadToDojoFlow(leadData) {
                   <pre className="text-xs text-gray-400 font-mono">{JSON.stringify({
                     firstName: "Test",
                     lastName: "Lead",
-                    email: "test-[timestamp]@mydojo-test.com",
+                    email: "test-[timestamp]@dojoflow-test.com",
                     phone: "5551234567",
-                    source: "MyDojo Website (Test)",
+                    source: "Website (Test)",
                     program: "Martial Arts",
                   }, null, 2)}</pre>
                 </div>
@@ -529,10 +529,10 @@ async function sendLeadToDojoFlow(leadData) {
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Monitor className="w-5 h-5 text-blue-400" />
-                  Kiosk ↔ MyDojo Website Sync
+                  Kiosk & Public API Sync
                 </CardTitle>
                 <CardDescription>
-                  These public REST endpoints let your MyDojo website pull live class schedules, programs,
+                  These public REST endpoints let your website pull live class schedules, programs,
                   and branding from DojoFlow — and push student check-ins back in real time.
                   Authenticate every request with your API key as the <code className="text-yellow-400">x-api-key</code> header.
                 </CardDescription>
@@ -540,12 +540,12 @@ async function sendLeadToDojoFlow(leadData) {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {[
-                    { icon: <CheckCircle2 className="w-4 h-4 text-green-400" />, label: "Status Check", method: "GET", path: "/api/mydojo/sync/status", color: "text-green-400" },
-                    { icon: <Calendar className="w-4 h-4 text-blue-400" />, label: "Class Schedule", method: "GET", path: "/api/mydojo/sync/schedule", color: "text-blue-400" },
-                    { icon: <BookOpen className="w-4 h-4 text-purple-400" />, label: "Programs", method: "GET", path: "/api/mydojo/sync/programs", color: "text-purple-400" },
-                    { icon: <Globe className="w-4 h-4 text-yellow-400" />, label: "Kiosk Branding", method: "GET", path: "/api/mydojo/sync/kiosk", color: "text-yellow-400" },
-                    { icon: <Users className="w-4 h-4 text-orange-400" />, label: "Today's Check-ins", method: "GET", path: "/api/mydojo/sync/checkins", color: "text-orange-400" },
-                    { icon: <Zap className="w-4 h-4 text-red-400" />, label: "Record Check-in", method: "POST", path: "/api/mydojo/sync/checkin", color: "text-red-400" },
+                    { icon: <CheckCircle2 className="w-4 h-4 text-green-400" />, label: "Status Check", method: "GET", path: "/api/public/sync/status", color: "text-green-400" },
+                    { icon: <Calendar className="w-4 h-4 text-blue-400" />, label: "Class Schedule", method: "GET", path: "/api/public/sync/schedule", color: "text-blue-400" },
+                    { icon: <BookOpen className="w-4 h-4 text-purple-400" />, label: "Programs", method: "GET", path: "/api/public/sync/programs", color: "text-purple-400" },
+                    { icon: <Globe className="w-4 h-4 text-yellow-400" />, label: "Kiosk Branding", method: "GET", path: "/api/public/sync/kiosk", color: "text-yellow-400" },
+                    { icon: <Users className="w-4 h-4 text-orange-400" />, label: "Today's Check-ins", method: "GET", path: "/api/public/sync/checkins", color: "text-orange-400" },
+                    { icon: <Zap className="w-4 h-4 text-red-400" />, label: "Record Check-in", method: "POST", path: "/api/public/sync/checkin", color: "text-red-400" },
                   ].map(({ icon, label, method, path, color }) => (
                     <div key={path} className="flex items-center gap-3 bg-zinc-800 rounded-lg p-3">
                       {icon}
@@ -594,7 +594,7 @@ async function sendLeadToDojoFlow(leadData) {
                     setKioskTestStatus("loading");
                     setKioskTestResult(null);
                     try {
-                      const res = await fetch(`/api/mydojo/sync/status`, {
+                      const res = await fetch(`/api/public/sync/status`, {
                         headers: { "x-api-key": apiKey },
                       });
                       const data = await res.json();
@@ -629,7 +629,7 @@ async function sendLeadToDojoFlow(leadData) {
                     <div>
                       <p className="font-semibold text-green-400">Kiosk Sync Connected!</p>
                       <p className="text-sm text-gray-300 mt-1">Organization: <span className="text-white font-medium">{kioskTestResult.organization}</span></p>
-                      <p className="text-xs text-gray-500 mt-0.5">All 5 sync endpoints are live and ready for your MyDojo website.</p>
+                      <p className="text-xs text-gray-500 mt-0.5">All 5 sync endpoints are live and ready for your website.</p>
                     </div>
                   </div>
                 )}
@@ -650,7 +650,7 @@ async function sendLeadToDojoFlow(leadData) {
             <Card className="bg-zinc-900 border-zinc-800">
               <CardHeader>
                 <CardTitle className="text-white">JavaScript Integration Snippet</CardTitle>
-                <CardDescription>Fetch class schedule and programs from your MyDojo website.</CardDescription>
+                <CardDescription>Fetch class schedule and programs from your website.</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="relative">
@@ -659,21 +659,21 @@ const API_KEY = '${apiKey || "YOUR_API_KEY_HERE"}';
 const BASE = '${baseUrl}';
 
 async function getSchedule() {
-  const res = await fetch(BASE + '/api/mydojo/sync/schedule', {
+  const res = await fetch(BASE + '/api/public/sync/schedule', {
     headers: { 'x-api-key': API_KEY }
   });
   return res.json(); // { schedule, byDay, totalClasses }
 }
 
 async function getPrograms() {
-  const res = await fetch(BASE + '/api/mydojo/sync/programs', {
+  const res = await fetch(BASE + '/api/public/sync/programs', {
     headers: { 'x-api-key': API_KEY }
   });
   return res.json(); // { programs, totalPrograms }
 }
 
 async function getBranding() {
-  const res = await fetch(BASE + '/api/mydojo/sync/kiosk', {
+  const res = await fetch(BASE + '/api/public/sync/kiosk', {
     headers: { 'x-api-key': API_KEY }
   });
   return res.json(); // { branding, contact, booking }
@@ -681,7 +681,7 @@ async function getBranding() {
 
 // Record a member check-in from your website
 async function checkIn(email) {
-  const res = await fetch(BASE + '/api/mydojo/sync/checkin', {
+  const res = await fetch(BASE + '/api/public/sync/checkin', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
     body: JSON.stringify({ email })
@@ -694,7 +694,7 @@ async function checkIn(email) {
 const BASE = '${baseUrl}';
 
 async function getSchedule() {
-  const res = await fetch(BASE + '/api/mydojo/sync/schedule', { headers: { 'x-api-key': API_KEY } });
+  const res = await fetch(BASE + '/api/public/sync/schedule', { headers: { 'x-api-key': API_KEY } });
   return res.json();
 }`,
                       "Kiosk sync snippet"

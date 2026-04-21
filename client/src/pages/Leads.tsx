@@ -278,11 +278,11 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
                   onClick={() => setShowMyDojoSync(true)}
                   variant="outline"
                   size="sm"
-                  title="Sync leads & students from MyDojo website"
+                  title="Manage integrations & external data sources"
                   className={`${isDarkMode ? 'bg-white/5 border-white/20 text-white hover:bg-white/10' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
                 >
                   <RefreshCw className="h-4 w-4 mr-1.5" />
-                  <span className="text-xs">MyDojo Sync</span>
+                  <span className="text-xs">Integrations</span>
                 </Button>
                 <Button 
                   onClick={() => setShowSettings(true)} 
@@ -491,7 +491,7 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
           onClose={() => setShowSettings(false)} 
         />
 
-        {/* MyDojo Sync Modal */}
+        {/* Integrations Modal */}
         <MyDojoSyncModal
           isOpen={showMyDojoSync}
           onClose={() => setShowMyDojoSync(false)}

@@ -27,7 +27,7 @@ const TIME_SLOTS: TimeSlot[] = [
 
 export const CalendarPicker: React.FC<CalendarPickerProps> = ({
   onSelectDateTime,
-  locationName = 'MyDojo',
+  locationName = 'Our School',
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);

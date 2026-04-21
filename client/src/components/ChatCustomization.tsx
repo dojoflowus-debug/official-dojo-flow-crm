@@ -131,7 +131,7 @@ export default function ChatCustomization({ onSave }: ChatCustomizationProps = {
           <textarea
             value={welcomeMessage}
             onChange={(e) => setWelcomeMessage(e.target.value)}
-            placeholder="Hi! 👋 Welcome to MyDojo. I can help you pick the right program and book a free intro class. What are you looking for today?"
+            placeholder="Hi! 👋 Welcome! I can help you pick the right program and book a free intro class. What are you looking for today?"
             rows={5}
             className="w-full px-4 py-3 bg-slate-900/60 border-2 border-slate-700/40 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none transition-all"
           />

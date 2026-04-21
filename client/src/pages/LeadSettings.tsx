@@ -185,7 +185,7 @@ export default function LeadSettings() {
                       <textarea
                         value={welcomeMessage}
                         onChange={(e) => setWelcomeMessage(e.target.value)}
-                        placeholder="Hi! 👋 Welcome to MyDojo. I can help you pick the right program and book a free intro class. What are you looking for today?"
+                        placeholder="Hi! 👋 Welcome! I can help you pick the right program and book a free intro class. What are you looking for today?"
                         rows={5}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
                       />

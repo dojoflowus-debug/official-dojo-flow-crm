@@ -74,7 +74,7 @@ export default function KaiLeadCaptureLocation() {
   // Initialize chat with location-aware greeting
   useEffect(() => {
     if (!locationLoading && locationContext && messages.length === 0) {
-      const greeting = `Hi! I'm Kai 👋 Welcome to MyDojo ${locationContext.name}. I can help you pick the right program and book a free intro class. What are you looking for today?`;
+      const greeting = `Hi! I'm Kai 👋 Welcome to ${locationContext.name}. I can help you pick the right program and book a free intro class. What are you looking for today?`;
       
       setMessages([
         {
@@ -204,7 +204,7 @@ export default function KaiLeadCaptureLocation() {
           </div>
           <div>
             <p className="text-white font-semibold">Kai</p>
-            <p className="text-sm text-gray-300">MyDojo {locationContext.name} • Always here to help</p>
+            <p className="text-sm text-gray-300">{locationContext.name} • Always here to help</p>
           </div>
         </div>
       </div>
