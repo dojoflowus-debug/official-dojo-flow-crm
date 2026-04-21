@@ -9507,3 +9507,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Update frontend DeleteStudentModal Step 2 to show "Code sent to [email]" instead of displaying the code
 - [x] Remove copy button and code display from Step 2
 - [x] Test end-to-end with real email delivery
+
+## Phase 20: Student-Lead Deduplication Rule
+- [ ] Analyze leads and students schema (table names, field names for name/email/phone)
+- [ ] Add backend: check for matching student on lead creation/update → auto-mark as "Enrolled"
+- [ ] Add backend: batch mutation to scan all existing leads and convert matches to "Enrolled"
+- [ ] Auto-filter "Enrolled" leads from active pipeline columns (New Lead, Contacted, etc.)
+- [ ] Show "Converted to Student" badge on matched lead cards
+- [ ] Run batch conversion on deploy to clean up existing duplicates
+- [ ] Test end-to-end and save checkpoint

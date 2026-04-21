@@ -18,8 +18,10 @@ import {
   Settings,
   Focus,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  UserCheck
 } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 import LeadSourceSettings from '@/components/LeadSourceSettings'
 import { KaiLeadCaptureSection } from '@/components/KaiLeadCaptureSection'
 import MyDojoSyncModal from '@/components/MyDojoSyncModal'
@@ -111,6 +113,21 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
       refetch()
       setIsDrawerOpen(false)
       setSelectedLead(null)
+    }
+  })
+  const { toast } = useToast()
+  const syncStudents = trpc.leads.syncEnrolledFromStudents.useMutation({
+    onSuccess: (data) => {
+      refetch()
+      toast({
+        title: 'Sync complete',
+        description: data.convertedCount > 0
+          ? `${data.convertedCount} lead${data.convertedCount === 1 ? '' : 's'} moved to Enrolled — they are already students.`
+          : 'All leads are up to date. No duplicates found.',
+      })
+    },
+    onError: (err) => {
+      toast({ title: 'Sync failed', description: err.message, variant: 'destructive' })
     }
   })
 
@@ -246,6 +263,17 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
                   />
                 </div>
                 
+                <Button
+                  onClick={() => syncStudents.mutate()}
+                  disabled={syncStudents.isLoading}
+                  variant="outline"
+                  size="sm"
+                  title="Auto-convert leads who are already students"
+                  className={`${isDarkMode ? 'bg-white/5 border-white/20 text-white hover:bg-white/10' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                >
+                  <UserCheck className="h-4 w-4 mr-1.5" />
+                  <span className="text-xs">{syncStudents.isLoading ? 'Syncing…' : 'Sync Students'}</span>
+                </Button>
                 <Button
                   onClick={() => setShowMyDojoSync(true)}
                   variant="outline"

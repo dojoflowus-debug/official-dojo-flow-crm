@@ -1958,13 +1958,39 @@ export const appRouter = router({
       }))
       .mutation(async ({ ctx, input }) => {
         const { getDb } = await import("./db");
-        const { leads } = await import("../drizzle/schema");
+        const { leads, students: studentsTable } = await import("../drizzle/schema");
+        const { or, and: andOp, eq: eqOp, sql: sqlExpr } = await import("drizzle-orm");
         
         const db = await getDb();
         if (!db) throw new Error('Database not available');
         
         // Use organization ID from context for multi-tenancy
         const orgId = ctx.currentOrganizationId;
+        
+        // ── Dedup rule: if a student already exists with matching email, phone, or full name → mark as Enrolled
+        let isAlreadyStudent = false;
+        try {
+          const dedupConditions: any[] = [];
+          if (input.email) dedupConditions.push(eqOp(studentsTable.email, input.email));
+          if (input.phone) dedupConditions.push(eqOp(studentsTable.phone, input.phone));
+          if (input.firstName && input.lastName) {
+            dedupConditions.push(
+              andOp(
+                sqlExpr`LOWER(${studentsTable.firstName}) = LOWER(${input.firstName})`,
+                sqlExpr`LOWER(${studentsTable.lastName}) = LOWER(${input.lastName})`
+              )
+            );
+          }
+          if (dedupConditions.length > 0) {
+            const match = await db.select({ id: studentsTable.id })
+              .from(studentsTable)
+              .where(andOp(eqOp(studentsTable.organizationId, orgId!), or(...dedupConditions)))
+              .limit(1);
+            isAlreadyStudent = match.length > 0;
+          }
+        } catch (dedupErr) {
+          console.error('[Leads] Dedup check error:', dedupErr);
+        }
         
         const result = await db.insert(leads).values({
           firstName: input.firstName,
@@ -1973,7 +1999,8 @@ export const appRouter = router({
           phone: input.phone,
           source: input.source,
           notes: input.notes,
-          status: "New Lead",
+          status: isAlreadyStudent ? 'Enrolled' : 'New Lead',
+          stage: isAlreadyStudent ? 'won' : 'new',
           organizationId: orgId,
         });
         
@@ -2297,6 +2324,58 @@ export const appRouter = router({
           name: r.name,
           role: r.role || 'staff',
         }));
+      }),
+
+    // ── Batch dedup: scan all leads and mark any that match an existing student as Enrolled
+    syncEnrolledFromStudents: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        const { getDb } = await import('./db');
+        const { leads, students: studentsTable } = await import('../drizzle/schema');
+        const { eq, or, and: andOp, sql: sqlExpr, ne } = await import('drizzle-orm');
+
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) throw new Error('Organization context missing');
+
+        // Fetch all active (non-Enrolled, non-won) leads for this org
+        const activeLeads = await db.select({
+          id: leads.id,
+          firstName: leads.firstName,
+          lastName: leads.lastName,
+          email: leads.email,
+          phone: leads.phone,
+        })
+          .from(leads)
+          .where(andOp(eq(leads.organizationId, orgId), ne(leads.status, 'Enrolled')));
+
+        let convertedCount = 0;
+        for (const lead of activeLeads) {
+          const conditions: any[] = [];
+          if (lead.email) conditions.push(eq(studentsTable.email, lead.email));
+          if (lead.phone) conditions.push(eq(studentsTable.phone, lead.phone));
+          if (lead.firstName && lead.lastName) {
+            conditions.push(
+              andOp(
+                sqlExpr`LOWER(${studentsTable.firstName}) = LOWER(${lead.firstName})`,
+                sqlExpr`LOWER(${studentsTable.lastName}) = LOWER(${lead.lastName})`
+              )
+            );
+          }
+          if (conditions.length === 0) continue;
+          const match = await db.select({ id: studentsTable.id })
+            .from(studentsTable)
+            .where(andOp(eq(studentsTable.organizationId, orgId), or(...conditions)))
+            .limit(1);
+          if (match.length > 0) {
+            await db.update(leads)
+              .set({ status: 'Enrolled', stage: 'won' })
+              .where(eq(leads.id, lead.id));
+            convertedCount++;
+          }
+        }
+
+        return { success: true, convertedCount };
       }),
   }),
   
