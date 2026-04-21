@@ -27,7 +27,6 @@ import {
 } from 'lucide-react';
 
 import { toast } from 'sonner';
-import { QRCodeSVG } from 'qrcode.react';
 
 export default function KioskSettings() {
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
@@ -382,21 +381,6 @@ export default function KioskSettings() {
                   <p className="text-xs text-muted-foreground">
                     Share this URL with staff or display it on a dedicated device
                   </p>
-                  {/* QR Code Generator */}
-                  <div className="mt-4 flex flex-col items-center gap-3 p-4 rounded-xl border bg-muted/30">
-                    <p className="text-sm font-semibold text-center">Scan to open kiosk on any device</p>
-                    <div className="p-3 bg-white rounded-xl shadow-sm">
-                      <QRCodeSVG
-                        value={kioskData.kioskUrl}
-                        size={160}
-                        level="M"
-                        includeMargin={false}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground text-center">
-                      Point a tablet camera at this code to instantly open the kiosk
-                    </p>
-                  </div>
                 </div>
               )}
 
