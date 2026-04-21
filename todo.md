@@ -9499,3 +9499,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Show code expiry countdown (10 min) in the modal
 - [x] Show success toast and refresh list after deletion
 - [x] Test end-to-end: generate code, enter wrong code (should fail), enter correct code (should delete)
+
+## Phase 19: Secure Delete - Email Verification Code
+- [x] Update generateDeleteCode mutation to send code via SendGrid to account holder's email instead of returning it in the response
+- [x] Find owner email from organization record
+- [x] Send branded email: "Your DojoFlow deletion verification code is: XXXXXX"
+- [x] Update frontend DeleteStudentModal Step 2 to show "Code sent to [email]" instead of displaying the code
+- [x] Remove copy button and code display from Step 2
+- [x] Test end-to-end with real email delivery
