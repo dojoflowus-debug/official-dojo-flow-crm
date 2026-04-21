@@ -1,741 +1,675 @@
 /**
- * KioskHome — DojoFlow Kiosk Live Screen (CINEMATIC EDITION)
+ * KioskHome — DojoFlow Kiosk Home Screen
  *
- * Full-screen kiosk with:
- *   - Canvas-based fire/ember particle system
- *   - Pulsing animated TAP TO CHECK IN CTA
- *   - Glassmorphism cards with glow borders
- *   - Dramatic typography with text glow
- *   - Intense crimson/ember color palette
+ * Layout matches the design mockup:
+ * ┌─────────────────────────────────────────────────────┐
+ * │  LOGO + SCHOOL NAME              CLOCK (top-right)  │
+ * ├──────────────────────────────┬──────────────────────┤
+ * │  WELCOME / READY TO TRAIN    │  TODAY'S SCHEDULE    │
+ * │  [TAP TO CHECK IN button]    │  DOJO LEADERBOARD    │
+ * │  🔥 STREAK BAR               │                      │
+ * │  [4 action icon cards]       │                      │
+ * ├──────────────────────────────┴──────────────────────┤
+ * │  TAP YOUR NAME TO CHECK IN (horizontal avatar row)  │
+ * ├─────────────────────────────────────────────────────┤
+ * │  Benefits strip (4 items)                           │
+ * ├─────────────────────────────────────────────────────┤
+ * │  ESPAÑOL  |  NEED HELP?  |  KIOSK MODE              │
+ * └─────────────────────────────────────────────────────┘
+ *
+ * Modes: idle → active → confirmation (auto-return)
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Flame, Users, Clock, Star, Gamepad2, Ticket, UserPlus } from 'lucide-react';
+import {
+  UserPlus, Gamepad2, ShoppingBag, Star, Lock, Settings,
+  Globe, HelpCircle, Trophy, Calendar, Flame, ChevronRight,
+  CheckCircle2, Clock, Users,
+} from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/hooks/useAuth';
 import KioskCheckInCelebration from '@/components/KioskCheckInCelebration';
 import KioskTrialBooking from '@/components/KioskTrialBooking';
 import { type KioskLang, t as kt, LANG_LABELS } from '@/lib/kioskI18n';
 
-// ─── helpers ────────────────────────────────────────────────────────────────
+// ─── Belt color ring map ─────────────────────────────────────────────────────
+const BELT_RING: Record<string, string> = {
+  white:  '#e5e7eb',
+  yellow: '#fbbf24',
+  orange: '#f97316',
+  green:  '#22c55e',
+  blue:   '#3b82f6',
+  purple: '#a855f7',
+  brown:  '#92400e',
+  red:    '#ef4444',
+  black:  '#111111',
+};
 
-function formatTime(t: string): string {
-  if (!t) return '';
-  if (t.includes(' ')) return t;
-  const [h, m] = t.split(':').map(Number);
-  if (isNaN(h)) return t;
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const h12 = h % 12 || 12;
-  return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+function getBeltColor(rank?: string | null): string {
+  if (!rank) return BELT_RING.white;
+  const key = rank.toLowerCase().replace(/\s+belt$/i, '').trim();
+  return BELT_RING[key] || BELT_RING.white;
 }
 
-function minutesUntil(startTime: string): number {
-  if (!startTime) return 0;
+// ─── Class status helper ─────────────────────────────────────────────────────
+function getClassStatus(startTime: string): 'in-progress' | 'up-next' | 'upcoming' {
+  if (!startTime) return 'upcoming';
   const now = new Date();
-  const [h, m] = startTime.split(':').map(Number);
-  if (isNaN(h)) return 0;
-  const classMinutes = h * 60 + (m || 0);
+  const [h, m] = startTime.replace(/[ap]m/i, '').split(':').map(Number);
+  const isPM = /pm/i.test(startTime) && h !== 12;
+  const isAM = /am/i.test(startTime) && h === 12;
+  const hour = isPM ? h + 12 : isAM ? 0 : h;
+  const classMinutes = hour * 60 + (m || 0);
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  return Math.max(0, classMinutes - nowMinutes);
+  const diff = classMinutes - nowMinutes;
+  if (diff < 0 && diff > -60) return 'in-progress';
+  if (diff >= 0 && diff <= 30) return 'up-next';
+  return 'upcoming';
 }
 
-function initials(name: string): string {
-  return name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
-}
-
-const AVATAR_COLORS = [
-  '#7c3aed', '#2563eb', '#059669', '#d97706',
-  '#db2777', '#0891b2', '#4f46e5', '#e11d48',
-];
-
-function avatarColor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-}
-
-// ─── Fire Canvas ─────────────────────────────────────────────────────────────
-
-interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  life: number;
-  maxLife: number;
-  size: number;
-  type: 'ember' | 'spark' | 'smoke';
-}
-
-function FireCanvas() {
+// ─── Particle background (fire/energy) ───────────────────────────────────────
+function FireParticles() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const particlesRef = useRef<Particle[]>([]);
-  const rafRef = useRef<number>(0);
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
-    function resize() {
-      if (!canvas) return;
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    function spawnParticle() {
-      if (!canvas) return;
-      const rand = Math.random();
-      const type: Particle['type'] = rand < 0.6 ? 'ember' : rand < 0.8 ? 'spark' : 'smoke';
-      particlesRef.current.push({
-        x: Math.random() * canvas.width,
-        y: canvas.height + 10,
-        vx: (Math.random() - 0.5) * 1.5,
-        vy: -(Math.random() * 2.5 + 1.5),
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    const particles: Array<{x:number;y:number;vx:number;vy:number;life:number;maxLife:number;size:number}> = [];
+    function spawn() {
+      particles.push({
+        x: Math.random() * canvas!.width,
+        y: canvas!.height + 10,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: -(Math.random() * 1.2 + 0.4),
         life: 0,
-        maxLife: type === 'smoke' ? 120 + Math.random() * 80 : 60 + Math.random() * 60,
-        size: type === 'smoke' ? 40 + Math.random() * 60 : 2 + Math.random() * 4,
-        type,
+        maxLife: Math.random() * 120 + 60,
+        size: Math.random() * 2 + 0.5,
       });
     }
-
     let frame = 0;
     function animate() {
-      if (!canvas || !ctx) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      frame++;
-      if (frame % 2 === 0) spawnParticle();
-      if (frame % 8 === 0) spawnParticle();
-
-      particlesRef.current = particlesRef.current.filter(p => p.life < p.maxLife);
-
-      for (const p of particlesRef.current) {
-        p.life++;
-        p.x += p.vx + Math.sin(p.life * 0.05) * 0.3;
+      ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
+      if (frame % 3 === 0) spawn();
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
         p.y += p.vy;
-        p.vy *= 0.99;
-
-        const progress = p.life / p.maxLife;
-        const alpha = Math.sin(progress * Math.PI) * (p.type === 'smoke' ? 0.06 : 0.7);
-
-        if (p.type === 'ember') {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size * (1 - progress * 0.5), 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255,${Math.round(100 * (1 - progress))},0,${alpha})`;
-          ctx.shadowBlur = 8;
-          ctx.shadowColor = `rgba(255,80,0,${alpha * 0.8})`;
-          ctx.fill();
-          ctx.shadowBlur = 0;
-        } else if (p.type === 'spark') {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size * 0.5, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255,200,50,${alpha * 1.2})`;
-          ctx.shadowBlur = 6;
-          ctx.shadowColor = `rgba(255,200,0,${alpha})`;
-          ctx.fill();
-          ctx.shadowBlur = 0;
-        } else {
-          const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
-          grad.addColorStop(0, `rgba(80,0,0,${alpha})`);
-          grad.addColorStop(1, `rgba(0,0,0,0)`);
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          ctx.fillStyle = grad;
-          ctx.fill();
-        }
+        p.life++;
+        if (p.life > p.maxLife) { particles.splice(i, 1); continue; }
+        const alpha = (1 - p.life / p.maxLife) * 0.35;
+        ctx!.beginPath();
+        ctx!.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx!.fillStyle = `rgba(239,68,68,${alpha})`;
+        ctx!.fill();
       }
-
-      rafRef.current = requestAnimationFrame(animate);
+      frame++;
+      requestAnimationFrame(animate);
     }
-
-    animate();
-    return () => {
-      window.removeEventListener('resize', resize);
-      cancelAnimationFrame(rafRef.current);
-    };
+    const raf = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(raf);
   }, []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0"
-      style={{ opacity: 0.85 }}
-    />
-  );
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />;
 }
 
-// ─── Check-in modal ──────────────────────────────────────────────────────────
-
-interface CheckInModalProps {
-  orgId: number;
-  onClose: () => void;
-}
-
-function CheckInModal({ orgId, onClose }: CheckInModalProps) {
-  const [query, setQuery] = useState('');
-  const [celebStudent, setCelebStudent] = useState<{ name: string; beltRank?: string | null } | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const searchQuery = trpc.kiosk.searchStudentsByOrg.useQuery(
-    { orgId, query },
-    { enabled: query.length >= 2 }
-  );
-  const checkIn = trpc.kiosk.checkInStudentByOrg.useMutation();
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  async function handleCheckIn(studentId: number, name: string, beltRank?: string | null) {
-    try {
-      await checkIn.mutateAsync({ orgId, studentId });
-      setCelebStudent({ name, beltRank });
-    } catch {
-      // ignore
-    }
-  }
-
-  if (celebStudent) {
-    return (
-      <KioskCheckInCelebration
-        studentName={celebStudent.name}
-        beltRank={celebStudent.beltRank}
-        onDismiss={onClose}
-        duration={4500}
-      />
-    );
-  }
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-lg mx-4 rounded-3xl p-8 shadow-2xl"
-        style={{
-          background: 'linear-gradient(135deg, rgba(30,0,0,0.95) 0%, rgba(10,0,0,0.98) 100%)',
-          border: '1px solid rgba(220,38,38,0.4)',
-          boxShadow: '0 0 60px rgba(220,38,38,0.2), 0 25px 50px rgba(0,0,0,0.8)',
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        <h2
-          className="text-4xl font-black text-white text-center mb-6 uppercase tracking-widest"
-          style={{ textShadow: '0 0 20px rgba(220,38,38,0.6)' }}
-        >
-          WHO'S CHECKING IN?
-        </h2>
-        <input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="Type your name..."
-          className="w-full rounded-2xl px-5 py-4 text-white text-xl placeholder-gray-600 focus:outline-none mb-4"
-          style={{
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(220,38,38,0.3)',
-            boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.4)',
-          }}
-        />
-        {searchQuery.isLoading && (
-          <p className="text-gray-500 text-center py-4 tracking-wider">Searching...</p>
-        )}
-        {searchQuery.data && searchQuery.data.length === 0 && query.length >= 2 && (
-          <p className="text-gray-500 text-center py-4">No students found</p>
-        )}
-        <div className="space-y-2 max-h-64 overflow-y-auto">
-          {((searchQuery.data as any[]) || []).map((s: any) => (
-            <button
-              key={s.id}
-              onClick={() => handleCheckIn(s.id, `${s.firstName} ${s.lastName || ''}`.trim(), s.beltRank)}
-              className="w-full flex items-center gap-4 rounded-2xl px-5 py-3 transition-all active:scale-95"
-              style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
-              }}
-            >
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-sm flex-shrink-0"
-                style={{ background: avatarColor(`${s.firstName} ${s.lastName}`) }}
-              >
-                {initials(`${s.firstName} ${s.lastName || ''}`)}
-              </div>
-              <div className="text-left flex-1">
-                <p className="text-white font-bold">{s.firstName} {s.lastName}</p>
-                {s.program && <p className="text-gray-500 text-sm">{s.program}</p>}
-              </div>
-              {s.beltRank && (
-                <span className="text-xs font-bold px-2 py-1 rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}>
-                  {s.beltRank}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-        <button
-          onClick={onClose}
-          className="w-full mt-6 py-3 rounded-2xl text-gray-500 hover:text-gray-300 transition-all tracking-widest text-sm uppercase font-bold"
-          style={{ border: '1px solid rgba(255,255,255,0.08)' }}
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ─── Main page ───────────────────────────────────────────────────────────────
+// ─── Main component ──────────────────────────────────────────────────────────
+type KioskMode = 'idle' | 'active' | 'confirmation' | 'checkin-search';
 
 export default function KioskHome() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const orgId = (user as any)?.activeOrgId || 1;
-  const [showCheckIn, setShowCheckIn] = useState(false);
-  const [showTrialBooking, setShowTrialBooking] = useState(false);
+
+  // Mode
+  const [mode, setMode] = useState<KioskMode>('active');
   const [lang, setLang] = useState<KioskLang>('en');
   const [now, setNow] = useState(new Date());
-  const [pulse, setPulse] = useState(false);
+  const [showTrialBooking, setShowTrialBooking] = useState(false);
+  const [showHelpPanel, setShowHelpPanel] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [celebStudent, setCelebStudent] = useState<{ name: string; beltRank?: string | null } | null>(null);
+  const [confirmedStudent, setConfirmedStudent] = useState<{ name: string; program: string; beltRank?: string | null } | null>(null);
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Data
+  const liveData = trpc.kiosk.getLiveKioskData.useQuery({ orgId }, { refetchInterval: 60_000 });
+  const studentsQuery = trpc.kiosk.getStudentsForKiosk.useQuery({ orgId }, { refetchInterval: 120_000 });
+  const searchResults = trpc.kiosk.searchStudentsByOrg.useQuery(
+    { orgId, query: searchQuery },
+    { enabled: searchQuery.length >= 2 }
+  );
+  const checkIn = trpc.kiosk.checkInStudentByOrg.useMutation();
+
+  // Clock
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 60_000);
+    const t = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(t);
   }, []);
 
+  // Idle reset
+  const resetIdle = useCallback(() => {
+    if (idleTimer.current) clearTimeout(idleTimer.current);
+    if (mode === 'idle') setMode('active');
+    idleTimer.current = setTimeout(() => setMode('idle'), 90_000);
+  }, [mode]);
+
   useEffect(() => {
-    const t = setInterval(() => {
-      setPulse(true);
-      setTimeout(() => setPulse(false), 600);
-    }, 4000);
-    return () => clearInterval(t);
-  }, []);
+    window.addEventListener('touchstart', resetIdle);
+    window.addEventListener('mousemove', resetIdle);
+    resetIdle();
+    return () => {
+      window.removeEventListener('touchstart', resetIdle);
+      window.removeEventListener('mousemove', resetIdle);
+      if (idleTimer.current) clearTimeout(idleTimer.current);
+    };
+  }, [resetIdle]);
 
-  const liveData = trpc.kiosk.getLiveKioskData.useQuery(
-    { orgId },
-    { refetchInterval: 60_000 }
-  );
+  // Auto-return from confirmation
+  useEffect(() => {
+    if (mode === 'confirmation') {
+      const t = setTimeout(() => {
+        setMode('active');
+        setConfirmedStudent(null);
+        setCelebStudent(null);
+      }, 8_000);
+      return () => clearTimeout(t);
+    }
+  }, [mode]);
 
-  const featureFlagsQuery = trpc.kiosk.getKioskFeatureFlags.useQuery(
-    { orgId },
-    { refetchInterval: 30_000 }
-  );
+  async function handleCheckIn(studentId: number, name: string, program: string, beltRank?: string | null) {
+    try {
+      await checkIn.mutateAsync({ orgId, studentId });
+      setCelebStudent({ name, beltRank });
+      setConfirmedStudent({ name, program, beltRank });
+      setMode('confirmation');
+      setSearchQuery('');
+    } catch (e) {
+      console.error('Check-in failed', e);
+    }
+  }
 
-  const flags = featureFlagsQuery.data ?? {
-    showLockButton: true,
-    showArcadeGames: true,
-    showDayPass: true,
-    showEnrollNow: true,
-    showNewStudents: true,
-    showClassSchedule: true,
-    showAttendanceLeaderboard: true,
-    showBeltPromotion: true,
-  };
+  const school = liveData.data;
+  const students = studentsQuery.data || [];
+  const todayClasses = school?.todayClasses || [];
+  const leaderboard = school?.leaderboard || [];
 
-  const data = liveData.data as any;
-  const todayClasses: any[] = data?.todayClasses || [];
-  const newStudents: any[] = data?.newStudents || [];
-  const leaderboard: any[] = data?.leaderboard || [];
-  const logoUrl: string | undefined = data?.logoUrl;
-  const schoolName: string | undefined = data?.schoolName;
-
-  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
+  // ── IDLE MODE ──────────────────────────────────────────────────────────────
+  if (mode === 'idle') {
+    return (
+      <div
+        className="fixed inset-0 flex flex-col items-center justify-center cursor-pointer select-none"
+        style={{ background: 'radial-gradient(ellipse at center, #1a0000 0%, #000 70%)' }}
+        onClick={() => setMode('active')}
+      >
+        <FireParticles />
+        <div className="relative z-10 flex flex-col items-center gap-6 text-center">
+          {school?.logoUrl && (
+            <img src={school.logoUrl} alt="logo" className="h-20 object-contain mb-2" />
+          )}
+          <div className="text-7xl font-black text-white tracking-tight" style={{ textShadow: '0 0 40px rgba(239,68,68,0.6)' }}>
+            READY TO TRAIN?
+          </div>
+          <div className="text-2xl text-red-400 font-semibold tracking-widest uppercase animate-pulse">
+            Tap anywhere to begin
+          </div>
+          <div className="text-white/40 text-xl mt-4">{timeStr}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── CONFIRMATION MODE ──────────────────────────────────────────────────────
+  if (mode === 'confirmation' && confirmedStudent) {
+    const beltColor = getBeltColor(confirmedStudent.beltRank);
+    return (
+      <div
+        className="fixed inset-0 flex flex-col items-center justify-center select-none"
+        style={{ background: 'radial-gradient(ellipse at center, #0a0a0a 0%, #000 100%)' }}
+      >
+        <FireParticles />
+        {celebStudent && (
+          <KioskCheckInCelebration
+            studentName={celebStudent.name}
+            beltRank={celebStudent.beltRank}
+            onDismiss={() => { setMode('active'); setCelebStudent(null); setConfirmedStudent(null); }}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // ── ACTIVE MODE ────────────────────────────────────────────────────────────
   return (
     <div
-      className="min-h-screen w-full overflow-y-auto text-white relative select-none"
-      style={{
-        background: 'radial-gradient(ellipse at 50% -10%, #4a0000 0%, #1f0000 30%, #0d0000 60%, #000000 100%)',
-      }}
+      className="fixed inset-0 flex flex-col overflow-hidden select-none"
+      style={{ background: '#0a0a0a', fontFamily: "'Inter', 'SF Pro Display', sans-serif" }}
     >
-      <FireCanvas />
+      <FireParticles />
 
-      {/* Vignette */}
-      <div
-        className="fixed inset-0 pointer-events-none z-0"
-        style={{ background: 'radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.7) 100%)' }}
-      />
-
-      {/* Top glow */}
-      <div
-        className="fixed top-0 left-0 right-0 h-64 pointer-events-none z-0"
-        style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(180,0,0,0.25) 0%, transparent 70%)' }}
-      />
-
-      <div className="relative z-10 max-w-3xl mx-auto px-4 py-8 pb-24">
-
-        {/* ── Hero ── */}
-        <div className="text-center mb-8">
-          <div className="relative w-24 h-24 mx-auto mb-5">
-            <div
-              className="absolute inset-0 rounded-full"
-              style={{
-                background: 'conic-gradient(from 0deg, #dc2626, #f97316, #dc2626, #7f1d1d, #dc2626)',
-                animation: 'spin 8s linear infinite',
-                filter: 'blur(2px)',
-              }}
-            />
-            <div
-              className="absolute inset-1 rounded-full flex items-center justify-center overflow-hidden"
-              style={{
-                background: 'radial-gradient(circle, #1a0000 0%, #000000 100%)',
-                border: '1px solid rgba(220,38,38,0.3)',
-              }}
-            >
-              {logoUrl ? (
-                <img
-                  src={logoUrl}
-                  alt={schoolName || 'Dojo Logo'}
-                  className="w-full h-full object-contain p-2"
-                />
-              ) : (
-                <Flame
-                  className="w-10 h-10 text-red-500"
-                  style={{ filter: 'drop-shadow(0 0 8px rgba(220,38,38,0.8))' }}
-                />
-              )}
+      {/* ── TOP HEADER ── */}
+      <div className="relative z-10 flex items-center justify-between px-6 pt-4 pb-2 flex-shrink-0">
+        {/* Logo + School Name */}
+        <div className="flex items-center gap-3">
+          {school?.logoUrl ? (
+            <img src={school.logoUrl} alt="logo" className="h-12 object-contain" />
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}>
+                <span className="text-white font-black text-lg">M</span>
+              </div>
+              <div>
+                <div className="text-white font-black text-lg leading-none">MY<span className="text-red-500">DOJO</span></div>
+                <div className="text-white/50 text-xs tracking-widest uppercase">Martial Arts</div>
+              </div>
             </div>
-          </div>
-
-          <h1
-            className="text-6xl sm:text-7xl font-black tracking-tight uppercase mb-2"
-            style={{
-              textShadow: '0 0 30px rgba(220,38,38,0.7), 0 0 60px rgba(220,38,38,0.3), 0 4px 20px rgba(0,0,0,0.8)',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            READY TO TRAIN 👊
-          </h1>
-          <p
-            className="text-gray-300 mt-2 text-lg tracking-widest uppercase font-semibold"
-            style={{ textShadow: '0 0 10px rgba(220,38,38,0.3)' }}
-          >
-            Tap or Scan to Begin
-          </p>
-          <p className="text-gray-600 text-sm mt-1 tracking-wider">{dateStr} · {timeStr}</p>
+          )}
+          {school?.schoolName && school.logoUrl && (
+            <div className="text-white font-bold text-lg ml-1">{school.schoolName}</div>
+          )}
         </div>
 
-        {/* ── New Students ── */}
-        {flags.showNewStudents && newStudents.length > 0 && (
-          <div
-            className="mb-5 rounded-3xl p-5"
+        {/* Clock */}
+        <div className="text-right">
+          <div className="flex items-center gap-2 text-white/80">
+            <Clock className="w-4 h-4 text-white/40" />
+            <span className="text-2xl font-bold text-white">{timeStr}</span>
+          </div>
+          <div className="text-white/40 text-sm">{dateStr}</div>
+        </div>
+      </div>
+
+      {/* ── MAIN CONTENT AREA ── */}
+      <div className="relative z-10 flex flex-1 gap-4 px-6 pb-2 min-h-0">
+
+        {/* ── LEFT PANEL ── */}
+        <div className="flex flex-col flex-1 gap-3 min-w-0">
+
+          {/* Welcome headline */}
+          <div className="text-center">
+            <div className="text-5xl font-black text-white tracking-tight leading-none" style={{ textShadow: '0 2px 20px rgba(0,0,0,0.8)' }}>
+              WELCOME!
+            </div>
+            <div className="text-red-400 font-bold text-xl tracking-widest uppercase mt-1">READY TO TRAIN?</div>
+            <div className="text-white/50 text-sm mt-0.5">Let's have a great class today!</div>
+          </div>
+
+          {/* TAP TO CHECK IN button */}
+          <button
+            onClick={() => setMode('checkin-search')}
+            className="relative w-full rounded-2xl flex items-center justify-center gap-4 py-5 overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, rgba(88,28,135,0.25) 0%, rgba(30,0,60,0.3) 100%)',
-              border: '1px solid rgba(147,51,234,0.3)',
-              boxShadow: '0 0 30px rgba(147,51,234,0.1), inset 0 1px 0 rgba(255,255,255,0.05)',
-              backdropFilter: 'blur(10px)',
+              background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
+              boxShadow: '0 0 40px rgba(220,38,38,0.5), 0 4px 20px rgba(0,0,0,0.5)',
+              border: '2px solid rgba(239,68,68,0.4)',
             }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" style={{ filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.6))' }} />
-              <span className="font-black text-white text-sm tracking-widest uppercase">Welcome New Students!</span>
+            <div className="w-12 h-12 rounded-full border-2 border-white/80 flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 className="w-7 h-7 text-white" />
             </div>
-            <p className="text-gray-500 text-xs mb-3 tracking-wide">We're excited to have you here for your first lesson</p>
-            <div className="space-y-2">
-              {newStudents.map((s: any) => (
-                <div
-                  key={s.id}
-                  className="flex items-center justify-between rounded-2xl px-4 py-3"
-                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)' }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-xs"
-                      style={{ background: avatarColor(s.name), boxShadow: `0 0 12px ${avatarColor(s.name)}60` }}
-                    >
-                      {initials(s.name)}
-                    </div>
-                    <div>
-                      <p className="text-white font-bold text-sm">{s.name}</p>
-                      <p className="text-gray-500 text-xs">{s.program}{s.time ? ` · ${s.time}` : ''}</p>
-                    </div>
-                  </div>
-                  <span
-                    className="text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider"
-                    style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#000', boxShadow: '0 0 12px rgba(245,158,11,0.4)' }}
-                  >
-                    NEW
-                  </span>
-                </div>
+            <span className="text-3xl font-black text-white tracking-wider uppercase">
+              TAP TO CHECK IN
+            </span>
+            <ChevronRight className="w-6 h-6 text-white/60" />
+            {/* Animated chevrons */}
+            <div className="absolute left-4 flex gap-1 opacity-40">
+              <ChevronRight className="w-5 h-5 text-white" />
+              <ChevronRight className="w-5 h-5 text-white" />
+            </div>
+            <div className="absolute right-16 flex gap-1 opacity-40">
+              <ChevronRight className="w-5 h-5 text-white" />
+              <ChevronRight className="w-5 h-5 text-white" />
+            </div>
+          </button>
+
+          {/* Streak bar */}
+          <div
+            className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <Flame className="w-5 h-5 text-orange-400 flex-shrink-0" />
+            <span className="text-orange-400 font-black text-sm">5 DAY STREAK</span>
+            <span className="text-white/40 text-sm flex-1">Keep it up!</span>
+            <div className="flex gap-1">
+              {[1,2,3,4,5].map(i => (
+                <span key={i} className="text-lg">🔥</span>
               ))}
             </div>
           </div>
-        )}
 
-        {/* ── Primary CTA ── */}
-        <button
-          onClick={() => setShowCheckIn(true)}
-          className="w-full mb-4 rounded-2xl font-black text-3xl tracking-widest uppercase transition-all active:scale-95"
-          style={{
-            padding: '28px 20px',
-            background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%)',
-            boxShadow: pulse
-              ? '0 0 80px rgba(220,38,38,0.9), 0 0 40px rgba(220,38,38,0.7), 0 20px 40px rgba(0,0,0,0.6)'
-              : '0 0 40px rgba(220,38,38,0.5), 0 0 20px rgba(220,38,38,0.3), 0 15px 30px rgba(0,0,0,0.5)',
-            border: '1px solid rgba(255,100,100,0.3)',
-            transform: pulse ? 'scale(1.02)' : 'scale(1)',
-            transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            textShadow: '0 2px 10px rgba(0,0,0,0.5)',
-            letterSpacing: '0.1em',
-          }}
-        >
-          {kt(lang, 'tapToCheckIn')}
-        </button>
-
-        {/* ── Action buttons ── */}
-        {(flags.showDayPass || flags.showEnrollNow || flags.showArcadeGames) && (
-          <div className="space-y-2 mb-5">
-            {flags.showDayPass && (
+          {/* 4 Action icon cards */}
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { label: 'BOOK A\nFREE TRIAL', icon: <Users className="w-7 h-7" />, color: '#7c3aed', bg: 'rgba(124,58,237,0.15)', border: 'rgba(124,58,237,0.3)', action: () => setShowTrialBooking(true) },
+              { label: 'ENROLL\nNOW', icon: <UserPlus className="w-7 h-7" />, color: '#16a34a', bg: 'rgba(22,163,74,0.15)', border: 'rgba(22,163,74,0.3)', action: () => navigate(`/kiosk/${orgId}/new-student`) },
+              { label: 'PRO\nSHOP', icon: <ShoppingBag className="w-7 h-7" />, color: '#b45309', bg: 'rgba(180,83,9,0.15)', border: 'rgba(180,83,9,0.3)', action: () => {} },
+              { label: 'ARCADE\nGAMES', icon: <Gamepad2 className="w-7 h-7" />, color: '#0284c7', bg: 'rgba(2,132,199,0.15)', border: 'rgba(2,132,199,0.3)', action: () => navigate('/kiosk-arcade') },
+            ].map((item, i) => (
               <button
-                className="w-full flex items-center justify-between rounded-2xl px-5 py-4 transition-all active:scale-95"
-                style={{
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                }}
+                key={i}
+                onClick={item.action}
+                className="flex flex-col items-center justify-center gap-2 py-4 rounded-2xl"
+                style={{ background: item.bg, border: `1px solid ${item.border}`, color: item.color }}
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.2)' }}>
-                    <Ticket className="w-4 h-4 text-red-400" />
-                  </div>
-                  <span className="font-black text-white uppercase tracking-wider text-sm">{kt(lang, 'buyDayPass')}</span>
-                </div>
-                <span className="text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  Walk-ins Welcome
+                {item.icon}
+                <span className="text-xs font-black text-white text-center leading-tight whitespace-pre-line tracking-wide uppercase">
+                  {item.label}
                 </span>
               </button>
-            )}
-
-            {flags.showEnrollNow && (
-              <button
-                onClick={() => navigate('/login?tab=signup')}
-                className="w-full flex items-center justify-between rounded-2xl px-5 py-4 transition-all active:scale-95"
-                style={{
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(5,150,105,0.15)', border: '1px solid rgba(5,150,105,0.2)' }}>
-                    <UserPlus className="w-4 h-4 text-emerald-400" />
-                  </div>
-                  <span className="font-black text-white uppercase tracking-wider text-sm">{kt(lang, 'enrollNow')}</span>
-                </div>
-                <span className="text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #059669, #047857)', color: '#fff', boxShadow: '0 0 12px rgba(5,150,105,0.4)' }}>
-                  Start Today
-                </span>
-              </button>
-            )}
-            {/* Trial Booking Button */}
-            <button
-              onClick={() => setShowTrialBooking(true)}
-              className="w-full flex items-center justify-between rounded-2xl px-5 py-4 transition-all active:scale-95"
-              style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(251,191,36,0.2)',
-                backdropFilter: 'blur(10px)',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.2)' }}>
-                  <Star className="w-4 h-4 text-yellow-400" />
-                </div>
-                  <span className="font-black text-white uppercase tracking-wider text-sm">{kt(lang, 'bookFreeTrial')}</span>
-              </div>
-              <span className="text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #d97706, #b45309)', color: '#fff', boxShadow: '0 0 12px rgba(217,119,6,0.4)' }}>
-                No Commitment
-              </span>
-            </button>
-
-            {flags.showArcadeGames && (
-              <button
-                onClick={() => navigate('/arcade')}
-                className="w-full flex items-center justify-between rounded-2xl px-5 py-4 transition-all active:scale-95"
-                style={{
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(147,51,234,0.2)',
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(147,51,234,0.15)', border: '1px solid rgba(147,51,234,0.2)' }}>
-                    <Gamepad2 className="w-4 h-4 text-purple-400" />
-                  </div>
-                  <span className="font-black text-white uppercase tracking-wider text-sm">{kt(lang, 'playArcadeGames')}</span>
-                </div>
-                <span className="text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', boxShadow: '0 0 12px rgba(124,58,237,0.4)' }}>
-                  4 Games
-                </span>
-              </button>
-            )}
+            ))}
           </div>
-        )}
+        </div>
 
-        <p className="text-center text-xs mb-6 tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.2)' }}>
-          Check-in opens 15 minutes before class
-        </p>
+        {/* ── RIGHT PANEL ── */}
+        <div className="flex flex-col gap-3 w-72 flex-shrink-0">
 
-        {/* ── Bottom panels ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-          {/* Classes */}
-          {flags.showClassSchedule && <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Flame className="w-4 h-4 text-red-500" style={{ filter: 'drop-shadow(0 0 6px rgba(220,38,38,0.8))' }} />
-              <span className="font-black text-white text-sm tracking-widest uppercase" style={{ textShadow: '0 0 10px rgba(220,38,38,0.4)' }}>Top Warriors</span>
-              <span className="text-gray-600 text-xs ml-1 tracking-wider">Current Begin</span>
+          {/* Today's Schedule */}
+          <div
+            className="rounded-2xl p-4 flex-1"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-red-400" />
+                <span className="text-white font-black text-sm uppercase tracking-wider">Today's Schedule</span>
+              </div>
+              <span className="text-white/40 text-xs">View All</span>
             </div>
-            <div className="space-y-2">
-              {todayClasses.length === 0 && (
-                <div className="rounded-2xl px-4 py-4 text-sm" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.25)' }}>
-                  No classes scheduled today
-                </div>
-              )}
-              {todayClasses.map((c: any) => {
-                const mins = minutesUntil(c.startTime);
-                return (
-                  <div key={c.id} className="rounded-2xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(10px)' }}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="font-black text-white text-sm uppercase truncate">{c.name}</p>
-                        <p className="text-gray-500 text-xs flex items-center gap-1 mt-0.5">
-                          <Users className="w-3 h-3 flex-shrink-0" /> {c.instructor}
-                        </p>
-                        <p className="text-gray-600 text-xs flex items-center gap-1 mt-0.5">
-                          <Clock className="w-3 h-3 flex-shrink-0" />
-                          {formatTime(c.startTime)}{c.endTime ? ` - ${formatTime(c.endTime)}` : ''}
-                        </p>
+            <div className="flex flex-col gap-2">
+              {todayClasses.length === 0 ? (
+                <div className="text-white/30 text-sm text-center py-4">No classes today</div>
+              ) : (
+                todayClasses.slice(0, 5).map((cls: { startTime: string; name: string; instructor: string }, i: number) => {
+                  const status = getClassStatus(cls.startTime);
+                  return (
+                    <div key={i} className="flex items-center justify-between gap-2">
+                      <div className="flex-shrink-0 text-white/50 text-xs w-14">{cls.startTime || '—'}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white text-sm font-semibold truncate">{cls.name}</div>
+                        <div className="text-white/40 text-xs truncate">{cls.instructor}</div>
                       </div>
-                      <span
-                        className="flex-shrink-0 text-xs font-black px-2 py-1 rounded-full whitespace-nowrap uppercase tracking-wider"
-                        style={mins === 0
-                          ? { background: 'rgba(220,38,38,0.8)', color: '#fff', boxShadow: '0 0 10px rgba(220,38,38,0.4)' }
-                          : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.08)' }
-                        }
-                      >
-                        {mins === 0 ? 'NOW' : `${mins}m`}
-                      </span>
+                      {status === 'in-progress' && (
+                        <span className="text-xs font-black px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: '#16a34a', color: '#fff' }}>IN PROGRESS</span>
+                      )}
+                      {status === 'up-next' && (
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}>UP NEXT</span>
+                      )}
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
-          </div>}
+          </div>
 
-          {/* Leaderboard */}
-          {(flags.showAttendanceLeaderboard || flags.showBeltPromotion) && <div className="space-y-3">
-            {flags.showAttendanceLeaderboard && (
-              <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(220,38,38,0.15)', backdropFilter: 'blur(10px)' }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <Flame className="w-4 h-4 text-red-500" style={{ filter: 'drop-shadow(0 0 6px rgba(220,38,38,0.8))' }} />
-                  <span className="font-black text-white text-sm tracking-widest uppercase" style={{ textShadow: '0 0 10px rgba(220,38,38,0.4)' }}>Perfect Attendance</span>
-                </div>
-                {leaderboard.length === 0 && (
-                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.2)' }}>No attendance data yet</p>
-                )}
-                {leaderboard.slice(0, 3).map((s: any, i: number) => (
-                  <div key={s.studentId} className="flex items-center gap-3 py-2" style={{ borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                    <span
-                      className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
-                      style={i === 0
-                        ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#000', boxShadow: '0 0 10px rgba(245,158,11,0.4)' }
-                        : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }
-                      }
-                    >
+          {/* Dojo Leaderboard */}
+          <div
+            className="rounded-2xl p-4"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <Trophy className="w-4 h-4 text-yellow-400" />
+              <span className="text-white font-black text-sm uppercase tracking-wider">Dojo Leaderboard</span>
+            </div>
+            <div className="text-white/30 text-xs mb-2">This Month</div>
+            <div className="flex flex-col gap-2">
+              {leaderboard.length === 0 ? (
+                <div className="text-white/30 text-sm text-center py-2">No data yet</div>
+              ) : (
+                leaderboard.slice(0, 4).map((entry, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-lg"
+                    style={{
+                      background: i === 0 ? 'rgba(234,179,8,0.1)' : i === 1 ? 'rgba(156,163,175,0.08)' : i === 2 ? 'rgba(180,83,9,0.08)' : 'rgba(239,68,68,0.08)',
+                      border: i === 0 ? '1px solid rgba(234,179,8,0.2)' : '1px solid rgba(255,255,255,0.05)',
+                    }}
+                  >
+                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
+                      style={{ background: i === 0 ? '#ca8a04' : i === 1 ? '#6b7280' : i === 2 ? '#b45309' : '#dc2626', color: '#fff' }}>
                       {i + 1}
                     </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-bold text-sm truncate">{s.name}</p>
-                      <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{s.streak} Classes Straight</p>
-                    </div>
-                    {i === 0 && <Flame className="w-4 h-4 text-red-500 flex-shrink-0" style={{ filter: 'drop-shadow(0 0 4px rgba(220,38,38,0.6))' }} />}
+                    <span className="flex-1 text-white text-sm font-semibold truncate">{entry.name}</span>
+                    <span className="text-white/50 text-xs flex-shrink-0">{entry.streak} Classes</span>
+                    <Flame className="w-3 h-3 text-orange-400 flex-shrink-0" />
                   </div>
-                ))}
-              </div>
+                ))
+              )}
+            </div>
+            {leaderboard.length > 0 && (
+              <div className="text-white/30 text-xs text-center mt-2">Keep training. Keep climbing!</div>
             )}
-
-            {flags.showBeltPromotion && (
-              <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(250,204,21,0.12)', backdropFilter: 'blur(10px)' }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" style={{ filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.6))' }} />
-                  <span className="font-black text-white text-sm tracking-widest uppercase" style={{ textShadow: '0 0 10px rgba(250,204,21,0.3)' }}>Runner Up for Next Belt</span>
-                </div>
-                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.2)' }}>No students close to promotion yet</p>
-              </div>
-            )}
-          </div>}
+          </div>
         </div>
       </div>
 
-      {/* Lock */}
-      {flags.showLockButton && (
-        <button
-          onClick={() => navigate('/kiosk-studio')}
-          className="fixed bottom-6 right-6 z-20 flex flex-col items-center gap-1 transition-all"
-          style={{ color: 'rgba(255,255,255,0.15)' }}
-          title="Lock kiosk"
-        >
-          <Lock className="w-5 h-5" />
-          <span className="text-xs tracking-widest uppercase">{kt(lang, 'lockKiosk')}</span>
-        </button>
-      )}
+      {/* ── STUDENT AVATAR ROW ── */}
+      <div
+        className="relative z-10 mx-6 mb-2 rounded-2xl px-4 py-3 flex-shrink-0"
+        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <Users className="w-4 h-4 text-red-400" />
+          <span className="text-white font-black text-sm uppercase tracking-wider">Tap Your Name to Check In</span>
+        </div>
+        <div className="flex gap-4 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+          {students.slice(0, 10).map((s: { id: number; firstName: string; lastName: string | null; program: string; beltRank: string | null; photoUrl: string | null; attendanceCount: number }) => {
+            const beltColor = getBeltColor(s.beltRank);
+            const initials = `${s.firstName?.[0] || ''}${s.lastName?.[0] || ''}`.toUpperCase();
+            return (
+              <button
+                key={s.id}
+                onClick={() => handleCheckIn(s.id, `${s.firstName} ${s.lastName || ''}`.trim(), s.program, s.beltRank)}
+                className="flex flex-col items-center gap-1.5 flex-shrink-0 group"
+                style={{ minWidth: 72 }}
+              >
+                <div
+                  className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center"
+                  style={{ border: `3px solid ${beltColor}`, boxShadow: `0 0 12px ${beltColor}55` }}
+                >
+                  {s.photoUrl ? (
+                    <img src={s.photoUrl} alt={s.firstName} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white font-black text-xl"
+                      style={{ background: `linear-gradient(135deg, ${beltColor}33, ${beltColor}11)` }}>
+                      {initials}
+                    </div>
+                  )}
+                </div>
+                <span className="text-white text-xs font-bold text-center leading-tight max-w-[72px] truncate">{s.firstName}</span>
+                <span className="text-white/40 text-xs text-center leading-tight max-w-[72px] truncate">{s.program}</span>
+                {/* Belt icon placeholder */}
+                <div className="flex gap-0.5">
+                  {[0,1,2].map(j => (
+                    <div key={j} className="w-3 h-1 rounded-full" style={{ background: j === 1 ? beltColor : `${beltColor}44` }} />
+                  ))}
+                </div>
+              </button>
+            );
+          })}
 
-      {/* Language Switcher */}
-      <div className="fixed bottom-4 left-4 z-40 flex gap-1">
-        {(Object.keys(LANG_LABELS) as KioskLang[]).map(l => (
+          {/* Not Listed? */}
           <button
-            key={l}
-            onClick={() => setLang(l)}
-            className="px-2 py-1 rounded-lg text-xs font-bold transition-all"
-            style={{
-              background: lang === l ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.05)',
-              border: `1px solid ${lang === l ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.1)'}`,
-              color: lang === l ? '#fff' : 'rgba(255,255,255,0.4)',
-            }}
+            onClick={() => setMode('checkin-search')}
+            className="flex flex-col items-center gap-1.5 flex-shrink-0"
+            style={{ minWidth: 80 }}
           >
-            {LANG_LABELS[l]}
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '2px dashed rgba(255,255,255,0.2)' }}
+            >
+              <Users className="w-7 h-7 text-white/30" />
+            </div>
+            <span className="text-white/50 text-xs font-bold text-center leading-tight">NOT LISTED?</span>
+            <span className="text-red-400 text-xs font-bold text-center leading-tight">TAP HERE</span>
+            <span className="text-white/30 text-xs text-center leading-tight">to check in</span>
           </button>
-        ))}
+        </div>
       </div>
-      {showCheckIn && (
-        <CheckInModal orgId={orgId} onClose={() => setShowCheckIn(false)} />
-      )}
-      {showTrialBooking && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md overflow-y-auto py-8"
-          onClick={() => setShowTrialBooking(false)}
+
+      {/* ── BENEFITS STRIP ── */}
+      <div
+        className="relative z-10 mx-6 mb-2 rounded-2xl px-4 py-2.5 flex-shrink-0"
+        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+      >
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { icon: <Star className="w-5 h-5" />, color: '#dc2626', title: 'EARN REWARDS', desc: 'Check in, earn points, get rewards!' },
+            { icon: <Trophy className="w-5 h-5" />, color: '#b45309', title: 'TRACK PROGRESS', desc: 'See your growth and achievements.' },
+            { icon: <Calendar className="w-5 h-5" />, color: '#16a34a', title: 'STAY CONSISTENT', desc: 'Build habits that build champions.' },
+            { icon: <Users className="w-5 h-5" />, color: '#0284c7', title: 'WE ARE FAMILY', desc: 'Train together. Grow together.' },
+          ].map((item, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ background: `${item.color}22`, color: item.color }}>
+                {item.icon}
+              </div>
+              <div>
+                <div className="text-white text-xs font-black leading-tight">{item.title}</div>
+                <div className="text-white/40 text-xs leading-tight">{item.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── BOTTOM FOOTER ── */}
+      <div
+        className="relative z-10 mx-6 mb-4 rounded-2xl px-4 py-2 flex items-center justify-between flex-shrink-0"
+        style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.06)' }}
+      >
+        {/* Language toggle */}
+        <button
+          onClick={() => setLang(l => l === 'en' ? 'es' : 'en')}
+          className="flex items-center gap-2 text-white/50 hover:text-white/80 transition-colors"
         >
+          <Globe className="w-4 h-4" />
+          <span className="text-sm font-semibold uppercase tracking-wider">
+            {lang === 'en' ? 'ESPAÑOL' : 'ENGLISH'}
+          </span>
+        </button>
+
+        {/* Need Help */}
+        <button
+          onClick={() => setShowHelpPanel(true)}
+          className="flex flex-col items-center gap-0.5"
+        >
+          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)' }}>
+            <HelpCircle className="w-4 h-4 text-red-400" />
+          </div>
+          <span className="text-white font-black text-xs">NEED HELP?</span>
+          <span className="text-white/40 text-xs">See an instructor.</span>
+        </button>
+
+        {/* Kiosk Mode */}
+        <button
+          onClick={() => navigate('/kiosk-settings')}
+          className="flex items-center gap-2 text-white/50 hover:text-white/80 transition-colors"
+        >
+          <span className="text-sm font-semibold uppercase tracking-wider">KIOSK MODE</span>
+          <Settings className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* ── CHECK-IN SEARCH MODAL ── */}
+      {mode === 'checkin-search' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md">
           <div
-            className="w-full max-w-2xl mx-4 rounded-3xl p-8 shadow-2xl"
-            style={{
-              background: 'linear-gradient(135deg, rgba(20,10,0,0.97) 0%, rgba(5,0,0,0.99) 100%)',
-              border: '1px solid rgba(251,191,36,0.3)',
-              boxShadow: '0 0 60px rgba(251,191,36,0.15), 0 25px 50px rgba(0,0,0,0.8)',
-            }}
-            onClick={e => e.stopPropagation()}
+            className="w-full max-w-lg mx-4 rounded-3xl p-6"
+            style={{ background: '#111', border: '1px solid rgba(255,255,255,0.1)' }}
           >
-            <KioskTrialBooking
-              onBack={() => setShowTrialBooking(false)}
-              onDone={() => setShowTrialBooking(false)}
+            <div className="text-white font-black text-2xl text-center mb-4">Search Your Name</div>
+            <input
+              type="text"
+              autoFocus
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Start typing your name..."
+              className="w-full px-4 py-3 rounded-xl text-white text-lg bg-white/10 border border-white/20 outline-none focus:border-red-500 mb-4"
             />
+            {searchQuery.length >= 2 && (
+              <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
+                {(searchResults.data || []).map((s: { id: number; firstName: string; lastName: string | null; program: string | null; beltRank: string | null }) => (
+                  <button
+                    key={s.id}
+                    onClick={() => handleCheckIn(s.id, `${s.firstName} ${s.lastName || ''}`.trim(), s.program || 'General', s.beltRank)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-left"
+                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  >
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black flex-shrink-0"
+                      style={{ background: `${getBeltColor(s.beltRank)}33`, border: `2px solid ${getBeltColor(s.beltRank)}` }}
+                    >
+                      {`${s.firstName?.[0] || ''}${s.lastName?.[0] || ''}`.toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-white font-semibold">{s.firstName} {s.lastName}</div>
+                      <div className="text-white/40 text-sm">{s.program || 'General'}</div>
+                    </div>
+                  </button>
+                ))}
+                {searchResults.data?.length === 0 && (
+                  <div className="text-white/40 text-center py-4">No students found</div>
+                )}
+              </div>
+            )}
+            <button
+              onClick={() => { setMode('active'); setSearchQuery(''); }}
+              className="w-full mt-4 py-3 rounded-xl text-white/60 font-semibold"
+              style={{ background: 'rgba(255,255,255,0.05)' }}
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
 
-      <style>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
+      {/* ── HELP PANEL ── */}
+      {showHelpPanel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md">
+          <div
+            className="w-full max-w-sm mx-4 rounded-3xl p-6"
+            style={{ background: '#111', border: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            <div className="text-white font-black text-2xl text-center mb-2">Need Help?</div>
+            <div className="text-white/50 text-center text-sm mb-6">What can we help you with?</div>
+            <div className="flex flex-col gap-3">
+              {[
+                { label: "I'm new here", action: () => { setShowHelpPanel(false); navigate(`/kiosk/${orgId}/new-student`); } },
+                { label: 'Book a free trial', action: () => { setShowHelpPanel(false); setShowTrialBooking(true); } },
+                { label: 'What class should I take?', action: () => setShowHelpPanel(false) },
+              ].map((item, i) => (
+                <button
+                  key={i}
+                  onClick={item.action}
+                  className="w-full py-4 rounded-xl text-white font-bold text-lg"
+                  style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)' }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowHelpPanel(false)}
+              className="w-full mt-4 py-3 rounded-xl text-white/50 font-semibold"
+              style={{ background: 'rgba(255,255,255,0.05)' }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── TRIAL BOOKING MODAL ── */}
+      {showTrialBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md overflow-y-auto py-8">
+          <KioskTrialBooking onBack={() => setShowTrialBooking(false)} onDone={() => setShowTrialBooking(false)} />
+        </div>
+      )}
     </div>
   );
 }

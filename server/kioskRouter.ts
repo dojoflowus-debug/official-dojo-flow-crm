@@ -1271,4 +1271,46 @@ export const kioskRouter = router({
       });
       return { success: true };
     }),
+  /**
+   * Get active students for the kiosk home screen avatar row
+   */
+  getStudentsForKiosk: publicProcedure
+    .input(z.object({ orgId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+      const { students, studentAttendance } = await import('../drizzle/schema');
+      const { sql, desc } = await import('drizzle-orm');
+      const activeStudents = await ctx.db
+        .select({
+          id: students.id,
+          firstName: students.firstName,
+          lastName: students.lastName,
+          program: students.program,
+          beltRank: students.beltRank,
+          photoUrl: students.photoUrl,
+        })
+        .from(students)
+        .where(and(eq(students.organizationId, input.orgId), eq(students.status, 'active')))
+        .orderBy(students.firstName)
+        .limit(30);
+      const attendanceRows = await ctx.db
+        .select({ studentId: studentAttendance.studentId, cnt: sql<number>`count(*)` })
+        .from(studentAttendance)
+        .where(eq(studentAttendance.status, 'attended'))
+        .groupBy(studentAttendance.studentId)
+        .limit(200);
+      const streakMap: Record<number, number> = {};
+      for (const row of attendanceRows) {
+        if (row.studentId) streakMap[row.studentId] = Number(row.cnt);
+      }
+      return activeStudents.map(s => ({
+        id: s.id,
+        firstName: s.firstName,
+        lastName: s.lastName,
+        program: s.program || 'General',
+        beltRank: s.beltRank || 'white',
+        photoUrl: s.photoUrl || null,
+        attendanceCount: streakMap[s.id] || 0,
+      }));
+    }),
 });
