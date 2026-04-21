@@ -9525,3 +9525,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Fix LeadSettings.tsx placeholder text "Welcome to MyDojo" — use org name dynamically
 - [ ] Build Integrations hub page with connector cards: GoHighLevel, Mindbody, Zen Planner, Custom Webhook
 - [ ] Each connector card shows: logo, name, description, "Connect" / "Connected" status, API key input
+
+## Phase 22: Kai Website Analyzer
+- [ ] Backend: analyzeSchoolWebsite endpoint (scrape URL + GPT-4o extraction)
+- [ ] Backend: populateSchoolFromWebsite mutation (update organizations + schoolProfiles + classes + programs)
+- [ ] Frontend: Kai command handler for "analyze website" / URL detection
+- [ ] Frontend: KaiWebsiteAnalyzer modal (progress steps + field preview + confirm/save)
+- [ ] Wire up to KaiAssistant processCommand

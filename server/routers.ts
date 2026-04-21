@@ -5643,6 +5643,294 @@ Return the data as a structured JSON object.`
         }
       }),
 
+    // ── Kai Website Analyzer ──────────────────────────────────────────────
+    // Scrape a school website and extract all available information using AI
+    analyzeSchoolWebsite: protectedProcedure
+      .input(z.object({
+        url: z.string().url(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { invokeLLM } = await import('./_core/llm');
+
+        // 1. Fetch the website HTML
+        let html = '';
+        try {
+          const res = await fetch(input.url, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DojoFlow/1.0; +https://dojo-flow.ai)' },
+            signal: AbortSignal.timeout(15000),
+          });
+          html = await res.text();
+        } catch (err) {
+          throw new Error(`Could not fetch website: ${err instanceof Error ? err.message : String(err)}`);
+        }
+
+        // 2. Strip HTML tags and limit to 12k chars for LLM context
+        const text = html
+          .replace(/<script[\s\S]*?<\/script>/gi, '')
+          .replace(/<style[\s\S]*?<\/style>/gi, '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .substring(0, 12000);
+
+        // 3. Also try to find logo/image URLs in the raw HTML
+        const imgMatches = html.match(/src=["']([^"']*(?:logo|brand|icon)[^"']*)["']/gi) || [];
+        const logoHints = imgMatches
+          .map(m => m.replace(/src=["']/i, '').replace(/["']$/, ''))
+          .filter(u => u.startsWith('http') || u.startsWith('/'))
+          .slice(0, 5);
+
+        // 4. Extract structured data with GPT-4o
+        const response = await invokeLLM({
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a data extraction assistant for a martial arts school management system. 
+Extract all available information from the provided website text and return it as structured JSON. 
+Be thorough — extract everything you can find. If a field is not found, use null.
+For programs/classes, extract each one as a separate object with name, description, ageRange, and schedule if available.
+For schedules, use 24h time format (HH:MM) and standard day names (Monday, Tuesday, etc.).
+Return ONLY valid JSON, no markdown, no explanation.`,
+            },
+            {
+              role: 'user',
+              content: `Website URL: ${input.url}\n\nWebsite content:\n${text}\n\nLogo URL hints found in HTML: ${logoHints.join(', ') || 'none'}\n\nExtract all school information and return as JSON with this exact structure:\n{
+  "schoolName": string | null,
+  "displayName": string | null,
+  "tagline": string | null,
+  "phone": string | null,
+  "email": string | null,
+  "website": string | null,
+  "addressStreet": string | null,
+  "addressCity": string | null,
+  "addressState": string | null,
+  "addressPostal": string | null,
+  "addressCountry": string | null,
+  "logoUrl": string | null,
+  "brandColorPrimary": string | null,
+  "timezone": string | null,
+  "programs": [
+    {
+      "name": string,
+      "description": string | null,
+      "ageRange": string | null,
+      "price": number | null,
+      "billing": "monthly" | "weekly" | "per_session" | "one_time" | null
+    }
+  ],
+  "classes": [
+    {
+      "name": string,
+      "instructor": string | null,
+      "dayOfWeek": string | null,
+      "startTime": string | null,
+      "endTime": string | null,
+      "program": string | null,
+      "level": string | null
+    }
+  ],
+  "instructors": [
+    {
+      "name": string,
+      "bio": string | null,
+      "specialties": string | null,
+      "certifications": string | null
+    }
+  ],
+  "socialLinks": {
+    "facebook": string | null,
+    "instagram": string | null,
+    "youtube": string | null,
+    "twitter": string | null
+  },
+  "confidence": {
+    "overall": "high" | "medium" | "low",
+    "notes": string
+  }
+}`,
+            },
+          ],
+          response_format: { type: 'json_object' },
+        });
+
+        let extracted: any = {};
+        try {
+          const raw = response.choices?.[0]?.message?.content || '{}';
+          extracted = JSON.parse(raw);
+        } catch {
+          throw new Error('AI returned invalid JSON — please try again');
+        }
+
+        // Resolve relative logo URLs to absolute
+        if (extracted.logoUrl && extracted.logoUrl.startsWith('/')) {
+          const base = new URL(input.url);
+          extracted.logoUrl = `${base.origin}${extracted.logoUrl}`;
+        }
+
+        return {
+          success: true,
+          url: input.url,
+          data: extracted,
+        };
+      }),
+
+    // Save the analyzed website data into the DB
+    populateSchoolFromWebsite: protectedProcedure
+      .input(z.object({
+        schoolName: z.string().optional(),
+        displayName: z.string().optional(),
+        tagline: z.string().optional(),
+        phone: z.string().optional(),
+        email: z.string().optional(),
+        website: z.string().optional(),
+        addressStreet: z.string().optional(),
+        addressCity: z.string().optional(),
+        addressState: z.string().optional(),
+        addressPostal: z.string().optional(),
+        addressCountry: z.string().optional(),
+        logoUrl: z.string().optional(),
+        brandColorPrimary: z.string().optional(),
+        timezone: z.string().optional(),
+        programs: z.array(z.object({
+          name: z.string(),
+          description: z.string().nullish(),
+          ageRange: z.string().nullish(),
+          price: z.number().nullish(),
+          billing: z.enum(['monthly','weekly','per_session','one_time']).nullish(),
+        })).optional(),
+        classes: z.array(z.object({
+          name: z.string(),
+          instructor: z.string().nullish(),
+          dayOfWeek: z.string().nullish(),
+          startTime: z.string().nullish(),
+          endTime: z.string().nullish(),
+          program: z.string().nullish(),
+          level: z.string().nullish(),
+        })).optional(),
+        instructors: z.array(z.object({
+          name: z.string(),
+          bio: z.string().nullish(),
+          specialties: z.string().nullish(),
+          certifications: z.string().nullish(),
+        })).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import('./db');
+        const {
+          organizations, schoolProfiles, programs: programsTable,
+          classes: classesTable, ownerProfiles,
+        } = await import('../drizzle/schema');
+        const { eq } = await import('drizzle-orm');
+
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const orgId = ctx.currentOrganizationId;
+
+        const results: string[] = [];
+
+        // 1. Update organizations table
+        const orgUpdate: Record<string, any> = {};
+        if (input.schoolName) orgUpdate.name = input.schoolName;
+        if (input.addressStreet) orgUpdate.address = input.addressStreet;
+        if (input.addressCity) orgUpdate.city = input.addressCity;
+        if (input.addressState) orgUpdate.state = input.addressState;
+        if (input.addressPostal) orgUpdate.zipCode = input.addressPostal;
+        if (input.timezone) orgUpdate.timezone = input.timezone;
+        if (input.logoUrl) orgUpdate.logoUrl = input.logoUrl;
+        if (input.brandColorPrimary) orgUpdate.brandColor = input.brandColorPrimary;
+        if (Object.keys(orgUpdate).length > 0) {
+          await db.update(organizations).set(orgUpdate).where(eq(organizations.id, orgId));
+          results.push(`Updated organization: ${Object.keys(orgUpdate).join(', ')}`);
+        }
+
+        // 2. Upsert school_profiles
+        const profileUpdate: Record<string, any> = {};
+        if (input.schoolName) profileUpdate.schoolName = input.schoolName;
+        if (input.displayName) profileUpdate.displayName = input.displayName;
+        if (input.tagline) profileUpdate.tagline = input.tagline;
+        if (input.phone) profileUpdate.phone = input.phone;
+        if (input.email) profileUpdate.email = input.email;
+        if (input.website) profileUpdate.website = input.website;
+        if (input.addressStreet) profileUpdate.addressStreet = input.addressStreet;
+        if (input.addressCity) profileUpdate.addressCity = input.addressCity;
+        if (input.addressState) profileUpdate.addressState = input.addressState;
+        if (input.addressPostal) profileUpdate.addressPostal = input.addressPostal;
+        if (input.addressCountry) profileUpdate.addressCountry = input.addressCountry;
+        if (input.logoUrl) { profileUpdate.logoLightUrl = input.logoUrl; profileUpdate.logoDarkUrl = input.logoUrl; }
+        if (input.brandColorPrimary) profileUpdate.brandColorPrimary = input.brandColorPrimary;
+        if (input.timezone) profileUpdate.timezone = input.timezone;
+
+        if (Object.keys(profileUpdate).length > 0) {
+          const existing = await db.select({ id: schoolProfiles.id })
+            .from(schoolProfiles).where(eq(schoolProfiles.organizationId, orgId)).limit(1);
+          if (existing.length > 0) {
+            await db.update(schoolProfiles).set(profileUpdate).where(eq(schoolProfiles.organizationId, orgId));
+          } else {
+            await db.insert(schoolProfiles).values({ organizationId: orgId, schoolName: input.schoolName || 'My School', ...profileUpdate });
+          }
+          results.push(`Updated school profile: ${Object.keys(profileUpdate).join(', ')}`);
+        }
+
+        // 3. Insert programs
+        if (input.programs && input.programs.length > 0) {
+          for (const prog of input.programs) {
+            await db.insert(programsTable).values({
+              organizationId: orgId,
+              name: prog.name,
+              description: prog.description || null,
+              ageRange: prog.ageRange || null,
+              price: prog.price ? Math.round(prog.price * 100) : null,
+              billing: prog.billing || null,
+              type: 'membership',
+              isActive: 1,
+            }).onDuplicateKeyUpdate({ set: { description: prog.description || null } });
+          }
+          results.push(`Inserted/updated ${input.programs.length} programs`);
+        }
+
+        // 4. Insert classes
+        if (input.classes && input.classes.length > 0) {
+          for (const cls of input.classes) {
+            await db.insert(classesTable).values({
+              organizationId: orgId,
+              name: cls.name,
+              instructor: cls.instructor || null,
+              dayOfWeek: cls.dayOfWeek || null,
+              startTime: cls.startTime || null,
+              endTime: cls.endTime || null,
+              program: cls.program || null,
+              level: cls.level || null,
+              time: cls.startTime || '00:00',
+              isActive: 1,
+            });
+          }
+          results.push(`Inserted ${input.classes.length} classes`);
+        }
+
+        // 5. Insert instructors as owner profiles
+        if (input.instructors && input.instructors.length > 0) {
+          for (const inst of input.instructors) {
+            const existing = await db.select({ id: ownerProfiles.id })
+              .from(ownerProfiles)
+              .where(eq(ownerProfiles.organizationId, orgId))
+              .limit(1);
+            if (existing.length === 0) {
+              await db.insert(ownerProfiles).values({
+                organizationId: orgId,
+                name: inst.name,
+                bio: inst.bio || null,
+                specialties: inst.specialties || null,
+                certifications: inst.certifications || null,
+              });
+            }
+          }
+          results.push(`Processed ${input.instructors.length} instructors`);
+        }
+
+        return { success: true, results };
+      }),
+
   // Subscription and credits management
   // Dojo Settings API
   settings: router({

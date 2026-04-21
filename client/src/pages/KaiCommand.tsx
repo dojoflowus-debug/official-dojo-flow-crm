@@ -28,6 +28,7 @@ import { StudentDetailsPanel } from '@/components/StudentDetailsPanel';
 import { ManagementPanel } from '@/components/kai/ManagementPanel';
 import VoicePacedMessage from '@/components/VoicePacedMessage';
 import { KaiErrorAlert } from '@/components/KaiErrorAlert';
+import KaiWebsiteAnalyzer from '@/components/KaiWebsiteAnalyzer';
 import { KaiReviewCard } from '@/components/KaiReviewCard';
 import { BetaNoticeModal } from '@/components/BetaNoticeModal';
 import { KaiLoadingAnimation } from '@/components/KaiLoadingAnimation';
@@ -93,7 +94,8 @@ import {
   RefreshCw,
   FileSpreadsheet,
   Download,
-  ExternalLink
+  ExternalLink,
+  Globe
 } from 'lucide-react';
 
 // Kai Logo for center panel - uses actual logo image
@@ -341,6 +343,10 @@ export default function KaiCommand() {
   // Paywall modal state
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallFeatureName, setPaywallFeatureName] = useState('this feature');
+
+  // Website Analyzer state
+  const [showWebsiteAnalyzer, setShowWebsiteAnalyzer] = useState(false);
+  const [websiteAnalyzerUrl, setWebsiteAnalyzerUrl] = useState('');
   
   // Results Panel state
   const [resultsPanelData, setResultsPanelData] = useState<ResultsPanelData>(null);
@@ -2495,6 +2501,33 @@ export default function KaiCommand() {
       return;
     }
      // --- END ONBOARDING INTERCEPTION ---
+
+    // --- KAI WEBSITE ANALYZER INTERCEPT ---
+    // If the user pastes a URL or says "analyze [url]", open the website analyzer
+    const websiteAnalyzerRegex = /(?:analyze|scan|scrape|import|populate)\s+(https?:\/\/[^\s]+)|(https?:\/\/[^\s]+)/i;
+    const websiteMatch = inputText.trim().match(websiteAnalyzerRegex);
+    if (websiteMatch) {
+      const detectedUrl = websiteMatch[1] || websiteMatch[2];
+      // Only trigger if it looks like a school/business website (not a short link or image)
+      const isSchoolUrl = !detectedUrl.match(/\.(jpg|jpeg|png|gif|pdf|mp4|zip)$/i);
+      if (isSchoolUrl) {
+        setWebsiteAnalyzerUrl(detectedUrl);
+        setShowWebsiteAnalyzer(true);
+        setMessageInput('');
+        setAttachments([]);
+        return;
+      }
+    }
+    // Also trigger on keyword commands without URL
+    const analyzeKeywords = /^(analyze my website|scan my website|import from website|populate from website|analyze school website)$/i;
+    if (analyzeKeywords.test(inputText.trim())) {
+      setWebsiteAnalyzerUrl('');
+      setShowWebsiteAnalyzer(true);
+      setMessageInput('');
+      setAttachments([]);
+      return;
+    }
+    // --- END WEBSITE ANALYZER INTERCEPT ---
 
     // --- KAI TUTORIAL COMMAND INTERCEPT ---
     // If the input matches a smart command (e.g. "add student"), start the tutorial
@@ -5808,6 +5841,17 @@ export default function KaiCommand() {
         featureName={paywallFeatureName}
       />
       
+      {/* Kai Website Analyzer Modal */}
+      {showWebsiteAnalyzer && (
+        <KaiWebsiteAnalyzer
+          initialUrl={websiteAnalyzerUrl}
+          onClose={() => {
+            setShowWebsiteAnalyzer(false);
+            setWebsiteAnalyzerUrl('');
+          }}
+        />
+      )}
+
       {/* Mobile Ops Drawer - slides up from bottom when mobileOpsOpen */}
       {isMobile && mobileOpsOpen && (
         <>
