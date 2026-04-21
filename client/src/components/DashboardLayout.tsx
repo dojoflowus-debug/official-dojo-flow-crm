@@ -23,7 +23,7 @@ import {
 import { APP_TITLE, APP_LOGO } from "@/const";
 import { useThemeAwareLogo } from "@/hooks/useThemeAwareLogo";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Monitor, Calendar } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Monitor, Calendar, Key } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -296,6 +296,13 @@ function DashboardLayoutContent({
                 >
                   <Users className="mr-2 h-4 w-4" />
                   <span>Profile Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => navigate('/settings/api-keys')}
+                  className="cursor-pointer"
+                >
+                  <Key className="mr-2 h-4 w-4" />
+                  <span>API Keys</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={logout}

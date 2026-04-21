@@ -7,7 +7,7 @@ import { trpc } from '@/lib/trpc'
 import { toast } from 'sonner'
 import { 
   User, Settings, BarChart3, CreditCard, Clock, Mail, Database, 
-  Cloud, Palette, Zap, HelpCircle, LogOut, X, ExternalLink, Banknote, Building2, ChevronDown
+  Cloud, Palette, Zap, HelpCircle, LogOut, X, ExternalLink, Banknote, Building2, ChevronDown, Key, Copy, RefreshCw, Trash2, Eye, EyeOff, Plus, CheckCircle, AlertTriangle
 } from 'lucide-react'
 import { UserAvatar } from '@/components/UserAvatar'
 import PaymentsSettingsTab from '@/components/settings/PaymentsSettingsTab'
@@ -50,6 +50,7 @@ const navigationItems = [
   { id: 'cloud', label: 'Cloud browser', icon: Cloud },
   { id: 'personalization', label: 'Personalization', icon: Palette },
   { id: 'connectors', label: 'Connectors', icon: Zap },
+  { id: 'api-keys', label: 'API Keys', icon: Key },
 ]
 
 export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }: SettingsPortalModalProps) {
@@ -769,6 +770,11 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
               </div>
             )}
 
+            {/* API Keys Tab */}
+            {activeTab === 'api-keys' && (
+              <ApiKeysTabContent />
+            )}
+
             {/* Payments Tab */}
             {activeTab === 'payments' && (
               <PaymentsSettingsTab />
@@ -785,7 +791,7 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
             )}
 
             {/* Placeholder for other tabs */}
-            {activeTab !== 'account' && activeTab !== 'usage' && activeTab !== 'billing' && activeTab !== 'personalization' && activeTab !== 'connectors' && activeTab !== 'payments' && activeTab !== 'school' && activeTab !== 'pc-bank-card' && activeTab !== 'mail' && (
+            {activeTab !== 'account' && activeTab !== 'usage' && activeTab !== 'billing' && activeTab !== 'personalization' && activeTab !== 'connectors' && activeTab !== 'payments' && activeTab !== 'school' && activeTab !== 'pc-bank-card' && activeTab !== 'mail' && activeTab !== 'api-keys' && (
               <div style={{
                 padding: '48px',
                 textAlign: 'center',

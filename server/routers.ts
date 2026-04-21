@@ -1901,16 +1901,16 @@ export const appRouter = router({
       .query(async ({ ctx, input }) => {
       const { getDb } = await import("./db");
       const { leads } = await import("../drizzle/schema");
-      const { eq } = await import("drizzle-orm");
+      const { eq, ne, and: andLeads } = await import("drizzle-orm");
       
       const db = await getDb();
       if (!db) throw new Error('Database not available');
       
       // Get leads filtered by organization for multi-tenancy
-      // Users without an organization see empty lists (no fake data)
+      // Exclude Enrolled leads — they are students and should not appear in the active pipeline
       const orgId = ctx.currentOrganizationId;
       const allLeads = orgId
-        ? await db.select().from(leads).where(eq(leads.organizationId, orgId))
+        ? await db.select().from(leads).where(andLeads(eq(leads.organizationId, orgId), ne(leads.status, 'Enrolled')))
         : [];
       
       // Group by status (map database enum values to frontend keys)
@@ -1971,8 +1971,19 @@ export const appRouter = router({
         let isAlreadyStudent = false;
         try {
           const dedupConditions: any[] = [];
-          if (input.email) dedupConditions.push(eqOp(studentsTable.email, input.email));
-          if (input.phone) dedupConditions.push(eqOp(studentsTable.phone, input.phone));
+          // Case-insensitive email match (check student email AND guardian email)
+          if (input.email) {
+            dedupConditions.push(sqlExpr`LOWER(${studentsTable.email}) = LOWER(${input.email})`);
+            dedupConditions.push(sqlExpr`LOWER(${studentsTable.guardianEmail}) = LOWER(${input.email})`);
+          }
+          // Normalized phone match: strip non-digits and compare last 10 digits
+          if (input.phone) {
+            const inputDigits = input.phone.replace(/\D/g, '').slice(-10);
+            if (inputDigits.length >= 7) {
+              dedupConditions.push(sqlExpr`RIGHT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(${studentsTable.phone}, '+', ''), '-', ''), ' ', ''), '(', ''), ')', ''), 10) = ${inputDigits}`);
+            }
+          }
+          // Case-insensitive full name match
           if (input.firstName && input.lastName) {
             dedupConditions.push(
               andOp(
@@ -2350,10 +2361,23 @@ export const appRouter = router({
           .where(andOp(eq(leads.organizationId, orgId), ne(leads.status, 'Enrolled')));
 
         let convertedCount = 0;
+        // Helper: strip all non-digit characters for phone comparison
+        const digitsOnly = (s: string) => s.replace(/\D/g, '');
         for (const lead of activeLeads) {
           const conditions: any[] = [];
-          if (lead.email) conditions.push(eq(studentsTable.email, lead.email));
-          if (lead.phone) conditions.push(eq(studentsTable.phone, lead.phone));
+          // Case-insensitive email match (check student email AND guardian email)
+          if (lead.email) {
+            conditions.push(sqlExpr`LOWER(${studentsTable.email}) = LOWER(${lead.email})`);
+            conditions.push(sqlExpr`LOWER(${studentsTable.guardianEmail}) = LOWER(${lead.email})`);
+          }
+          // Normalized phone match: compare last 10 digits to handle +1 country code differences
+          if (lead.phone) {
+            const leadDigits = digitsOnly(lead.phone).slice(-10);
+            if (leadDigits.length >= 7) {
+              conditions.push(sqlExpr`RIGHT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(${studentsTable.phone}, '+', ''), '-', ''), ' ', ''), '(', ''), ')', ''), 10) = ${leadDigits}`);
+            }
+          }
+          // Case-insensitive full name match
           if (lead.firstName && lead.lastName) {
             conditions.push(
               andOp(
@@ -5839,6 +5863,74 @@ Return the data as a structured JSON object.`
         const newKey = 'djf_' + crypto.randomBytes(24).toString('hex');
         await db.update(organizations).set({ widgetApiKey: newKey }).where(eq(organizations.id, orgId));
         return { widgetApiKey: newKey };
+      }),
+
+    // Named API Keys management (multiple keys per org with labels)
+    listApiKeys: protectedProcedure
+      .query(async ({ ctx }) => {
+        const { getDb } = await import('./db');
+        const { organizations } = await import('../drizzle/schema');
+        const { eq } = await import('drizzle-orm');
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) throw new Error('No organization found');
+        const rows = await db.select({ settings: organizations.settings, widgetApiKey: organizations.widgetApiKey })
+          .from(organizations).where(eq(organizations.id, orgId)).limit(1);
+        let parsed: any = {};
+        try { parsed = JSON.parse(rows[0]?.settings || '{}'); } catch {}
+        const namedKeys: Array<{ id: string; label: string; key: string; createdAt: string }> = parsed.apiKeys || [];
+        const primaryKey = rows[0]?.widgetApiKey;
+        return { primaryKey, namedKeys };
+      }),
+
+    createApiKey: protectedProcedure
+      .input(z.object({ label: z.string().min(1).max(64) }))
+      .mutation(async ({ ctx, input }) => {
+        const { getDb } = await import('./db');
+        const { organizations } = await import('../drizzle/schema');
+        const { eq } = await import('drizzle-orm');
+        const crypto = await import('crypto');
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) throw new Error('No organization found');
+        const rows = await db.select({ settings: organizations.settings })
+          .from(organizations).where(eq(organizations.id, orgId)).limit(1);
+        let parsed: any = {};
+        try { parsed = JSON.parse(rows[0]?.settings || '{}'); } catch {}
+        const namedKeys: Array<{ id: string; label: string; key: string; createdAt: string }> = parsed.apiKeys || [];
+        if (namedKeys.length >= 10) throw new Error('Maximum of 10 API keys allowed per organization');
+        const newEntry = {
+          id: crypto.randomBytes(8).toString('hex'),
+          label: input.label,
+          key: 'djf_' + crypto.randomBytes(24).toString('hex'),
+          createdAt: new Date().toISOString(),
+        };
+        namedKeys.push(newEntry);
+        parsed.apiKeys = namedKeys;
+        await db.update(organizations).set({ settings: JSON.stringify(parsed) }).where(eq(organizations.id, orgId));
+        return newEntry;
+      }),
+
+    revokeApiKey: protectedProcedure
+      .input(z.object({ id: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const { getDb } = await import('./db');
+        const { organizations } = await import('../drizzle/schema');
+        const { eq } = await import('drizzle-orm');
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) throw new Error('No organization found');
+        const rows = await db.select({ settings: organizations.settings })
+          .from(organizations).where(eq(organizations.id, orgId)).limit(1);
+        let parsed: any = {};
+        try { parsed = JSON.parse(rows[0]?.settings || '{}'); } catch {}
+        const namedKeys: Array<{ id: string }> = parsed.apiKeys || [];
+        parsed.apiKeys = namedKeys.filter((k) => k.id !== input.id);
+        await db.update(organizations).set({ settings: JSON.stringify(parsed) }).where(eq(organizations.id, orgId));
+        return { success: true };
       }),
   }),
 

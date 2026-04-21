@@ -85,6 +85,7 @@ const SettingsTest = lazy(() => import("../pages/SettingsTest"));
 const CommunicationSettings = lazy(() => import("../pages/CommunicationSettings"));
 const OwnerCommandCenter = lazy(() => import("../pages/OwnerCommandCenter").then(m => ({ default: m.OwnerCommandCenter })));
 const WebhookSettings = lazy(() => import("../pages/WebhookSettings"));
+const ApiKeysSettings = lazy(() => import("../pages/ApiKeysSettings"));
 const KioskSettings = lazy(() => import("../pages/KioskSettings"));
 
 const KioskStudio = lazy(() => import("../pages/KioskStudio"));
@@ -308,6 +309,7 @@ export const appRoutes: RouteConfig[] = [
   { path: "/settings-test", element: <SettingsTest />, label: "Settings Test" },
   { path: "/settings/communication", element: <CommunicationSettings />, label: "Communication Settings" },
   { path: "/settings/webhooks", element: <WebhookSettings />, label: "Webhook Settings" },
+  { path: "/settings/api-keys", element: <ApiKeysSettings />, label: "API Keys" },
   { path: "/settings/kiosk", element: <KioskSettings />, label: "Kiosk Settings" },
   { path: "/settings/kiosk/studio", element: <ProtectedRoute><KioskStudioBuilder2 /></ProtectedRoute>, label: "Kiosk Studio" },
   { path: "/kiosk-studio-builder/:locationId", element: <ProtectedRoute><KioskStudioBuilder2 /></ProtectedRoute>, label: "Kiosk Studio Builder" },
