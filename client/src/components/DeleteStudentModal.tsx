@@ -84,12 +84,13 @@ export function DeleteStudentModal({
   };
 
   const handleVerifyAndDelete = async () => {
-    if (enteredCode.length !== 6) {
+    const cleanCode = enteredCode.replace(/[^0-9]/g, '');
+    if (cleanCode.length !== 6) {
       toast({ title: 'Enter the full 6-digit code', variant: 'destructive' });
       return;
     }
     try {
-      await verifyMutation.mutateAsync({ studentId, code: enteredCode });
+      await verifyMutation.mutateAsync({ studentId, code: cleanCode });
       toast({ title: 'Student deleted', description: `${studentName} has been permanently removed.` });
       onOpenChange(false);
       onDeleted();
@@ -105,10 +106,10 @@ export function DeleteStudentModal({
   // 6-digit OTP-style input handler
   const handleDigitChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
-    const digits = enteredCode.split('');
+    // Build a clean array of exactly 6 slots (empty string = unfilled)
+    const digits = Array.from({ length: 6 }, (_, i) => enteredCode[i] || '');
     digits[index] = value.slice(-1);
-    const newCode = digits.join('').slice(0, 6);
-    setEnteredCode(newCode.padEnd(6, '').slice(0, 6));
+    setEnteredCode(digits.join(''));
     // Auto-advance
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
@@ -116,8 +117,19 @@ export function DeleteStudentModal({
   };
 
   const handleDigitKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !enteredCode[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
+    if (e.key === 'Backspace') {
+      if (!enteredCode[index] && index > 0) {
+        // Move back and clear previous digit
+        const digits = Array.from({ length: 6 }, (_, i) => enteredCode[i] || '');
+        digits[index - 1] = '';
+        setEnteredCode(digits.join(''));
+        inputRefs.current[index - 1]?.focus();
+      } else {
+        // Clear current digit
+        const digits = Array.from({ length: 6 }, (_, i) => enteredCode[i] || '');
+        digits[index] = '';
+        setEnteredCode(digits.join(''));
+      }
     }
   };
 
@@ -250,7 +262,7 @@ export function DeleteStudentModal({
                 variant="destructive"
                 className="flex-1"
                 onClick={handleVerifyAndDelete}
-                disabled={enteredCode.replace(/\s/g, '').length !== 6 || verifyMutation.isPending}
+                disabled={enteredCode.replace(/[^0-9]/g, '').length !== 6 || verifyMutation.isPending}
               >
                 {verifyMutation.isPending ? 'Deleting...' : 'Delete Student'}
               </Button>
