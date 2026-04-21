@@ -366,7 +366,11 @@ export default function KioskHome() {
         style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(180,0,0,0.25) 0%, transparent 70%)' }}
       />
 
-      <div className="relative z-10 max-w-3xl mx-auto px-4 py-8 pb-24">
+      {/* ── 2-column layout wrapper ── */}
+      <div className="relative z-10 flex min-h-screen">
+
+      {/* ── LEFT COLUMN: main content ── */}
+      <div className="flex-1 px-6 py-8 pb-24 overflow-y-auto" style={{ minWidth: 0 }}>
 
         {/* ── Hero ── */}
         <div className="text-center mb-8">
@@ -563,15 +567,24 @@ export default function KioskHome() {
           Check-in opens 15 minutes before class
         </p>
 
-        {/* ── Bottom panels ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      </div>{/* end LEFT COLUMN */}
 
-          {/* Classes */}
-          {flags.showClassSchedule && <div>
+      {/* ── RIGHT COLUMN: schedule + leaderboard ── */}
+      <div
+        className="flex-shrink-0 overflow-y-auto py-8 px-4"
+        style={{
+          width: '320px',
+          borderLeft: '1px solid rgba(255,255,255,0.05)',
+          background: 'rgba(0,0,0,0.35)',
+          backdropFilter: 'blur(12px)',
+        }}
+      >
+        {/* Today's Schedule */}
+        {flags.showClassSchedule && (
+          <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
-              <Flame className="w-4 h-4 text-red-500" style={{ filter: 'drop-shadow(0 0 6px rgba(220,38,38,0.8))' }} />
-              <span className="font-black text-white text-sm tracking-widest uppercase" style={{ textShadow: '0 0 10px rgba(220,38,38,0.4)' }}>Top Warriors</span>
-              <span className="text-gray-600 text-xs ml-1 tracking-wider">Current Begin</span>
+              <Clock className="w-4 h-4 text-red-500" style={{ filter: 'drop-shadow(0 0 6px rgba(220,38,38,0.8))' }} />
+              <span className="font-black text-white text-sm tracking-widest uppercase" style={{ textShadow: '0 0 10px rgba(220,38,38,0.4)' }}>Today's Schedule</span>
             </div>
             <div className="space-y-2">
               {todayClasses.length === 0 && (
@@ -581,8 +594,14 @@ export default function KioskHome() {
               )}
               {todayClasses.map((c: any) => {
                 const mins = minutesUntil(c.startTime);
+                const isNow = mins === 0;
+                const isNext = !isNow && mins <= 60;
                 return (
-                  <div key={c.id} className="rounded-2xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(10px)' }}>
+                  <div key={c.id} className="rounded-2xl px-4 py-3" style={{
+                    background: isNow ? 'rgba(220,38,38,0.12)' : 'rgba(255,255,255,0.03)',
+                    border: isNow ? '1px solid rgba(220,38,38,0.4)' : '1px solid rgba(255,255,255,0.07)',
+                    backdropFilter: 'blur(10px)',
+                  }}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="font-black text-white text-sm uppercase truncate">{c.name}</p>
@@ -591,69 +610,76 @@ export default function KioskHome() {
                         </p>
                         <p className="text-gray-600 text-xs flex items-center gap-1 mt-0.5">
                           <Clock className="w-3 h-3 flex-shrink-0" />
-                          {formatTime(c.startTime)}{c.endTime ? ` - ${formatTime(c.endTime)}` : ''}
+                          {formatTime(c.startTime)}{c.endTime ? ` – ${formatTime(c.endTime)}` : ''}
                         </p>
                       </div>
                       <span
                         className="flex-shrink-0 text-xs font-black px-2 py-1 rounded-full whitespace-nowrap uppercase tracking-wider"
-                        style={mins === 0
-                          ? { background: 'rgba(220,38,38,0.8)', color: '#fff', boxShadow: '0 0 10px rgba(220,38,38,0.4)' }
-                          : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.08)' }
+                        style={isNow
+                          ? { background: 'rgba(220,38,38,0.9)', color: '#fff', boxShadow: '0 0 10px rgba(220,38,38,0.5)' }
+                          : isNext
+                          ? { background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.15)' }
+                          : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.06)' }
                         }
                       >
-                        {mins === 0 ? 'NOW' : `${mins}m`}
+                        {isNow ? 'IN PROGRESS' : isNext ? 'UP NEXT' : formatTime(c.startTime)}
                       </span>
                     </div>
                   </div>
                 );
               })}
             </div>
-          </div>}
+          </div>
+        )}
 
-          {/* Leaderboard */}
-          {(flags.showAttendanceLeaderboard || flags.showBeltPromotion) && <div className="space-y-3">
-            {flags.showAttendanceLeaderboard && (
-              <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(220,38,38,0.15)', backdropFilter: 'blur(10px)' }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <Flame className="w-4 h-4 text-red-500" style={{ filter: 'drop-shadow(0 0 6px rgba(220,38,38,0.8))' }} />
-                  <span className="font-black text-white text-sm tracking-widest uppercase" style={{ textShadow: '0 0 10px rgba(220,38,38,0.4)' }}>Perfect Attendance</span>
-                </div>
-                {leaderboard.length === 0 && (
-                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.2)' }}>No attendance data yet</p>
-                )}
-                {leaderboard.slice(0, 3).map((s: any, i: number) => (
-                  <div key={s.studentId} className="flex items-center gap-3 py-2" style={{ borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                    <span
-                      className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
-                      style={i === 0
-                        ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#000', boxShadow: '0 0 10px rgba(245,158,11,0.4)' }
-                        : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }
-                      }
-                    >
-                      {i + 1}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-bold text-sm truncate">{s.name}</p>
-                      <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{s.streak} Classes Straight</p>
-                    </div>
-                    {i === 0 && <Flame className="w-4 h-4 text-red-500 flex-shrink-0" style={{ filter: 'drop-shadow(0 0 4px rgba(220,38,38,0.6))' }} />}
+        {/* Leaderboard */}
+        {flags.showAttendanceLeaderboard && (
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Flame className="w-4 h-4 text-yellow-400" style={{ filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.8))' }} />
+              <span className="font-black text-white text-sm tracking-widest uppercase" style={{ textShadow: '0 0 10px rgba(250,204,21,0.3)' }}>Dojo Leaderboard</span>
+              <span className="text-gray-600 text-xs ml-auto tracking-wider">This Month</span>
+            </div>
+            <div className="space-y-1">
+              {leaderboard.length === 0 && (
+                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.2)' }}>No attendance data yet</p>
+              )}
+              {leaderboard.slice(0, 5).map((s: any, i: number) => (
+                <div
+                  key={s.studentId}
+                  className="flex items-center gap-3 rounded-xl px-3 py-2"
+                  style={{
+                    background: i === 0 ? 'rgba(220,38,38,0.12)' : 'rgba(255,255,255,0.02)',
+                    border: i === 0 ? '1px solid rgba(220,38,38,0.25)' : '1px solid rgba(255,255,255,0.04)',
+                  }}
+                >
+                  <span
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
+                    style={i === 0
+                      ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#000', boxShadow: '0 0 10px rgba(245,158,11,0.4)' }
+                      : i === 1
+                      ? { background: 'rgba(156,163,175,0.3)', color: '#d1d5db' }
+                      : i === 2
+                      ? { background: 'rgba(180,120,60,0.3)', color: '#d97706' }
+                      : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)' }
+                    }
+                  >
+                    {i + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-bold text-sm truncate">{s.name}</p>
                   </div>
-                ))}
-              </div>
-            )}
-
-            {flags.showBeltPromotion && (
-              <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(250,204,21,0.12)', backdropFilter: 'blur(10px)' }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" style={{ filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.6))' }} />
-                  <span className="font-black text-white text-sm tracking-widest uppercase" style={{ textShadow: '0 0 10px rgba(250,204,21,0.3)' }}>Runner Up for Next Belt</span>
+                  <span className="text-xs font-black flex items-center gap-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    {s.streak} Classes <Flame className="w-3 h-3 text-red-400" />
+                  </span>
                 </div>
-                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.2)' }}>No students close to promotion yet</p>
-              </div>
-            )}
-          </div>}
-        </div>
-      </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>{/* end RIGHT COLUMN */}
+
+      </div>{/* end 2-column wrapper */}
 
       {/* Lock */}
       {flags.showLockButton && (
