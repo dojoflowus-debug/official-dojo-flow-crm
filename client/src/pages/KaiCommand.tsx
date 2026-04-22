@@ -178,6 +178,25 @@ interface Message {
   viewClassesLink?: boolean;
   /** Number of classes imported in the last auto-import */
   importedClassCount?: number;
+  /** Website scan results — shown as an inline card in the chat */
+  websiteScanData?: {
+    url: string;
+    schoolName?: string;
+    address?: string;
+    phone?: string;
+    email?: string;
+    logoUrl?: string;
+    brandColor?: string;
+    timezone?: string;
+    programs?: string[];
+    instructors?: string[];
+    schedules?: Array<{ day: string; time: string; program: string }>;
+    socialLinks?: { facebook?: string; instagram?: string; youtube?: string; tiktok?: string };
+    description?: string;
+    saved?: boolean;
+  };
+  /** Waiting for user to provide a website URL for scanning */
+  awaitingWebsiteUrl?: boolean;
 }
 
 // Attachment type
@@ -773,6 +792,10 @@ export default function KaiCommand() {
     }
   });
   
+  // Website analyzer mutations (inline chat flow)
+  const analyzeSchoolWebsiteMutation = trpc.kai.analyzeSchoolWebsite.useMutation();
+  const populateSchoolFromWebsiteMutation = trpc.kai.populateSchoolFromWebsite.useMutation();
+
   // Trial checkout mutation
   const createTrialCheckoutMutation = trpc.subscription.createTrialCheckout.useMutation({
     onError: (error: any) => {
@@ -2502,29 +2525,80 @@ export default function KaiCommand() {
     }
      // --- END ONBOARDING INTERCEPTION ---
 
-    // --- KAI WEBSITE ANALYZER INTERCEPT ---
-    // If the user pastes a URL or says "analyze [url]", open the website analyzer
+    // --- KAI WEBSITE ANALYZER INTERCEPT (inline chat flow) ---
     const websiteAnalyzerRegex = /(?:analyze|scan|scrape|import|populate)\s+(https?:\/\/[^\s]+)|(https?:\/\/[^\s]+)/i;
     const websiteMatch = inputText.trim().match(websiteAnalyzerRegex);
+    const analyzeKeywords = /^(analyze my website|scan my website|import from website|populate from website|analyze school website|scan website|analyze website)$/i;
+
+    // Check if user is responding to Kai's "please share your URL" prompt
+    const lastMsg = messages[messages.length - 1];
+    const isAwaitingUrl = lastMsg?.awaitingWebsiteUrl === true;
+    const urlOnlyRegex = /^https?:\/\/[^\s]+$/i;
+
+    if (isAwaitingUrl && urlOnlyRegex.test(inputText.trim())) {
+      // User just pasted a URL in response to Kai's prompt — run the scan inline
+      const url = inputText.trim();
+      setMessageInput('');
+      setAttachments([]);
+      const userMsg: Message = { id: Date.now().toString(), role: 'user', content: url, timestamp: new Date() };
+      const scanningMsg: Message = { id: (Date.now() + 1).toString(), role: 'assistant', content: '🔍 Scanning your website... this usually takes 10–20 seconds.', timestamp: new Date() };
+      setMessages(prev => [...prev, userMsg, scanningMsg]);
+      try {
+        const result = await analyzeSchoolWebsiteMutation.mutateAsync({ url, orgId: user?.activeOrgId || 0 });
+        const scanResultMsg: Message = {
+          id: (Date.now() + 2).toString(),
+          role: 'assistant',
+          content: `✅ I found your school info! Here's what I extracted from **${url}**. Review the details below and click **Save to Profile** to populate your DojoFlow settings.`,
+          timestamp: new Date(),
+          websiteScanData: { url, ...(result as any) },
+        };
+        setMessages(prev => prev.map(m => m.id === scanningMsg.id ? scanResultMsg : m));
+      } catch (err: any) {
+        const errMsg: Message = { id: (Date.now() + 2).toString(), role: 'assistant', content: `❌ I couldn't scan that website. Make sure the URL is correct and the site is publicly accessible. Error: ${err?.message || 'Unknown error'}`, timestamp: new Date() };
+        setMessages(prev => prev.map(m => m.id === scanningMsg.id ? errMsg : m));
+      }
+      return;
+    }
+
     if (websiteMatch) {
       const detectedUrl = websiteMatch[1] || websiteMatch[2];
-      // Only trigger if it looks like a school/business website (not a short link or image)
       const isSchoolUrl = !detectedUrl.match(/\.(jpg|jpeg|png|gif|pdf|mp4|zip)$/i);
       if (isSchoolUrl) {
-        setWebsiteAnalyzerUrl(detectedUrl);
-        setShowWebsiteAnalyzer(true);
         setMessageInput('');
         setAttachments([]);
+        const userMsg: Message = { id: Date.now().toString(), role: 'user', content: inputText.trim(), timestamp: new Date() };
+        const scanningMsg: Message = { id: (Date.now() + 1).toString(), role: 'assistant', content: '🔍 Scanning your website... this usually takes 10–20 seconds.', timestamp: new Date() };
+        setMessages(prev => [...prev, userMsg, scanningMsg]);
+        try {
+          const result = await analyzeSchoolWebsiteMutation.mutateAsync({ url: detectedUrl, orgId: user?.activeOrgId || 0 });
+          const scanResultMsg: Message = {
+            id: (Date.now() + 2).toString(),
+            role: 'assistant',
+            content: `✅ I found your school info! Here's what I extracted from **${detectedUrl}**. Review the details below and click **Save to Profile** to populate your DojoFlow settings.`,
+            timestamp: new Date(),
+            websiteScanData: { url: detectedUrl, ...(result as any) },
+          };
+          setMessages(prev => prev.map(m => m.id === scanningMsg.id ? scanResultMsg : m));
+        } catch (err: any) {
+          const errMsg: Message = { id: (Date.now() + 2).toString(), role: 'assistant', content: `❌ I couldn't scan that website. Make sure the URL is correct and the site is publicly accessible. Error: ${err?.message || 'Unknown error'}`, timestamp: new Date() };
+          setMessages(prev => prev.map(m => m.id === scanningMsg.id ? errMsg : m));
+        }
         return;
       }
     }
-    // Also trigger on keyword commands without URL
-    const analyzeKeywords = /^(analyze my website|scan my website|import from website|populate from website|analyze school website)$/i;
+
     if (analyzeKeywords.test(inputText.trim())) {
-      setWebsiteAnalyzerUrl('');
-      setShowWebsiteAnalyzer(true);
       setMessageInput('');
       setAttachments([]);
+      const userMsg: Message = { id: Date.now().toString(), role: 'user', content: inputText.trim(), timestamp: new Date() };
+      const askUrlMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: `Sure! Please share your school's website URL and I'll scan it to extract your name, address, phone, logo, programs, class schedules, and more — then save it all to your DojoFlow profile.`,
+        timestamp: new Date(),
+        awaitingWebsiteUrl: true,
+      };
+      setMessages(prev => [...prev, userMsg, askUrlMsg]);
       return;
     }
     // --- END WEBSITE ANALYZER INTERCEPT ---
@@ -4866,6 +4940,131 @@ export default function KaiCommand() {
                           </button>
                         </div>
                       )}
+                      {/* Website Scan Results Card — inline in chat */}
+                      {message.websiteScanData && !message.websiteScanData.saved && (
+                        <div className={`mt-3 rounded-xl border overflow-hidden ${
+                          isCinematic ? 'border-purple-500/30 bg-purple-950/20' :
+                          isDark ? 'border-violet-500/30 bg-violet-950/20' :
+                          'border-violet-200 bg-violet-50'
+                        }`}>
+                          <div className={`px-4 py-3 border-b flex items-center justify-between ${
+                            isCinematic ? 'border-purple-500/20 bg-purple-900/30' :
+                            isDark ? 'border-violet-500/20 bg-violet-900/30' :
+                            'border-violet-200 bg-violet-100'
+                          }`}>
+                            <div className="flex items-center gap-2">
+                              <Globe className={`w-4 h-4 ${
+                                isCinematic ? 'text-purple-400' : isDark ? 'text-violet-400' : 'text-violet-600'
+                              }`} />
+                              <span className={`text-sm font-semibold ${
+                                isCinematic ? 'text-purple-200' : isDark ? 'text-violet-200' : 'text-violet-800'
+                              }`}>
+                                {message.websiteScanData.schoolName || 'School Info Extracted'}
+                              </span>
+                            </div>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              isCinematic ? 'bg-purple-500/20 text-purple-300' : isDark ? 'bg-violet-500/20 text-violet-300' : 'bg-violet-200 text-violet-700'
+                            }`}>From {message.websiteScanData.url.replace(/^https?:\/\//, '').split('/')[0]}</span>
+                          </div>
+                          <div className="px-4 py-3 grid grid-cols-2 gap-2 text-sm">
+                            {message.websiteScanData.address && (
+                              <div>
+                                <p className={`text-xs font-medium mb-0.5 ${
+                                  isCinematic ? 'text-purple-400' : isDark ? 'text-violet-400' : 'text-violet-600'
+                                }`}>Address</p>
+                                <p className="text-foreground text-xs">{message.websiteScanData.address}</p>
+                              </div>
+                            )}
+                            {message.websiteScanData.phone && (
+                              <div>
+                                <p className={`text-xs font-medium mb-0.5 ${
+                                  isCinematic ? 'text-purple-400' : isDark ? 'text-violet-400' : 'text-violet-600'
+                                }`}>Phone</p>
+                                <p className="text-foreground text-xs">{message.websiteScanData.phone}</p>
+                              </div>
+                            )}
+                            {message.websiteScanData.email && (
+                              <div>
+                                <p className={`text-xs font-medium mb-0.5 ${
+                                  isCinematic ? 'text-purple-400' : isDark ? 'text-violet-400' : 'text-violet-600'
+                                }`}>Email</p>
+                                <p className="text-foreground text-xs">{message.websiteScanData.email}</p>
+                              </div>
+                            )}
+                            {message.websiteScanData.programs && message.websiteScanData.programs.length > 0 && (
+                              <div className="col-span-2">
+                                <p className={`text-xs font-medium mb-0.5 ${
+                                  isCinematic ? 'text-purple-400' : isDark ? 'text-violet-400' : 'text-violet-600'
+                                }`}>Programs</p>
+                                <p className="text-foreground text-xs">{message.websiteScanData.programs.join(', ')}</p>
+                              </div>
+                            )}
+                            {message.websiteScanData.description && (
+                              <div className="col-span-2">
+                                <p className={`text-xs font-medium mb-0.5 ${
+                                  isCinematic ? 'text-purple-400' : isDark ? 'text-violet-400' : 'text-violet-600'
+                                }`}>About</p>
+                                <p className="text-foreground text-xs line-clamp-2">{message.websiteScanData.description}</p>
+                              </div>
+                            )}
+                          </div>
+                          <div className={`px-4 py-3 border-t flex gap-2 ${
+                            isCinematic ? 'border-purple-500/20' : isDark ? 'border-violet-500/20' : 'border-violet-200'
+                          }`}>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await populateSchoolFromWebsiteMutation.mutateAsync({
+                                    orgId: user?.activeOrgId || 0,
+                                    data: message.websiteScanData!,
+                                  });
+                                  setMessages(prev => prev.map(m =>
+                                    m.id === message.id ? { ...m, websiteScanData: { ...m.websiteScanData!, saved: true } } : m
+                                  ));
+                                  setMessages(prev => [...prev, {
+                                    id: `website-saved-${Date.now()}`,
+                                    role: 'assistant',
+                                    content: `✅ Your school profile has been updated! Head to **Settings → School Profile** to review the saved info.`,
+                                    timestamp: new Date(),
+                                    quickReplies: [{ label: '⚙️ Open Settings', action: 'navigate:/settings' }],
+                                  }]);
+                                  toast.success('School profile updated!');
+                                } catch (err: any) {
+                                  toast.error('Failed to save: ' + (err?.message || 'Unknown error'));
+                                }
+                              }}
+                              disabled={populateSchoolFromWebsiteMutation.isLoading}
+                              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
+                                isCinematic ? 'bg-purple-500 hover:bg-purple-400 text-white' :
+                                isDark ? 'bg-violet-600 hover:bg-violet-500 text-white' :
+                                'bg-violet-600 hover:bg-violet-700 text-white'
+                              } disabled:opacity-50`}
+                            >
+                              {populateSchoolFromWebsiteMutation.isLoading ? 'Saving…' : '💾 Save to Profile'}
+                            </button>
+                            <button
+                              onClick={() => setMessages(prev => prev.map(m =>
+                                m.id === message.id ? { ...m, websiteScanData: undefined } : m
+                              ))}
+                              className={`px-3 py-2 rounded-lg text-sm transition-all ${
+                                isCinematic ? 'text-purple-400 hover:bg-purple-500/10' :
+                                isDark ? 'text-violet-400 hover:bg-violet-500/10' :
+                                'text-violet-600 hover:bg-violet-100'
+                              }`}
+                            >
+                              Dismiss
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {message.websiteScanData?.saved && (
+                        <div className={`mt-2 flex items-center gap-2 text-xs px-3 py-2 rounded-lg ${
+                          isCinematic ? 'bg-green-900/20 text-green-400' : isDark ? 'bg-green-900/20 text-green-400' : 'bg-green-50 text-green-700'
+                        }`}>
+                          <span>✅</span>
+                          <span>Saved to your school profile</span>
+                        </div>
+                      )}
                       {/* Quick-reply action buttons */}
                       {message.quickReplies && message.quickReplies.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-2.5">
@@ -5841,18 +6040,7 @@ export default function KaiCommand() {
         featureName={paywallFeatureName}
       />
       
-      {/* Kai Website Analyzer Modal */}
-      {showWebsiteAnalyzer && (
-        <KaiWebsiteAnalyzer
-          initialUrl={websiteAnalyzerUrl}
-          onClose={() => {
-            setShowWebsiteAnalyzer(false);
-            setWebsiteAnalyzerUrl('');
-          }}
-        />
-      )}
-
-      {/* Mobile Ops Drawer - slides up from bottom when mobileOpsOpen */}
+       {/* Mobile Ops Drawer - slides up from bottom when mobileOpsOpen */}
       {isMobile && mobileOpsOpen && (
         <>
           {/* Backdrop */}
