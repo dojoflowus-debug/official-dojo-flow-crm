@@ -433,6 +433,12 @@ export default function KaiCommand() {
   // Fullscreen and Add Staff state
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showAddStaffModal, setShowAddStaffModal] = useState(false);
+  // Website scan confirmation dialog state
+  const [websiteScanConfirm, setWebsiteScanConfirm] = useState<{
+    messageId: string;
+    scanData: NonNullable<Message['websiteScanData']>;
+    selectedFields: Set<string>;
+  } | null>(null);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Unique ID generator for messages to prevent duplicate key warnings
@@ -5040,76 +5046,36 @@ export default function KaiCommand() {
                             isCinematic ? 'border-purple-500/20' : isDark ? 'border-violet-500/20' : 'border-violet-200'
                           }`}>
                             <button
-                              onClick={async () => {
-                                try {
-                                  const scanData = message.websiteScanData!;
-                                  // Helper: convert null → undefined so Zod optional() validation passes
-                                  const nn = <T,>(v: T | null | undefined): T | undefined => v == null ? undefined : v;
-                                  // Filter out null entries from arrays too
-                                  const cleanPrograms = scanData.programs?.map(p => ({
-                                    name: p.name,
-                                    description: nn(p.description),
-                                    ageRange: nn(p.ageRange),
-                                    price: nn(p.price),
-                                    billing: nn(p.billing) as any,
-                                  }));
-                                  const cleanClasses = scanData.classes?.map(c => ({
-                                    name: c.name,
-                                    instructor: nn(c.instructor),
-                                    dayOfWeek: nn(c.dayOfWeek),
-                                    startTime: nn(c.startTime),
-                                    endTime: nn(c.endTime),
-                                    program: nn(c.program),
-                                    level: nn(c.level),
-                                  }));
-                                  const cleanInstructors = scanData.instructors?.map(i => ({
-                                    name: i.name,
-                                    bio: nn(i.bio),
-                                    specialties: nn(i.specialties),
-                                    certifications: nn(i.certifications),
-                                  }));
-                                  await populateSchoolFromWebsiteMutation.mutateAsync({
-                                    schoolName: nn(scanData.schoolName),
-                                    displayName: nn(scanData.displayName),
-                                    tagline: nn(scanData.tagline),
-                                    phone: nn(scanData.phone),
-                                    email: nn(scanData.email),
-                                    website: nn(scanData.website),
-                                    addressStreet: nn(scanData.addressStreet),
-                                    addressCity: nn(scanData.addressCity),
-                                    addressState: nn(scanData.addressState),
-                                    addressPostal: nn(scanData.addressPostal),
-                                    addressCountry: nn(scanData.addressCountry),
-                                    logoUrl: nn(scanData.logoUrl),
-                                    brandColorPrimary: nn(scanData.brandColorPrimary),
-                                    timezone: nn(scanData.timezone),
-                                    programs: cleanPrograms,
-                                    classes: cleanClasses,
-                                    instructors: cleanInstructors,
-                                  });
-                                  setMessages(prev => prev.map(m =>
-                                    m.id === message.id ? { ...m, websiteScanData: { ...m.websiteScanData!, saved: true } } : m
-                                  ));
-                                  setMessages(prev => [...prev, {
-                                    id: `website-saved-${Date.now()}`,
-                                    role: 'assistant',
-                                    content: `✅ Your school profile has been updated! Head to **Settings → School Profile** to review the saved info.`,
-                                    timestamp: new Date(),
-                                    quickReplies: [{ label: '⚙️ Open Settings', action: 'navigate:/settings' }],
-                                  }]);
-                                  toast.success('School profile updated!');
-                                } catch (err: any) {
-                                  toast.error('Failed to save: ' + (err?.message || 'Unknown error'));
-                                }
+                              onClick={() => {
+                                const scanData = message.websiteScanData!;
+                                // Build default selected fields — include everything that has a value
+                                const defaults = new Set<string>();
+                                if (scanData.schoolName) defaults.add('schoolName');
+                                if (scanData.displayName) defaults.add('displayName');
+                                if (scanData.tagline) defaults.add('tagline');
+                                if (scanData.phone) defaults.add('phone');
+                                if (scanData.email) defaults.add('email');
+                                if (scanData.website) defaults.add('website');
+                                if (scanData.addressStreet) defaults.add('addressStreet');
+                                if (scanData.addressCity) defaults.add('addressCity');
+                                if (scanData.addressState) defaults.add('addressState');
+                                if (scanData.addressPostal) defaults.add('addressPostal');
+                                if (scanData.addressCountry) defaults.add('addressCountry');
+                                if (scanData.logoUrl) defaults.add('logoUrl');
+                                if (scanData.brandColorPrimary) defaults.add('brandColorPrimary');
+                                if (scanData.timezone) defaults.add('timezone');
+                                if (scanData.programs?.length) defaults.add('programs');
+                                if (scanData.classes?.length) defaults.add('classes');
+                                if (scanData.instructors?.length) defaults.add('instructors');
+                                setWebsiteScanConfirm({ messageId: message.id, scanData, selectedFields: defaults });
                               }}
-                              disabled={populateSchoolFromWebsiteMutation.isLoading}
                               className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
                                 isCinematic ? 'bg-purple-500 hover:bg-purple-400 text-white' :
                                 isDark ? 'bg-violet-600 hover:bg-violet-500 text-white' :
                                 'bg-violet-600 hover:bg-violet-700 text-white'
-                              } disabled:opacity-50`}
+                              }`}
                             >
-                              {populateSchoolFromWebsiteMutation.isLoading ? 'Saving…' : '💾 Save to Profile'}
+                              Review &amp; Save to Profile
                             </button>
                             <button
                               onClick={() => setMessages(prev => prev.map(m =>
@@ -6066,6 +6032,144 @@ export default function KaiCommand() {
       </AlertDialog>
       
       {/* Onboarding is handled in-chat via useKaiOnboarding hook */}
+
+      {/* Website Scan Confirmation Dialog */}
+      {websiteScanConfirm && (() => {
+        const { scanData, selectedFields } = websiteScanConfirm;
+        const nn = <T,>(v: T | null | undefined): T | undefined => v == null ? undefined : v;
+        const toggle = (field: string) => {
+          setWebsiteScanConfirm(prev => {
+            if (!prev) return prev;
+            const next = new Set(prev.selectedFields);
+            if (next.has(field)) next.delete(field); else next.add(field);
+            return { ...prev, selectedFields: next };
+          });
+        };
+        const fieldRows: Array<{ key: string; label: string; value: string | undefined }> = [
+          { key: 'schoolName', label: 'School Name', value: scanData.schoolName },
+          { key: 'displayName', label: 'Display Name', value: scanData.displayName },
+          { key: 'tagline', label: 'Tagline', value: scanData.tagline },
+          { key: 'phone', label: 'Phone', value: scanData.phone },
+          { key: 'email', label: 'Email', value: scanData.email },
+          { key: 'website', label: 'Website', value: scanData.website },
+          { key: 'addressStreet', label: 'Street Address', value: scanData.addressStreet },
+          { key: 'addressCity', label: 'City', value: scanData.addressCity },
+          { key: 'addressState', label: 'State', value: scanData.addressState },
+          { key: 'addressPostal', label: 'Postal Code', value: scanData.addressPostal },
+          { key: 'addressCountry', label: 'Country', value: scanData.addressCountry },
+          { key: 'logoUrl', label: 'Logo', value: scanData.logoUrl ? '(image found)' : undefined },
+          { key: 'brandColorPrimary', label: 'Brand Color', value: scanData.brandColorPrimary },
+          { key: 'timezone', label: 'Timezone', value: scanData.timezone },
+          { key: 'programs', label: `Programs (${scanData.programs?.length || 0})`, value: scanData.programs?.length ? scanData.programs.map(p => p.name).join(', ') : undefined },
+          { key: 'classes', label: `Classes (${scanData.classes?.length || 0})`, value: scanData.classes?.length ? scanData.classes.map(c => c.name).join(', ') : undefined },
+          { key: 'instructors', label: `Instructors (${scanData.instructors?.length || 0})`, value: scanData.instructors?.length ? scanData.instructors.map(i => i.name).join(', ') : undefined },
+        ].filter(r => r.value);
+        return (
+          <div className="fixed inset-0 z-[900] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
+            <div className={`w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden ${
+              isDark || isCinematic ? 'bg-[oklch(0.12_0.01_260)] text-white border border-white/10' : 'bg-white text-gray-900 border border-gray-200'
+            }`}>
+              {/* Header */}
+              <div className={`px-5 py-4 border-b ${ isDark || isCinematic ? 'border-white/10' : 'border-gray-200' }`}>
+                <h2 className="text-base font-bold">Review &amp; Confirm Save</h2>
+                <p className={`text-xs mt-0.5 ${ isDark || isCinematic ? 'text-white/50' : 'text-gray-500' }`}>
+                  The following information was extracted from <strong>{scanData.url}</strong>. Uncheck any fields you don&apos;t want to overwrite.
+                </p>
+              </div>
+              {/* Field list */}
+              <div className="max-h-[50vh] overflow-y-auto px-5 py-3 space-y-2">
+                {fieldRows.map(row => (
+                  <label key={row.key} className="flex items-start gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={selectedFields.has(row.key)}
+                      onChange={() => toggle(row.key)}
+                      className="mt-0.5 h-4 w-4 rounded accent-violet-500 flex-shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <span className={`text-xs font-semibold uppercase tracking-wide ${ isDark || isCinematic ? 'text-white/40' : 'text-gray-400' }`}>{row.label}</span>
+                      {row.key === 'logoUrl' && scanData.logoUrl ? (
+                        <div className="mt-1">
+                          <img src={scanData.logoUrl} alt="Logo" className="h-10 object-contain rounded" />
+                        </div>
+                      ) : row.key === 'brandColorPrimary' && scanData.brandColorPrimary ? (
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <div className="w-4 h-4 rounded-full border border-white/20" style={{ background: scanData.brandColorPrimary }} />
+                          <span className="text-sm">{scanData.brandColorPrimary}</span>
+                        </div>
+                      ) : (
+                        <p className={`text-sm mt-0.5 truncate ${ isDark || isCinematic ? 'text-white/80' : 'text-gray-700' }`}>{row.value}</p>
+                      )}
+                    </div>
+                  </label>
+                ))}
+              </div>
+              {/* Footer */}
+              <div className={`px-5 py-4 border-t flex gap-3 ${ isDark || isCinematic ? 'border-white/10' : 'border-gray-200' }`}>
+                <button
+                  onClick={() => setWebsiteScanConfirm(null)}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium ${ isDark || isCinematic ? 'bg-white/10 hover:bg-white/15 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700' }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={selectedFields.size === 0 || populateSchoolFromWebsiteMutation.isLoading}
+                  onClick={async () => {
+                    try {
+                      const sel = selectedFields;
+                      const cleanPrograms = sel.has('programs') ? scanData.programs?.map(p => ({
+                        name: p.name, description: nn(p.description), ageRange: nn(p.ageRange), price: nn(p.price), billing: nn(p.billing) as any,
+                      })) : undefined;
+                      const cleanClasses = sel.has('classes') ? scanData.classes?.map(c => ({
+                        name: c.name, instructor: nn(c.instructor), dayOfWeek: nn(c.dayOfWeek), startTime: nn(c.startTime), endTime: nn(c.endTime), program: nn(c.program), level: nn(c.level),
+                      })) : undefined;
+                      const cleanInstructors = sel.has('instructors') ? scanData.instructors?.map(i => ({
+                        name: i.name, bio: nn(i.bio), specialties: nn(i.specialties), certifications: nn(i.certifications),
+                      })) : undefined;
+                      await populateSchoolFromWebsiteMutation.mutateAsync({
+                        schoolName: sel.has('schoolName') ? nn(scanData.schoolName) : undefined,
+                        displayName: sel.has('displayName') ? nn(scanData.displayName) : undefined,
+                        tagline: sel.has('tagline') ? nn(scanData.tagline) : undefined,
+                        phone: sel.has('phone') ? nn(scanData.phone) : undefined,
+                        email: sel.has('email') ? nn(scanData.email) : undefined,
+                        website: sel.has('website') ? nn(scanData.website) : undefined,
+                        addressStreet: sel.has('addressStreet') ? nn(scanData.addressStreet) : undefined,
+                        addressCity: sel.has('addressCity') ? nn(scanData.addressCity) : undefined,
+                        addressState: sel.has('addressState') ? nn(scanData.addressState) : undefined,
+                        addressPostal: sel.has('addressPostal') ? nn(scanData.addressPostal) : undefined,
+                        addressCountry: sel.has('addressCountry') ? nn(scanData.addressCountry) : undefined,
+                        logoUrl: sel.has('logoUrl') ? nn(scanData.logoUrl) : undefined,
+                        brandColorPrimary: sel.has('brandColorPrimary') ? nn(scanData.brandColorPrimary) : undefined,
+                        timezone: sel.has('timezone') ? nn(scanData.timezone) : undefined,
+                        programs: cleanPrograms,
+                        classes: cleanClasses,
+                        instructors: cleanInstructors,
+                      });
+                      setWebsiteScanConfirm(null);
+                      setMessages(prev => prev.map(m =>
+                        m.id === websiteScanConfirm!.messageId ? { ...m, websiteScanData: { ...m.websiteScanData!, saved: true } } : m
+                      ));
+                      setMessages(prev => [...prev, {
+                        id: `website-saved-${Date.now()}`,
+                        role: 'assistant',
+                        content: `✅ Done! I saved ${selectedFields.size} field${selectedFields.size !== 1 ? 's' : ''} to your school profile. Head to **Settings → School Profile** to review everything.`,
+                        timestamp: new Date(),
+                        quickReplies: [{ label: '⚙️ Open Settings', action: 'navigate:/settings' }],
+                      }]);
+                      toast.success('School profile updated!');
+                    } catch (err: any) {
+                      toast.error('Failed to save: ' + (err?.message || 'Unknown error'));
+                    }
+                  }}
+                  className="flex-1 py-2 rounded-lg text-sm font-semibold bg-violet-600 hover:bg-violet-500 text-white disabled:opacity-50 transition-all"
+                >
+                  {populateSchoolFromWebsiteMutation.isLoading ? 'Saving…' : `Confirm Save (${selectedFields.size} field${selectedFields.size !== 1 ? 's' : ''})`}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Beta Notice Modal */}
       {showBetaNotice && (

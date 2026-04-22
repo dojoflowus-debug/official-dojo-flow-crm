@@ -5674,11 +5674,25 @@ Return the data as a structured JSON object.`
           .substring(0, 12000);
 
         // 3. Also try to find logo/image URLs in the raw HTML
-        const imgMatches = html.match(/src=["']([^"']*(?:logo|brand|icon)[^"']*)["']/gi) || [];
-        const logoHints = imgMatches
-          .map(m => m.replace(/src=["']/i, '').replace(/["']$/, ''))
-          .filter(u => u.startsWith('http') || u.startsWith('/'))
-          .slice(0, 5);
+        const base = new URL(input.url);
+        const logoHintSet = new Set<string>();
+        // a) <img src> with logo/brand/icon in path
+        const imgMatches = html.match(/src=["']([^"']*(?:logo|brand|icon|header)[^"']*\.(png|svg|webp|jpg|jpeg))["']/gi) || [];
+        imgMatches.forEach(m => {
+          const u = m.replace(/src=["']/i, '').replace(/["']$/, '');
+          if (u.startsWith('http')) logoHintSet.add(u);
+          else if (u.startsWith('/')) logoHintSet.add(`${base.origin}${u}`);
+        });
+        // b) og:image meta tag
+        const ogImg = html.match(/property=["']og:image["'][^>]*content=["']([^"']+)["']/i) || html.match(/content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
+        if (ogImg?.[1]) { const u = ogImg[1]; logoHintSet.add(u.startsWith('http') ? u : `${base.origin}${u}`); }
+        // c) link rel=icon / apple-touch-icon
+        const iconMatches = html.match(/rel=["'](?:icon|shortcut icon|apple-touch-icon)["'][^>]*href=["']([^"']+)["']/gi) || [];
+        iconMatches.forEach(m => {
+          const hrefMatch = m.match(/href=["']([^"']+)["']/i);
+          if (hrefMatch?.[1]) { const u = hrefMatch[1]; logoHintSet.add(u.startsWith('http') ? u : `${base.origin}${u}`); }
+        });
+        const logoHints = Array.from(logoHintSet).slice(0, 8);
 
         // 4. Extract structured data with GPT-4o
         const response = await invokeLLM({
@@ -5691,6 +5705,21 @@ Extract all available information from the provided website text and return it a
 Be thorough — extract everything you can find. If a field is not found, use null.
 For programs/classes, extract each one as a separate object with name, description, ageRange, and schedule if available.
 For schedules, use 24h time format (HH:MM) and standard day names (Monday, Tuesday, etc.).
+
+CRITICAL ADDRESS RULES:
+- addressStreet: ONLY the street number and street name (e.g. "123 Main Street"). NEVER include city, state, or zip here.
+- addressCity: ONLY the city name (e.g. "New York"). NEVER include state or zip.
+- addressState: ONLY the 2-letter state abbreviation or full state name (e.g. "NY" or "New York"). NEVER include city.
+- addressPostal: ONLY the zip/postal code (e.g. "10001").
+- addressCountry: Country name (e.g. "United States").
+- If you see a combined address like "123 Main St, New York, NY 10001", split it correctly into the separate fields.
+
+CRITICAL LOGO RULES:
+- logoUrl: Return the BEST logo image URL found. Prefer SVG or PNG over JPG. Prefer URLs containing "logo" in the path.
+- Choose from the Logo URL hints provided. If a hint URL contains "logo", "brand", or "icon" in its path, prefer it.
+- Return the full absolute URL (starting with https://).
+- If no logo is found in the hints, return null.
+
 Return ONLY valid JSON, no markdown, no explanation.`,
             },
             {
@@ -5793,8 +5822,32 @@ Return ONLY valid JSON, no markdown, no explanation.`,
 
         // Resolve relative logo URLs to absolute
         if (extracted.logoUrl && extracted.logoUrl.startsWith('/')) {
-          const base = new URL(input.url);
-          extracted.logoUrl = `${base.origin}${extracted.logoUrl}`;
+          const baseUrl = new URL(input.url);
+          extracted.logoUrl = `${baseUrl.origin}${extracted.logoUrl}`;
+        }
+
+        // Download logo and upload to S3 so we have a permanent hosted copy
+        if (extracted.logoUrl && extracted.logoUrl.startsWith('http')) {
+          try {
+            const { storagePut } = await import('./storage');
+            const logoRes = await fetch(extracted.logoUrl, {
+              headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DojoFlow/1.0)' },
+              signal: AbortSignal.timeout(10000),
+            });
+            if (logoRes.ok) {
+              const logoBuffer = Buffer.from(await logoRes.arrayBuffer());
+              const contentType = logoRes.headers.get('content-type') || 'image/png';
+              const ext = contentType.includes('svg') ? 'svg' : contentType.includes('webp') ? 'webp' : contentType.includes('png') ? 'png' : 'jpg';
+              const orgId = ctx.currentOrganizationId;
+              const logoKey = `logos/org-${orgId}/website-scan-${Date.now()}.${ext}`;
+              const { url: s3Url } = await storagePut(logoKey, logoBuffer, contentType);
+              extracted.logoUrl = s3Url;
+              console.log('[analyzeSchoolWebsite] Logo uploaded to S3:', s3Url);
+            }
+          } catch (logoErr) {
+            console.warn('[analyzeSchoolWebsite] Logo download/upload failed (non-fatal):', logoErr);
+            // Keep the original URL as fallback
+          }
         }
 
         return {
