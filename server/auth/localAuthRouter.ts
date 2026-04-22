@@ -184,8 +184,32 @@ router.post("/login", async (req, res) => {
     }
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    console.log('[Login Debug] user.id:', user.id, 'provider:', user.provider, 'password length:', user.password?.length, 'starts with:', user.password?.substring(0, 4));
+    
+    // Handle plaintext passwords (migration path for legacy users)
+    let isValidPassword = false;
+    const storedPw = user.password || '';
+    if (storedPw.startsWith('$2a$') || storedPw.startsWith('$2b$') || storedPw.startsWith('$2y$')) {
+      // Proper bcrypt hash
+      isValidPassword = await bcrypt.compare(password, storedPw);
+    } else if (storedPw === password) {
+      // Plaintext password stored — migrate it to bcrypt on the fly
+      console.log('[Login Debug] Migrating plaintext password to bcrypt for user', user.id);
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await db.update(users).set({ password: hashedPassword }).where(eq(users.id, user.id));
+      isValidPassword = true;
+    } else {
+      // Unknown format — try bcrypt anyway
+      try {
+        isValidPassword = await bcrypt.compare(password, storedPw);
+      } catch (e) {
+        console.log('[Login Debug] bcrypt.compare threw error:', e);
+        isValidPassword = false;
+      }
+    }
+    
     if (!isValidPassword) {
+      console.log('[Login Debug] Password mismatch for user', user.id);
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
