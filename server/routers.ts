@@ -5756,10 +5756,39 @@ Return ONLY valid JSON, no markdown, no explanation.`,
 
         let extracted: any = {};
         try {
-          const raw = response.choices?.[0]?.message?.content || '{}';
-          extracted = JSON.parse(raw);
-        } catch {
-          throw new Error('AI returned invalid JSON — please try again');
+          // Get raw content — handle both OpenAI choices format and direct content
+          let raw: string = (
+            response.choices?.[0]?.message?.content ||
+            (response as any).content ||
+            (response as any).text ||
+            '{}'
+          ).trim();
+          // Strip markdown code fences if present (```json ... ``` or ``` ... ```)
+          if (raw.startsWith('```')) {
+            raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+          }
+          // Strategy 1: direct parse
+          try {
+            extracted = JSON.parse(raw);
+          } catch {
+            // Strategy 2: extract first JSON object from the string
+            const jsonMatch = raw.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              try {
+                extracted = JSON.parse(jsonMatch[0]);
+              } catch {
+                // Strategy 3: return minimal object so we don't hard-fail
+                console.error('[analyzeSchoolWebsite] All JSON parse strategies failed. Raw:', raw.substring(0, 300));
+                extracted = { schoolName: null, phone: null, email: null, programs: [], classes: [], instructors: [], socialLinks: {} };
+              }
+            } else {
+              console.error('[analyzeSchoolWebsite] No JSON found in response. Raw:', raw.substring(0, 300));
+              extracted = { schoolName: null, phone: null, email: null, programs: [], classes: [], instructors: [], socialLinks: {} };
+            }
+          }
+        } catch (parseErr) {
+          console.error('[analyzeSchoolWebsite] Outer parse error:', parseErr);
+          extracted = { schoolName: null, phone: null, email: null, programs: [], classes: [], instructors: [], socialLinks: {} };
         }
 
         // Resolve relative logo URLs to absolute
