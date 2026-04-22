@@ -49,31 +49,10 @@ interface AnalyzedData {
   };
 }
 
-// Map of field keys to their display labels
-const FIELD_LABELS: Record<string, string> = {
-  schoolName: 'School Name',
-  displayName: 'Display Name',
-  tagline: 'Tagline',
-  phone: 'Phone',
-  email: 'Email',
-  website: 'Website',
-  addressStreet: 'Street',
-  addressCity: 'City',
-  addressState: 'State',
-  addressPostal: 'Postal Code',
-  addressCountry: 'Country',
-  logoUrl: 'Logo URL',
-  brandColorPrimary: 'Brand Color',
-  timezone: 'Timezone',
-  programs: 'Programs',
-  classes: 'Class Schedule',
-  instructors: 'Instructors',
-};
-
 interface Props {
   onClose: () => void;
   initialUrl?: string;
-  rescanMode?: boolean; // When true, fetch current profile and show diff
+  rescanMode?: boolean;
 }
 
 type Step = 'input' | 'analyzing' | 'review' | 'saving' | 'done';
@@ -98,7 +77,6 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
   const [fieldDiffs, setFieldDiffs] = useState<Record<string, FieldDiff>>({});
   const [changedCount, setChangedCount] = useState(0);
 
-  // Fetch current school profile for diffing
   const { data: currentProfile } = trpc.schoolProfile.get.useQuery(undefined, {
     enabled: rescanMode || step === 'review',
   });
@@ -107,8 +85,6 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
     onSuccess: (result) => {
       setData(result.data);
       const d = result.data;
-
-      // Build diff map against current profile
       const diffs: Record<string, FieldDiff> = {};
       let changes = 0;
 
@@ -128,7 +104,6 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
           diffs[field] = { status: 'empty' };
           continue;
         }
-
         if (!oldVal) {
           diffs[field] = { status: 'new', newValue: newVal };
           autoSelected.add(field);
@@ -139,12 +114,10 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
           changes++;
         } else {
           diffs[field] = { status: 'unchanged', oldValue: oldVal, newValue: newVal };
-          // Don't auto-select unchanged fields in rescan mode
           if (!rescanMode) autoSelected.add(field);
         }
       }
 
-      // Always auto-select programs/classes/instructors if present
       if (d.programs?.length) { autoSelected.add('programs'); diffs['programs'] = { status: 'new' }; changes++; }
       if (d.classes?.length) { autoSelected.add('classes'); diffs['classes'] = { status: 'new' }; changes++; }
       if (d.instructors?.length) { autoSelected.add('instructors'); diffs['instructors'] = { status: 'new' }; changes++; }
@@ -171,7 +144,6 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
     },
   });
 
-  // If rescanMode and we have a website in the profile, pre-fill the URL
   useEffect(() => {
     if (rescanMode && currentProfile?.website && !url) {
       setUrl(currentProfile.website);
@@ -227,19 +199,19 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
     });
   };
 
-  const confidenceColor = { high: 'text-green-400', medium: 'text-yellow-400', low: 'text-red-400' };
+  const confidenceColor = { high: 'text-green-600 dark:text-green-400', medium: 'text-yellow-600 dark:text-yellow-400', low: 'text-red-600 dark:text-red-400' };
 
   const getDiffBadge = (fieldKey: string) => {
     const diff = fieldDiffs[fieldKey];
     if (!diff || diff.status === 'empty') return null;
     if (diff.status === 'new') return (
-      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400 uppercase tracking-wide">New</span>
+      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 uppercase tracking-wide">New</span>
     );
     if (diff.status === 'changed') return (
-      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 uppercase tracking-wide">Changed</span>
+      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 uppercase tracking-wide">Changed</span>
     );
     if (diff.status === 'unchanged') return (
-      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-white/5 text-white/30 uppercase tracking-wide">Same</span>
+      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wide">Same</span>
     );
     return null;
   };
@@ -247,32 +219,32 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
   const getDiffRowClass = (fieldKey: string) => {
     const diff = fieldDiffs[fieldKey];
     if (!diff) return '';
-    if (diff.status === 'new') return 'bg-green-500/5 border-l-2 border-green-500/40 pl-2 rounded-r-lg';
-    if (diff.status === 'changed') return 'bg-amber-500/5 border-l-2 border-amber-500/40 pl-2 rounded-r-lg';
+    if (diff.status === 'new') return 'bg-green-50 dark:bg-green-500/5 border-l-2 border-green-500/50 pl-2 rounded-r-lg';
+    if (diff.status === 'changed') return 'bg-amber-50 dark:bg-amber-500/5 border-l-2 border-amber-500/50 pl-2 rounded-r-lg';
     return '';
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="bg-[#0f0f0f] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
               {rescanMode ? <RefreshCw className="w-5 h-5 text-white" /> : <Globe className="w-5 h-5 text-white" />}
             </div>
             <div>
-              <h2 className="text-white font-semibold text-base">
+              <h2 className="text-foreground font-semibold text-base">
                 {rescanMode ? 'Re-scan Website' : 'Kai Website Analyzer'}
               </h2>
-              <p className="text-white/40 text-xs">
+              <p className="text-muted-foreground text-xs">
                 {rescanMode
                   ? 'Detect changes since your last scan and update your profile'
                   : 'Auto-populate your school info from your website'}
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -280,19 +252,19 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
-          {/* Step: Input */}
+          {/* Step: Input / Analyzing */}
           {(step === 'input' || step === 'analyzing') && (
             <div className="space-y-4">
               {rescanMode && currentProfile?.website && (
-                <div className="flex items-center gap-2 text-sm text-white/50 bg-white/5 rounded-xl px-4 py-3">
-                  <Globe className="w-4 h-4 text-white/30 flex-shrink-0" />
-                  <span>Last saved website: <span className="text-blue-400">{currentProfile.website}</span></span>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted rounded-xl px-4 py-3">
+                  <Globe className="w-4 h-4 flex-shrink-0" />
+                  <span>Last saved website: <span className="text-blue-500">{currentProfile.website}</span></span>
                 </div>
               )}
-              <p className="text-white/60 text-sm leading-relaxed">
+              <p className="text-muted-foreground text-sm leading-relaxed">
                 {rescanMode
                   ? 'Kai will re-scan your website and highlight any fields that have changed since your last scan.'
-                  : 'Enter your school\'s website URL and Kai will scan it to extract your school name, address, phone, logo, programs, class schedules, instructors, and more.'}
+                  : "Enter your school's website URL and Kai will scan it to extract your school name, address, phone, logo, programs, class schedules, instructors, and more."}
               </p>
               <div className="flex gap-3">
                 <input
@@ -302,7 +274,7 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
                   onKeyDown={e => e.key === 'Enter' && handleAnalyze()}
                   placeholder="https://yourdojo.com"
                   disabled={step === 'analyzing'}
-                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:border-blue-500/50 focus:bg-white/8 transition-all disabled:opacity-50"
+                  className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-foreground placeholder-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all disabled:opacity-50"
                 />
                 <button
                   onClick={handleAnalyze}
@@ -319,14 +291,14 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
                 </button>
               </div>
               {step === 'analyzing' && (
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl p-4">
                   <div className="flex items-center gap-3">
-                    <Loader2 className="w-5 h-5 text-blue-400 animate-spin flex-shrink-0" />
+                    <Loader2 className="w-5 h-5 text-blue-500 animate-spin flex-shrink-0" />
                     <div>
-                      <p className="text-blue-300 text-sm font-medium">
+                      <p className="text-blue-700 dark:text-blue-300 text-sm font-medium">
                         {rescanMode ? 'Re-scanning website...' : 'Scanning website...'}
                       </p>
-                      <p className="text-blue-400/60 text-xs mt-0.5">
+                      <p className="text-blue-600/70 dark:text-blue-400/60 text-xs mt-0.5">
                         Kai is reading your website and extracting school information. This may take 10–20 seconds.
                       </p>
                     </div>
@@ -334,9 +306,9 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
                 </div>
               )}
               {error && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-red-300 text-sm">{error}</p>
+                <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-4 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
                 </div>
               )}
             </div>
@@ -349,7 +321,7 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
               <div className="flex items-center gap-3 flex-wrap">
                 {data.confidence && (
                   <div className="flex items-center gap-1.5 text-sm">
-                    <span className="text-white/40">Confidence:</span>
+                    <span className="text-muted-foreground">Confidence:</span>
                     <span className={`font-medium capitalize ${confidenceColor[data.confidence.overall]}`}>
                       {data.confidence.overall}
                     </span>
@@ -357,16 +329,16 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
                 )}
                 {rescanMode && (
                   <div className="flex items-center gap-2">
-                    <span className="text-white/30 text-xs">|</span>
+                    <span className="text-muted-foreground text-xs">|</span>
                     {changedCount > 0 ? (
                       <div className="flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                        <span className="text-amber-400 text-sm font-medium">{changedCount} change{changedCount !== 1 ? 's' : ''} detected</span>
+                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                        <span className="text-amber-600 dark:text-amber-400 text-sm font-medium">{changedCount} change{changedCount !== 1 ? 's' : ''} detected</span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-1.5">
-                        <CheckCircle className="w-3.5 h-3.5 text-green-400" />
-                        <span className="text-green-400 text-sm">No changes detected</span>
+                        <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                        <span className="text-green-600 dark:text-green-400 text-sm">No changes detected</span>
                       </div>
                     )}
                   </div>
@@ -375,26 +347,26 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
 
               {/* Legend for rescan mode */}
               {rescanMode && changedCount > 0 && (
-                <div className="flex items-center gap-4 text-xs text-white/40 bg-white/3 rounded-xl px-4 py-2.5">
+                <div className="flex items-center gap-4 text-xs text-muted-foreground bg-muted rounded-xl px-4 py-2.5">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-green-400" />
+                    <div className="w-2 h-2 rounded-full bg-green-500" />
                     <span>New field</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-amber-400" />
+                    <div className="w-2 h-2 rounded-full bg-amber-500" />
                     <span>Changed</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-white/20" />
+                    <div className="w-2 h-2 rounded-full bg-border" />
                     <span>Unchanged</span>
                   </div>
                 </div>
               )}
 
-              <p className="text-white/50 text-xs">
+              <p className="text-muted-foreground text-xs">
                 {rescanMode
-                  ? 'Changed and new fields are pre-selected. Uncheck any you don\'t want to update.'
-                  : 'Review the extracted data. Uncheck any fields you don\'t want to save.'}
+                  ? "Changed and new fields are pre-selected. Uncheck any you don't want to update."
+                  : "Review the extracted data. Uncheck any fields you don't want to save."}
               </p>
 
               {/* Identity Section */}
@@ -408,7 +380,7 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
                   <FieldRow label="Logo" fieldKey="logoUrl" selected={selected} onToggle={toggleField}
                     badge={getDiffBadge('logoUrl')} rowClass={getDiffRowClass('logoUrl')}>
                     <img src={data.logoUrl} alt="Logo" className="h-8 object-contain rounded" onError={e => (e.currentTarget.style.display = 'none')} />
-                    <span className="text-white/40 text-xs truncate max-w-[180px]">{data.logoUrl}</span>
+                    <span className="text-muted-foreground text-xs truncate max-w-[180px]">{data.logoUrl}</span>
                   </FieldRow>
                 )}
                 {data.schoolName && (
@@ -417,7 +389,7 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
                     {rescanMode && fieldDiffs['schoolName']?.status === 'changed' ? (
                       <DiffValue old={fieldDiffs['schoolName'].oldValue} next={data.schoolName} />
                     ) : (
-                      <span className="text-white text-sm">{data.schoolName}</span>
+                      <span className="text-foreground text-sm">{data.schoolName}</span>
                     )}
                   </FieldRow>
                 )}
@@ -427,27 +399,27 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
                     {rescanMode && fieldDiffs['displayName']?.status === 'changed' ? (
                       <DiffValue old={fieldDiffs['displayName'].oldValue} next={data.displayName} />
                     ) : (
-                      <span className="text-white text-sm">{data.displayName}</span>
+                      <span className="text-foreground text-sm">{data.displayName}</span>
                     )}
                   </FieldRow>
                 )}
                 {data.tagline && (
                   <FieldRow label="Tagline" fieldKey="tagline" selected={selected} onToggle={toggleField}
                     badge={getDiffBadge('tagline')} rowClass={getDiffRowClass('tagline')}>
-                    <span className="text-white/70 text-sm italic">"{data.tagline}"</span>
+                    <span className="text-muted-foreground text-sm italic">"{data.tagline}"</span>
                   </FieldRow>
                 )}
                 {data.brandColorPrimary && (
                   <FieldRow label="Brand Color" fieldKey="brandColorPrimary" selected={selected} onToggle={toggleField}
                     badge={getDiffBadge('brandColorPrimary')} rowClass={getDiffRowClass('brandColorPrimary')}>
-                    <div className="w-5 h-5 rounded-full border border-white/20" style={{ backgroundColor: data.brandColorPrimary }} />
-                    <span className="text-white/70 text-sm">{data.brandColorPrimary}</span>
+                    <div className="w-5 h-5 rounded-full border border-border" style={{ backgroundColor: data.brandColorPrimary }} />
+                    <span className="text-muted-foreground text-sm">{data.brandColorPrimary}</span>
                   </FieldRow>
                 )}
                 {data.timezone && (
                   <FieldRow label="Timezone" fieldKey="timezone" selected={selected} onToggle={toggleField}
                     badge={getDiffBadge('timezone')} rowClass={getDiffRowClass('timezone')}>
-                    <span className="text-white/70 text-sm">{data.timezone}</span>
+                    <span className="text-muted-foreground text-sm">{data.timezone}</span>
                   </FieldRow>
                 )}
               </Section>
@@ -465,7 +437,7 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
                     {rescanMode && fieldDiffs['phone']?.status === 'changed' ? (
                       <DiffValue old={fieldDiffs['phone'].oldValue} next={data.phone} />
                     ) : (
-                      <span className="text-white text-sm">{data.phone}</span>
+                      <span className="text-foreground text-sm">{data.phone}</span>
                     )}
                   </FieldRow>
                 )}
@@ -475,14 +447,14 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
                     {rescanMode && fieldDiffs['email']?.status === 'changed' ? (
                       <DiffValue old={fieldDiffs['email'].oldValue} next={data.email} />
                     ) : (
-                      <span className="text-white text-sm">{data.email}</span>
+                      <span className="text-foreground text-sm">{data.email}</span>
                     )}
                   </FieldRow>
                 )}
                 {data.website && (
                   <FieldRow label="Website" fieldKey="website" selected={selected} onToggle={toggleField}
                     badge={getDiffBadge('website')} rowClass={getDiffRowClass('website')}>
-                    <span className="text-blue-400 text-sm">{data.website}</span>
+                    <span className="text-blue-500 text-sm">{data.website}</span>
                   </FieldRow>
                 )}
               </Section>
@@ -500,32 +472,32 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
                     {rescanMode && fieldDiffs['addressStreet']?.status === 'changed' ? (
                       <DiffValue old={fieldDiffs['addressStreet'].oldValue} next={data.addressStreet} />
                     ) : (
-                      <span className="text-white text-sm">{data.addressStreet}</span>
+                      <span className="text-foreground text-sm">{data.addressStreet}</span>
                     )}
                   </FieldRow>
                 )}
                 {data.addressCity && (
                   <FieldRow label="City" fieldKey="addressCity" selected={selected} onToggle={toggleField}
                     badge={getDiffBadge('addressCity')} rowClass={getDiffRowClass('addressCity')}>
-                    <span className="text-white text-sm">{data.addressCity}</span>
+                    <span className="text-foreground text-sm">{data.addressCity}</span>
                   </FieldRow>
                 )}
                 {data.addressState && (
                   <FieldRow label="State" fieldKey="addressState" selected={selected} onToggle={toggleField}
                     badge={getDiffBadge('addressState')} rowClass={getDiffRowClass('addressState')}>
-                    <span className="text-white text-sm">{data.addressState}</span>
+                    <span className="text-foreground text-sm">{data.addressState}</span>
                   </FieldRow>
                 )}
                 {data.addressPostal && (
                   <FieldRow label="Postal" fieldKey="addressPostal" selected={selected} onToggle={toggleField}
                     badge={getDiffBadge('addressPostal')} rowClass={getDiffRowClass('addressPostal')}>
-                    <span className="text-white text-sm">{data.addressPostal}</span>
+                    <span className="text-foreground text-sm">{data.addressPostal}</span>
                   </FieldRow>
                 )}
                 {data.addressCountry && (
                   <FieldRow label="Country" fieldKey="addressCountry" selected={selected} onToggle={toggleField}
                     badge={getDiffBadge('addressCountry')} rowClass={getDiffRowClass('addressCountry')}>
-                    <span className="text-white text-sm">{data.addressCountry}</span>
+                    <span className="text-foreground text-sm">{data.addressCountry}</span>
                   </FieldRow>
                 )}
               </Section>
@@ -541,16 +513,16 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
                   <div className="flex items-center gap-3 py-2">
                     <input type="checkbox" checked={selected.has('programs')} onChange={() => toggleField('programs')}
                       className="w-4 h-4 rounded accent-blue-500" />
-                    <span className="text-white/50 text-xs">Save all {data.programs.length} programs</span>
+                    <span className="text-muted-foreground text-xs">Save all {data.programs.length} programs</span>
                     {getDiffBadge('programs')}
                   </div>
                   <div className="space-y-2 mt-1">
                     {data.programs.map((p, i) => (
-                      <div key={i} className="bg-white/5 rounded-lg px-3 py-2">
-                        <p className="text-white text-sm font-medium">{p.name}</p>
-                        {p.ageRange && <p className="text-white/40 text-xs">Ages: {p.ageRange}</p>}
-                        {p.description && <p className="text-white/50 text-xs mt-1 line-clamp-2">{p.description}</p>}
-                        {p.price && <p className="text-green-400 text-xs">${p.price}/mo</p>}
+                      <div key={i} className="bg-muted rounded-lg px-3 py-2">
+                        <p className="text-foreground text-sm font-medium">{p.name}</p>
+                        {p.ageRange && <p className="text-muted-foreground text-xs">Ages: {p.ageRange}</p>}
+                        {p.description && <p className="text-muted-foreground text-xs mt-1 line-clamp-2">{p.description}</p>}
+                        {p.price && <p className="text-green-600 dark:text-green-400 text-xs">${p.price}/mo</p>}
                       </div>
                     ))}
                   </div>
@@ -568,20 +540,20 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
                   <div className="flex items-center gap-3 py-2">
                     <input type="checkbox" checked={selected.has('classes')} onChange={() => toggleField('classes')}
                       className="w-4 h-4 rounded accent-blue-500" />
-                    <span className="text-white/50 text-xs">Save all {data.classes.length} classes</span>
+                    <span className="text-muted-foreground text-xs">Save all {data.classes.length} classes</span>
                     {getDiffBadge('classes')}
                   </div>
                   <div className="space-y-2 mt-1">
                     {data.classes.map((c, i) => (
-                      <div key={i} className="bg-white/5 rounded-lg px-3 py-2 flex items-center justify-between">
+                      <div key={i} className="bg-muted rounded-lg px-3 py-2 flex items-center justify-between">
                         <div>
-                          <p className="text-white text-sm font-medium">{c.name}</p>
-                          {c.instructor && <p className="text-white/40 text-xs">Instructor: {c.instructor}</p>}
+                          <p className="text-foreground text-sm font-medium">{c.name}</p>
+                          {c.instructor && <p className="text-muted-foreground text-xs">Instructor: {c.instructor}</p>}
                         </div>
                         {(c.dayOfWeek || c.startTime) && (
                           <div className="text-right">
-                            {c.dayOfWeek && <p className="text-blue-400 text-xs">{c.dayOfWeek}</p>}
-                            {c.startTime && <p className="text-white/50 text-xs">{c.startTime}{c.endTime ? ` – ${c.endTime}` : ''}</p>}
+                            {c.dayOfWeek && <p className="text-blue-500 text-xs">{c.dayOfWeek}</p>}
+                            {c.startTime && <p className="text-muted-foreground text-xs">{c.startTime}{c.endTime ? ` – ${c.endTime}` : ''}</p>}
                           </div>
                         )}
                       </div>
@@ -601,15 +573,15 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
                   <div className="flex items-center gap-3 py-2">
                     <input type="checkbox" checked={selected.has('instructors')} onChange={() => toggleField('instructors')}
                       className="w-4 h-4 rounded accent-blue-500" />
-                    <span className="text-white/50 text-xs">Save all {data.instructors.length} instructors</span>
+                    <span className="text-muted-foreground text-xs">Save all {data.instructors.length} instructors</span>
                     {getDiffBadge('instructors')}
                   </div>
                   <div className="space-y-2 mt-1">
                     {data.instructors.map((inst, i) => (
-                      <div key={i} className="bg-white/5 rounded-lg px-3 py-2">
-                        <p className="text-white text-sm font-medium">{inst.name}</p>
-                        {inst.specialties && <p className="text-white/40 text-xs">{inst.specialties}</p>}
-                        {inst.bio && <p className="text-white/50 text-xs mt-1 line-clamp-2">{inst.bio}</p>}
+                      <div key={i} className="bg-muted rounded-lg px-3 py-2">
+                        <p className="text-foreground text-sm font-medium">{inst.name}</p>
+                        {inst.specialties && <p className="text-muted-foreground text-xs">{inst.specialties}</p>}
+                        {inst.bio && <p className="text-muted-foreground text-xs mt-1 line-clamp-2">{inst.bio}</p>}
                       </div>
                     ))}
                   </div>
@@ -617,9 +589,9 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
               )}
 
               {error && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-red-300 text-sm">{error}</p>
+                <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-4 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
                 </div>
               )}
             </div>
@@ -628,24 +600,24 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
           {/* Step: Done */}
           {step === 'done' && (
             <div className="space-y-4 text-center py-6">
-              <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
-                <CheckCircle className="w-8 h-8 text-green-400" />
+              <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center mx-auto">
+                <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <h3 className="text-white font-semibold text-lg">
+                <h3 className="text-foreground font-semibold text-lg">
                   {rescanMode ? 'Profile Updated!' : 'All Done!'}
                 </h3>
-                <p className="text-white/50 text-sm mt-1">
+                <p className="text-muted-foreground text-sm mt-1">
                   {rescanMode
                     ? 'Your school profile has been updated with the latest information.'
                     : 'Your school information has been saved to DojoFlow.'}
                 </p>
               </div>
-              <div className="bg-white/5 rounded-xl p-4 text-left space-y-2">
+              <div className="bg-muted rounded-xl p-4 text-left space-y-2">
                 {saveResults.map((r, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-                    <span className="text-white/70">{r}</span>
+                    <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                    <span className="text-muted-foreground">{r}</span>
                   </div>
                 ))}
               </div>
@@ -654,13 +626,13 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-white/10 flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-border flex items-center justify-between">
           {step === 'review' || step === 'saving' ? (
             <>
               <button
                 onClick={() => setStep('input')}
                 disabled={step === 'saving'}
-                className="text-white/40 hover:text-white text-sm transition-colors disabled:opacity-30"
+                className="text-muted-foreground hover:text-foreground text-sm transition-colors disabled:opacity-30"
               >
                 ← Try different URL
               </button>
@@ -683,14 +655,14 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
           ) : step === 'done' ? (
             <button
               onClick={onClose}
-              className="ml-auto px-6 py-2.5 bg-white/10 hover:bg-white/15 text-white rounded-xl text-sm font-medium transition-all"
+              className="ml-auto px-6 py-2.5 bg-muted hover:bg-muted/80 text-foreground rounded-xl text-sm font-medium transition-all"
             >
               Close
             </button>
           ) : (
             <button
               onClick={onClose}
-              className="text-white/40 hover:text-white text-sm transition-colors"
+              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
             >
               Cancel
             </button>
@@ -701,18 +673,16 @@ export default function KaiWebsiteAnalyzer({ onClose, initialUrl = '', rescanMod
   );
 }
 
-// Diff value display — shows old → new with arrow
 function DiffValue({ old: oldVal, next: newVal }: { old?: string | null; next?: string | null }) {
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <span className="text-white/30 text-sm line-through">{oldVal}</span>
-      <ArrowRight className="w-3 h-3 text-amber-400 flex-shrink-0" />
-      <span className="text-amber-300 text-sm font-medium">{newVal}</span>
+      <span className="text-muted-foreground text-sm line-through">{oldVal}</span>
+      <ArrowRight className="w-3 h-3 text-amber-500 flex-shrink-0" />
+      <span className="text-amber-600 dark:text-amber-300 text-sm font-medium">{newVal}</span>
     </div>
   );
 }
 
-// Section accordion
 function Section({
   title, icon, expanded, onToggle, children,
 }: {
@@ -723,23 +693,22 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border border-white/8 rounded-xl overflow-hidden">
+    <div className="border border-border rounded-xl overflow-hidden">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-4 py-3 bg-white/3 hover:bg-white/5 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 bg-muted/50 hover:bg-muted transition-colors"
       >
-        <div className="flex items-center gap-2 text-white/70">
+        <div className="flex items-center gap-2 text-muted-foreground">
           {icon}
-          <span className="text-sm font-medium">{title}</span>
+          <span className="text-sm font-medium text-foreground">{title}</span>
         </div>
-        {expanded ? <ChevronUp className="w-4 h-4 text-white/30" /> : <ChevronDown className="w-4 h-4 text-white/30" />}
+        {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
       </button>
       {expanded && <div className="px-4 pb-3 space-y-2">{children}</div>}
     </div>
   );
 }
 
-// Field row with checkbox, label, badge, and children
 function FieldRow({
   label, fieldKey, selected, onToggle, children, badge, rowClass = '',
 }: {
@@ -759,7 +728,7 @@ function FieldRow({
         onChange={() => onToggle(fieldKey)}
         className="w-4 h-4 rounded accent-blue-500 flex-shrink-0"
       />
-      <span className="text-white/40 text-xs w-24 flex-shrink-0">{label}</span>
+      <span className="text-muted-foreground text-xs w-24 flex-shrink-0">{label}</span>
       <div className="flex items-center gap-2 flex-1 min-w-0">{children}</div>
       {badge && <div className="flex-shrink-0">{badge}</div>}
     </div>
