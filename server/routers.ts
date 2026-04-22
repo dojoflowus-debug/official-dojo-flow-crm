@@ -4888,8 +4888,33 @@ Return the data as a structured JSON object.`
         const { chatWithKai } = await import("./services/openai");
         const { processAbsenceReportQuery } = await import("./services/absenceReportWrapper");
         
+        // ── CONTEXT LOADING & INTENT ROUTING ─────────────────────────────────
+        let contextBlock = '';
+        let intentHint = '';
         try {
-          const aiResponse = await chatWithKai(message, conversationHistory, avatarName, input.imageUrl);
+          const orgId = ctx?.currentOrganizationId || organizationId;
+          if (orgId) {
+            const { loadKaiContext, buildContextBlock } = await import('./services/kaiContextLoader');
+            const { classifyIntent, buildIntentHint } = await import('./services/kaiIntentRouter');
+            const db = await getDb();
+            if (db) {
+              const pageCtx = {
+                userName: ctx?.user?.name || undefined,
+                userRole: ctx?.user?.role || 'owner',
+              };
+              const kaiCtx = await loadKaiContext(orgId, db, pageCtx);
+              contextBlock = buildContextBlock(kaiCtx);
+              const intentMatch = classifyIntent(message);
+              intentHint = buildIntentHint(intentMatch);
+            }
+          }
+        } catch (ctxErr) {
+          console.warn('[Kai Chat] Context loading failed (non-fatal):', ctxErr);
+        }
+        // ── END CONTEXT LOADING ───────────────────────────────────────────────
+        
+        try {
+          const aiResponse = await chatWithKai(message, conversationHistory, avatarName, input.imageUrl, contextBlock, intentHint);
           console.log('[Kai Chat] AI response:', JSON.stringify(aiResponse, null, 2));
           
           // Check if this is an absence report query and wrap data for InfoPanel
