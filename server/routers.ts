@@ -6008,7 +6008,13 @@ Return ONLY valid JSON, no markdown, no explanation.`,
         if (input.addressState) profileUpdate.addressState = input.addressState;
         if (input.addressPostal) profileUpdate.addressPostal = input.addressPostal;
         if (input.addressCountry) profileUpdate.addressCountry = input.addressCountry;
-        if (input.logoUrl) { profileUpdate.logoLightUrl = input.logoUrl; profileUpdate.logoDarkUrl = input.logoUrl; }
+        if (input.logoUrl) {
+          // Save to all 4 logo slots so all contexts (light/dark, full/icon) show the scanned logo
+          profileUpdate.logoLightUrl = input.logoUrl;
+          profileUpdate.logoDarkUrl = input.logoUrl;
+          profileUpdate.logoIconLightUrl = input.logoUrl;
+          profileUpdate.logoIconDarkUrl = input.logoUrl;
+        }
         if (input.brandColorPrimary) profileUpdate.brandColorPrimary = input.brandColorPrimary;
         if (input.timezone) profileUpdate.timezone = input.timezone;
 
