@@ -5673,6 +5673,75 @@ Return the data as a structured JSON object.`
           .trim()
           .substring(0, 12000);
 
+        // 2b. Extract JSON-LD schema.org structured data (most reliable source for phone/address)
+        let schemaOrgHints = '';
+        try {
+          const jsonLdMatches = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
+          const schemaData: any[] = [];
+          for (const block of jsonLdMatches) {
+            const inner = block.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, '').trim();
+            try {
+              const parsed = JSON.parse(inner);
+              const items = Array.isArray(parsed) ? parsed : [parsed];
+              for (const item of items) {
+                if (item['@type'] && (item.telephone || item.address || item.name || item.email || item.url)) {
+                  schemaData.push(item);
+                }
+              }
+            } catch { /* ignore malformed JSON-LD */ }
+          }
+          if (schemaData.length > 0) {
+            schemaOrgHints = `\n\nJSON-LD Schema.org structured data found on page:\n${JSON.stringify(schemaData, null, 2).substring(0, 3000)}`;
+          }
+        } catch { /* non-fatal */ }
+
+        // 2c. Regex fallbacks for phone and address in raw HTML
+        let phoneHint = '';
+        let addressHint = '';
+        try {
+          // Phone: look for tel: links or common phone patterns
+          const telLinks = html.match(/href=["']tel:([+\d\s().\-]+)["']/gi) || [];
+          if (telLinks.length > 0) {
+            phoneHint = telLinks[0].replace(/href=["']tel:/i, '').replace(/["']$/, '').trim();
+          }
+          if (!phoneHint) {
+            // Fallback: look for 10-digit US phone patterns in visible text
+            const phoneMatch = text.match(/(?:\+1[\s.-]?)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}/);
+            if (phoneMatch) phoneHint = phoneMatch[0].trim();
+          }
+          // Address: look for schema.org address patterns or common address patterns
+          const addrMatch = text.match(/\d{2,5}\s+[A-Za-z0-9\s.,'#-]{5,60},\s*[A-Za-z\s]{2,30},\s*[A-Z]{2}\s+\d{5}/);
+          if (addrMatch) addressHint = addrMatch[0].trim();
+        } catch { /* non-fatal */ }
+
+        // 2d. Try to also fetch the /contact page for more data
+        let contactPageText = '';
+        try {
+          const baseUrl2 = new URL(input.url);
+          const contactUrl = `${baseUrl2.origin}/contact`;
+          const contactRes = await fetch(contactUrl, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DojoFlow/1.0)' },
+            signal: AbortSignal.timeout(8000),
+          });
+          if (contactRes.ok) {
+            const contactHtml = await contactRes.text();
+            contactPageText = contactHtml
+              .replace(/<script[\s\S]*?<\/script>/gi, '')
+              .replace(/<style[\s\S]*?<\/style>/gi, '')
+              .replace(/<[^>]+>/g, ' ')
+              .replace(/\s+/g, ' ')
+              .trim()
+              .substring(0, 4000);
+            // Also check contact page for phone
+            if (!phoneHint) {
+              const telLinksContact = contactHtml.match(/href=["']tel:([+\d\s().\-]+)["']/gi) || [];
+              if (telLinksContact.length > 0) {
+                phoneHint = telLinksContact[0].replace(/href=["']tel:/i, '').replace(/["']$/, '').trim();
+              }
+            }
+          }
+        } catch { /* contact page may not exist, non-fatal */ }
+
         // 3. Also try to find logo/image URLs in the raw HTML
         const base = new URL(input.url);
         const logoHintSet = new Set<string>();
@@ -5724,7 +5793,7 @@ Return ONLY valid JSON, no markdown, no explanation.`,
             },
             {
               role: 'user',
-              content: `Website URL: ${input.url}\n\nWebsite content:\n${text}\n\nLogo URL hints found in HTML: ${logoHints.join(', ') || 'none'}\n\nExtract all school information and return as JSON with this exact structure:\n{
+              content: `Website URL: ${input.url}\n\nWebsite content (homepage):\n${text}${contactPageText ? `\n\nContact page content:\n${contactPageText}` : ''}${schemaOrgHints}${phoneHint ? `\n\nPhone number found via tel: link or regex: ${phoneHint}` : ''}${addressHint ? `\n\nAddress found via regex: ${addressHint}` : ''}\n\nLogo URL hints found in HTML: ${logoHints.join(', ') || 'none'}\n\nIMPORTANT: Use the phone number hint and address hint above if the website content does not clearly show them. Prefer structured JSON-LD data over text extraction for phone and address.\n\nExtract all school information and return as JSON with this exact structure:\n{
   "schoolName": string | null,
   "displayName": string | null,
   "tagline": string | null,
