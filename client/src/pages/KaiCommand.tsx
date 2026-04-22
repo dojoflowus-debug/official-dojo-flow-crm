@@ -5043,24 +5043,49 @@ export default function KaiCommand() {
                               onClick={async () => {
                                 try {
                                   const scanData = message.websiteScanData!;
+                                  // Helper: convert null → undefined so Zod optional() validation passes
+                                  const nn = <T,>(v: T | null | undefined): T | undefined => v == null ? undefined : v;
+                                  // Filter out null entries from arrays too
+                                  const cleanPrograms = scanData.programs?.map(p => ({
+                                    name: p.name,
+                                    description: nn(p.description),
+                                    ageRange: nn(p.ageRange),
+                                    price: nn(p.price),
+                                    billing: nn(p.billing) as any,
+                                  }));
+                                  const cleanClasses = scanData.classes?.map(c => ({
+                                    name: c.name,
+                                    instructor: nn(c.instructor),
+                                    dayOfWeek: nn(c.dayOfWeek),
+                                    startTime: nn(c.startTime),
+                                    endTime: nn(c.endTime),
+                                    program: nn(c.program),
+                                    level: nn(c.level),
+                                  }));
+                                  const cleanInstructors = scanData.instructors?.map(i => ({
+                                    name: i.name,
+                                    bio: nn(i.bio),
+                                    specialties: nn(i.specialties),
+                                    certifications: nn(i.certifications),
+                                  }));
                                   await populateSchoolFromWebsiteMutation.mutateAsync({
-                                    schoolName: scanData.schoolName,
-                                    displayName: scanData.displayName,
-                                    tagline: scanData.tagline,
-                                    phone: scanData.phone,
-                                    email: scanData.email,
-                                    website: scanData.website,
-                                    addressStreet: scanData.addressStreet,
-                                    addressCity: scanData.addressCity,
-                                    addressState: scanData.addressState,
-                                    addressPostal: scanData.addressPostal,
-                                    addressCountry: scanData.addressCountry,
-                                    logoUrl: scanData.logoUrl,
-                                    brandColorPrimary: scanData.brandColorPrimary,
-                                    timezone: scanData.timezone,
-                                    programs: scanData.programs,
-                                    classes: scanData.classes,
-                                    instructors: scanData.instructors,
+                                    schoolName: nn(scanData.schoolName),
+                                    displayName: nn(scanData.displayName),
+                                    tagline: nn(scanData.tagline),
+                                    phone: nn(scanData.phone),
+                                    email: nn(scanData.email),
+                                    website: nn(scanData.website),
+                                    addressStreet: nn(scanData.addressStreet),
+                                    addressCity: nn(scanData.addressCity),
+                                    addressState: nn(scanData.addressState),
+                                    addressPostal: nn(scanData.addressPostal),
+                                    addressCountry: nn(scanData.addressCountry),
+                                    logoUrl: nn(scanData.logoUrl),
+                                    brandColorPrimary: nn(scanData.brandColorPrimary),
+                                    timezone: nn(scanData.timezone),
+                                    programs: cleanPrograms,
+                                    classes: cleanClasses,
+                                    instructors: cleanInstructors,
                                   });
                                   setMessages(prev => prev.map(m =>
                                     m.id === message.id ? { ...m, websiteScanData: { ...m.websiteScanData!, saved: true } } : m
