@@ -2534,18 +2534,28 @@ export default function KaiCommand() {
      // --- END ONBOARDING INTERCEPTION ---
 
     // --- KAI WEBSITE ANALYZER INTERCEPT (inline chat flow) ---
+    // Match: explicit scan/analyze + URL, or any bare/full URL in message
     const websiteAnalyzerRegex = /(?:analyze|scan|scrape|import|populate)\s+(https?:\/\/[^\s]+)|(https?:\/\/[^\s]+)/i;
     const websiteMatch = inputText.trim().match(websiteAnalyzerRegex);
-    const analyzeKeywords = /(scan|analyze|scrape|import|populate).{0,20}(my website|school website|website|our site|my site|the website)|(website|site).{0,20}(scan|analyze|scrape|import|populate)/i;
+    // Broad keyword match — catches natural language like:
+    // "can you pull my info from my website", "can i send you my website url",
+    // "pull information from my site", "get my school info from my website",
+    // "import from our website", "use my website", "check my website"
+    const analyzeKeywords = /\b(scan|analyze|scrape|import|populate|pull|get|grab|fetch|extract|use|check|read|look at|look up)\b.{0,40}\b(my website|school website|website|our site|my site|the website|my url|website url|site url|web page|my web)\b|\b(my website|school website|website|our site|my site|the website|my url|website url)\b.{0,40}\b(scan|analyze|scrape|import|populate|pull|get|grab|fetch|extract|use|check|send|share|give)\b|(send|share|give|provide).{0,20}(my website|website url|my url|my site|the url)/i;
 
     // Check if user is responding to Kai's "please share your URL" prompt
     const lastMsg = messages[messages.length - 1];
-    const isAwaitingUrl = lastMsg?.awaitingWebsiteUrl === true;
-    const urlOnlyRegex = /^https?:\/\/[^\s]+$/i;
+    // Also detect when Kai's LLM response asked for a website URL (e.g. "What's your website address?")
+    const lastMsgAskedForUrl = lastMsg?.role === 'assistant' && !!(lastMsg?.content?.match(/\b(website|url|web address|site address|website address)\b/i) && lastMsg?.content?.match(/\b(share|send|give|provide|what.?s|drop|paste|enter|type)\b/i));
+    const isAwaitingUrl = lastMsg?.awaitingWebsiteUrl === true || lastMsgAskedForUrl;
+    // Accept https://, http://, or bare domain (e.g. yaegerssda.com)
+    const urlOnlyRegex = /^(https?:\/\/)?[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9]?(\.[a-zA-Z]{2,})+(\/[^\s]*)?$/i;
 
     if (isAwaitingUrl && urlOnlyRegex.test(inputText.trim())) {
+      // Auto-prepend https:// if missing
+      const rawUrl = inputText.trim();
+      const url = rawUrl.startsWith('http://') || rawUrl.startsWith('https://') ? rawUrl : `https://${rawUrl}`;
       // User just pasted a URL in response to Kai's prompt — run the scan inline
-      const url = inputText.trim();
       setMessageInput('');
       setAttachments([]);
       const userMsg: Message = { id: Date.now().toString(), role: 'user', content: url, timestamp: new Date() };
