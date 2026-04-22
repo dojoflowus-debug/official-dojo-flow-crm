@@ -181,18 +181,26 @@ interface Message {
   /** Website scan results — shown as an inline card in the chat */
   websiteScanData?: {
     url: string;
+    // Backend field names from analyzeSchoolWebsite endpoint
     schoolName?: string;
-    address?: string;
+    displayName?: string;
+    tagline?: string;
     phone?: string;
     email?: string;
+    website?: string;
+    addressStreet?: string;
+    addressCity?: string;
+    addressState?: string;
+    addressPostal?: string;
+    addressCountry?: string;
     logoUrl?: string;
-    brandColor?: string;
+    brandColorPrimary?: string;
     timezone?: string;
-    programs?: string[];
-    instructors?: string[];
-    schedules?: Array<{ day: string; time: string; program: string }>;
-    socialLinks?: { facebook?: string; instagram?: string; youtube?: string; tiktok?: string };
-    description?: string;
+    programs?: Array<{ name: string; description?: string | null; ageRange?: string | null; price?: number | null; billing?: string | null }>;
+    classes?: Array<{ name: string; instructor?: string | null; dayOfWeek?: string | null; startTime?: string | null; endTime?: string | null; program?: string | null; level?: string | null }>;
+    instructors?: Array<{ name: string; bio?: string | null; specialties?: string | null; certifications?: string | null }>;
+    socialLinks?: { facebook?: string | null; instagram?: string | null; youtube?: string | null; twitter?: string | null };
+    confidence?: { overall: string; notes: string };
     saved?: boolean;
   };
   /** Waiting for user to provide a website URL for scanning */
@@ -2550,7 +2558,7 @@ export default function KaiCommand() {
           role: 'assistant',
           content: `✅ I found your school info! Here's what I extracted from **${url}**. Review the details below and click **Save to Profile** to populate your DojoFlow settings.`,
           timestamp: new Date(),
-          websiteScanData: { url, ...(result as any) },
+          websiteScanData: { url, ...((result as any).data ?? (result as any)) },
         };
         setMessages(prev => prev.map(m => m.id === scanningMsg.id ? scanResultMsg : m));
       } catch (err: any) {
@@ -2576,7 +2584,7 @@ export default function KaiCommand() {
             role: 'assistant',
             content: `✅ I found your school info! Here's what I extracted from **${detectedUrl}**. Review the details below and click **Save to Profile** to populate your DojoFlow settings.`,
             timestamp: new Date(),
-            websiteScanData: { url: detectedUrl, ...(result as any) },
+            websiteScanData: { url: detectedUrl, ...((result as any).data ?? (result as any)) },
           };
           setMessages(prev => prev.map(m => m.id === scanningMsg.id ? scanResultMsg : m));
         } catch (err: any) {
@@ -4967,12 +4975,14 @@ export default function KaiCommand() {
                             }`}>From {message.websiteScanData.url.replace(/^https?:\/\//, '').split('/')[0]}</span>
                           </div>
                           <div className="px-4 py-3 grid grid-cols-2 gap-2 text-sm">
-                            {message.websiteScanData.address && (
+                            {(message.websiteScanData.addressStreet || message.websiteScanData.addressCity) && (
                               <div>
                                 <p className={`text-xs font-medium mb-0.5 ${
                                   isCinematic ? 'text-purple-400' : isDark ? 'text-violet-400' : 'text-violet-600'
                                 }`}>Address</p>
-                                <p className="text-foreground text-xs">{message.websiteScanData.address}</p>
+                                <p className="text-foreground text-xs">
+                                  {[message.websiteScanData.addressStreet, message.websiteScanData.addressCity, message.websiteScanData.addressState].filter(Boolean).join(', ')}
+                                </p>
                               </div>
                             )}
                             {message.websiteScanData.phone && (
@@ -4996,15 +5006,23 @@ export default function KaiCommand() {
                                 <p className={`text-xs font-medium mb-0.5 ${
                                   isCinematic ? 'text-purple-400' : isDark ? 'text-violet-400' : 'text-violet-600'
                                 }`}>Programs</p>
-                                <p className="text-foreground text-xs">{message.websiteScanData.programs.join(', ')}</p>
+                                <p className="text-foreground text-xs">{message.websiteScanData.programs.map(p => p.name).join(', ')}</p>
                               </div>
                             )}
-                            {message.websiteScanData.description && (
+                            {message.websiteScanData.tagline && (
                               <div className="col-span-2">
                                 <p className={`text-xs font-medium mb-0.5 ${
                                   isCinematic ? 'text-purple-400' : isDark ? 'text-violet-400' : 'text-violet-600'
-                                }`}>About</p>
-                                <p className="text-foreground text-xs line-clamp-2">{message.websiteScanData.description}</p>
+                                }`}>Tagline</p>
+                                <p className="text-foreground text-xs line-clamp-2">{message.websiteScanData.tagline}</p>
+                              </div>
+                            )}
+                            {message.websiteScanData.classes && message.websiteScanData.classes.length > 0 && (
+                              <div className="col-span-2">
+                                <p className={`text-xs font-medium mb-0.5 ${
+                                  isCinematic ? 'text-purple-400' : isDark ? 'text-violet-400' : 'text-violet-600'
+                                }`}>Classes Found</p>
+                                <p className="text-foreground text-xs">{message.websiteScanData.classes.length} class{message.websiteScanData.classes.length !== 1 ? 'es' : ''} detected</p>
                               </div>
                             )}
                           </div>
@@ -5014,9 +5032,25 @@ export default function KaiCommand() {
                             <button
                               onClick={async () => {
                                 try {
+                                  const scanData = message.websiteScanData!;
                                   await populateSchoolFromWebsiteMutation.mutateAsync({
-                                    orgId: user?.activeOrgId || 0,
-                                    data: message.websiteScanData!,
+                                    schoolName: scanData.schoolName,
+                                    displayName: scanData.displayName,
+                                    tagline: scanData.tagline,
+                                    phone: scanData.phone,
+                                    email: scanData.email,
+                                    website: scanData.website,
+                                    addressStreet: scanData.addressStreet,
+                                    addressCity: scanData.addressCity,
+                                    addressState: scanData.addressState,
+                                    addressPostal: scanData.addressPostal,
+                                    addressCountry: scanData.addressCountry,
+                                    logoUrl: scanData.logoUrl,
+                                    brandColorPrimary: scanData.brandColorPrimary,
+                                    timezone: scanData.timezone,
+                                    programs: scanData.programs,
+                                    classes: scanData.classes,
+                                    instructors: scanData.instructors,
                                   });
                                   setMessages(prev => prev.map(m =>
                                     m.id === message.id ? { ...m, websiteScanData: { ...m.websiteScanData!, saved: true } } : m
