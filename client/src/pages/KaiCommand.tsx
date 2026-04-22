@@ -199,6 +199,7 @@ interface Message {
     programs?: Array<{ name: string; description?: string | null; ageRange?: string | null; price?: number | null; billing?: string | null }>;
     classes?: Array<{ name: string; instructor?: string | null; dayOfWeek?: string | null; startTime?: string | null; endTime?: string | null; program?: string | null; level?: string | null }>;
     instructors?: Array<{ name: string; bio?: string | null; specialties?: string | null; certifications?: string | null }>;
+    about?: string | null;
     socialLinks?: { facebook?: string | null; instagram?: string | null; youtube?: string | null; twitter?: string | null };
     confidence?: { overall: string; notes: string };
     saved?: boolean;
@@ -6060,8 +6061,9 @@ export default function KaiCommand() {
           { key: 'logoUrl', label: 'Logo', value: scanData.logoUrl ? '(image found)' : undefined },
           { key: 'brandColorPrimary', label: 'Brand Color', value: scanData.brandColorPrimary },
           { key: 'timezone', label: 'Timezone', value: scanData.timezone },
+          { key: 'about', label: 'About / School Story', value: scanData.about ? scanData.about.substring(0, 120) + (scanData.about.length > 120 ? '…' : '') : undefined },
           { key: 'programs', label: `Programs (${scanData.programs?.length || 0})`, value: scanData.programs?.length ? scanData.programs.map(p => p.name).join(', ') : undefined },
-          { key: 'classes', label: `Classes (${scanData.classes?.length || 0})`, value: scanData.classes?.length ? scanData.classes.map(c => c.name).join(', ') : undefined },
+          { key: 'classes', label: `Classes (${scanData.classes?.length || 0})`, value: scanData.classes?.length ? scanData.classes.map(c => `${c.name}${c.dayOfWeek ? ' · ' + c.dayOfWeek : ''}${c.startTime ? ' ' + c.startTime : ''}${c.endTime ? '–' + c.endTime : ''}`).join(' | ') : undefined },
           { key: 'instructors', label: `Instructors (${scanData.instructors?.length || 0})`, value: scanData.instructors?.length ? scanData.instructors.map(i => i.name).join(', ') : undefined },
         ].filter(r => r.value);
         return (
@@ -6141,6 +6143,7 @@ export default function KaiCommand() {
                         logoUrl: sel.has('logoUrl') ? nn(scanData.logoUrl) : undefined,
                         brandColorPrimary: sel.has('brandColorPrimary') ? nn(scanData.brandColorPrimary) : undefined,
                         timezone: sel.has('timezone') ? nn(scanData.timezone) : undefined,
+                        about: sel.has('about') ? nn(scanData.about) : undefined,
                         programs: cleanPrograms,
                         classes: cleanClasses,
                         instructors: cleanInstructors,
@@ -6152,9 +6155,12 @@ export default function KaiCommand() {
                       setMessages(prev => [...prev, {
                         id: `website-saved-${Date.now()}`,
                         role: 'assistant',
-                        content: `✅ Done! I saved ${selectedFields.size} field${selectedFields.size !== 1 ? 's' : ''} to your school profile. Head to **Settings → School Profile** to review everything.`,
+                        content: `✅ Done! I saved ${selectedFields.size} field${selectedFields.size !== 1 ? 's' : ''} to your school profile${cleanClasses && cleanClasses.length > 0 ? ` and added **${cleanClasses.length} class${cleanClasses.length !== 1 ? 'es' : ''}** to your Classes tab` : ''}. Head to **Settings → School Profile** to review everything.`,
                         timestamp: new Date(),
-                        quickReplies: [{ label: '⚙️ Open Settings', action: 'navigate:/settings' }],
+                        quickReplies: [
+                          { label: '⚙️ Open Settings', action: 'navigate:/settings' },
+                          ...(cleanClasses && cleanClasses.length > 0 ? [{ label: '🥋 View Classes', action: 'navigate:/classes' }] : []),
+                        ],
                       }]);
                       toast.success('School profile updated!');
                     } catch (err: any) {

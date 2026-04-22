@@ -5742,6 +5742,44 @@ Return the data as a structured JSON object.`
           }
         } catch { /* contact page may not exist, non-fatal */ }
 
+        // 2e. Try to fetch schedule/classes pages for richer class data
+        let schedulePageText = '';
+        try {
+          const baseUrl3 = new URL(input.url);
+          // Find schedule/classes links in the homepage HTML first
+          const scheduleLinks = (html.match(/href=["']([^"']*(?:schedule|classes|class|programs?|timetable|calendar)[^"']*)["']/gi) || [])
+            .map(m => m.replace(/href=["']/i, '').replace(/["']$/, ''))
+            .filter(u => !u.startsWith('http') || u.includes(baseUrl3.hostname))
+            .map(u => u.startsWith('http') ? u : `${baseUrl3.origin}${u.startsWith('/') ? u : '/' + u}`)
+            .filter((u, i, arr) => arr.indexOf(u) === i) // dedupe
+            .slice(0, 3);
+          // Also try common paths
+          const commonPaths = ['/schedule', '/classes', '/programs', '/class-schedule', '/martial-arts-classes', '/about', '/about-us', '/our-story', '/instructors', '/team'];
+          const allScheduleUrls = [...new Set([...scheduleLinks, ...commonPaths.map(p => `${baseUrl3.origin}${p}`)])];
+          for (const schedUrl of allScheduleUrls.slice(0, 8)) {
+            try {
+              const schedRes = await fetch(schedUrl, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DojoFlow/1.0)' },
+                signal: AbortSignal.timeout(8000),
+              });
+              if (schedRes.ok) {
+                const schedHtml = await schedRes.text();
+                const schedText = schedHtml
+                  .replace(/<script[\s\S]*?<\/script>/gi, '')
+                  .replace(/<style[\s\S]*?<\/style>/gi, '')
+                  .replace(/<[^>]+>/g, ' ')
+                  .replace(/\s+/g, ' ')
+                  .trim()
+                  .substring(0, 5000);
+                if (schedText.length > 200) {
+                  schedulePageText += `\n\n[Page: ${schedUrl}]\n${schedText}`;
+                  if (schedulePageText.length > 8000) break; // cap total
+                }
+              }
+            } catch { /* skip failed pages */ }
+          }
+        } catch { /* non-fatal */ }
+
         // 3. Also try to find logo/image URLs in the raw HTML
         const base = new URL(input.url);
         const logoHintSet = new Set<string>();
@@ -5793,7 +5831,7 @@ Return ONLY valid JSON, no markdown, no explanation.`,
             },
             {
               role: 'user',
-              content: `Website URL: ${input.url}\n\nWebsite content (homepage):\n${text}${contactPageText ? `\n\nContact page content:\n${contactPageText}` : ''}${schemaOrgHints}${phoneHint ? `\n\nPhone number found via tel: link or regex: ${phoneHint}` : ''}${addressHint ? `\n\nAddress found via regex: ${addressHint}` : ''}\n\nLogo URL hints found in HTML: ${logoHints.join(', ') || 'none'}\n\nIMPORTANT: Use the phone number hint and address hint above if the website content does not clearly show them. Prefer structured JSON-LD data over text extraction for phone and address.\n\nExtract all school information and return as JSON with this exact structure:\n{
+              content: `Website URL: ${input.url}\n\nWebsite content (homepage):\n${text}${contactPageText ? `\n\nContact page content:\n${contactPageText}` : ''}${schedulePageText ? `\n\nSchedule/Classes page content:${schedulePageText}` : ''}${schemaOrgHints}${phoneHint ? `\n\nPhone number found via tel: link or regex: ${phoneHint}` : ''}${addressHint ? `\n\nAddress found via regex: ${addressHint}` : ''}\n\nLogo URL hints found in HTML: ${logoHints.join(', ') || 'none'}\n\nIMPORTANT:\n- Use the phone number hint and address hint above if the website content does not clearly show them.\n- Prefer structured JSON-LD data over text extraction for phone and address.\n- For classes: extract EVERY individual class session with its day, start time, end time, and name. If a class runs Monday/Wednesday/Friday, create 3 separate class entries (one per day).\n- For instructors: extract full name, bio, rank/certifications, and specialties from the About page content.\n- For the school description/about: capture the school's history, mission, and story in the \"about\" field.\n\nExtract all school information and return as JSON with this exact structure:\n{
   "schoolName": string | null,
   "displayName": string | null,
   "tagline": string | null,
@@ -5836,6 +5874,7 @@ Return ONLY valid JSON, no markdown, no explanation.`,
       "certifications": string | null
     }
   ],
+  "about": string | null,
   "socialLinks": {
     "facebook": string | null,
     "instagram": string | null,
@@ -5965,6 +6004,7 @@ Return ONLY valid JSON, no markdown, no explanation.`,
           specialties: z.string().nullish(),
           certifications: z.string().nullish(),
         })).optional(),
+        about: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const { getDb } = await import('./db');
@@ -6017,6 +6057,7 @@ Return ONLY valid JSON, no markdown, no explanation.`,
         }
         if (input.brandColorPrimary) profileUpdate.brandColorPrimary = input.brandColorPrimary;
         if (input.timezone) profileUpdate.timezone = input.timezone;
+        if (input.about) profileUpdate.about = input.about;
 
         if (Object.keys(profileUpdate).length > 0) {
           const existing = await db.select({ id: schoolProfiles.id })

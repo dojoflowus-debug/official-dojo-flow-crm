@@ -1739,6 +1739,8 @@ export const schoolProfiles = mysqlTable("school_profiles", {
 	// Preferences
 	timezone: varchar({ length: 100 }),
 	currency: varchar({ length: 10 }),
+	// About / Description
+	about: text("about"),
 	// Chat Customization
 	chatUseFullLogo: boolean("chat_use_full_logo").default(false),
 	chatWelcomeMessage: text("chat_welcome_message"),
