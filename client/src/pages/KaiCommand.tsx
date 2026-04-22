@@ -2528,7 +2528,7 @@ export default function KaiCommand() {
     // --- KAI WEBSITE ANALYZER INTERCEPT (inline chat flow) ---
     const websiteAnalyzerRegex = /(?:analyze|scan|scrape|import|populate)\s+(https?:\/\/[^\s]+)|(https?:\/\/[^\s]+)/i;
     const websiteMatch = inputText.trim().match(websiteAnalyzerRegex);
-    const analyzeKeywords = /^(analyze my website|scan my website|import from website|populate from website|analyze school website|scan website|analyze website)$/i;
+    const analyzeKeywords = /(scan|analyze|scrape|import|populate).{0,20}(my website|school website|website|our site|my site|the website)|(website|site).{0,20}(scan|analyze|scrape|import|populate)/i;
 
     // Check if user is responding to Kai's "please share your URL" prompt
     const lastMsg = messages[messages.length - 1];
