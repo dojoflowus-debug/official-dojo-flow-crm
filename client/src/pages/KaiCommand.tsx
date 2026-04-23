@@ -811,6 +811,12 @@ export default function KaiCommand() {
   const analyzeSchoolWebsiteMutation = trpc.kai.analyzeSchoolWebsite.useMutation();
   const populateSchoolFromWebsiteMutation = trpc.kai.populateSchoolFromWebsite.useMutation();
 
+  // Proactive alert engine
+  const alertsQuery = trpc.kai.getAlerts.useQuery(
+    { organizationId: memoizedOrgId ?? undefined },
+    { enabled: !!memoizedOrgId, staleTime: 5 * 60 * 1000 }
+  );
+
   // Trial checkout mutation
   const createTrialCheckoutMutation = trpc.subscription.createTrialCheckout.useMutation({
     onError: (error: any) => {
@@ -1182,7 +1188,23 @@ export default function KaiCommand() {
       setMessages([]);
       // Clear any input
       setMessageInput('');
-      
+
+      // Inject proactive alert summary as opening message
+      const alerts = alertsQuery.data?.alerts || [];
+      if (alerts.length > 0) {
+        const severityIcon: Record<string, string> = { CRITICAL: '🔴', HIGH: '🟠', MEDIUM: '🟡', LOW: '🟢' };
+        const alertLines = alerts.map(a =>
+          `${severityIcon[a.severity] || '⚠️'} ${a.severity} — ${a.message}. ${a.action}.`
+        ).join('\n');
+        const openingMsg: Message = {
+          id: `kai-alerts-${Date.now()}`,
+          role: 'assistant',
+          content: `Running diagnostic...\n\n${alertLines}\n\nWant me to handle all of this now?`,
+          timestamp: new Date(),
+        };
+        setMessages([openingMsg]);
+      }
+
       // Show success toast
       toast.success('New conversation created');
     } catch (error) {

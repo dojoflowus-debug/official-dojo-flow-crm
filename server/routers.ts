@@ -6154,6 +6154,90 @@ Return ONLY valid JSON, no markdown, no explanation.`,
         return { success: true, results };
       }),
 
+    getAlerts: protectedProcedure
+      .input(z.object({
+        organizationId: z.number().optional(),
+      }).optional())
+      .query(async ({ input, ctx }) => {
+        const { getDb } = await import('./db');
+        const { students: studentsTable, leads: leadsTable, enrollments: enrollmentsTable } = await import('../drizzle/schema');
+        const { and: andAlerts, eq: eqAlerts, lt: ltAlerts, isNull: isNullAlerts, or: orAlerts } = await import('drizzle-orm');
+        const db = await getDb();
+        const orgId = (input as any)?.organizationId || ctx.currentOrganizationId;
+        if (!orgId || !db) return { alerts: [] };
+
+        const alerts: Array<{ type: string; severity: string; count: number; message: string; action: string }> = [];
+        const now = new Date();
+        const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+        const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+
+        try {
+          // 1. Inactive students (status Inactive)
+          const inactiveStudents = await db.select({ id: studentsTable.id })
+            .from(studentsTable)
+            .where(andAlerts(
+              eqAlerts(studentsTable.organizationId, orgId),
+              eqAlerts(studentsTable.status, 'Inactive')
+            ));
+          if (inactiveStudents.length > 0) {
+            const severity = inactiveStudents.length >= 10 ? 'CRITICAL' : inactiveStudents.length >= 5 ? 'HIGH' : 'MEDIUM';
+            alerts.push({
+              type: 'INACTIVE_MEMBERS',
+              severity,
+              count: inactiveStudents.length,
+              message: `${inactiveStudents.length} student${inactiveStudents.length > 1 ? 's' : ''} inactive`,
+              action: 'Send re-engagement message'
+            });
+          }
+
+          // 2. Lead neglect (new leads uncontacted 48h+)
+          const neglectedLeads = await db.select({ id: leadsTable.id })
+            .from(leadsTable)
+            .where(andAlerts(
+              eqAlerts(leadsTable.organizationId, orgId),
+              orAlerts(eqAlerts(leadsTable.status, 'new'), eqAlerts(leadsTable.status, 'New Lead')),
+              ltAlerts(leadsTable.createdAt, twoDaysAgo)
+            ));
+          if (neglectedLeads.length > 0) {
+            const severity = neglectedLeads.length >= 5 ? 'HIGH' : 'MEDIUM';
+            alerts.push({
+              type: 'LEAD_NEGLECT',
+              severity,
+              count: neglectedLeads.length,
+              message: `${neglectedLeads.length} lead${neglectedLeads.length > 1 ? 's' : ''} uncontacted 48h+`,
+              action: 'Send follow-up message'
+            });
+          }
+
+          // 3. Revenue leak — overdue enrollments
+          if (enrollmentsTable) {
+            const overdueEnrollments = await db.select({ id: enrollmentsTable.id })
+              .from(enrollmentsTable)
+              .where(andAlerts(
+                eqAlerts(enrollmentsTable.organizationId, orgId),
+                eqAlerts(enrollmentsTable.paymentStatus, 'overdue')
+              ));
+            if (overdueEnrollments.length > 0) {
+              const severity = overdueEnrollments.length >= 5 ? 'CRITICAL' : 'HIGH';
+              alerts.push({
+                type: 'REVENUE_LEAK',
+                severity,
+                count: overdueEnrollments.length,
+                message: `${overdueEnrollments.length} overdue payment${overdueEnrollments.length > 1 ? 's' : ''}`,
+                action: 'Send billing reminder'
+              });
+            }
+          }
+        } catch (err) {
+          console.warn('[kai.getAlerts] Error:', err);
+        }
+
+        // Sort by severity
+        const severityOrder: Record<string, number> = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+        alerts.sort((a, b) => (severityOrder[a.severity] ?? 4) - (severityOrder[b.severity] ?? 4));
+        return { alerts };
+      }),
+
   // Subscription and credits management
   // Dojo Settings API
   settings: router({
