@@ -30,6 +30,7 @@ import VoicePacedMessage from '@/components/VoicePacedMessage';
 import { KaiErrorAlert } from '@/components/KaiErrorAlert';
 import KaiWebsiteAnalyzer from '@/components/KaiWebsiteAnalyzer';
 import { KaiReviewCard } from '@/components/KaiReviewCard';
+import { KaiTaskFeedback } from '@/components/KaiTaskFeedback';
 import { BetaNoticeModal } from '@/components/BetaNoticeModal';
 import { KaiLoadingAnimation } from '@/components/KaiLoadingAnimation';
 import { KaiThinkingIndicator } from '@/components/KaiThinkingIndicator';
@@ -206,6 +207,10 @@ interface Message {
   };
   /** Waiting for user to provide a website URL for scanning */
   awaitingWebsiteUrl?: boolean;
+  /** Show post-task feedback card below this message */
+  showFeedback?: boolean;
+  /** Whether the feedback card has been dismissed */
+  feedbackDismissed?: boolean;
 }
 
 // Attachment type
@@ -3297,6 +3302,7 @@ export default function KaiCommand() {
           reviewRequest: (response as any).reviewRequest || undefined,
           viewClassesLink: (response as any).viewClassesLink || undefined,
           importedClassCount: (response as any).importedClassCount || undefined,
+          showFeedback: true,
         };
         setMessages(prev => [...prev, aiMessage]);
         
@@ -5123,6 +5129,18 @@ export default function KaiCommand() {
                           <span>Saved to your school profile</span>
                         </div>
                       )}
+                      {/* Post-task feedback card — shown after every Kai response */}
+                      {message.showFeedback && !message.feedbackDismissed && (
+                        <KaiTaskFeedback
+                          messageId={message.id}
+                          conversationId={selectedConversationId ?? undefined}
+                          taskSummary={message.content.slice(0, 120)}
+                          onDismiss={() => setMessages(prev => prev.map(m =>
+                            m.id === message.id ? { ...m, feedbackDismissed: true } : m
+                          ))}
+                        />
+                      )}
+
                       {/* Quick-reply action buttons */}
                       {message.quickReplies && message.quickReplies.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-2.5">

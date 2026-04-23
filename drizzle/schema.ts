@@ -2226,3 +2226,23 @@ export const studentDeleteCodes = mysqlTable("student_delete_codes", {
   index("idx_sdc_org_student").on(table.organizationId, table.studentId),
   index("idx_sdc_expires").on(table.expiresAt),
 ]);
+
+// ─── Kai Task Feedback ────────────────────────────────────────────────────────
+// Stores post-task star ratings and bug reports submitted after Kai responses.
+export const kaiTaskFeedback = mysqlTable("kai_task_feedback", {
+  id: int("id").autoincrement().notNull().primaryKey(),
+  organizationId: int("organization_id"),
+  userId: int("user_id"),
+  conversationId: varchar("conversation_id", { length: 64 }),
+  messageId: varchar("message_id", { length: 128 }).notNull(),
+  rating: tinyint("rating").notNull(),
+  taskSummary: text("task_summary"),
+  bugCategory: varchar("bug_category", { length: 64 }),
+  bugDescription: text("bug_description"),
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+},
+(table) => [
+  index("idx_ktf_org").on(table.organizationId),
+  index("idx_ktf_rating").on(table.rating),
+  index("idx_ktf_created").on(table.createdAt),
+]);

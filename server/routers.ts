@@ -6238,6 +6238,38 @@ Return ONLY valid JSON, no markdown, no explanation.`,
         return { alerts };
       }),
 
+    submitTaskFeedback: protectedProcedure
+      .input(z.object({
+        messageId: z.string(),
+        conversationId: z.string().optional(),
+        rating: z.number().min(1).max(5),
+        taskSummary: z.string().optional(),
+        bugReport: z.object({
+          category: z.string(),
+          description: z.string(),
+        }).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import('./db');
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+
+        const { kaiTaskFeedback } = await import('../drizzle/schema');
+
+        await db.insert(kaiTaskFeedback).values({
+          organizationId: ctx.organizationId ?? null,
+          userId: ctx.userId ?? null,
+          conversationId: input.conversationId ?? null,
+          messageId: input.messageId,
+          rating: input.rating,
+          taskSummary: input.taskSummary ?? null,
+          bugCategory: input.bugReport?.category ?? null,
+          bugDescription: input.bugReport?.description ?? null,
+        });
+
+        return { success: true };
+      }),
+
   // Subscription and credits management
   // Dojo Settings API
   settings: router({
