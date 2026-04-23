@@ -4895,7 +4895,7 @@ Return the data as a structured JSON object.`
           const orgId = ctx?.currentOrganizationId || organizationId;
           if (orgId) {
             const { loadKaiContext, buildContextBlock } = await import('./services/kaiContextLoader');
-            const { classifyIntent, buildIntentHint } = await import('./services/kaiIntentRouter');
+            const { classifyIntent, buildIntentHint, isConfirmationReply } = await import('./services/kaiIntentRouter');
             const db = await getDb();
             if (db) {
               const pageCtx = {
@@ -4904,8 +4904,16 @@ Return the data as a structured JSON object.`
               };
               const kaiCtx = await loadKaiContext(orgId, db, pageCtx);
               contextBlock = buildContextBlock(kaiCtx);
-              const intentMatch = classifyIntent(message);
-              intentHint = buildIntentHint(intentMatch);
+
+              // Check if this is a confirmation reply (yes/no/confirm/cancel)
+              // If so, inject a special hint so the LLM looks at history and executes the pending action
+              if (isConfirmationReply(message) && conversationHistory.length >= 2) {
+                const lastAssistantMsg = [...conversationHistory].reverse().find(m => m.role === 'assistant');
+                intentHint = `## CONFIRMATION REPLY DETECTED\nThe user replied "${message}" to a previous Kai message.\nLast Kai message: "${lastAssistantMsg?.content?.slice(0, 200) || '(none)'}"\nIMPORTANT: Look at the conversation history to identify the pending action Kai proposed, then execute it (if "yes") or cancel it (if "no"). Do NOT reset to a greeting. Do NOT ask what the user wants. Just execute or cancel the pending action.\n`;
+              } else {
+                const intentMatch = classifyIntent(message);
+                intentHint = buildIntentHint(intentMatch);
+              }
             }
           }
         } catch (ctxErr) {

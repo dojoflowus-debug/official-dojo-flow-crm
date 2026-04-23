@@ -2537,6 +2537,18 @@ export default function KaiCommand() {
     // Use override values if provided, otherwise fall back to state
     const inputText = overrideInput !== undefined ? overrideInput : messageInput;
     const inputAttachments = overrideAttachments !== undefined ? overrideAttachments : attachments;
+
+    // Build conversation history for the LLM immediately (before any state mutations)
+    // Append the current user message so the LLM always has full context including this request.
+    // This fixes context loss on short replies like 'yes' / 'no' / 'confirm'.
+    const historyForLLM = messages
+      .filter(m => !(m as any).isOnboarding)
+      .slice(-19)
+      .map(m => ({
+        role: m.role as 'user' | 'assistant' | 'system',
+        content: typeof m.content === 'string' ? m.content : String(m.content),
+      }))
+      .concat([{ role: 'user' as const, content: inputText }]);
     
     // Check subscription status before sending message
     // Don't show paywall while subscription status is still loading
@@ -2793,17 +2805,10 @@ export default function KaiCommand() {
 
       try {
         const stats = statsQuery.data;
-        const historyMessages = messages
-          .filter(m => !(m as any).isOnboarding)
-          .slice(-20)
-          .map(m => ({
-            role: m.role as 'user' | 'assistant' | 'system',
-            content: typeof m.content === 'string' ? m.content : String(m.content),
-          }));
         const visionPayload = {
           message: inputText.trim() || 'Please analyze this image. If it contains a class schedule, extract all classes with their times, days, programs, locations, and instructors. If it contains student data, extract the student information.',
           organizationId: 1,
-          conversationHistory: historyMessages,
+          conversationHistory: historyForLLM,
           imageUrl: firstImage.url,
           context: stats ? {
             totalStudents: stats.totalStudents,
@@ -3229,14 +3234,8 @@ export default function KaiCommand() {
     if (shouldKaiRespond) {
       try {
         const stats = statsQuery.data;
-        // Build conversation history for context (last 20 messages, excluding onboarding)
-        const historyMessages = messages
-          .filter(m => !(m as any).isOnboarding)
-          .slice(-20)
-          .map(m => ({
-            role: m.role as 'user' | 'assistant' | 'system',
-            content: typeof m.content === 'string' ? m.content : String(m.content),
-          }));
+        // historyForLLM was built before the optimistic update (above) and already includes
+        // the current user message appended — so the LLM always has full context
         // Check if there's pending schedule data in recent messages that should be passed to the server
         // This is needed because the SCHEDULE_JSON block is stripped from the cleaned response in history
         const importKeywords = ['put this in', 'place this', 'add this', 'import this', 'save this',
@@ -3252,7 +3251,7 @@ export default function KaiCommand() {
         const payload: any = {
           message: currentInput,
           organizationId: 1, // TODO: Get from user context when multi-org is implemented
-          conversationHistory: historyMessages,
+          conversationHistory: historyForLLM,
           context: stats ? {
             totalStudents: stats.totalStudents,
             activeStudents: stats.activeStudents,

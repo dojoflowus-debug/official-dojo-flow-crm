@@ -210,6 +210,22 @@ const INTENT_PATTERNS: IntentPattern[] = [
   },
 ];
 
+/**
+ * Detect if a message is a confirmation reply (yes/no/confirm/cancel)
+ * based on the message text alone. Used to prevent context loss on short replies.
+ */
+export function isConfirmationReply(message: string): boolean {
+  const trimmed = message.trim().toLowerCase();
+  const confirmPatterns = [
+    /^yes$/i, /^yeah$/i, /^yep$/i, /^yup$/i, /^sure$/i, /^ok$/i, /^okay$/i,
+    /^confirm$/i, /^confirmed$/i, /^go ahead$/i, /^do it$/i, /^send it$/i,
+    /^sounds good$/i, /^that'?s? (?:fine|good|correct|right)$/i,
+    /^no$/i, /^nope$/i, /^cancel$/i, /^stop$/i, /^don'?t$/i, /^never mind$/i,
+    /^please do$/i, /^yes please$/i, /^go for it$/i, /^proceed$/i,
+  ];
+  return confirmPatterns.some(p => p.test(trimmed));
+}
+
 export function classifyIntent(message: string): IntentMatch | null {
   for (const def of INTENT_PATTERNS) {
     for (const pattern of def.patterns) {
