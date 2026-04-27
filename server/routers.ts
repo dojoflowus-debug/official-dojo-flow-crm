@@ -163,9 +163,19 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       console.log('[executeCRMFunction] get_dashboard_stats result', result);
       return result;
     
-    case 'get_student_count':
-      const stats = await getDashboardStats();
-      return { count: stats?.total_students || 0, status: args.status || 'all' };
+    case 'get_student_count': {
+      const { getDb: getDbSC } = await import('./db');
+      const { students: studentsSC } = await import('../drizzle/schema');
+      const { eq: eqSC, and: andSC, count: countSC } = await import('drizzle-orm');
+      const dbSC = await getDbSC();
+      const orgIdSC = ctx?.currentOrganizationId;
+      if (!dbSC || !orgIdSC) return { count: 0, status: args.status || 'all' };
+      const whereSC = args.status && args.status !== 'all'
+        ? andSC(eqSC(studentsSC.organizationId, orgIdSC), eqSC(studentsSC.status, args.status))
+        : eqSC(studentsSC.organizationId, orgIdSC);
+      const [countResult] = await dbSC.select({ count: countSC() }).from(studentsSC).where(whereSC);
+      return { count: countResult?.count || 0, status: args.status || 'all' };
+    }
     
     case 'find_student':
       console.log('[executeCRMFunction] find_student called', { query: args.query, orgId: ctx?.currentOrganizationId });
@@ -236,18 +246,9 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
             const settingsRev = await dbRev.select().from(dojoSettingsRev).where(eqRev(dojoSettingsRev.organizationId, resolvedOrgId)).limit(1);
             fpKey = (settingsRev[0] as any)?.fluidpayApiKey;
           }
-          // Scan ALL rows if still no key found — bypasses org/user resolution issues
+          // SECURITY: Never scan other orgs' settings — strict org isolation enforced
           if (!fpKey) {
-            console.log('[get_revenue] Scanning ALL dojo_settings for FluidPay key');
-            const allSettings = await dbRev.select().from(dojoSettingsRev).limit(50);
-            for (const row of allSettings) {
-              const key = (row as any)?.fluidpayApiKey;
-              if (key && key.length > 10) {
-                console.log('[get_revenue] Found FluidPay key in org', (row as any).organizationId);
-                fpKey = key;
-                break;
-              }
-            }
+            console.log('[get_revenue] No FluidPay key for org', resolvedOrgId, '— not connected');
           }
           if (fpKey) {
             const now = new Date();
@@ -299,9 +300,19 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       };
     }
     
-    case 'get_leads':
-      const leadStats = await getDashboardStats();
-      return { count: leadStats?.total_leads || 0, status: args.status || 'all' };
+    case 'get_leads': {
+      const { getDb: getDbGL } = await import('./db');
+      const { leads: leadsGL } = await import('../drizzle/schema');
+      const { eq: eqGL, and: andGL, count: countGL } = await import('drizzle-orm');
+      const dbGL = await getDbGL();
+      const orgIdGL = ctx?.currentOrganizationId;
+      if (!dbGL || !orgIdGL) return { count: 0, status: args.status || 'all' };
+      const whereGL = args.status && args.status !== 'all'
+        ? andGL(eqGL(leadsGL.organizationId, orgIdGL), eqGL(leadsGL.status, args.status))
+        : eqGL(leadsGL.organizationId, orgIdGL);
+      const [countResultGL] = await dbGL.select({ count: countGL() }).from(leadsGL).where(whereGL);
+      return { count: countResultGL?.count || 0, status: args.status || 'all' };
+    }
     
     case 'search_students':
       console.log('[executeCRMFunction] search_students called with query:', args.query);
@@ -344,8 +355,13 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       const dbStudent = await getDbForStudent();
       if (!dbStudent) return { error: 'Database not available' };
       
+      const orgIdForGetStudent = ctx?.currentOrganizationId;
+      const { and: andGetStudent } = await import('drizzle-orm');
+      const studentWhere = orgIdForGetStudent
+        ? andGetStudent(eqStudent(studentsTable.id, args.studentId), eqStudent(studentsTable.organizationId, orgIdForGetStudent))
+        : eqStudent(studentsTable.id, args.studentId);
       const studentResult = await dbStudent.select().from(studentsTable)
-        .where(eqStudent(studentsTable.id, args.studentId))
+        .where(studentWhere)
         .limit(1);
       
       if (studentResult.length > 0) {
@@ -373,11 +389,17 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       const dbAtRisk = await getDbForAtRisk();
       if (!dbAtRisk) return { error: 'Database not available' };
       
+      const orgIdAtRisk = ctx?.currentOrganizationId;
+      if (!orgIdAtRisk) return { students: [] };
+      const { and: andAtRisk } = await import('drizzle-orm');
       const atRiskStudents = await dbAtRisk.select().from(studentsAtRisk)
         .where(
-          orAtRisk(
-            eqAtRisk(studentsAtRisk.status, 'inactive'),
-            eqAtRisk(studentsAtRisk.status, 'on_hold')
+          andAtRisk(
+            eqAtRisk(studentsAtRisk.organizationId, orgIdAtRisk),
+            orAtRisk(
+              eqAtRisk(studentsAtRisk.status, 'Inactive'),
+              eqAtRisk(studentsAtRisk.status, 'On Hold')
+            )
           )
         )
         .limit(50);
@@ -404,13 +426,19 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       const dbLeads = await getDbForLeads();
       if (!dbLeads) return { error: 'Database not available' };
       
+      const orgIdForLeadSearch = ctx?.currentOrganizationId;
+      if (!orgIdForLeadSearch) return { leads: [] };
+      const { eq: eqLeadSearch, and: andLeadSearch } = await import('drizzle-orm');
       const searchedLeads = await dbLeads.select().from(leadsTable)
         .where(
-          orLeads(
-            likeLeads(leadsTable.firstName, `%${args.query}%`),
-            likeLeads(leadsTable.lastName, `%${args.query}%`),
-            likeLeads(leadsTable.email, `%${args.query}%`),
-            likeLeads(leadsTable.phone, `%${args.query}%`)
+          andLeadSearch(
+            eqLeadSearch(leadsTable.organizationId, orgIdForLeadSearch),
+            orLeads(
+              likeLeads(leadsTable.firstName, `%${args.query}%`),
+              likeLeads(leadsTable.lastName, `%${args.query}%`),
+              likeLeads(leadsTable.email, `%${args.query}%`),
+              likeLeads(leadsTable.phone, `%${args.query}%`)
+            )
           )
         )
         .limit(20);
@@ -434,8 +462,13 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       const dbLead = await getDbForLead();
       if (!dbLead) return { error: 'Database not available' };
       
+      const orgIdForLead = ctx?.currentOrganizationId;
+      const { and: andLead } = await import('drizzle-orm');
+      const leadWhere = orgIdForLead
+        ? andLead(eqLead(leadsTableSingle.id, args.leadId), eqLead(leadsTableSingle.organizationId, orgIdForLead))
+        : eqLead(leadsTableSingle.id, args.leadId);
       const leadResult = await dbLead.select().from(leadsTableSingle)
-        .where(eqLead(leadsTableSingle.id, args.leadId))
+        .where(leadWhere)
         .limit(1);
       
       if (leadResult.length > 0) {
@@ -462,11 +495,17 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       if (!db) return { error: 'Database not available' };
       
       // Search leads by name
+      const orgIdForFindLead = ctx?.currentOrganizationId;
+      if (!orgIdForFindLead) return { error: 'Organization context missing' };
+      const { eq: eqFL, and: andFL } = await import('drizzle-orm');
       const searchResults = await db.select().from(leads)
         .where(
-          or(
-            like(leads.firstName, `%${args.query}%`),
-            like(leads.lastName, `%${args.query}%`)
+          andFL(
+            eqFL(leads.organizationId, orgIdForFindLead),
+            or(
+              like(leads.firstName, `%${args.query}%`),
+              like(leads.lastName, `%${args.query}%`)
+            )
           )
         )
         .limit(1);
