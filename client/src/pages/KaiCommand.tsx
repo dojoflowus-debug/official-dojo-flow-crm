@@ -2807,7 +2807,7 @@ export default function KaiCommand() {
         const stats = statsQuery.data;
         const visionPayload = {
           message: inputText.trim() || 'Please analyze this image. If it contains a class schedule, extract all classes with their times, days, programs, locations, and instructors. If it contains student data, extract the student information.',
-          organizationId: 1,
+          organizationId: user?.activeOrgId || undefined,
           conversationHistory: historyForLLM,
           imageUrl: firstImage.url,
           context: stats ? {
@@ -3250,7 +3250,7 @@ export default function KaiCommand() {
 
         const payload: any = {
           message: currentInput,
-          organizationId: 1, // TODO: Get from user context when multi-org is implemented
+          organizationId: user?.activeOrgId || undefined,
           conversationHistory: historyForLLM,
           context: stats ? {
             totalStudents: stats.totalStudents,
@@ -5342,6 +5342,7 @@ export default function KaiCommand() {
                                   try {
                                     const sendResult = await kaiChatMutation.mutateAsync({
                                       message: `✅ Confirmed: please execute the pending action now`,
+                                      organizationId: user?.activeOrgId || undefined,
                                       conversationHistory: messages.slice(-20).map(m => ({
                                         role: m.role as 'user' | 'assistant',
                                         content: m.content,
@@ -5388,6 +5389,7 @@ export default function KaiCommand() {
                                   try {
                                     const confirmResult = await kaiChatMutation.mutateAsync({
                                       message: `✅ Confirmed: archive ${pendingAction.toolArgs?.studentName || 'student'}`,
+                                      organizationId: user?.activeOrgId || undefined,
                                       conversationHistory: [],
                                       confirmedAction: {
                                         toolName: pendingAction.toolName,

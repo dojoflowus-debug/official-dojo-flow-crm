@@ -4905,8 +4905,8 @@ Return the data as a structured JSON object.`
         }
         // ── END CONFIRMED ACTION SHORTCUT ─────────────────────────────────────
         
-        console.log('[Kai Chat] Input received:', { message, avatarName, hasHistory: conversationHistory.length > 0, organizationId });
-        console.log('[Kai Chat] User message:', message);
+        console.log('[Kai Chat] Input received:', { message: message.slice(0, 80), avatarName, hasHistory: conversationHistory.length > 0, organizationId, ctxOrgId: ctx?.currentOrganizationId, resolvedOrgId: ctx?.currentOrganizationId || organizationId });
+        console.log('[Kai Chat] User message:', message.slice(0, 120));
         
         // Check credit balance before processing (if organizationId provided)
         if (organizationId) {

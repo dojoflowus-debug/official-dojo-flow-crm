@@ -3,7 +3,7 @@ import { getUserByOpenId, getDb } from "./db";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { organizationUsers, organizations, users, dojoSettings } from "../drizzle/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, asc } from "drizzle-orm";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { storagePut } from "./storage";
 
@@ -85,13 +85,14 @@ export const authRouter = router({
       if (primaryOrg) {
         activeOrgId = primaryOrg.organizationId;
       } else {
-        // If no primary org, get the first organization
+        // If no primary org, get the first organization (deterministic ordering)
         const [firstOrg] = await db
           .select({
             organizationId: organizationUsers.organizationId,
           })
           .from(organizationUsers)
           .where(eq(organizationUsers.userId, user.id))
+          .orderBy(asc(organizationUsers.id))
           .limit(1);
         
         if (firstOrg) {

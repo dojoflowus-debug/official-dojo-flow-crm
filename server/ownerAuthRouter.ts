@@ -4,7 +4,7 @@ import { TRPCError } from "@trpc/server";
 import bcrypt from "bcrypt";
 import { getDb } from "./db.js";
 import { users, verificationCodes, onboardingProgress, organizationUsers, organizations } from "../drizzle/schema.js";
-import { eq, and, gt } from "drizzle-orm";
+import { eq, and, gt, asc } from "drizzle-orm";
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies.js";
 import { sdk } from "./_core/sdk.js";
@@ -386,6 +386,7 @@ export const ownerAuthRouter = router({
         .from(organizationUsers)
         .innerJoin(organizations, eq(organizationUsers.organizationId, organizations.id))
         .where(eq(organizationUsers.userId, user.id))
+        .orderBy(asc(organizationUsers.id))
         .limit(1);
 
       const hasOrganization = orgMemberships.length > 0;
