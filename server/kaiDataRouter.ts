@@ -15,19 +15,28 @@ import type { TrpcContext } from "./_core/context";
 
 /**
  * Resolve the current organization ID from session or fall back to user's first membership.
- * This handles cases where the session cookie is missing (e.g., JWT-only auth).
+ * SECURITY: Always prefer ctx.currentOrganizationId (set from session cookie).
+ * The fallback queries the user's OWN memberships only — never scans all orgs.
  */
 async function resolveOrgId(ctx: TrpcContext, db: Database): Promise<number | null> {
+  // Primary: use the session-bound org (most secure, always correct)
   if (ctx.currentOrganizationId) return ctx.currentOrganizationId;
   if (!ctx.user) return null;
   try {
     const { organizationUsers } = await import('../drizzle/schema');
+    // Fallback: find the user's OWN org memberships — ordered by ID for determinism
+    // NEVER query all orgs; only query orgs this specific user belongs to
     const memberships = await db
       .select({ organizationId: organizationUsers.organizationId })
       .from(organizationUsers)
       .where(eq(organizationUsers.userId, ctx.user.id))
+      .orderBy(asc(organizationUsers.organizationId))
       .limit(1);
-    return memberships.length > 0 ? memberships[0].organizationId : null;
+    if (memberships.length > 0) {
+      console.warn('[resolveOrgId] Session org missing for user', ctx.user.id, '— falling back to org', memberships[0].organizationId);
+      return memberships[0].organizationId;
+    }
+    return null;
   } catch {
     return null;
   }
@@ -664,14 +673,14 @@ export const kaiDataRouter = router({
         return { classId: input.classId, className: "", date: input.date || "", students: [], totalEnrolled: 0 };
       }
 
-      // Get enrolled students
+      // Get enrolled students (classEnrollments doesn't have orgId — class already verified above)
       const enrolledStudents = await db
         .select()
         .from(classEnrollments)
         .where(eq(classEnrollments.classId, input.classId))
         .limit(100);
 
-      // Get attendance for the date if provided
+      // Get attendance for the date if provided (class already org-verified)
       const attendanceRecords = input.date
         ? await db
             .select()
@@ -778,14 +787,18 @@ export const kaiDataRouter = router({
         return { totalClasses: 0, totalAttendance: 0, averageAttendanceRate: 0, byClass: [] };
       }
 
-      // Get attendance records for date range
+      // Get attendance records for date range — scoped to org via class IDs
+      const { inArray: inArrayAS } = await import('drizzle-orm');
+      const orgClassIdsAS = (await db.select({ id: classes.id }).from(classes).where(eq(classes.organizationId, orgId))).map(c => c.id);
+      if (orgClassIdsAS.length === 0) return { totalClasses: 0, totalAttendance: 0, averageAttendanceRate: 0, byClass: [] };
       const attendanceData = await db
         .select()
         .from(studentAttendance)
         .where(
           and(
             gte(studentAttendance.classDate, input.startDate),
-            lte(studentAttendance.classDate, input.endDate)
+            lte(studentAttendance.classDate, input.endDate),
+            inArrayAS(studentAttendance.classId, orgClassIdsAS)
           )
         );
 
@@ -866,19 +879,23 @@ export const kaiDataRouter = router({
       const today = new Date().toISOString().split('T')[0];
 
       // Get attendance records for today (using classDate as check-in date)
+      // Join with classes to enforce org scoping
+      const orgClassIds = (await db.select({ id: classes.id }).from(classes).where(eq(classes.organizationId, orgId))).map(c => c.id);
+      if (orgClassIds.length === 0) return { checkins: [], totalCount: 0, locationId: input.locationId };
+      const { inArray } = await import('drizzle-orm');
       const attendanceData = await db
         .select()
         .from(studentAttendance)
-        .where(eq(studentAttendance.classDate, today))
+        .where(and(eq(studentAttendance.classDate, today), inArray(studentAttendance.classId, orgClassIds)))
         .limit(100);
 
-      // Enrich with student names
+      // Enrich with student names (scoped to org)
       const checkins = [];
       for (const record of attendanceData) {
         const studentData = await db
           .select()
           .from(students)
-          .where(eq(students.id, record.studentId))
+          .where(and(eq(students.id, record.studentId), eq(students.organizationId, orgId)))
           .limit(1);
 
         if (studentData.length > 0) {
@@ -943,25 +960,29 @@ export const kaiDataRouter = router({
         };
       }
 
-      // Get attendance records for date range
+      // Get attendance records for date range — scoped to org via class IDs
+      const { inArray: inArrayCI } = await import('drizzle-orm');
+      const orgClassIdsCI = (await db.select({ id: classes.id }).from(classes).where(eq(classes.organizationId, orgId))).map(c => c.id);
+      if (orgClassIdsCI.length === 0) return { checkins: [], totalCount: 0, locationId: input.locationId, dateRange: { start: input.startDate, end: input.endDate } };
       const attendanceData = await db
         .select()
         .from(studentAttendance)
         .where(
           and(
             gte(studentAttendance.classDate, input.startDate),
-            lte(studentAttendance.classDate, input.endDate)
+            lte(studentAttendance.classDate, input.endDate),
+            inArrayCI(studentAttendance.classId, orgClassIdsCI)
           )
         )
         .limit(500);
 
-      // Enrich with student names
+      // Enrich with student names (scoped to org)
       const checkins = [];
       for (const record of attendanceData) {
         const studentData = await db
           .select()
           .from(students)
-          .where(eq(students.id, record.studentId))
+          .where(and(eq(students.id, record.studentId), eq(students.organizationId, orgId)))
           .limit(1);
 
         if (studentData.length > 0) {
@@ -1019,14 +1040,18 @@ export const kaiDataRouter = router({
         return { visitors: [], totalCount: 0, locationId: input.locationId };
       }
 
-      // Get attendance records for date range
+      // Get attendance records for date range — scoped to org via class IDs
+      const { inArray: inArrayNV } = await import('drizzle-orm');
+      const orgClassIdsNV = (await db.select({ id: classes.id }).from(classes).where(eq(classes.organizationId, orgId))).map(c => c.id);
+      if (orgClassIdsNV.length === 0) return { visitors: [], totalCount: 0, locationId: input.locationId };
       const attendanceData = await db
         .select()
         .from(studentAttendance)
         .where(
           and(
             gte(studentAttendance.classDate, input.startDate),
-            lte(studentAttendance.classDate, input.endDate)
+            lte(studentAttendance.classDate, input.endDate),
+            inArrayNV(studentAttendance.classId, orgClassIdsNV)
           )
         );
 
@@ -1038,13 +1063,13 @@ export const kaiDataRouter = router({
         }
       }
 
-      // Enrich with student data
+      // Enrich with student data (scoped to org)
       const visitors = [];
       for (const [studentId, firstDate] of visitorMap.entries()) {
         const studentData = await db
           .select()
           .from(students)
-          .where(eq(students.id, studentId))
+          .where(and(eq(students.id, studentId), eq(students.organizationId, orgId)))
           .limit(1);
 
         if (studentData.length > 0) {
@@ -1100,11 +1125,11 @@ export const kaiDataRouter = router({
         };
       }
 
-      // Get student info
+      // Get student info — enforce org scoping
       const studentData = await db
         .select()
         .from(students)
-        .where(eq(students.id, input.personId))
+        .where(and(eq(students.id, input.personId), eq(students.organizationId, orgId)))
         .limit(1);
 
       if (!studentData.length) {
@@ -1211,19 +1236,9 @@ export const kaiDataRouter = router({
         // First try the resolved org
         let settings = await db.select().from(dojoSettings).where(eq(dojoSettings.organizationId, orgId)).limit(1);
         let fpKey = (settings[0] as any)?.fluidpayApiKey;
-        // If no key found, scan ALL dojo_settings rows for any FluidPay key
-        // This bypasses org/user resolution issues entirely
+        // If no key found for this org, do NOT scan other orgs — return no data
         if (!fpKey) {
-          console.log('[getRevenueSummary] No FluidPay key for org', orgId, '- scanning ALL settings rows');
-          const allSettings = await db.select().from(dojoSettings).limit(50);
-          for (const row of allSettings) {
-            const key = (row as any)?.fluidpayApiKey;
-            if (key && key.length > 10) {
-              console.log('[getRevenueSummary] Found FluidPay key in org', (row as any).organizationId);
-              fpKey = key;
-              break;
-            }
-          }
+          console.log('[getRevenueSummary] No FluidPay key configured for org', orgId);
         }
         console.log('[getRevenueSummary] FluidPay key found:', !!fpKey);
         if (fpKey) {
@@ -1255,7 +1270,10 @@ export const kaiDataRouter = router({
         console.error('[getRevenueSummary] FluidPay error:', fpErr.message);
       }
 
-      // Fallback: Get tuition records for date range that are paid
+      // Fallback: Get tuition records for date range that are paid — scoped to org
+      const orgStudentIdsTuition = (await db.select({ id: students.id }).from(students).where(eq(students.organizationId, orgId))).map(s => s.id);
+      if (orgStudentIdsTuition.length === 0) return { totalRevenue: 0, totalTransactions: 0, averageTransactionValue: 0, dateRange: { start: input.startDate, end: input.endDate }, locationId: input.locationId };
+      const { inArray: inArrayTuition } = await import('drizzle-orm');
       const tuitionData = await db
         .select()
         .from(studentTuition)
@@ -1263,7 +1281,8 @@ export const kaiDataRouter = router({
           and(
             gte(studentTuition.paidDate, input.startDate),
             lte(studentTuition.paidDate, input.endDate),
-            eq(studentTuition.status, "paid")
+            eq(studentTuition.status, "paid"),
+            inArrayTuition(studentTuition.studentId, orgStudentIdsTuition)
           )
         )
         .limit(1000);
@@ -1328,14 +1347,18 @@ export const kaiDataRouter = router({
       cutoffDate.setDate(cutoffDate.getDate() - input.daysPastDue);
       const cutoffDateStr = cutoffDate.toISOString().split('T')[0];
 
-      // Get overdue tuition records
+      // Get overdue tuition records — scoped to org via student IDs
+      const orgStudentIds = (await db.select({ id: students.id }).from(students).where(eq(students.organizationId, orgId))).map(s => s.id);
+      if (orgStudentIds.length === 0) return { accounts: [], totalCount: 0, locationId: input.locationId };
+      const { inArray: inArrayOD } = await import('drizzle-orm');
       const overdueData = await db
         .select()
         .from(studentTuition)
         .where(
           and(
             eq(studentTuition.status, "overdue"),
-            lte(studentTuition.dueDate, cutoffDateStr)
+            lte(studentTuition.dueDate, cutoffDateStr),
+            inArrayOD(studentTuition.studentId, orgStudentIds)
           )
         )
         .limit(500);
@@ -1354,13 +1377,13 @@ export const kaiDataRouter = router({
         account.totalOverdue += record.amount || 0;
       }
 
-      // Enrich with student data
+      // Enrich with student data (already org-scoped via orgStudentIds)
       const accounts = [];
       for (const [studentId, accountData] of accountMap.entries()) {
         const studentData = await db
           .select()
           .from(students)
-          .where(eq(students.id, studentId))
+          .where(and(eq(students.id, studentId), eq(students.organizationId, orgId)))
           .limit(1);
 
         if (studentData.length > 0) {
@@ -1426,15 +1449,18 @@ export const kaiDataRouter = router({
         };
       }
 
-      // Get failed tuition records (placeholder implementation)
-      // In production, this would query a payment processor API or failed_payments table
+      // Get failed tuition records — scoped to org via student IDs
+      const orgStudentIdsFP = (await db.select({ id: students.id }).from(students).where(eq(students.organizationId, orgId))).map(s => s.id);
+      if (orgStudentIdsFP.length === 0) return { payments: [], totalCount: 0, dateRange: { start: input.startDate, end: input.endDate } };
+      const { inArray: inArrayFP } = await import('drizzle-orm');
       const failedData = await db
         .select()
         .from(studentTuition)
         .where(
           and(
             eq(studentTuition.status, "pending"),
-            lte(studentTuition.dueDate, new Date().toISOString().split('T')[0])
+            lte(studentTuition.dueDate, new Date().toISOString().split('T')[0]),
+            inArrayFP(studentTuition.studentId, orgStudentIdsFP)
           )
         )
         .limit(500);
@@ -1445,7 +1471,7 @@ export const kaiDataRouter = router({
         const studentData = await db
           .select()
           .from(students)
-          .where(eq(students.id, record.studentId))
+          .where(and(eq(students.id, record.studentId), eq(students.organizationId, orgId)))
           .limit(1);
 
         if (studentData.length > 0) {
