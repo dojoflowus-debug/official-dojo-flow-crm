@@ -5168,6 +5168,63 @@ Return the data as a structured JSON object.`
               classCount: scheduleImportData.classes.length,
             });
           }
+          // ── PENDING ACTION DETECTION ────────────────────────────────────────
+          // When Kai's response contains a confirmation prompt ("Would you like me to send..."),
+          // inject Yes/No quick-reply buttons so the user can confirm without typing.
+          const pendingActionPhrases = [
+            /would you like me to send/i,
+            /shall i send/i,
+            /should i send/i,
+            /want me to send/i,
+            /ready to send/i,
+            /confirm.*send/i,
+            /would you like me to text/i,
+            /shall i text/i,
+            /want me to text/i,
+            /would you like me to email/i,
+            /shall i email/i,
+            /want me to email/i,
+            /would you like me to (create|add|schedule|book|enroll|update|remove|archive)/i,
+            /shall i (create|add|schedule|book|enroll|update|remove|archive)/i,
+            /want me to (create|add|schedule|book|enroll|update|remove|archive)/i,
+            /ready to (create|add|schedule|book|enroll|update|remove|archive)/i,
+            /confirm.*and i('ll| will) (send|text|email|create|add|schedule)/i,
+            /reply.*yes.*to (send|confirm|proceed)/i,
+          ];
+          const hasPendingActionPrompt = pendingActionPhrases.some(p => p.test(cleanedResponse));
+          
+          // Detect what tool to execute based on the message context
+          let pendingActionForButtons: { toolName: string; toolArgs: Record<string, any> } | undefined;
+          let pendingQuickReplies: Array<{ label: string; action: string }> | undefined;
+          
+          if (hasPendingActionPrompt && !scheduleImportData) {
+            // Determine the pending tool from the original user message
+            const msgL = (message || '').toLowerCase();
+            if (msgL.includes('text') || msgL.includes('sms') || msgL.includes('message')) {
+              const isBulk = msgL.includes('all') || msgL.includes('everyone') || msgL.includes('members') || msgL.includes('students');
+              pendingActionForButtons = {
+                toolName: isBulk ? 'send_bulk_sms' : 'send_sms',
+                toolArgs: { message: cleanedResponse, originalRequest: message },
+              };
+            } else if (msgL.includes('email')) {
+              pendingActionForButtons = {
+                toolName: 'send_bulk_email',
+                toolArgs: { message: cleanedResponse, originalRequest: message },
+              };
+            } else {
+              // Generic pending action — let the LLM handle on confirm
+              pendingActionForButtons = {
+                toolName: 'confirm_pending',
+                toolArgs: { originalRequest: message },
+              };
+            }
+            pendingQuickReplies = [
+              { label: '✅ Yes, send it', action: `confirm_send:${pendingActionForButtons.toolName}:${JSON.stringify(pendingActionForButtons.toolArgs)}` },
+              { label: '❌ No, cancel', action: 'cancel_action' },
+            ];
+          }
+          // ── END PENDING ACTION DETECTION ─────────────────────────────────────
+
           // ── POST-TASK REVIEW DETECTION ──────────────────────────────────────
           // Detect task-completion signals in the response to prompt a review.
           // We look for common completion phrases that indicate Kai finished a meaningful task.
@@ -5230,6 +5287,8 @@ Return the data as a structured JSON object.`
             ui_blocks: finalUiBlocks,
             scheduleImportData: scheduleImportData || undefined,
             reviewRequest,
+            pendingAction: pendingActionForButtons,
+            quickReplies: pendingQuickReplies,
           };
         } catch (error) {
           console.error('[Kai Chat] Error caught:', error);

@@ -5321,6 +5321,53 @@ export default function KaiCommand() {
                                     content: `Sure! I\'ve read **${fileName}**. What would you like to know about it? You can ask me questions like \'What programs are listed?\' or \'Summarize this document\'.`,
                                     timestamp: new Date(),
                                   }]);
+                                } else if (qr.action.startsWith('confirm_send:')) {
+                                  // User confirmed a send action — execute it via the LLM with confirmed context
+                                  setMessages(prev => prev.map(m =>
+                                    m.id === message.id ? { ...m, quickReplies: [], pendingAction: undefined } : m
+                                  ));
+                                  const sendPayload = qr.action.replace('confirm_send:', '');
+                                  const colonIdx = sendPayload.indexOf(':');
+                                  const toolName = sendPayload.slice(0, colonIdx);
+                                  let toolArgs: Record<string, any> = {};
+                                  try { toolArgs = JSON.parse(sendPayload.slice(colonIdx + 1)); } catch {}
+                                  // Add user confirmation message
+                                  setMessages(prev => [...prev, {
+                                    id: `confirm-send-user-${Date.now()}`,
+                                    role: 'user',
+                                    content: '✅ Yes, send it',
+                                    timestamp: new Date(),
+                                  }]);
+                                  setIsLoading(true);
+                                  try {
+                                    const sendResult = await kaiChatMutation.mutateAsync({
+                                      message: `✅ Confirmed: please execute the pending action now`,
+                                      conversationHistory: messages.slice(-20).map(m => ({
+                                        role: m.role as 'user' | 'assistant',
+                                        content: m.content,
+                                      })),
+                                      confirmedAction: toolName !== 'confirm_pending' ? {
+                                        toolName,
+                                        toolArgs,
+                                      } : undefined,
+                                    });
+                                    setMessages(prev => [...prev, {
+                                      id: `confirm-send-result-${Date.now()}`,
+                                      role: 'assistant',
+                                      content: sendResult.response,
+                                      timestamp: new Date(),
+                                      showFeedback: true,
+                                    }]);
+                                  } catch (e: any) {
+                                    setMessages(prev => [...prev, {
+                                      id: `confirm-send-error-${Date.now()}`,
+                                      role: 'assistant',
+                                      content: `❌ Failed to execute: ${e.message}`,
+                                      timestamp: new Date(),
+                                    }]);
+                                  } finally {
+                                    setIsLoading(false);
+                                  }
                                 } else if (qr.action.startsWith('confirm_archive:')) {
                                   // User confirmed a destructive action — execute it now
                                   setMessages(prev => prev.map(m =>
@@ -5383,6 +5430,10 @@ export default function KaiCommand() {
                                 qr.action.startsWith('import_merchandise_from_pdf:') ||
                                 qr.action.startsWith('import_schedule_from_pdf:') ||
                                 qr.action.startsWith('confirm_archive:')
+                                  ? 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200'
+                                  : qr.action.startsWith('confirm_send:')
+                                  ? 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'
+                                  : qr.action === 'cancel_action'
                                   ? 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200'
                                   : isDark || isCinematic
                                     ? 'bg-white/8 hover:bg-white/15 text-white/70 border-white/15'
