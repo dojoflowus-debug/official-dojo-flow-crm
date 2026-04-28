@@ -1341,8 +1341,8 @@ export default function KaiCommand() {
   
   // Tactical status filters
   const smartCollections = [
-    { id: 'urgent', label: 'CRITICAL', count: urgentCount, icon: AlertCircle, color: 'text-red-500' },
-    { id: 'insights', label: 'INTEL', count: insightsCount, icon: Sparkles, color: 'text-white/70' },
+    { id: 'urgent', label: 'URGENT', count: urgentCount, icon: AlertCircle, color: 'text-red-500' },
+    { id: 'insights', label: 'INSIGHTS', count: insightsCount, icon: Sparkles, color: 'text-white/70' },
     { id: 'pending', label: 'PENDING', count: pendingCount, icon: CheckSquare, color: 'text-amber-500' }
   ];
 
@@ -1368,19 +1368,19 @@ export default function KaiCommand() {
     },
     {
       id: 'enrollments',
-      header: 'DIRECTIVE: LEAD PURSUIT',
+      header: 'LEAD FOLLOW-UP',
       text: '"Queue leads requiring follow-up. Prioritize by conversion probability."',
       severity: 'warning'
     },
     {
       id: 'health',
-      header: 'INTEL: ATTENDANCE SCAN',
+      header: 'ATTENDANCE SCAN',
       text: '"Report attendance anomalies. Flag no-shows."',
       severity: 'info' // white/neutral left bar
     },
     {
       id: 'class-quality',
-      header: 'INTEL: CAPACITY ANALYSIS',
+      header: 'CAPACITY ANALYSIS',
       text: '"Audit class utilization. Identify bottlenecks."',
       severity: 'info'
     },
@@ -1392,7 +1392,7 @@ export default function KaiCommand() {
     },
     {
       id: 'staff-perf',
-      header: 'INTEL: INSTRUCTOR METRICS',
+      header: 'INSTRUCTOR METRICS',
       text: '"Rank instructors by retention. Surface top performers."',
       severity: 'info'
     },
@@ -3466,13 +3466,13 @@ export default function KaiCommand() {
   const yesterdayConversations = filteredConversations.filter(c => c.date === 'yesterday');
   const olderConversations = filteredConversations.filter(c => c.date === 'older');
 
-  // Tactical command center taglines
+  // School-friendly Kai taglines
   const cinematicTaglines = [
-    "Standing by for your directive.",
-    "All systems operational. Awaiting orders.",
-    "Intel ready. What's the mission?",
-    "Command center active. Status: green.",
-    "Ready to execute. Define your objective."
+    "Ready to help. Ask me anything.",
+    "What can I help you with today?",
+    "Your school data is loaded. Let's get to work.",
+    "Need a flyer, report, or student update? I'm on it.",
+    "Ask me about students, leads, classes, or marketing."
   ];
   const [currentTaglineIndex, setCurrentTaglineIndex] = useState(0);
   const [taglineVisible, setTaglineVisible] = useState(true);
@@ -3705,7 +3705,7 @@ export default function KaiCommand() {
                 ) : (
                   <Plus className={`w-3.5 h-3.5 ${getTextClass('muted')}`} />
                 )}
-                {createConversationMutation.isPending ? 'CREATING...' : 'NEW OP'}
+                {createConversationMutation.isPending ? 'CREATING...' : '+ NEW CHAT'}
               </button>
             </div>
 
@@ -3721,7 +3721,7 @@ export default function KaiCommand() {
 
           {/* Status Filters */}
           <div className={`px-4 py-4 border-b ${getBorderClass()}`}>
-            <h3 className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${getTextClass('muted')}`}>STATUS FILTERS</h3>
+            <h3 className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${getTextClass('muted')}`}>QUICK FILTERS</h3>
             <div className="space-y-1">
               {smartCollections.map((collection) => {
                 const isActive = activeCollection === collection.id;
@@ -3754,7 +3754,7 @@ export default function KaiCommand() {
           <div className="flex-1 overflow-hidden flex flex-col">
             <div className="px-4 pt-4 pb-2">
               <div className="flex items-center justify-between mb-2">
-                <h3 className={`text-[10px] font-bold uppercase tracking-widest ${getTextClass('muted')}`}>OPERATIONS LOG</h3>
+                <h3 className={`text-[10px] font-bold uppercase tracking-widest ${getTextClass('muted')}`}>CONVERSATIONS</h3>
                 <span className={`text-[10px] font-mono ${getTextClass('muted')}`}>{filteredConversations.length}</span>
               </div>
               {activeCollection && (
@@ -4022,7 +4022,7 @@ export default function KaiCommand() {
               className={`text-[10px] uppercase tracking-widest font-medium ${isCinematic ? 'text-white/70' : isDark ? 'text-white/40' : 'text-slate-400'}`}
               style={isCinematic ? { textShadow: '0 2px 4px rgba(0,0,0,0.75)' } : {}}
             >
-              {isMobile ? 'COMMAND CENTER' : 'COMMAND CENTER • OPERATIONAL STATUS: ACTIVE • ALL SYSTEMS NOMINAL'}
+              {isMobile ? 'KAI AI ASSISTANT' : 'KAI AI ASSISTANT • READY'}
             </p>
             <div className="flex items-center gap-1">
               {/* Mobile: Ops list toggle button */}
@@ -4299,11 +4299,11 @@ export default function KaiCommand() {
                         opacity: 1
                       }}
                     >
-                      {isCinematic ? cinematicTaglines[currentTaglineIndex] : 'Select a directive below or issue a custom command.'}
+                      {isCinematic ? cinematicTaglines[currentTaglineIndex] : 'Select a quick action below or ask me anything.'}
                     </p>
                   ) : (
                     <p className={`text-center max-w-md mb-6 text-[11px] uppercase tracking-widest ${getTextClass('muted')}`}>
-                      Select a directive below or issue a custom command.
+                      Select a quick action below or ask me anything.
                     </p>
                   )}
                   </div>{/* End Header Block */}
@@ -6008,7 +6008,7 @@ export default function KaiCommand() {
               onSubmit={(value, mentions) => {
                 handleSendMessage('submit');
               }}
-              placeholder="Issue directive... Type @ to assign"
+              placeholder="Ask Kai anything... Type @ to assign"
               theme={isCinematic ? 'cinematic' : isDark ? 'dark' : 'light'}
               variant="apple"
             />

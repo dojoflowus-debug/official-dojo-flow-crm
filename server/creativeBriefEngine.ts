@@ -311,13 +311,14 @@ export function analyzeBrief(
     !!context.phone ||
     answers.content === "Skip — use my profile data";
 
-  // isComplete = ALL THREE confirmed. No exceptions. No bypasses.
-  const isComplete = programConfirmed && audienceConfirmed && keyContentConfirmed;
+  // isComplete = program + key content confirmed. Audience is optional — enhances output but never blocks.
+  // This ensures Kai generates immediately when the user provides a program name,
+  // rather than forcing them through a multi-step brief flow for simple requests.
+  const isComplete = programConfirmed && keyContentConfirmed;
   const canGenerate = isComplete; // explicit alias for clarity
 
   const missingFields: string[] = [];
   if (!programConfirmed) missingFields.push("program");
-  if (!audienceConfirmed) missingFields.push("audience");
   if (!keyContentConfirmed) missingFields.push("key content");
 
   const questions = isComplete ? [] : buildQuestions(scoring, context, mergedPrompt);
