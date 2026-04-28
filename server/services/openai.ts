@@ -296,6 +296,29 @@ const crmTools = [
   {
     type: 'function' as const,
     function: {
+      name: 'update_staff',
+      description: "Update an existing staff member's information (name, phone, role, bio). Use when user asks to edit, update, or change a staff member's details. First call list_staff to get the staffId if you don't have it.",
+      parameters: {
+        type: 'object',
+        properties: {
+          staffId: { type: 'number', description: 'The ID of the staff member to update (from list_staff)' },
+          firstName: { type: 'string', description: 'Updated first name' },
+          lastName: { type: 'string', description: 'Updated last name' },
+          phone: { type: 'string', description: 'Updated phone number' },
+          role: {
+            type: 'string',
+            enum: ['instructor', 'front_desk', 'manager', 'admin', 'coach', 'trainer', 'assistant'],
+            description: 'Updated role/position',
+          },
+          bio: { type: 'string', description: 'Updated bio or notes about the staff member' },
+        },
+        required: ['staffId'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
       name: 'list_staff',
       description: 'List all staff members for this organization. Use when user asks to see, show, or list staff, instructors, or team members.',
       parameters: {

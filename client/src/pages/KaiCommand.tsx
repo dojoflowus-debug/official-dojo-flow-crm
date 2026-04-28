@@ -3259,6 +3259,14 @@ export default function KaiCommand() {
             totalClasses: stats.totalClasses
           } : undefined,
           ...(pendingScheduleData ? { pendingScheduleData } : {}),
+          ...(inputAttachments.length > 0 ? {
+            attachments: inputAttachments.filter(a => !a.uploading && !a.error).map(a => ({
+              url: a.url,
+              name: a.fileName,
+              type: a.fileType,
+              size: a.fileSize,
+            }))
+          } : {}),
         };
         const response = await kaiChatMutation.mutateAsync(payload);
 

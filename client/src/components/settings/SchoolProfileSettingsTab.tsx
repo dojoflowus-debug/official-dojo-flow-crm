@@ -180,6 +180,135 @@ const TextareaField = ({
   </div>
 );
 
+// Country list for dropdown
+const COUNTRIES = [
+  'Afghanistan','Albania','Algeria','Andorra','Angola','Antigua and Barbuda','Argentina','Armenia','Australia','Austria',
+  'Azerbaijan','Bahamas','Bahrain','Bangladesh','Barbados','Belarus','Belgium','Belize','Benin','Bhutan',
+  'Bolivia','Bosnia and Herzegovina','Botswana','Brazil','Brunei','Bulgaria','Burkina Faso','Burundi','Cabo Verde','Cambodia',
+  'Cameroon','Canada','Central African Republic','Chad','Chile','China','Colombia','Comoros','Congo','Costa Rica',
+  'Croatia','Cuba','Cyprus','Czech Republic','Denmark','Djibouti','Dominica','Dominican Republic','Ecuador','Egypt',
+  'El Salvador','Equatorial Guinea','Eritrea','Estonia','Eswatini','Ethiopia','Fiji','Finland','France','Gabon',
+  'Gambia','Georgia','Germany','Ghana','Greece','Grenada','Guatemala','Guinea','Guinea-Bissau','Guyana',
+  'Haiti','Honduras','Hungary','Iceland','India','Indonesia','Iran','Iraq','Ireland','Israel',
+  'Italy','Jamaica','Japan','Jordan','Kazakhstan','Kenya','Kiribati','Kuwait','Kyrgyzstan','Laos',
+  'Latvia','Lebanon','Lesotho','Liberia','Libya','Liechtenstein','Lithuania','Luxembourg','Madagascar','Malawi',
+  'Malaysia','Maldives','Mali','Malta','Marshall Islands','Mauritania','Mauritius','Mexico','Micronesia','Moldova',
+  'Monaco','Mongolia','Montenegro','Morocco','Mozambique','Myanmar','Namibia','Nauru','Nepal','Netherlands',
+  'New Zealand','Nicaragua','Niger','Nigeria','North Korea','North Macedonia','Norway','Oman','Pakistan','Palau',
+  'Palestine','Panama','Papua New Guinea','Paraguay','Peru','Philippines','Poland','Portugal','Qatar','Romania',
+  'Russia','Rwanda','Saint Kitts and Nevis','Saint Lucia','Saint Vincent and the Grenadines','Samoa','San Marino',
+  'Sao Tome and Principe','Saudi Arabia','Senegal','Serbia','Seychelles','Sierra Leone','Singapore','Slovakia',
+  'Slovenia','Solomon Islands','Somalia','South Africa','South Korea','South Sudan','Spain','Sri Lanka','Sudan',
+  'Suriname','Sweden','Switzerland','Syria','Taiwan','Tajikistan','Tanzania','Thailand','Timor-Leste','Togo',
+  'Tonga','Trinidad and Tobago','Tunisia','Turkey','Turkmenistan','Tuvalu','Uganda','Ukraine','United Arab Emirates',
+  'United Kingdom','United States','Uruguay','Uzbekistan','Vanuatu','Vatican City','Venezuela','Vietnam',
+  'Yemen','Zambia','Zimbabwe'
+];
+
+// US States
+const US_STATES = [
+  'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia',
+  'Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland',
+  'Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire',
+  'New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania',
+  'Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington',
+  'West Virginia','Wisconsin','Wyoming','District of Columbia'
+];
+
+// Canadian Provinces
+const CA_PROVINCES = [
+  'Alberta','British Columbia','Manitoba','New Brunswick','Newfoundland and Labrador',
+  'Northwest Territories','Nova Scotia','Nunavut','Ontario','Prince Edward Island','Quebec','Saskatchewan','Yukon'
+];
+
+function getRegionOptions(country: string): string[] {
+  if (country === 'United States') return US_STATES;
+  if (country === 'Canada') return CA_PROVINCES;
+  return [];
+}
+
+// Searchable country select component
+const CountrySelectField = ({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) => {
+  const [search, setSearch] = useState('');
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const filtered = COUNTRIES.filter(c => c.toLowerCase().includes(search.toLowerCase()));
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div style={{ marginBottom: '16px', position: 'relative' }} ref={ref}>
+      <label style={{ display: 'block', fontSize: '14px', color: 'rgba(255,255,255,0.7)', marginBottom: '8px' }}>{label}</label>
+      <div
+        onClick={() => setOpen(!open)}
+        style={{
+          width: '100%', padding: '12px 16px', borderRadius: '10px',
+          border: '1px solid rgba(255,255,255,0.15)', backgroundColor: 'rgba(255,255,255,0.05)',
+          color: value ? 'white' : 'rgba(255,255,255,0.4)', fontSize: '14px',
+          cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}
+      >
+        <span>{value || 'Select country...'}</span>
+        <span style={{ fontSize: '10px', opacity: 0.5 }}>{open ? '▲' : '▼'}</span>
+      </div>
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1000,
+          backgroundColor: 'rgba(20,20,20,0.98)', border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: '10px', maxHeight: '220px', overflow: 'hidden',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.5)', marginTop: '4px',
+        }}>
+          <input
+            autoFocus
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search country..."
+            style={{
+              width: '100%', padding: '10px 16px', border: 'none',
+              borderBottom: '1px solid rgba(255,255,255,0.1)',
+              backgroundColor: 'transparent', color: 'white', fontSize: '14px', outline: 'none',
+            }}
+          />
+          <div style={{ overflowY: 'auto', maxHeight: '170px' }}>
+            {filtered.map(c => (
+              <div
+                key={c}
+                onClick={() => { onChange(c); setOpen(false); setSearch(''); }}
+                style={{
+                  padding: '10px 16px', cursor: 'pointer', fontSize: '14px',
+                  color: c === value ? '#ef4444' : 'rgba(255,255,255,0.85)',
+                  backgroundColor: c === value ? 'rgba(239,68,68,0.1)' : 'transparent',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = c === value ? 'rgba(239,68,68,0.1)' : 'transparent')}
+              >
+                {c}
+              </div>
+            ))}
+            {filtered.length === 0 && (
+              <div style={{ padding: '10px 16px', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>No results</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Select dropdown component
 const SelectField = ({
   label,
@@ -766,12 +895,21 @@ export function SchoolProfileSettingsTab() {
               onChange={setAddressCity}
               placeholder="City"
             />
-            <InputField
-              label="State/Region"
-              value={addressState}
-              onChange={setAddressState}
-              placeholder="State"
-            />
+            {getRegionOptions(addressCountry).length > 0 ? (
+              <SelectField
+                label="State/Region"
+                value={addressState}
+                onChange={setAddressState}
+                options={getRegionOptions(addressCountry).map(s => ({ value: s, label: s }))}
+              />
+            ) : (
+              <InputField
+                label="State/Region"
+                value={addressState}
+                onChange={setAddressState}
+                placeholder="State / Province / Region"
+              />
+            )}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <InputField
@@ -780,11 +918,10 @@ export function SchoolProfileSettingsTab() {
               onChange={setAddressPostal}
               placeholder="12345"
             />
-            <InputField
+            <CountrySelectField
               label="Country"
               value={addressCountry}
-              onChange={setAddressCountry}
-              placeholder="United States"
+              onChange={(val) => { setAddressCountry(val); setAddressState(''); }}
             />
           </div>
         </SettingsCard>

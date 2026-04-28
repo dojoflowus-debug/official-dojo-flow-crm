@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import ManagementLayout from '@/components/ManagementLayout';
 import { trpc } from '@/lib/trpc';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -41,7 +42,8 @@ import { toast } from 'sonner'
 
 const API_URL = '/api'  // Use relative path to work from any device
 
-export default function Staff({ onLogout, theme, toggleTheme }) {
+export default function Staff({ onLogout, theme, toggleTheme }: { onLogout?: () => void; theme?: string; toggleTheme?: () => void }) {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -78,7 +80,7 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
   // Use trpc query to fetch instructors (same as Classes page)
   const { data: staffMembers = [], isLoading: loading, refetch: fetchStaff } = trpc.classes.getInstructors.useQuery();
   
-  const [staffMembersState, setStaffMembers] = useState([])
+  const [staffMembersState, setStaffMembers] = useState<any[]>([])
 
   // Fetch stats on mount
   useEffect(() => {
@@ -86,15 +88,36 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
   }, [])
   
   // Update local state when trpc data changes
+  // Map trpc shape {id, name, role, email, phone, photoUrl} → page shape {id, first_name, last_name, email, phone, role, photo_url}
   useEffect(() => {
     if (staffMembers) {
-      setStaffMembers(staffMembers)
+      const mapped = staffMembers.map((m: any) => {
+        const nameParts = (m.name || '').trim().split(' ')
+        const first_name = nameParts[0] || ''
+        const last_name = nameParts.slice(1).join(' ') || ''
+        const roleDisplay: Record<string, string> = {
+          instructor: 'Instructor', coach: 'Coach', trainer: 'Trainer',
+          manager: 'Manager', owner: 'Owner', front_desk: 'Front Desk',
+          assistant: 'Assistant',
+        }
+        return {
+          ...m,
+          first_name,
+          last_name,
+          photo_url: m.photoUrl || m.photo_url || '',
+          role: roleDisplay[m.role] || m.role || 'Instructor',
+        }
+      })
+      setStaffMembers(mapped)
     }
   }, [staffMembers])
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(`${API_URL}/staff/stats`)
+      const orgId = user?.activeOrgId || localStorage.getItem('dojo_active_org_id');
+      const orgHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (orgId) orgHeaders['x-organization-id'] = String(orgId);
+      const response = await fetch(`${API_URL}/staff/stats`, { credentials: 'include', headers: orgHeaders })
       const data = await response.json()
       setStats(data)
     } catch (error) {
@@ -102,7 +125,7 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
     }
   }
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -272,12 +295,34 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
   }
 
   const handleAddStaff = async () => {
+    // Validate required fields before submitting
+    if (!formData.first_name.trim()) {
+      toast.error('First name is required')
+      return
+    }
+    if (!formData.last_name.trim()) {
+      toast.error('Last name is required')
+      return
+    }
+    if (!formData.email.trim()) {
+      toast.error('Email address is required')
+      return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email.trim())) {
+      toast.error('Please enter a valid email address')
+      return
+    }
     try {
       setSubmitting(true)
       
+      const orgId = user?.activeOrgId || localStorage.getItem('dojo_active_org_id');
+      const postHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (orgId) postHeaders['x-organization-id'] = String(orgId);
       const response = await fetch(`${API_URL}/staff`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: postHeaders,
         body: JSON.stringify(formData)
       })
       
@@ -296,7 +341,7 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
     }
   }
 
-  const openEditModal = (staff) => {
+  const openEditModal = (staff: any) => {
     setSelectedStaff(staff)
     setFormData({
       first_name: staff.first_name || '',
@@ -316,9 +361,13 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
     try {
       setSubmitting(true)
       
-      const response = await fetch(`${API_URL}/staff/${selectedStaff.id}`, {
+      const orgId = user?.activeOrgId || localStorage.getItem('dojo_active_org_id');
+      const putHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (orgId) putHeaders['x-organization-id'] = String(orgId);
+      const response = await fetch(`${API_URL}/staff/${(selectedStaff as any).id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: putHeaders,
         body: JSON.stringify(formData)
       })
       
@@ -338,7 +387,7 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
     }
   }
 
-  const openDeleteDialog = (staff) => {
+  const openDeleteDialog = (staff: any) => {
     setSelectedStaff(staff)
     setShowDeleteDialog(true)
   }
@@ -347,8 +396,9 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
     try {
       setSubmitting(true)
       
-      const response = await fetch(`${API_URL}/staff/${selectedStaff.id}`, {
-        method: 'DELETE'
+      const response = await fetch(`${API_URL}/staff/${(selectedStaff as any)?.id}`, {
+        method: 'DELETE',
+        credentials: 'include'
       })
       
       if (!response.ok) throw new Error('Failed to delete staff member')
@@ -366,7 +416,7 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
     }
   }
 
-  const filteredStaff = staffMembers.filter(staff =>
+  const filteredStaff = (staffMembersState as any[]).filter((staff: any) =>
     `${staff.first_name} ${staff.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
     staff.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     staff.role?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -466,7 +516,7 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredStaff.map((staff) => (
+            {filteredStaff.map((staff: any) => (
               <Card key={staff.id} className="hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">

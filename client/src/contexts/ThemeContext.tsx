@@ -28,7 +28,8 @@ function isMarketingRoute(pathname: string): boolean {
 }
 
 // App routes that should always render in light mode regardless of user preference
-const FORCED_LIGHT_ROUTES = ["/students"];
+// NOTE: /students was previously forced to light mode but this broke dark/cinematic themes (BUG-16)
+const FORCED_LIGHT_ROUTES: string[] = [];
 
 function isForcedLightRoute(pathname: string): boolean {
   return FORCED_LIGHT_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'));
@@ -126,6 +127,10 @@ export function ThemeProvider({
     // Add the current theme class
     root.classList.add(theme);
     root.classList.add(`${theme}-mode`);
+    // Cinematic is a dark variant - ensure Tailwind dark: classes apply
+    if (theme === 'cinematic') {
+      root.classList.add('dark');
+    }
     
     // Also set data attribute for CSS selectors
     root.setAttribute("data-theme", theme);

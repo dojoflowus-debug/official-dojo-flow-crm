@@ -299,7 +299,7 @@ export default function KanbanBoard({
                         ? 'bg-white/[0.02] border border-t-0 border-white/10' 
                         : 'bg-slate-50/50 border border-t-0 border-slate-200'
                       }
-                      ${isExpanded ? 'max-h-[600px]' : 'max-h-0'}
+                      ${isExpanded ? 'max-h-[calc(100vh-280px)]' : 'max-h-0'}
                       ${isHovered && draggedLeadId ? 'ring-2 ring-offset-0' : ''}
                     `}
                     style={{
@@ -309,7 +309,7 @@ export default function KanbanBoard({
                       e.preventDefault();
                     }}
                   >
-                    <div className="p-3 space-y-3 overflow-y-auto max-h-[550px] scrollbar-hide">
+                    <div className="p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-330px)] scrollbar-hide">
                       {stageLeads.length === 0 ? (
                         /* Empty State */
                         <div 

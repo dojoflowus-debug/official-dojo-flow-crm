@@ -33,6 +33,7 @@ import { setupModeRouter } from "./setupModeRouter";
 import { subscriptionRouter } from "./subscriptionRouter";
 import { welcomeMessageRouter } from "./welcomeMessageRouter";
 import { creditRouter } from "./creditRouter";
+import { floorPlansRouter } from "./floorPlansRouter";
 import { userRouter } from "./userRouter";
 import { platformRouter } from "./platformRouter";
 import { platformAdminAuthRouter } from "./platformAdminAuth";
@@ -662,7 +663,7 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       try { return typeof inviteResult === 'string' ? JSON.parse(inviteResult) : inviteResult; } catch { return inviteResult; }
     }
 
-    case 'list_staff': {
+     case 'list_staff': {
       const { checkKaiPermission, getUserRole } = await import('./staffPermissions');
       const userRole = await getUserRole(ctx);
       const perm = checkKaiPermission(userRole, 'list_staff');
@@ -670,7 +671,34 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       const { executeListStaff } = await import('./kai-tools');
       return await executeListStaff(args, ctx);
     }
-
+    case 'update_staff': {
+      const db = await getDb();
+      if (!db) return { error: 'Database not available' };
+      const orgId = ctx?.currentOrganizationId;
+      if (!orgId) return { error: 'No organization context' };
+      const { teamMembers: tmTable } = await import('../drizzle/schema');
+      const { eq: eqTm, and: andTm } = await import('drizzle-orm');
+      const staffId = args.staffId as number;
+      if (!staffId) return { error: 'staffId is required. Use list_staff to find the staff member first.' };
+      const updateData: Record<string, any> = {};
+      if (args.firstName !== undefined || args.lastName !== undefined) {
+        const existing = await db.select({ name: tmTable.name }).from(tmTable).where(andTm(eq(tmTable.id, staffId), eq(tmTable.organizationId, orgId))).limit(1);
+        const currentName = existing[0]?.name || '';
+        const parts = currentName.split(' ');
+        const newFirst = args.firstName ?? parts[0] ?? '';
+        const newLast = args.lastName ?? parts.slice(1).join(' ') ?? '';
+        updateData.name = `${newFirst} ${newLast}`.trim();
+      }
+      if (args.phone !== undefined) updateData.phone = args.phone || null;
+      if (args.bio !== undefined) updateData.focusAreas = args.bio ? JSON.stringify([args.bio]) : null;
+      if (args.role !== undefined) {
+        const roleMap: Record<string, string> = { instructor: 'instructor', coach: 'coach', trainer: 'trainer', assistant: 'assistant', manager: 'manager', front_desk: 'front_desk', admin: 'manager', owner: 'owner' };
+        updateData.role = roleMap[args.role] || args.role;
+      }
+      if (Object.keys(updateData).length === 0) return { error: 'No fields to update provided.' };
+      await db.update(tmTable).set(updateData).where(andTm(eq(tmTable.id, staffId), eq(tmTable.organizationId, orgId)));
+      return { success: true, message: `✅ Staff member updated successfully.` };
+    }
     case 'send_sms': {
       // Send SMS to a specific student by ID or phone number
       const { sendSMS, formatPhoneNumber } = await import('./services/twilio.js');
@@ -1112,6 +1140,7 @@ export const appRouter = router({
   setupMode: setupModeRouter,
   subscription: subscriptionRouter,
   credits: creditRouter,
+  floorPlans: floorPlansRouter,
   ownerProfile: ownerProfileRouter,
   user: userRouter,
   paymentProvider: paymentProviderRouter,
@@ -9279,20 +9308,28 @@ Membership plans available:
         const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
 
+        // Get org's student IDs for filtering tuition records
+        const orgStudentIdRows = orgId ? await db.select({ id: studentsTable.id }).from(studentsTable).where(eq(studentsTable.organizationId, orgId)) : [];
+        const orgStudentIds = orgStudentIdRows.map(s => s.id);
+        // Build a reusable org filter for tuition queries
+        const tuitionOrgFilter = orgId && orgStudentIds.length > 0
+          ? sql<boolean>`${studentTuition.studentId} IN (${sql.raw(orgStudentIds.join(','))})`
+          : orgId ? sql<boolean>`1=0` : sql<boolean>`1=1`;
+
         // Money collected - all time
-        const paidAll = await db.select({ total: sum(studentTuition.amount) }).from(studentTuition).where(eq(studentTuition.status, 'paid'));
+        const paidAll = await db.select({ total: sum(studentTuition.amount) }).from(studentTuition).where(and(eq(studentTuition.status, 'paid'), tuitionOrgFilter));
         const moneyCollectedTotal = Number(paidAll[0]?.total || 0);
 
         // Money collected - this month
-        const paidThisMonth = await db.select({ total: sum(studentTuition.amount) }).from(studentTuition).where(and(eq(studentTuition.status, 'paid'), gte(studentTuition.paidDate, thisMonthStart.toISOString())));
+        const paidThisMonth = await db.select({ total: sum(studentTuition.amount) }).from(studentTuition).where(and(eq(studentTuition.status, 'paid'), gte(studentTuition.paidDate, thisMonthStart.toISOString()), tuitionOrgFilter));
         const moneyCollectedThisMonth = Number(paidThisMonth[0]?.total || 0);
 
         // Money collected - last month
-        const paidLastMonth = await db.select({ total: sum(studentTuition.amount) }).from(studentTuition).where(and(eq(studentTuition.status, 'paid'), gte(studentTuition.paidDate, lastMonthStart.toISOString()), lte(studentTuition.paidDate, lastMonthEnd.toISOString())));
+        const paidLastMonth = await db.select({ total: sum(studentTuition.amount) }).from(studentTuition).where(and(eq(studentTuition.status, 'paid'), gte(studentTuition.paidDate, lastMonthStart.toISOString()), lte(studentTuition.paidDate, lastMonthEnd.toISOString()), tuitionOrgFilter));
         const moneyCollectedLastMonth = Number(paidLastMonth[0]?.total || 0);
 
         // Delinquent accounts (overdue or past-due pending)
-        const delinquentRows = await db.select({ studentId: studentTuition.studentId, totalOwed: sum(studentTuition.amount) }).from(studentTuition).where(or(eq(studentTuition.status, 'overdue'), and(eq(studentTuition.status, 'pending'), lt(studentTuition.dueDate, now.toISOString())))).groupBy(studentTuition.studentId);
+        const delinquentRows = await db.select({ studentId: studentTuition.studentId, totalOwed: sum(studentTuition.amount) }).from(studentTuition).where(and(or(eq(studentTuition.status, 'overdue'), and(eq(studentTuition.status, 'pending'), lt(studentTuition.dueDate, now.toISOString()))), tuitionOrgFilter)).groupBy(studentTuition.studentId);
         const delinquentWithNames = await Promise.all(delinquentRows.slice(0, 20).map(async (d) => {
           const s = await db.select({ firstName: studentsTable.firstName, lastName: studentsTable.lastName, email: studentsTable.email }).from(studentsTable).where(eq(studentsTable.id, d.studentId)).limit(1);
           return { studentId: d.studentId, name: s[0] ? `${s[0].firstName} ${s[0].lastName}` : 'Unknown', email: s[0]?.email || '', amountOwed: Number(d.totalOwed || 0) };

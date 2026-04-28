@@ -9532,3 +9532,26 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Frontend: Kai command handler for "analyze website" / URL detection
 - [ ] Frontend: KaiWebsiteAnalyzer modal (progress steps + field preview + confirm/save)
 - [ ] Wire up to KaiAssistant processCommand
+
+## Bug Report Batch (Apr 27 2026)
+
+- [ ] BUG-01: Kai AI not responding properly or attaching files immediately
+- [ ] BUG-02: Kai staff update fails with john.doe@example.com error
+- [ ] BUG-03: Image generation inaccurate (branding DNA, spelling errors)
+- [ ] BUG-04: Leads page doesn't scroll vertically
+- [ ] BUG-05: Focus mode can't be disabled on Android
+- [ ] BUG-06: Theme change not displaying properly for light mode and cinema
+- [ ] BUG-07: Reports/Analysis page has predefined static values instead of real data
+- [ ] BUG-08: Staff creation allows empty form (no required field validation)
+- [ ] BUG-09: Unable to create new classes because of floor plans error
+- [ ] BUG-10: Equipment setup adds a zero before all values entered
+- [ ] BUG-11: Profile address fields need dropdowns (state, city, country)
+- [ ] BUG-12: 20-step AI onboarding prevents AI from working properly
+- [ ] BUG-13: Verification code not working for non-Google emails
+- [ ] BUG-14: Kai has trouble remembering previous session context
+- [ ] BUG-15: AI credits remain stuck at 984 (not updating/deducting)
+- [ ] BUG-16: Student tab and Payment tab switch to light theme on dark mode
+- [ ] BUG-17: Site still on old version (not deployed to dojo-flow.ai)
+- [ ] BUG-18: New staff member added but doesn't show in staff page
+- [ ] BUG-19: Programs not added to kiosk even when toggle is on
+- [ ] BUG-20: Kiosk removes bottom navigation completely

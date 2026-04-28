@@ -392,7 +392,7 @@ export const classesRouter = router({
         and(
           eq(teamMembers.organizationId, organizationId),
           eq(teamMembers.isActive, 1),
-          inArray(teamMembers.role, ['instructor', 'coach', 'trainer', 'manager', 'owner'])
+          inArray(teamMembers.role, ['instructor', 'coach', 'trainer', 'manager', 'owner', 'front_desk', 'assistant'])
         )
       );
 

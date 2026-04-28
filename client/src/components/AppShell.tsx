@@ -41,7 +41,7 @@ const NAVIGATION = [
   { id: 'kai-command', name: 'Kai', href: '/kai', icon: Sparkles, isCenter: true },
   { id: 'classes', name: 'Classes', href: '/classes', icon: Calendar },
   { id: 'merchandise', name: 'Merchandise', href: '/merchandise', icon: Package },
-  { id: 'kiosk-studio', name: 'Kiosk', href: '/kiosk-home', icon: Grid3x3 },
+  { id: 'kiosk-studio', name: 'Kiosk', href: '/kiosk-studio', icon: Grid3x3 },
   { id: 'staff', name: 'Staff', href: '/staff', icon: UserCog },
   { id: 'programs', name: 'Programs', href: '/programs', icon: BookOpen },
   { id: 'payments-dashboard', name: 'Payments', href: '/payments/dashboard', icon: Wallet },
@@ -61,7 +61,7 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
   const { theme } = useTheme()
   const { isFocusMode, toggleFocusMode, showOverlay, isEntering, showEscHint } = useFocusMode()
   
-  const isDark = theme === 'dark'
+  const isDark = theme === 'dark' || theme === 'cinematic'
   const isCinematic = theme === 'cinematic'
   const isKaiRoute = location.pathname === '/kai'
   
@@ -320,7 +320,7 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
       />
 
         {/* ESC Hint Label */}
-        <EscHintLabel show={showEscHint} />
+        <EscHintLabel show={showEscHint} onExit={toggleFocusMode} />
       </div>
 
       {/* Global KaiBar - Fixed at app root level */}

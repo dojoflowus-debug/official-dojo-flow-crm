@@ -677,7 +677,7 @@ async function startServer() {
         return res.status(500).json({ error: "Database not available" });
       }
       
-      // Get organization ID from session cookie
+      // Get organization ID from session cookie or x-organization-id header
       let organizationId: number | null = null;
       const sessionCookie = req.cookies?.session;
       if (sessionCookie) {
@@ -687,6 +687,14 @@ async function startServer() {
         } catch (e) {
           console.log('[API] Error parsing session cookie:', e);
           // Invalid session data, ignore
+        }
+      }
+      // Fallback: check x-organization-id header (sent by tRPC client)
+      if (!organizationId) {
+        const headerOrgId = req.headers['x-organization-id'];
+        if (headerOrgId) {
+          const parsed = parseInt(String(headerOrgId));
+          if (!isNaN(parsed)) organizationId = parsed;
         }
       }
       
@@ -736,7 +744,7 @@ async function startServer() {
         return res.status(500).json({ error: "Database not available" });
       }
       
-      // Get organization ID from session cookie
+      // Get organization ID from session cookie or x-organization-id header
       let organizationId: number | null = null;
       const sessionCookie = req.cookies?.session;
       if (sessionCookie) {
@@ -748,9 +756,31 @@ async function startServer() {
           // Invalid session data, ignore
         }
       }
+      // Fallback: check x-organization-id header (sent by tRPC client)
+      if (!organizationId) {
+        const headerOrgId = req.headers['x-organization-id'];
+        if (headerOrgId) {
+          const parsed = parseInt(String(headerOrgId));
+          if (!isNaN(parsed)) organizationId = parsed;
+        }
+      }
       
       const { first_name, last_name, email, phone, role, bio, photo_url } = req.body;
-      const fullName = `${first_name || ''} ${last_name || ''}`.trim() || 'Staff Member';
+      // Server-side validation
+      if (!first_name || !String(first_name).trim()) {
+        return res.status(400).json({ error: 'First name is required' });
+      }
+      if (!last_name || !String(last_name).trim()) {
+        return res.status(400).json({ error: 'Last name is required' });
+      }
+      if (!email || !String(email).trim()) {
+        return res.status(400).json({ error: 'Email address is required' });
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(String(email).trim())) {
+        return res.status(400).json({ error: 'Please enter a valid email address' });
+      }
+      const fullName = `${String(first_name).trim()} ${String(last_name).trim()}`.trim();
       
       // Map frontend role to schema role
       const roleMap: Record<string, string> = {

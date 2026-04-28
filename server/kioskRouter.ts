@@ -359,6 +359,41 @@ export const kioskRouter = router({
   }),
 
   /**
+   * Get programs available for kiosk display (showOnKiosk = 1)
+   */
+  getPrograms: publicProcedure
+    .input(z.object({ locationSlug: z.string() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.db) return [];
+      const { programs: programsTable } = await import('../drizzle/schema');
+      const { and } = await import('drizzle-orm');
+      // Find org from location slug
+      const location = await ctx.db
+        .select({ organizationId: locations.organizationId })
+        .from(locations)
+        .where(eq(locations.kioskSlug, input.locationSlug))
+        .limit(1);
+      if (!location[0]?.organizationId) return [];
+      const orgId = location[0].organizationId;
+      const rows = await ctx.db
+        .select()
+        .from(programsTable)
+        .where(and(eq(programsTable.organizationId, orgId), eq(programsTable.showOnKiosk, 1), eq(programsTable.isActive, 1)));
+      return rows.map(p => ({
+        id: p.id,
+        name: p.name,
+        type: p.type,
+        ageRange: p.ageRange,
+        price: p.price,
+        billing: p.billing,
+        description: p.description,
+        trialType: p.trialType,
+        trialLengthDays: p.trialLengthDays,
+        trialPrice: p.trialPrice,
+      }));
+    }),
+
+  /**
    * Get all preset backgrounds
    */
   getPresetBackgrounds: publicProcedure.query(async ({ ctx }) => {

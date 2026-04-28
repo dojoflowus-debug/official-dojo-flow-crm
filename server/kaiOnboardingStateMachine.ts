@@ -111,29 +111,16 @@ function parsePrograms(text: string): string[] {
 }
 
 // ─── Ordered flow builder ─────────────────────────────────────────────────────
-
-function buildFlow(hasMartialArts: boolean): OnboardingStep[] {
+// Reduced to 8 essential steps so Kai can start working immediately after setup
+// Additional profile details (logo, address, branding) can be set in Settings later
+function buildFlow(_hasMartialArts: boolean): OnboardingStep[] {
   return [
     "name",
     "title",
-    "profile_photo",
-    "programs",
-    ...(hasMartialArts ? ["rank" as OnboardingStep] : []),
     "school_name",
-    "display_name",
-    "tagline",
-    ...(hasMartialArts ? ["martial_style" as OnboardingStep] : []),
-    "address",
-    "city_state_zip",
-    "country",
-    "phone",
+    "programs",
     "email",
-    "website",
-    "logo_light",
-    "logo_dark",
-    "icon_logo_light",
-    "icon_logo_dark",
-    "brand_colors",
+    "phone",
     "timezone",
     "currency",
     "complete",

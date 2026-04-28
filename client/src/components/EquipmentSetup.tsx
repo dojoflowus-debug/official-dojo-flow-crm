@@ -21,14 +21,18 @@ export function EquipmentSetup({
   onGenerateStations,
   isLoading = false,
 }: EquipmentSetupProps) {
-  const [localBagsOnHand, setLocalBagsOnHand] = useState(bagsOnHand);
-  const [localBagsInstalled, setLocalBagsInstalled] = useState(bagsInstalled);
+  const [localBagsOnHand] = useState(bagsOnHand);
+  // Use string state so the input doesn't prepend a "0" when user starts typing
+  const [bagsInstalledStr, setBagsInstalledStr] = useState(String(bagsInstalled || 0));
   const [selectedLayout, setSelectedLayout] = useState(defaultLayout || "grid");
   const [validationError, setValidationError] = useState("");
 
+  const localBagsInstalled = parseInt(bagsInstalledStr) || 0;
+
   const handleBagsInstalledChange = (value: string) => {
-    const num = parseInt(value) || 0;
-    setLocalBagsInstalled(num);
+    // Strip leading zeros when the user types a non-zero digit
+    const cleaned = value.replace(/^0+(\d)/, '$1');
+    setBagsInstalledStr(cleaned);
     setValidationError("");
   };
 
@@ -73,8 +77,9 @@ export function EquipmentSetup({
           type="number"
           min="0"
           max={localBagsOnHand}
-          value={localBagsInstalled}
+          value={bagsInstalledStr}
           onChange={(e) => handleBagsInstalledChange(e.target.value)}
+          onBlur={() => setBagsInstalledStr(String(localBagsInstalled))}
           className="bg-white/10 border-white/20 text-white"
           disabled={isLoading}
         />

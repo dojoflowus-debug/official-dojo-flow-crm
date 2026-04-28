@@ -6,10 +6,19 @@ interface EquipmentSetupPanelV2Props {
   onSave?: (bagsOnHand: number, bagsInstalled: number, layout: string) => void;
 }
 
+function stripLeadingZeros(value: string): string {
+  // Allow empty string, single '0', or strip leading zeros before non-zero digits
+  if (value === '' || value === '0') return value;
+  return value.replace(/^0+(\d)/, '$1');
+}
+
 export function EquipmentSetupPanelV2({ templateType, onGenerateStations, onSave }: EquipmentSetupPanelV2Props) {
-  const [bagsOnHand, setBagsOnHand] = useState(0);
-  const [bagsInstalled, setBagsInstalled] = useState(0);
+  const [bagsOnHandStr, setBagsOnHandStr] = useState('0');
+  const [bagsInstalledStr, setBagsInstalledStr] = useState('0');
   const [layout, setLayout] = useState('grid');
+
+  const bagsOnHand = parseInt(bagsOnHandStr) || 0;
+  const bagsInstalled = parseInt(bagsInstalledStr) || 0;
 
   const isValid = bagsInstalled <= bagsOnHand && bagsInstalled > 0;
   const isKickboxing = templateType === 'kickboxing_bags';
@@ -43,8 +52,8 @@ export function EquipmentSetupPanelV2({ templateType, onGenerateStations, onSave
         <input
           type="number"
           min="0"
-          value={bagsOnHand}
-          onChange={(e) => setBagsOnHand(Math.max(0, parseInt(e.target.value) || 0))}
+          value={bagsOnHandStr}
+          onChange={(e) => setBagsOnHandStr(stripLeadingZeros(e.target.value))}
           className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
         />
         <p className="text-xs text-slate-400 mt-1">Total bags available at your location</p>
@@ -59,8 +68,8 @@ export function EquipmentSetupPanelV2({ templateType, onGenerateStations, onSave
           type="number"
           min="0"
           max={bagsOnHand}
-          value={bagsInstalled}
-          onChange={(e) => setBagsInstalled(Math.max(0, parseInt(e.target.value) || 0))}
+          value={bagsInstalledStr}
+          onChange={(e) => setBagsInstalledStr(stripLeadingZeros(e.target.value))}
           className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
         />
         <p className="text-xs text-slate-400 mt-1">{bagsInstalled} of {bagsOnHand} bags</p>

@@ -93,6 +93,7 @@ const KioskStudioBuilder2 = lazy(() => import("../pages/KioskStudioBuilder2"));
 const KioskStudioSimplified = lazy(() => import("../pages/KioskStudioSimplified"));
 const KioskStudioExact = lazy(() => import("../pages/KioskStudioExact"));
 const KioskHome = lazy(() => import("../pages/KioskHome"));
+const KioskPrograms = lazy(() => import("../pages/KioskPrograms"));
 const KioskArcade = lazy(() => import("../pages/KioskArcade"));
 const KioskLive = lazy(() => import("../pages/KioskLive").then(m => ({ default: m.KioskLive })));
 const LeadCapture = lazy(() => import("../pages/LeadCapture").then(m => ({ default: m.LeadCapture })));
@@ -217,6 +218,7 @@ export const appRoutes: RouteConfig[] = [
   { path: "/kiosk/:locationSlug/student-login", element: <KioskStudentAuth />, label: "Kiosk Student Login" },
   { path: "/kiosk/:locationSlug/checkin", element: <KioskCheckIn />, label: "Kiosk Check In" },
   { path: "/kiosk/:locationSlug/new-student", element: <KioskNewStudent />, label: "Kiosk New Student" },
+  { path: "/kiosk/:locationSlug/programs", element: <KioskPrograms />, label: "Kiosk Programs" },
   { path: "/enrollment", element: <EnrollmentStart />, label: "Enrollment Start" },
   { path: "/enrollment/form", element: <EnrollmentForm />, label: "Enrollment Form" },
   { path: "/enrollment/kai", element: <KaiEnrollment />, label: "Kai Enrollment" },
