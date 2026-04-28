@@ -43,6 +43,7 @@ import { useKaiTutorial } from '@/contexts/KaiTutorialContext';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useMobileLayout } from '@/hooks/useMobileLayout';
 import '@/styles/kai-light-command-center.css';
+import VoiceInput from '@/components/VoiceInput';
 
 // Global layout constants for unified chat layout
 const LAYOUT_CONSTANTS = {
@@ -5889,6 +5890,19 @@ export default function KaiCommand() {
               variant="apple"
             />
 
+            {/* Voice Input Button */}
+            <VoiceInput
+              onTranscript={(text) => setMessageInput(prev => prev ? prev + ' ' + text : text)}
+              autoSubmit={true}
+              onAutoSubmit={() => handleSendMessage('submit')}
+              className={
+                isCinematic
+                  ? 'text-white hover:text-white hover:bg-white/20'
+                  : isDark
+                  ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+              }
+            />
             {/* Send Button */}
             <Button
               type="submit"

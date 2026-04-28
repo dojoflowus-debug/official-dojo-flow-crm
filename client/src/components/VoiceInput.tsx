@@ -7,9 +7,10 @@ interface VoiceInputProps {
   onListeningChange?: (isListening: boolean) => void;
   autoSubmit?: boolean;
   onAutoSubmit?: () => void;
+  className?: string;
 }
 
-export default function VoiceInput({ onTranscript, onListeningChange, autoSubmit = false, onAutoSubmit }: VoiceInputProps) {
+export default function VoiceInput({ onTranscript, onListeningChange, autoSubmit = false, onAutoSubmit, className }: VoiceInputProps) {
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -149,13 +150,17 @@ export default function VoiceInput({ onTranscript, onListeningChange, autoSubmit
 
   return (
     <Button
+      type="button"
       onClick={toggleListening}
-      variant={isListening ? "default" : "outline"}
+      variant="ghost"
       size="icon"
-      className={isListening ? "bg-red-500 hover:bg-red-600 animate-pulse" : ""}
+      className={isListening
+        ? `h-9 w-9 rounded-full flex-shrink-0 bg-red-500 hover:bg-red-600 text-white animate-pulse ${className || ''}`
+        : `h-9 w-9 rounded-full flex-shrink-0 ${className || ''}`
+      }
       title={isListening ? "Stop listening" : "Start voice input"}
     >
-      {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+      {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
     </Button>
   );
 }
