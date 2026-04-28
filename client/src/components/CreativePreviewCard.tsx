@@ -5,14 +5,15 @@
  *  - Generated image preview (click to open fullscreen lightbox)
  *  - Prompt used
  *  - "Saved to Library" badge (when applicable)
- *  - Action buttons: Open in Creative, Edit, Retry, Download
+ *  - Action buttons: Save to Library, Download, Open in Creative, Edit, Retry
  */
 
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Download, ExternalLink, Edit3, RefreshCw, Sparkles, CheckCircle2, ZoomIn } from "lucide-react";
+import { Download, ExternalLink, Edit3, RefreshCw, Sparkles, CheckCircle2, ZoomIn, BookmarkPlus, Loader2 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import ImageLightbox from "@/components/ImageLightbox";
+import { trpc } from "@/lib/trpc";
 
 export interface CreativePreviewCardData {
   imageUrl: string;
@@ -45,6 +46,29 @@ export function CreativePreviewCard({ data, onRetry, onEdit }: CreativePreviewCa
   const isCinematic = theme === "cinematic";
 
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [isSaved, setIsSaved] = useState(data.savedToLibrary);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const saveAssetMutation = trpc.kaiCreative.saveGeneratedAsset.useMutation({
+    onSuccess: () => {
+      setIsSaved(true);
+      setSaveError(null);
+    },
+    onError: (err) => {
+      setSaveError(err.message ?? "Save failed. Please try again.");
+    },
+  });
+
+  const handleSaveToLibrary = () => {
+    if (isSaved || saveAssetMutation.isPending) return;
+    setSaveError(null);
+    saveAssetMutation.mutate({
+      imageBase64: data.imageBase64,
+      mimeType: data.mimeType,
+      prompt: data.prompt,
+      size: data.size,
+    });
+  };
 
   const handleDownload = () => {
     const a = document.createElement("a");
@@ -132,7 +156,7 @@ export function CreativePreviewCard({ data, onRetry, onEdit }: CreativePreviewCa
             </span>
           </div>
           {/* Saved badge */}
-          {data.savedToLibrary && (
+          {isSaved && (
             <div className="absolute top-2 right-2">
               <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 backdrop-blur-sm border border-green-500/30">
                 <CheckCircle2 className="w-3 h-3" />
@@ -149,12 +173,45 @@ export function CreativePreviewCard({ data, onRetry, onEdit }: CreativePreviewCa
           </p>
         </div>
 
+        {/* Save error */}
+        {saveError && (
+          <div className="px-3 pb-1">
+            <p className="text-xs text-red-400">{saveError}</p>
+          </div>
+        )}
+
         {/* Action buttons */}
         <div className="p-3 grid grid-cols-2 gap-2">
-          {/* Download — primary */}
+          {/* Save to Library — primary CTA when not yet saved */}
+          {!isSaved ? (
+            <button
+              onClick={handleSaveToLibrary}
+              disabled={saveAssetMutation.isPending}
+              className="col-span-2 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-green-600 hover:bg-green-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
+            >
+              {saveAssetMutation.isPending ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                <>
+                  <BookmarkPlus className="w-3.5 h-3.5" />
+                  Save to Library
+                </>
+              )}
+            </button>
+          ) : (
+            <div className="col-span-2 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-green-600/20 border border-green-500/30 text-green-400 text-sm font-semibold">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Saved to Library
+            </div>
+          )}
+
+          {/* Download */}
           <button
             onClick={handleDownload}
-            className="col-span-2 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-semibold transition-colors"
+            className={`flex items-center justify-center gap-1.5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold transition-colors`}
           >
             <Download className="w-3.5 h-3.5" />
             Download
@@ -182,7 +239,7 @@ export function CreativePreviewCard({ data, onRetry, onEdit }: CreativePreviewCa
           {onRetry && (
             <button
               onClick={onRetry}
-              className={`col-span-2 flex items-center justify-center gap-1.5 py-1.5 rounded-xl border text-xs font-medium transition-colors ${btnBase}`}
+              className={`flex items-center justify-center gap-1.5 py-1.5 rounded-xl border text-xs font-medium transition-colors ${btnBase}`}
             >
               <RefreshCw className="w-3 h-3" />
               Retry

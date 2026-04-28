@@ -849,6 +849,50 @@ export const kaiCreativeRouter = router({
       };
     }),
 
+  // ── saveGeneratedAsset: manual save from chat card when auto-save failed ──────
+  saveGeneratedAsset: orgScopedProcedure
+    .input(
+      z.object({
+        imageBase64: z.string(),
+        mimeType: z.string().default("image/png"),
+        prompt: z.string().max(2000),
+        size: z.string().default("flyer"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const orgId = ctx.currentOrganizationId as number;
+      const buffer = Buffer.from(input.imageBase64, "base64");
+      const ext = input.mimeType.includes("jpeg") ? "jpg" : "png";
+      const key = `creative/${orgId}/generated/${Date.now()}.${ext}`;
+      let uploadUrl: string;
+      let uploadKey: string | null = null;
+      try {
+        const result = await storagePut(key, buffer, input.mimeType);
+        uploadUrl = result.url;
+        uploadKey = result.key;
+      } catch {
+        uploadUrl = `data:${input.mimeType};base64,${input.imageBase64}`;
+      }
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      const inserted = await db
+        .insert(creativeAssets)
+        .values({
+          orgId,
+          assetType: "generated",
+          name: `Chat — ${input.prompt.slice(0, 60)}`,
+          url: uploadUrl,
+          storageKey: uploadKey,
+          prompt: input.prompt,
+          outputSize: input.size,
+          mimeType: input.mimeType,
+          createdBy: ctx.user?.id ?? null,
+        })
+        .$returningId();
+      const assetId = (inserted as any)?.[0]?.id ?? null;
+      return { assetId, url: uploadUrl, savedToLibrary: true };
+    }),
+
   // ── Generate marketing copy: OpenAI-powered copywriting for flyers/ads ───────
   generateCopy: orgScopedProcedure
     .input(
