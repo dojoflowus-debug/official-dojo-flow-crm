@@ -39,7 +39,7 @@ import { Button } from "@/components/ui/button";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type Mode = "create" | "edit" | "logo";
-type ImageSize = "instagram_post" | "instagram_story" | "facebook_ad" | "flyer" | "website_banner";
+type ImageSize = "instagram_post" | "instagram_story" | "facebook_ad" | "flyer" | "website_banner" | "business_card";
 
 interface GeneratedResult {
   imageUrl: string;
@@ -52,11 +52,12 @@ interface GeneratedResult {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const SIZES: { id: ImageSize; label: string; ratio: string; description: string }[] = [
-  { id: "instagram_post",  label: "Instagram Post",  ratio: "1:1",  description: "1080×1080" },
-  { id: "instagram_story", label: "Instagram Story", ratio: "9:16", description: "1080×1920" },
-  { id: "facebook_ad",     label: "Facebook Ad",     ratio: "4:5",  description: "1080×1350" },
-  { id: "flyer",           label: "Flyer",           ratio: "3:4",  description: "1080×1440" },
-  { id: "website_banner",  label: "Website Banner",  ratio: "16:9", description: "1920×1080" },
+  { id: "instagram_post",  label: "Instagram Post",  ratio: "1:1",   description: "1080×1080" },
+  { id: "instagram_story", label: "Instagram Story", ratio: "9:16",  description: "1080×1920" },
+  { id: "facebook_ad",     label: "Facebook Ad",     ratio: "4:5",   description: "1080×1350" },
+  { id: "flyer",           label: "Flyer",           ratio: "3:4",   description: "1080×1440" },
+  { id: "website_banner",  label: "Website Banner",  ratio: "16:9",  description: "1920×1080" },
+  { id: "business_card",   label: "Business Card",   ratio: "7:4",   description: "1050×600 · Print-ready" },
 ];
 
 const PROMPT_SUGGESTIONS = [

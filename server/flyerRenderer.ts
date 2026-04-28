@@ -124,7 +124,7 @@ export interface FlyerData {
   testimonial?: string | null;
 
   // Layout
-  size?: "flyer" | "instagram_post" | "instagram_story" | "facebook_ad" | "website_banner";
+  size?: "flyer" | "instagram_post" | "instagram_story" | "facebook_ad" | "website_banner" | "business_card";
   style?: "bold" | "clean" | "cinematic" | "playful";
 
   // Hero image (base64 data URL or external URL)
@@ -141,6 +141,8 @@ const SIZE_DIMS: Record<string, { width: number; height: number }> = {
   instagram_story: { width: 1080, height: 1920 },
   facebook_ad:     { width: 1200, height: 1500 },
   website_banner:  { width: 1200, height: 628 },
+  // Business card: 3.5" × 2" at 300dpi = 1050 × 600px
+  business_card:   { width: 1050, height: 600 },
 };
 
 // ── Color helpers ─────────────────────────────────────────────────────────────
@@ -177,8 +179,11 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#039;");
 }
 
-// ── HTML template builder — Cinematic full-bleed layout ───────────────────────
+// ── HTML template builder — Cinematic full-bleed layout ────────────────────────────────────
 export function buildFlyerHtml(data: FlyerData): string {
+  // Route business card to its own template
+  if (data.size === 'business_card') return buildBusinessCardHtml(data);
+
   const primary = data.primaryColor || "#C8102E";
   const secondary = data.secondaryColor || "#1A1A1A";
   const darkPrimary = darken(primary, 0.3);
@@ -573,6 +578,218 @@ export function buildFlyerHtml(data: FlyerData): string {
   </div>` : ""}
   <div class="bottom-stripe"></div>
 
+</div>
+</body>
+</html>`;
+}
+
+// ── Business card HTML template ─────────────────────────────────────────────
+export function buildBusinessCardHtml(data: FlyerData): string {
+  const primary = data.primaryColor || "#C8102E";
+  const secondary = data.secondaryColor || "#1A1A1A";
+  const dims = SIZE_DIMS.business_card; // 1050 × 600
+
+  const schoolName = escapeHtml(data.schoolName || "Your Dojo");
+  const tagline = escapeHtml(data.tagline || "Martial Arts · Self-Defense · Fitness");
+  const phone = data.phone ? escapeHtml(data.phone) : null;
+  const email = data.email ? escapeHtml(data.email) : null;
+  const website = data.website ? escapeHtml(data.website) : null;
+  const address = data.address ? escapeHtml(data.address) : null;
+
+  // Logo or wordmark
+  const logoHtml = data.logoUrl
+    ? `<img class="bc-logo" src="${data.logoUrl}" alt="${schoolName}" />`
+    : `<div class="bc-wordmark">${schoolName}</div>`;
+
+  // QR code (right side)
+  const qrHtml = data.qrCodeDataUrl
+    ? `<div class="bc-qr-block">
+        <img class="bc-qr" src="${data.qrCodeDataUrl}" alt="QR" />
+        <div class="bc-qr-label">Scan to Connect</div>
+       </div>`
+    : "";
+
+  // Contact rows
+  const contactRows = [
+    phone  ? `<div class="bc-contact-row"><span class="bc-icon">📞</span><span>${phone}</span></div>` : "",
+    email  ? `<div class="bc-contact-row"><span class="bc-icon">✉</span><span>${email}</span></div>` : "",
+    website? `<div class="bc-contact-row"><span class="bc-icon">🌐</span><span>${website}</span></div>` : "",
+    address? `<div class="bc-contact-row"><span class="bc-icon">📍</span><span>${address}</span></div>` : "",
+  ].filter(Boolean).join("\n");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Open+Sans:wght@400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    width: ${dims.width}px;
+    height: ${dims.height}px;
+    overflow: hidden;
+    font-family: 'Montserrat', sans-serif;
+    background: ${secondary};
+  }
+
+  /* ── Card canvas ── */
+  .bc {
+    width: ${dims.width}px;
+    height: ${dims.height}px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    background: ${secondary};
+  }
+
+  /* ── Left accent stripe ── */
+  .bc-stripe {
+    width: 12px;
+    background: ${primary};
+    flex-shrink: 0;
+  }
+
+  /* ── Left panel: logo + tagline ── */
+  .bc-left {
+    width: 380px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 36px;
+    background: ${secondary};
+    border-right: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+  }
+
+  .bc-logo {
+    max-height: 80px;
+    max-width: 260px;
+    object-fit: contain;
+    margin-bottom: 16px;
+  }
+
+  .bc-wordmark {
+    font-size: 28px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+
+  .bc-tagline {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    line-height: 1.5;
+  }
+
+  /* ── Accent dot ── */
+  .bc-dot {
+    width: 8px;
+    height: 8px;
+    background: ${primary};
+    border-radius: 50%;
+    margin-bottom: 12px;
+  }
+
+  /* ── Right panel: contact info ── */
+  .bc-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 36px;
+    gap: 0;
+  }
+
+  .bc-contact-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.88);
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-family: 'Open Sans', sans-serif;
+  }
+
+  .bc-contact-row:last-child { border-bottom: none; }
+
+  .bc-icon {
+    font-size: 14px;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+    color: ${primary};
+  }
+
+  /* ── QR code block ── */
+  .bc-qr-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 28px;
+    border-left: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+  }
+
+  .bc-qr {
+    width: 100px;
+    height: 100px;
+    border-radius: 6px;
+    background: #fff;
+    padding: 4px;
+  }
+
+  .bc-qr-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  /* ── Bottom color bar ── */
+  .bc-bottom-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 5px;
+    background: ${primary};
+  }
+
+</style>
+</head>
+<body>
+<div class="bc">
+  <div class="bc-stripe"></div>
+
+  <!-- Left: Logo + tagline -->
+  <div class="bc-left">
+    <div class="bc-dot"></div>
+    ${logoHtml}
+    <div class="bc-tagline">${tagline}</div>
+  </div>
+
+  <!-- Right: Contact info -->
+  <div class="bc-right">
+    ${contactRows}
+  </div>
+
+  <!-- QR code -->
+  ${qrHtml}
+
+  <div class="bc-bottom-bar"></div>
 </div>
 </body>
 </html>`;

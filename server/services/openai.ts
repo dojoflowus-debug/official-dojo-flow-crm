@@ -418,8 +418,8 @@ const crmTools = [
           },
           size: {
             type: 'string',
-            enum: ['flyer', 'instagram_post', 'instagram_story', 'facebook_ad', 'website_banner'],
-            description: 'Output format. Use "flyer" for general flyers/posters, "instagram_post" for square social posts, "instagram_story" for vertical stories, "facebook_ad" for Facebook ads, "website_banner" for wide banners. Default: flyer.',
+            enum: ['flyer', 'instagram_post', 'instagram_story', 'facebook_ad', 'website_banner', 'business_card'],
+            description: 'Output format. Use "flyer" for general flyers/posters, "instagram_post" for square social posts, "instagram_story" for vertical stories, "facebook_ad" for Facebook ads, "website_banner" for wide banners, "business_card" for professional business cards (3.5"×2" print-ready). Default: flyer.',
           },
           program: {
             type: 'string',

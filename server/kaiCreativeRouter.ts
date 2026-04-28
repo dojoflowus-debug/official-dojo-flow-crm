@@ -46,6 +46,7 @@ import {
 // ── Zod schemas ───────────────────────────────────────────────────────────────
 
 const imageSizeSchema = z.enum([
+  "business_card",
   "instagram_post",
   "instagram_story",
   "facebook_ad",
@@ -931,7 +932,7 @@ export async function generateFlyerFromKai(
   assetId: number | null;
   savedToLibrary: boolean;
 }> {
-  const validSize = ['flyer', 'instagram_post', 'instagram_story', 'facebook_ad', 'website_banner'].includes(size)
+  const validSize = ['flyer', 'instagram_post', 'instagram_story', 'facebook_ad', 'website_banner', 'business_card'].includes(size)
     ? size as ImageSize
     : 'flyer' as ImageSize;
 
