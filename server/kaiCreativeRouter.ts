@@ -971,6 +971,7 @@ export async function generateFlyerFromKai(
     'Typography: Bold modern sans-serif fonts (Bebas Neue or Impact for headlines, clean sans-serif for body). NO handwriting fonts.',
     'Style: Cinematic, professional, high-contrast. Real photography. Print-ready quality.',
     'CRITICAL: Use REAL PHOTOGRAPHIC images of martial arts students. NO cartoons, NO illustrations, NO anime, NO 3D renders.',
+    'CRITICAL: Do NOT draw any logo, shield, crest, or emblem anywhere on the flyer. Leave the top-left corner (200x100px area) as a clean dark/semi-transparent background for a logo to be placed later.',
     'Include a small white square placeholder in the bottom-right corner labeled "QR" for a QR code.',
   ].filter(Boolean).join('\n');
 
@@ -1006,6 +1007,46 @@ export async function generateFlyerFromKai(
     }
   } catch (qrErr: any) {
     console.warn('[KaiCreative] QR compositing failed (non-blocking):', qrErr?.message);
+  }
+
+  // Composite real school logo on top using sharp (top-left corner)
+  const logoUrl = brand.logoUrl;
+  if (logoUrl && (logoUrl.startsWith('http') || logoUrl.startsWith('data:'))) {
+    try {
+      const sharp = (await import('sharp')).default;
+      let logoBuf: Buffer;
+      if (logoUrl.startsWith('data:')) {
+        const b64 = logoUrl.replace(/^data:[^;]+;base64,/, '');
+        logoBuf = Buffer.from(b64, 'base64');
+      } else {
+        const { default: https } = await import('https');
+        const { default: http } = await import('http');
+        logoBuf = await new Promise<Buffer>((resolve, reject) => {
+          const client = logoUrl.startsWith('https') ? https : http;
+          client.get(logoUrl, (res) => {
+            const chunks: Buffer[] = [];
+            res.on('data', (c: Buffer) => chunks.push(c));
+            res.on('end', () => resolve(Buffer.concat(chunks)));
+            res.on('error', reject);
+          }).on('error', reject);
+        });
+      }
+      // Resize logo to max 160px wide, maintain aspect ratio
+      const logoResized = await sharp(logoBuf)
+        .resize(160, 80, { fit: 'inside', withoutEnlargement: true })
+        .png()
+        .toBuffer();
+      const mainBuf2 = Buffer.from(imageBase64, 'base64');
+      const composited2 = await sharp(mainBuf2)
+        .composite([{ input: logoResized, left: 20, top: 20, blend: 'over' }])
+        .png()
+        .toBuffer();
+      imageBase64 = composited2.toString('base64');
+      mimeType = 'image/png';
+      console.log('[KaiCreative] School logo composited onto flyer successfully');
+    } catch (logoErr: any) {
+      console.warn('[KaiCreative] Logo compositing failed (non-blocking):', logoErr?.message);
+    }
   }
 
   const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
