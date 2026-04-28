@@ -951,34 +951,9 @@ export async function generateFlyerFromKai(
 
   const resolvedStyle = parseStyleFromText(prompt);
 
-  // Use HTML flyer renderer for flyer/social sizes
-  const isFlyerSize = validSize === 'flyer' || validSize === 'instagram_post' ||
-    validSize === 'instagram_story' || validSize === 'facebook_ad';
-
-  let result: { imageBase64: string; mimeType: string };
-
-  if (isFlyerSize) {
-    const flyerData = await parseFlyerDataFromBrief(
-      enrichedPrompt,
-      {},
-      {
-        schoolName: brand.schoolName ?? null,
-        phone: brand.phone ?? null,
-        email: (brand as any).email ?? null,
-        website: brand.website ?? null,
-        primaryColor: brand.primaryColor ?? null,
-        secondaryColor: brand.secondaryColor ?? null,
-        logoUrl: brand.logoUrl ?? null,
-        address: brand.address ?? null,
-      },
-      validSize
-    );
-    const html = buildFlyerHtml(flyerData);
-    const pngBuffer = await renderFlyerToPng(html, flyerData.size);
-    result = { imageBase64: pngBuffer.toString('base64'), mimeType: 'image/png' };
-  } else {
-    result = await generateImage(enrichedPrompt, validSize, brand, resolvedStyle);
-  }
+  // Use Gemini AI image generation for all sizes (Puppeteer/Chromium not available in production)
+  // This produces high-quality AI-generated marketing images without requiring a browser runtime
+  const result = await generateImage(enrichedPrompt, validSize, brand, resolvedStyle);
 
   // Upload to S3
   const ext = result.mimeType.includes('jpeg') ? 'jpg' : 'png';
