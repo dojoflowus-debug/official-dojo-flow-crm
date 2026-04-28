@@ -421,6 +421,15 @@ ${brand.phone && !userValues.phone ? `- Phone: ${brand.phone} — bottom section
 ${brand.website ? `- Website: ${brand.website} — bottom section` : ""}
 ${brand.address ? `- Address: ${brand.address} — include if space allows` : ""}
 ${brand.tagline ? `- Tagline: "${brand.tagline}" — subheadline or footer` : ""}
+QR CODE — MANDATORY ON EVERY FLYER:
+- Include a QR code in the bottom-right corner of the design
+- The QR code should be clean, scannable, and labeled "Scan to Enroll" or "Scan to Learn More"
+- Size: approximately 10–12% of design width — large enough to scan but not dominant
+- Place it in the contact info section at the bottom
+${brand.website ? `- QR code links to: ${brand.website}` : "- QR code links to the school's registration page"}
+SCHOOL CONTACT INFO — MANDATORY:
+- ALWAYS include school name, phone, and address in the bottom contact strip
+- These must be readable and professional — never omit them
 
 LOGO PLACEMENT — CRITICAL REQUIREMENT:
 ${hasLogo

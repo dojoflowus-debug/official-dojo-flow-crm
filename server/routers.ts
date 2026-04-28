@@ -892,6 +892,7 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
           args.prompt || '',
           args.program ? `Program: ${args.program}` : '',
           args.audience ? `Audience: ${args.audience}` : '',
+          args.changes ? `REQUESTED CHANGES: ${args.changes}` : '',
         ].filter(Boolean).join('. ');
         const flyerResult = await generateFlyerFromKai(orgIdFlyer, flyerPrompt, args.size || 'flyer');
         return {

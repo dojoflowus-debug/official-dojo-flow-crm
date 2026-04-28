@@ -408,13 +408,13 @@ const crmTools = [
     type: 'function' as const,
     function: {
       name: 'generate_flyer',
-      description: 'Generate a marketing flyer, poster, or social media image for the school. MUST be called IMMEDIATELY whenever the user asks to create, generate, make, or design a flyer, poster, banner, social post, or any visual marketing material. Do NOT write a text outline or ask clarifying questions — call this tool right away to produce the actual image. If the user says "create the flyer", "make a flyer", "design a poster", or similar, call this tool.',
+      description: 'Generate OR regenerate a marketing flyer, poster, or social media image for the school. MUST be called IMMEDIATELY whenever the user asks to: (1) create/generate/make/design a flyer, poster, banner, or social post, OR (2) edit/modify/change/update/redo/regenerate an existing flyer (e.g. "add a QR code", "make it more realistic", "remove the cartoon", "change the headline", "add my logo", "make it darker", "redo the flyer"). Do NOT write a text outline or ask clarifying questions — call this tool right away. When editing, incorporate ALL previous flyer context plus the requested changes into the prompt.',
       parameters: {
         type: 'object',
         properties: {
           prompt: {
             type: 'string',
-            description: 'Full description of the flyer to generate. Include program name, audience, key offer, school name, and any details the user provided or that are available from context.',
+            description: 'Full description of the flyer to generate or the full updated description when editing. Include program name, audience, key offer, school name, and ALL user-specified changes. When regenerating, carry forward all previous context and add the new changes.',
           },
           size: {
             type: 'string',
@@ -428,6 +428,10 @@ const crmTools = [
           audience: {
             type: 'string',
             description: 'Target audience (e.g. parents of kids ages 3-7, adults, teens). Optional.',
+          },
+          changes: {
+            type: 'string',
+            description: 'When editing an existing flyer: describe the specific changes requested (e.g. "add QR code", "make photorealistic", "remove cartoon characters", "change headline to X"). Leave empty for new flyers.',
           },
         },
         required: ['prompt', 'size'],
@@ -726,6 +730,16 @@ EXAMPLES:
 - "Design an Instagram post for kickboxing" → call generate_flyer with size="instagram_post"
 - "Ok create the flyer" / "Go ahead" / "Yes make it" → call generate_flyer immediately using all context from prior messages
 - "Can you please make the flyer" → call generate_flyer immediately — do NOT ask for more info
+
+FLYER EDITING EXAMPLES (also call generate_flyer immediately):
+- "Add a QR code" → regenerate with changes="add QR code in bottom-right corner"
+- "Make it more realistic" / "No cartoons" → regenerate with changes="photorealistic photography, no cartoons"
+- "Change the headline" → regenerate with the new headline in the prompt
+- "Add my logo" → regenerate with changes="include school logo prominently at top"
+- "Make it darker" / "Change the colors" → regenerate with updated style in prompt
+- "Remove the [element]" → regenerate with changes="remove [element] from the design"
+- "Redo the flyer" / "Try again" → regenerate with same context plus any new instructions
+When editing: carry forward ALL previous flyer context (program, audience, school info) and apply the requested changes.
 
 ${contextBlock || ''}
 ${intentHint || ''}`;
