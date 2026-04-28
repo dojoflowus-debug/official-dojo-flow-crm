@@ -55,6 +55,13 @@ async function fetchUrlBuffer(url: string, headers: Record<string, string> = {})
         fetchUrlBuffer(res.headers.location as string, headers).then(resolve).catch(reject);
         return;
       }
+      // Reject on non-2xx (e.g. 503 Service Unavailable from Pexels)
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        const errChunks: Buffer[] = [];
+        res.on("data", (c: Buffer) => errChunks.push(c));
+        res.on("end", () => reject(new Error(`HTTP ${res.statusCode}: ${Buffer.concat(errChunks).toString('utf-8').slice(0, 200)}`)));
+        return;
+      }
       const chunks: Buffer[] = [];
       res.on("data", (chunk: Buffer) => chunks.push(chunk));
       res.on("end", () => resolve(Buffer.concat(chunks)));
