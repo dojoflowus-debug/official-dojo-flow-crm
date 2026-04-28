@@ -958,9 +958,23 @@ export async function generateFlyerFromKai(
   let result: { imageBase64: string; mimeType: string };
 
   if (isFlyerSize) {
-    const flyerData = await parseFlyerDataFromBrief(enrichedPrompt, brand);
-    const html = buildFlyerHtml(flyerData, validSize, brand);
-    const pngBuffer = await renderFlyerToPng(html, validSize);
+    const flyerData = await parseFlyerDataFromBrief(
+      enrichedPrompt,
+      {},
+      {
+        schoolName: brand.schoolName ?? null,
+        phone: brand.phone ?? null,
+        email: (brand as any).email ?? null,
+        website: brand.website ?? null,
+        primaryColor: brand.primaryColor ?? null,
+        secondaryColor: brand.secondaryColor ?? null,
+        logoUrl: brand.logoUrl ?? null,
+        address: brand.address ?? null,
+      },
+      validSize
+    );
+    const html = buildFlyerHtml(flyerData);
+    const pngBuffer = await renderFlyerToPng(html, flyerData.size);
     result = { imageBase64: pngBuffer.toString('base64'), mimeType: 'image/png' };
   } else {
     result = await generateImage(enrichedPrompt, validSize, brand, resolvedStyle);
