@@ -250,6 +250,8 @@ export default function KaiCommand() {
   const [isExtractingSchedule, setIsExtractingSchedule] = useState(false);
   const [isCreatingClasses, setIsCreatingClasses] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [thinkingStep, setThinkingStep] = useState(0);
+  const thinkingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
   // Error handling state
   interface ApiError {
@@ -3006,6 +3008,12 @@ export default function KaiCommand() {
     setMessageInput('');
     setAttachments([]); // Clear attachments after sending
     setIsLoading(true);
+    // Start cycling Kai thinking messages
+    setThinkingStep(0);
+    if (thinkingIntervalRef.current) clearInterval(thinkingIntervalRef.current);
+    thinkingIntervalRef.current = setInterval(() => {
+      setThinkingStep(prev => prev + 1);
+    }, 2200);
 
         // Auto-create conversation if we're in a new conversation
     let conversationId = selectedConversationId && !selectedConversationId.startsWith('new-') 
@@ -3262,6 +3270,7 @@ export default function KaiCommand() {
       } finally {
         // CRITICAL: Always reset sending lock in finally block
         sendingRef.current = false;
+        if (thinkingIntervalRef.current) { clearInterval(thinkingIntervalRef.current); thinkingIntervalRef.current = null; }
         setIsLoading(false);
         // Maintain input focus after send
         setTimeout(() => {
@@ -3270,6 +3279,7 @@ export default function KaiCommand() {
       }
     } else {
       // No Kai response in group conversation without @Kai mention
+      if (thinkingIntervalRef.current) { clearInterval(thinkingIntervalRef.current); thinkingIntervalRef.current = null; }
       setIsLoading(false);
       // Remove from pending set
       pendingMessageIdsRef.current.delete(messageId);
@@ -5317,24 +5327,46 @@ export default function KaiCommand() {
                       )}
                     </div>
                   ))}
-                  {isLoading && (
-                    <div className="flex gap-3 relative" style={{ zIndex: 30 }}>
-                      <div className="w-8 h-8 rounded-full shrink-0 shadow-lg shadow-red-500/30 overflow-hidden">
-                        <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/RWtkCgdJjxxOQJjI.png" alt="Kai" className="w-full h-full object-cover animate-pulse" />
-                      </div>
-                      <div className="flex-1">
-                        <div 
-                          className={`font-medium mb-1`}
-                          style={(isCinematic || isFocusMode) ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isDark ? { color: 'white' } : { color: '#0f172a' }}
-                        >Kai</div>
-                        <div className="flex gap-1">
-                          <div className={`w-2 h-2 rounded-full animate-bounce ${(isCinematic || isFocusMode) ? 'bg-white/50' : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '0ms' }} />
-                          <div className={`w-2 h-2 rounded-full animate-bounce ${(isCinematic || isFocusMode) ? 'bg-white/50' : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '150ms' }} />
-                          <div className={`w-2 h-2 rounded-full animate-bounce ${(isCinematic || isFocusMode) ? 'bg-white/50' : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '300ms' }} />
+                  {isLoading && (() => {
+                    const KAI_THINKING_STEPS = [
+                      'Reading your request…',
+                      'Checking your school profile & brand…',
+                      'Analyzing intent and context…',
+                      'Crafting the perfect prompt…',
+                      'Generating your image with Kai Creative…',
+                      'Applying your brand colors and details…',
+                      'Rendering the final design…',
+                      'Saving to your Creative Library…',
+                      'Almost there — polishing the result…',
+                      'Wrapping up…',
+                    ];
+                    const currentThinkingMsg = KAI_THINKING_STEPS[thinkingStep % KAI_THINKING_STEPS.length];
+                    return (
+                      <div className="flex gap-3 relative" style={{ zIndex: 30 }}>
+                        <div className="w-8 h-8 rounded-full shrink-0 shadow-lg shadow-red-500/30 overflow-hidden">
+                          <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/RWtkCgdJjxxOQJjI.png" alt="Kai" className="w-full h-full object-cover animate-pulse" />
+                        </div>
+                        <div className="flex-1">
+                          <div
+                            className="font-medium mb-1"
+                            style={(isCinematic || isFocusMode) ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isDark ? { color: 'white' } : { color: '#0f172a' }}
+                          >Kai</div>
+                          <div className="flex items-center gap-2">
+                            <div className="flex gap-1">
+                              <div className={`w-1.5 h-1.5 rounded-full animate-bounce ${(isCinematic || isFocusMode) ? 'bg-red-400' : 'bg-red-500'}`} style={{ animationDelay: '0ms' }} />
+                              <div className={`w-1.5 h-1.5 rounded-full animate-bounce ${(isCinematic || isFocusMode) ? 'bg-red-400' : 'bg-red-500'}`} style={{ animationDelay: '150ms' }} />
+                              <div className={`w-1.5 h-1.5 rounded-full animate-bounce ${(isCinematic || isFocusMode) ? 'bg-red-400' : 'bg-red-500'}`} style={{ animationDelay: '300ms' }} />
+                            </div>
+                            <span
+                              key={thinkingStep}
+                              className="text-sm italic"
+                              style={(isCinematic || isFocusMode) ? { color: 'rgba(255,255,255,0.7)', animation: 'fadeIn 0.4s ease' } : isDark ? { color: 'rgba(255,255,255,0.5)', animation: 'fadeIn 0.4s ease' } : { color: '#64748b', animation: 'fadeIn 0.4s ease' }}
+                            >{currentThinkingMsg}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                   
                   {/* Approval Modal - 3rd Screen */}
                   {schedulePreview && (

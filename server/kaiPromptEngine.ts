@@ -157,16 +157,18 @@ VISUAL STYLE: Elegant, exclusive, premium martial arts school
 - Conveys prestige, exclusivity, and mastery`,
 
   kids_playful: `
-VISUAL STYLE: Fun, energetic, kid-friendly martial arts — but PREMIUM quality
+VISUAL STYLE: Fun, energetic, kid-friendly martial arts — PHOTOREALISTIC photography style
 - Bold, vibrant colors: red, black, white with bright accents
-- Cartoon-style martial arts kids in gi uniforms — confident poses
+- REAL CHILDREN photographed in martial arts uniforms — NOT cartoons, NOT illustrations, NOT anime
+- Cinematic, professional photography with dramatic lighting
 - Rounded, friendly typography that's still bold and readable
 - Playful but structured — NOT childish or cheap-looking
 - Parents see: safe, professional, confidence-building
 - Kids see: exciting, fun, I want to do that!
-- Think: high-end children's brand, NOT clip-art
-- Cartoon characters: 2–3 kids in white karate gi, black belts, big smiles
-- Characters doing kicks, punches, or bow stance — full of energy`,
+- Think: high-end children's brand photographed by a professional sports photographer
+- PHOTOREALISTIC: 2–3 real children in white karate gi, black belts, big smiles
+- Characters doing kicks, punches, or bow stance — full of energy
+- CRITICAL: NO cartoons, NO illustrations, NO anime, NO 3D renders — REAL PHOTOS ONLY`,
 
   high_converting_ad: `
 VISUAL STYLE: Direct-response marketing — maximum conversion
@@ -201,7 +203,7 @@ const PROGRAM_CONTEXTS: ProgramContext[] = [
     targetAudience: "parents of young children",
     keywords: ["little ninjas", "little ninja", "tiny ninjas"],
     defaultCTA: "Enroll Today – Limited Spots!",
-    visualStyle: "Cartoon kids in white karate gi, big smiles, energetic poses. Playful but structured. Red/black/white palette.",
+    visualStyle: "PHOTOREALISTIC real children in white karate gi, big smiles, energetic poses. Professional sports photography. Playful but structured. Red/black/white palette. NO cartoons, NO illustrations.",
   },
   {
     name: "Kids Karate",
@@ -538,6 +540,7 @@ PREMIUM DESIGN STANDARDS:
 - Format: ${formatLabel}
 
 WHAT TO AVOID -- HARD BANS (any of these = failed output):
+- Cartoons, anime, illustrations, 3D renders, or any non-photorealistic style
 - Generic stock photo backgrounds
 - Clip-art or low-quality illustrations
 - Overcrowded layouts
@@ -567,6 +570,7 @@ ${conversionMode}
 ${compositionRules}
 ${premiumDesignDirectives}
 
+PHOTOREALISM MANDATE: ALL human figures, people, children, and athletes in this image MUST be photorealistic. Use cinematic photography style. Absolutely NO cartoons, NO illustrations, NO anime, NO 3D renders, NO clip-art. Real people, real photography, real lighting.
 FINAL DIRECTIVE: This must be the kind of ad that stops a parent scrolling and makes them say "I need to call this school." Bold. Cinematic. Conversion-focused. Every value the user specified must appear EXACTLY as written. NO placeholder text. NO template artifacts. NO weak headlines.`;
 }
 
