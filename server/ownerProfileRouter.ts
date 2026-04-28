@@ -16,7 +16,7 @@ export const ownerProfileRouter = router({
    * Get owner profile for current organization
    */
   getProfile: protectedProcedure.query(async ({ ctx }) => {
-    const organizationId = ctx.user.organizationId;
+    const organizationId = ctx.currentOrganizationId;
     if (!organizationId) {
       throw new TRPCError({
         code: "BAD_REQUEST",
@@ -42,7 +42,7 @@ export const ownerProfileRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const organizationId = ctx.user.organizationId;
+      const organizationId = ctx.currentOrganizationId;
       if (!organizationId) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -83,7 +83,7 @@ export const ownerProfileRouter = router({
    * Delete owner profile
    */
   deleteProfile: protectedProcedure.mutation(async ({ ctx }) => {
-    const organizationId = ctx.user.organizationId;
+    const organizationId = ctx.currentOrganizationId;
     if (!organizationId) {
       throw new TRPCError({
         code: "BAD_REQUEST",

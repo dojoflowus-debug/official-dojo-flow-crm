@@ -32,7 +32,7 @@ export const kaiConversationsRouter = router({
       if (!db) throw new Error("Database not available");
 
       const result = await db.insert(kaiConversations).values({
-        organizationId: ctx.user.organizationId,
+        organizationId: ctx.currentOrganizationId,
         userId: ctx.user.id,
         title: input?.title || "New Conversation",
         
@@ -59,7 +59,7 @@ export const kaiConversationsRouter = router({
         .from(kaiConversations)
         .where(
           and(
-            eq(kaiConversations.organizationId, ctx.user.organizationId),
+            eq(kaiConversations.organizationId, ctx.currentOrganizationId),
             eq(kaiConversations.userId, ctx.user.id)
           )
         )
@@ -84,7 +84,7 @@ export const kaiConversationsRouter = router({
         .where(
           and(
             eq(kaiConversations.id, input.conversationId),
-            eq(kaiConversations.organizationId, ctx.user.organizationId)
+            eq(kaiConversations.organizationId, ctx.currentOrganizationId)
           )
         )
         .limit(1);
@@ -119,7 +119,7 @@ export const kaiConversationsRouter = router({
         .where(
           and(
             eq(kaiConversations.id, input.conversationId),
-            eq(kaiConversations.organizationId, ctx.user.organizationId)
+            eq(kaiConversations.organizationId, ctx.currentOrganizationId)
           )
         )
         .limit(1);
@@ -176,7 +176,7 @@ export const kaiConversationsRouter = router({
         .where(
           and(
             eq(kaiConversations.id, input.conversationId),
-            eq(kaiConversations.organizationId, ctx.user.organizationId)
+            eq(kaiConversations.organizationId, ctx.currentOrganizationId)
           )
         )
         .limit(1);
@@ -193,7 +193,7 @@ export const kaiConversationsRouter = router({
       
       const result = await db.insert(kaiMessages).values({
         conversationId: input.conversationId,
-        organizationId: ctx.user.organizationId,
+        organizationId: ctx.currentOrganizationId,
         role: input.role,
         content: input.content,
         metadata: Object.keys(metadata).length > 0 ? JSON.stringify(metadata) : null,
@@ -238,7 +238,7 @@ export const kaiConversationsRouter = router({
         .where(
           and(
             eq(kaiConversations.id, input.conversationId),
-            eq(kaiConversations.organizationId, ctx.user.organizationId)
+            eq(kaiConversations.organizationId, ctx.currentOrganizationId)
           )
         );
 
@@ -273,7 +273,7 @@ export const kaiConversationsRouter = router({
         .where(
           and(
             eq(kaiConversations.id, input.conversationId),
-            eq(kaiConversations.organizationId, ctx.user.organizationId)
+            eq(kaiConversations.organizationId, ctx.currentOrganizationId)
           )
         );
 
@@ -372,7 +372,7 @@ export const kaiConversationsRouter = router({
         .where(
           and(
             eq(kaiConversations.id, input.conversationId),
-            eq(kaiConversations.organizationId, ctx.user.organizationId)
+            eq(kaiConversations.organizationId, ctx.currentOrganizationId)
           )
         )
         .limit(1);
@@ -387,7 +387,7 @@ export const kaiConversationsRouter = router({
         // Store the user confirmation message
         await db.insert(kaiMessages).values({
           conversationId: input.conversationId,
-          organizationId: ctx.user.organizationId,
+          organizationId: ctx.currentOrganizationId,
           role: "user",
           content: input.query,
           createdAt: new Date().toISOString(),
@@ -400,7 +400,7 @@ export const kaiConversationsRouter = router({
         // Store Kai's response
         await db.insert(kaiMessages).values({
           conversationId: input.conversationId,
-          organizationId: ctx.user.organizationId,
+          organizationId: ctx.currentOrganizationId,
           role: "assistant",
           content: confirmResponse,
           createdAt: new Date().toISOString(),
@@ -420,7 +420,7 @@ export const kaiConversationsRouter = router({
       // Step 1: Store user message
       await db.insert(kaiMessages).values({
         conversationId: input.conversationId,
-        organizationId: ctx.user.organizationId,
+        organizationId: ctx.currentOrganizationId,
         role: "user",
         content: input.query,
         createdAt: new Date().toISOString(),
@@ -449,7 +449,7 @@ export const kaiConversationsRouter = router({
         // This is likely a metric query
         const metricResult = await processMetricQuery(
           input.query,
-          ctx.user.organizationId
+          ctx.currentOrganizationId
         );
 
         if (metricResult.success) {
@@ -610,7 +610,7 @@ Always place the UI block on its own line after your text response.`;
               // Store Kai's confirmation request as an assistant message
               await db.insert(kaiMessages).values({
                 conversationId: input.conversationId,
-                organizationId: ctx.user.organizationId,
+                organizationId: ctx.currentOrganizationId,
                 role: "assistant",
                 content: confirmMsg,
                 metadata: JSON.stringify({
@@ -785,7 +785,7 @@ Always place the UI block on its own line after your text response.`;
 
       await db.insert(kaiMessages).values({
         conversationId: input.conversationId,
-        organizationId: ctx.user.organizationId,
+        organizationId: ctx.currentOrganizationId,
         role: "assistant",
         content: aiResponse,
         metadata: JSON.stringify(responseMetadata),
@@ -827,7 +827,7 @@ Always place the UI block on its own line after your text response.`;
         .where(
           and(
             eq(kaiConversations.id, input.conversationId),
-            eq(kaiConversations.organizationId, ctx.user.organizationId)
+            eq(kaiConversations.organizationId, ctx.currentOrganizationId)
           )
         )
         .limit(1);

@@ -596,7 +596,7 @@ export async function executeKaiTool(
         const result = await db
           .select()
           .from(students)
-          .where(eq(students.organizationId, ctx.user.organizationId));
+          .where(eq(students.organizationId, ctx.currentOrganizationId));
         
         return JSON.stringify({
           success: true,
@@ -628,7 +628,7 @@ export async function executeKaiTool(
         const { eq, and, gte, inArray, notInArray } = await import("drizzle-orm");
         const db = await getDb();
         if (!db) throw new Error("Database not available");
-        const orgId = ctx.user.organizationId;
+        const orgId = ctx.currentOrganizationId;
         const daysBack = toolArgs.days || 14;
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - daysBack);
@@ -914,7 +914,7 @@ export async function executeKaiTool(
           contactNameOverride: toolArgs.contact_name_override,
           programNameOverride: toolArgs.program_name_override,
           channelOverride: toolArgs.channel as "sms" | "email" | undefined,
-          organizationId: ctx.user.organizationId,
+          organizationId: ctx.currentOrganizationId,
           initiatedById: ctx.user.id,
           initiatedByName,
         });
@@ -961,7 +961,7 @@ export async function executeKaiTool(
 
       case "resolve_contact": {
         const { resolveContact } = await import("./kai-command-engine");
-        const matches = await resolveContact(toolArgs.name, ctx.user.organizationId);
+        const matches = await resolveContact(toolArgs.name, ctx.currentOrganizationId);
         if (matches.length === 0) {
           return JSON.stringify({ success: false, message: `No contact named "${toolArgs.name}" found in the CRM.` });
         }
@@ -980,7 +980,7 @@ export async function executeKaiTool(
         const progs = await resolveProgram(
           toolArgs.program_name || "",
           null,
-          ctx.user.organizationId
+          ctx.currentOrganizationId
         );
         if (progs.length === 0) {
           return JSON.stringify({ success: false, message: "No active programs found in the CRM. Add programs in the Programs section." });
@@ -1029,7 +1029,7 @@ async function executeSmsBlast(
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const orgId = ctx.user.organizationId;
+  const orgId = ctx.currentOrganizationId;
   const delayMs = args.delay_ms ?? 1200;
   const message = args.message;
   const target = args.target || "leads";
@@ -1253,7 +1253,7 @@ async function executeRemoveStudent(
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const orgId = ctx.user.organizationId;
+  const orgId = ctx.currentOrganizationId;
 
   // Verify the student belongs to this org
   const [existing] = await db
@@ -1308,7 +1308,7 @@ async function executeAddLead(
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const orgId = ctx.user.organizationId;
+  const orgId = ctx.currentOrganizationId;
   const now = new Date().toISOString().slice(0, 19).replace("T", " ");
 
   const [inserted] = await db
@@ -1352,7 +1352,7 @@ async function executeUpdateLeadStatus(
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const orgId = ctx.user.organizationId;
+  const orgId = ctx.currentOrganizationId;
   const now = new Date().toISOString().slice(0, 19).replace("T", " ");
 
   // Verify lead belongs to this org
@@ -1398,7 +1398,7 @@ async function executeMarkAttendance(
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const orgId = ctx.user.organizationId;
+  const orgId = ctx.currentOrganizationId;
 
   // Verify student belongs to this org
   const [existing] = await db

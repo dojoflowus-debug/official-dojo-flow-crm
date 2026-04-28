@@ -1269,16 +1269,14 @@ export default function KaiCommand() {
   // Use backend conversations, or show empty state if not logged in
   const conversations = convertedConversations;
 
-  // Clear messages when switching to new conversation
+  // Clear messages when switching conversations (both new and existing)
   useEffect(() => {
-    if (selectedConversationId?.startsWith('new-')) {
-      // Preserve onboarding messages if onboarding is active
-      setMessages(prev => {
-        const hasOnboardingMessages = prev.some(m => (m as any).isOnboarding);
-        if (hasOnboardingMessages) return prev;
-        return [];
-      });
-    }
+    // Always clear messages when conversation ID changes so old messages don't bleed into new conversation
+    setMessages(prev => {
+      const hasOnboardingMessages = prev.some(m => (m as any).isOnboarding);
+      if (hasOnboardingMessages) return prev;
+      return [];
+    });
   }, [selectedConversationId]);
 
   // Load messages when conversation changes
@@ -1306,41 +1304,23 @@ export default function KaiCommand() {
         };
       });
       
-      // Deduplicate messages: merge loaded messages with existing optimistic messages
-      // Use clientMessageId to match optimistic messages with server messages
+      // Replace messages with loaded ones (we cleared on conversation switch above)
+      // Only merge optimistic client- messages that haven't been confirmed yet
       setMessages(prev => {
-        const messageMap = new Map<string, Message>();
-        const clientIdMap = new Map<string, string>(); // clientMessageId -> final id
-        
-        // First pass: index loaded messages by both id and clientMessageId
+        const serverIds = new Set(loadedMessages.map(m => m.id));
+        const clientIdMap = new Map<string, string>();
         loadedMessages.forEach(msg => {
-          messageMap.set(msg.id, msg);
-          if (msg.clientMessageId) {
-            clientIdMap.set(msg.clientMessageId, msg.id);
-          }
+          if (msg.clientMessageId) clientIdMap.set(msg.clientMessageId, msg.id);
         });
-        
-        // Second pass: merge existing messages, replacing optimistic ones that match clientMessageId
-        prev.forEach(msg => {
-          // Check if this is an optimistic message that has been saved to server
-          if (msg.id.startsWith('client-') && clientIdMap.has(msg.id)) {
-            // Skip this optimistic message - it's already in messageMap with server ID
-            return;
-          }
-          // Check if this message already exists (by server ID)
-          if (!messageMap.has(msg.id)) {
-            messageMap.set(msg.id, msg);
-          }
-        });
-        
-        // Convert back to array, sorted by timestamp
-        const finalMessages = Array.from(messageMap.values()).sort((a, b) => 
+        // Keep only optimistic messages that haven't been saved yet
+        const pendingOptimistic = prev.filter(msg =>
+          msg.id.startsWith('client-') &&
+          !clientIdMap.has(msg.id) &&
+          !serverIds.has(msg.id)
+        );
+        return [...loadedMessages, ...pendingOptimistic].sort((a, b) =>
           new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
         );
-        const testCard = finalMessages.find(m => m.id === 'hardcoded-test-card');
-        if (testCard) {
-        }
-        return finalMessages;
       });
     } else if (messagesQuery.data && messagesQuery.data.length === 0) {
       // Don't clear messages if onboarding is active — onboarding messages live in local state only

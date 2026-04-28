@@ -1016,20 +1016,20 @@ export const setupWizardRouter = router({
     }
     
     // Get organization
-    const org = await db.select().from(organizations).where(eq(organizations.id, ctx.user.organizationId)).limit(1);
+    const org = await db.select().from(organizations).where(eq(organizations.id, ctx.currentOrganizationId)).limit(1);
     if (!org.length) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Organization not found' });
     }
     
     // Check if setup is needed
     const hasLogo = !!org[0].logoUrl;
-    const programCount = await db.select({ count: count() }).from(programs).where(eq(programs.organizationId, ctx.user.organizationId));
-    const classCount = await db.select({ count: count() }).from(classesTable).where(eq(classesTable.organizationId, ctx.user.organizationId));
+    const programCount = await db.select({ count: count() }).from(programs).where(eq(programs.organizationId, ctx.currentOrganizationId));
+    const classCount = await db.select({ count: count() }).from(classesTable).where(eq(classesTable.organizationId, ctx.currentOrganizationId));
     
     const needsSetup = !hasLogo || programCount[0].count === 0 || classCount[0].count === 0;
     
     // Get setup progress
-    const progress = await db.select().from(setupProgress).where(eq(setupProgress.organizationId, ctx.user.organizationId)).limit(1);
+    const progress = await db.select().from(setupProgress).where(eq(setupProgress.organizationId, ctx.currentOrganizationId)).limit(1);
     const currentProgress = progress[0];
     
     // Check if snoozed
@@ -1064,11 +1064,11 @@ export const setupWizardRouter = router({
     
     const snoozeUntil = new Date(Date.now() + input.hours * 60 * 60 * 1000);
     
-    const existing = await db.select().from(setupProgress).where(eq(setupProgress.organizationId, ctx.user.organizationId)).limit(1);
+    const existing = await db.select().from(setupProgress).where(eq(setupProgress.organizationId, ctx.currentOrganizationId)).limit(1);
     
     if (existing.length === 0) {
       await db.insert(setupProgress).values({
-        organizationId: ctx.user.organizationId,
+        organizationId: ctx.currentOrganizationId,
         snoozeUntil,
         currentStep: 1,
       });
@@ -1076,7 +1076,7 @@ export const setupWizardRouter = router({
       await db.update(setupProgress).set({
         snoozeUntil,
         updatedAt:new Date().toISOString(),
-      }).where(eq(setupProgress.organizationId, ctx.user.organizationId));
+      }).where(eq(setupProgress.organizationId, ctx.currentOrganizationId));
     }
     
     return { success: true, snoozeUntil };
@@ -1098,7 +1098,7 @@ export const setupWizardRouter = router({
       throw new TRPCError({ code: 'UNAUTHORIZED' });
     }
     
-    const existing = await db.select().from(setupProgress).where(eq(setupProgress.organizationId, ctx.user.organizationId)).limit(1);
+    const existing = await db.select().from(setupProgress).where(eq(setupProgress.organizationId, ctx.currentOrganizationId)).limit(1);
     
     const updateData = {
       currentStep: input.currentStep,
@@ -1108,11 +1108,11 @@ export const setupWizardRouter = router({
     
     if (existing.length === 0) {
       await db.insert(setupProgress).values({
-        organizationId: ctx.user.organizationId,
+        organizationId: ctx.currentOrganizationId,
         ...updateData,
       });
     } else {
-      await db.update(setupProgress).set(updateData).where(eq(setupProgress.organizationId, ctx.user.organizationId));
+      await db.update(setupProgress).set(updateData).where(eq(setupProgress.organizationId, ctx.currentOrganizationId));
     }
     
     return { success: true };
@@ -1138,7 +1138,7 @@ export const setupWizardRouter = router({
     
     // Create import record
     const result = await db.insert(setupImports).values({
-      organizationId: ctx.user.organizationId,
+      organizationId: ctx.currentOrganizationId,
       importType: input.importType,
       filename: input.filename,
       mimeType: input.mimeType,
@@ -1170,8 +1170,8 @@ export const setupWizardRouter = router({
     }
     
     const where = input.importType 
-      ? and(eq(setupImports.organizationId, ctx.user.organizationId), eq(setupImports.importType, input.importType))
-      : eq(setupImports.organizationId, ctx.user.organizationId);
+      ? and(eq(setupImports.organizationId, ctx.currentOrganizationId), eq(setupImports.importType, input.importType))
+      : eq(setupImports.organizationId, ctx.currentOrganizationId);
     
     const imports = await db.select().from(setupImports)
       .where(where)
@@ -1198,7 +1198,7 @@ export const setupWizardRouter = router({
     
     // Verify ownership
     const importRecord = await db.select().from(setupImports).where(eq(setupImports.id, input.importId)).limit(1);
-    if (!importRecord.length || importRecord[0].organizationId !== ctx.user.organizationId) {
+    if (!importRecord.length || importRecord[0].organizationId !== ctx.currentOrganizationId) {
       throw new TRPCError({ code: 'FORBIDDEN' });
     }
     
