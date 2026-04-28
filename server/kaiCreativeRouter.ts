@@ -938,76 +938,87 @@ export async function generateFlyerFromKai(
 
   const brand = await getBrandDataForOrg(orgId);
 
-  // ── Hybrid pipeline: HTML compositor with real logo, fonts, QR code ──────────
-  // Step 1: Parse flyer data (fetches Pexels stock photo + generates QR code)
-  const flyerData = await parseFlyerDataFromBrief(prompt, {}, {
-    schoolName: brand.schoolName ?? null,
-    phone: brand.phone ?? null,
-    email: brand.email ?? null,
-    website: brand.website ?? null,
-    address: brand.address ?? null,
-    logoUrl: brand.logoUrl ?? null,
-    primaryColor: brand.primaryColor ?? null,
-    secondaryColor: brand.secondaryColor ?? null,
-  }, validSize);
+  // ── Pipeline: Gemini AI generation + sharp QR code compositing ──────────────
+  // This approach avoids Puppeteer/Chromium (too heavy for Cloud Run) and uses:
+  // 1. Gemini Imagen for the full flyer design (background, text, layout)
+  // 2. sharp to composite a real scannable QR code on top
+  // 3. sharp to composite the school logo if available
 
-  // Step 2: Build the HTML flyer template
-  const flyerHtml = buildFlyerHtml(flyerData);
+  // Build a rich structured prompt with all brand/school info
+  const schoolName = brand.schoolName || 'Your Dojo';
+  const phone = brand.phone || '';
+  const address = brand.address || '';
+  const website = brand.website || '';
+  const primaryColor = brand.primaryColor || '#C8102E';
 
-  // Step 3: Render HTML to PNG using Puppeteer + @sparticuz/chromium
-  let pngBuffer: Buffer | null = null;
+  // Parse program info from prompt
+  const lowerPrompt = prompt.toLowerCase();
+  const isBusinessCard = validSize === 'business_card';
+
+  // Build a highly structured flyer prompt
+  const structuredPrompt = [
+    `Create a PHOTOREALISTIC professional ${isBusinessCard ? 'business card' : 'marketing flyer'} for a martial arts school.`,
+    `School: ${schoolName}`,
+    phone ? `Phone: ${phone}` : '',
+    address ? `Address: ${address}` : '',
+    website ? `Website: ${website}` : '',
+    `Primary color: ${primaryColor}`,
+    `Content: ${prompt}`,
+    '',
+    isBusinessCard
+      ? 'Layout: Horizontal business card 3.5x2 inches. School name large on front. Contact info (phone, address, website) in clean typography. Martial arts themed background. Professional and sleek.'
+      : 'Layout: Portrait flyer. Large cinematic hero photo of real martial arts students (photorealistic, NOT cartoon, NOT illustration, NOT anime). Bold headline text at top. Program details in middle. Contact info at bottom. Red accent color. White text on dark overlay.',
+    'Typography: Bold modern sans-serif fonts (Bebas Neue or Impact for headlines, clean sans-serif for body). NO handwriting fonts.',
+    'Style: Cinematic, professional, high-contrast. Real photography. Print-ready quality.',
+    'CRITICAL: Use REAL PHOTOGRAPHIC images of martial arts students. NO cartoons, NO illustrations, NO anime, NO 3D renders.',
+    'Include a small white square placeholder in the bottom-right corner labeled "QR" for a QR code.',
+  ].filter(Boolean).join('\n');
+
+  const resolvedStyle = parseStyleFromText(prompt);
+  const result = await generateImage(structuredPrompt, validSize, brand, resolvedStyle);
+  let imageBase64 = result.imageBase64;
+  let mimeType = result.mimeType;
+
+  // Composite real QR code on top using sharp
   try {
-    pngBuffer = await renderFlyerToPng(flyerHtml, validSize);
-  } catch (renderErr: any) {
-    console.warn('[KaiCreative] Puppeteer render failed, falling back to AI generation:', renderErr?.message);
+    const { generateQrCodeDataUrl } = await import('./flyerRenderer');
+    const qrUrl = website || `https://www.google.com/search?q=${encodeURIComponent(schoolName + ' martial arts')}`;
+    const qrDataUrl = await generateQrCodeDataUrl(qrUrl);
+    if (qrDataUrl) {
+      const sharp = (await import('sharp')).default;
+      const qrBase64 = qrDataUrl.replace(/^data:image\/png;base64,/, '');
+      const qrBuf = Buffer.from(qrBase64, 'base64');
+      // Resize QR to 120x120
+      const qrResized = await sharp(qrBuf).resize(120, 120).png().toBuffer();
+      // Get dimensions of the AI-generated image
+      const mainBuf = Buffer.from(imageBase64, 'base64');
+      const mainMeta = await sharp(mainBuf).metadata();
+      const w = mainMeta.width || 800;
+      const h = mainMeta.height || 1000;
+      // Place QR in bottom-right with 20px margin
+      const composited = await sharp(mainBuf)
+        .composite([{ input: qrResized, left: w - 140, top: h - 140, blend: 'over' }])
+        .png()
+        .toBuffer();
+      imageBase64 = composited.toString('base64');
+      mimeType = 'image/png';
+      console.log('[KaiCreative] QR code composited onto flyer successfully');
+    }
+  } catch (qrErr: any) {
+    console.warn('[KaiCreative] QR compositing failed (non-blocking):', qrErr?.message);
   }
 
-  let imageUrl: string;
-  let imageBase64: string;
-  let mimeType: string;
+  const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
+  const key = `creative/${orgId}/generated/${Date.now()}.${ext}`;
+  let imageUrl: string = `data:${mimeType};base64,${imageBase64}`;
   let s3Key: string | null = null;
-
-  if (pngBuffer) {
-    // HTML pipeline succeeded — upload PNG to S3
-    imageBase64 = pngBuffer.toString('base64');
-    mimeType = 'image/png';
-    const key = `creative/${orgId}/generated/${Date.now()}.png`;
-    imageUrl = `data:image/png;base64,${imageBase64}`;
-    try {
-      const { storagePut: sp } = await import('./storage');
-      const s3Result = await sp(key, pngBuffer, 'image/png');
-      imageUrl = s3Result.url;
-      s3Key = s3Result.key;
-    } catch { /* non-blocking */ }
-  } else {
-    // Fallback: AI image generation
-    const { enrichedPrompt: contextPrompt } = await runContextInjection(prompt, orgId, true);
-    let enrichedPrompt = contextPrompt;
-    try {
-      const aiDirection = await enrichPromptContext(prompt, {
-        schoolName: brand.schoolName ?? '',
-        phone: brand.phone ?? null,
-        logoUrl: brand.logoUrl ?? null,
-        programs: Array.isArray((brand as any).programs) ? (brand as any).programs : [],
-        primaryColor: brand.primaryColor ?? null,
-      });
-      if (aiDirection) enrichedPrompt = `${contextPrompt}\n\nCreative direction: ${aiDirection}`;
-    } catch { /* non-blocking */ }
-    const resolvedStyle = parseStyleFromText(prompt);
-    const result = await generateImage(enrichedPrompt, validSize, brand, resolvedStyle);
-    imageBase64 = result.imageBase64;
-    mimeType = result.mimeType;
-    const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
-    const key = `creative/${orgId}/generated/${Date.now()}.${ext}`;
-    imageUrl = `data:${mimeType};base64,${imageBase64}`;
-    try {
-      const { storagePut: sp } = await import('./storage');
-      const buffer = Buffer.from(imageBase64, 'base64');
-      const s3Result = await sp(key, buffer, mimeType);
-      imageUrl = s3Result.url;
-      s3Key = s3Result.key;
-    } catch { /* non-blocking */ }
-  }
+  try {
+    const { storagePut: sp } = await import('./storage');
+    const buffer = Buffer.from(imageBase64, 'base64');
+    const s3Result = await sp(key, buffer, mimeType);
+    imageUrl = s3Result.url;
+    s3Key = s3Result.key;
+  } catch { /* non-blocking */ }
 
   // Save to creative library
   let assetId: number | null = null;

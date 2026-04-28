@@ -86,8 +86,8 @@ export function KaiErrorAlert({
 
   return (
     <div
-      className={`fixed top-4 right-4 max-w-md z-50 transition-all duration-300 ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
+      className={`fixed bottom-24 left-1/2 -translate-x-1/2 w-[90vw] max-w-md z-50 transition-all duration-300 ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
       }`}
     >
       <div
