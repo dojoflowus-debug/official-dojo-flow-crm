@@ -883,6 +883,33 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       };
     }
 
+    case 'generate_flyer': {
+      const orgIdFlyer = ctx?.currentOrganizationId;
+      if (!orgIdFlyer) return { error: 'No organization context — cannot generate flyer.' };
+      try {
+        const { generateFlyerFromKai } = await import('./kaiCreativeRouter');
+        const flyerPrompt = [
+          args.prompt || '',
+          args.program ? `Program: ${args.program}` : '',
+          args.audience ? `Audience: ${args.audience}` : '',
+        ].filter(Boolean).join('. ');
+        const flyerResult = await generateFlyerFromKai(orgIdFlyer, flyerPrompt, args.size || 'flyer');
+        return {
+          success: true,
+          type: 'creative_image',
+          imageUrl: flyerResult.imageUrl,
+          imageBase64: flyerResult.imageBase64,
+          mimeType: flyerResult.mimeType,
+          prompt: flyerResult.prompt,
+          size: flyerResult.size,
+          assetId: flyerResult.assetId,
+          savedToLibrary: flyerResult.savedToLibrary,
+          message: 'Flyer generated successfully.',
+        };
+      } catch (err: any) {
+        return { error: `Flyer generation failed: ${err.message}` };
+      }
+    }
      default:
       return { error: 'Unknown function' };
   }
@@ -1091,18 +1118,33 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
     };
   }
 
+   // Handle creative_image result (generate_flyer tool)
+  if (result.type === 'creative_image' && result.imageUrl) {
+    return {
+      text: `Here's your flyer! It's been saved to your Creative Library.`,
+      ui_blocks: [{
+        type: 'creative_image',
+        imageUrl: result.imageUrl,
+        imageBase64: result.imageBase64,
+        mimeType: result.mimeType,
+        prompt: result.prompt,
+        size: result.size,
+        assetId: result.assetId,
+        savedToLibrary: result.savedToLibrary,
+        label: 'Generated Flyer',
+      }],
+    };
+  }
   // Handle action results (remove_student, add_lead, update_lead_status, mark_attendance)
   if (result.success && result.message) {
     return { text: result.message, ui_blocks: [] };
   }
-
   // Handle permission denied errors
   if (result.permissionDenied) {
     return { text: `⛔ ${result.error}`, ui_blocks: [] };
   }
-
   return { text: JSON.stringify(result), ui_blocks: [] };
-}
+}}
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly

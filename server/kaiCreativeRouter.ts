@@ -708,21 +708,8 @@ export const kaiCreativeRouter = router({
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.currentOrganizationId as number;
 
-      // ── SERVER-SIDE HARD EXECUTION GATE ────────────────────────────────────
-      const chatBriefContext = await loadBusinessContext(orgId);
-      const chatBriefCheck = analyzeBrief(
-        input.prompt,
-        chatBriefContext,
-        input.briefAnswers ?? {},
-        false // fastMode always false — gate cannot be bypassed
-      );
-      if (!chatBriefCheck.canGenerate) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: `Let's build this together — I just need a couple more details before I can create this for you. Please answer the quick questions in the brief panel.`,
-        });
-      }
-      // ── END GATE ────────────────────────────────────────────────────────────
+      // Gate removed — generate immediately with whatever context is available.
+      // The prompt enrichment below will fill in brand details automatically.
 
       const brand = await getBrandDataForOrg(orgId);
       const { enrichedPrompt: contextChatPrompt } = await runContextInjection(input.prompt, orgId, true);
@@ -924,3 +911,103 @@ export const kaiCreativeRouter = router({
       return copy;
     }),
 });
+
+// ── Exported helper for Kai tool calls ───────────────────────────────────────
+/**
+ * generateFlyerFromKai — called from executeCRMFunction when Kai's generate_flyer tool fires.
+ * Runs the same pipeline as generateFromChat but without the tRPC context requirement.
+ */
+export async function generateFlyerFromKai(
+  orgId: number,
+  prompt: string,
+  size: string = 'flyer'
+): Promise<{
+  imageUrl: string;
+  imageBase64: string;
+  mimeType: string;
+  prompt: string;
+  size: string;
+  assetId: number | null;
+  savedToLibrary: boolean;
+}> {
+  const validSize = ['flyer', 'instagram_post', 'instagram_story', 'facebook_ad', 'website_banner'].includes(size)
+    ? size as ImageSize
+    : 'flyer' as ImageSize;
+
+  const brand = await getBrandDataForOrg(orgId);
+  const { enrichedPrompt: contextPrompt } = await runContextInjection(prompt, orgId, true);
+
+  let enrichedPrompt = contextPrompt;
+  try {
+    const aiDirection = await enrichPromptContext(prompt, {
+      schoolName: brand.schoolName ?? '',
+      phone: brand.phone ?? null,
+      logoUrl: brand.logoUrl ?? null,
+      programs: Array.isArray((brand as any).programs) ? (brand as any).programs : [],
+      primaryColor: brand.primaryColor ?? null,
+    });
+    if (aiDirection) enrichedPrompt = `${contextPrompt}\n\nCreative direction: ${aiDirection}`;
+  } catch { /* non-blocking */ }
+
+  const resolvedStyle = parseStyleFromText(prompt);
+
+  // Use HTML flyer renderer for flyer/social sizes
+  const isFlyerSize = validSize === 'flyer' || validSize === 'instagram_post' ||
+    validSize === 'instagram_story' || validSize === 'facebook_ad';
+
+  let result: { imageBase64: string; mimeType: string };
+
+  if (isFlyerSize) {
+    const flyerData = await parseFlyerDataFromBrief(enrichedPrompt, brand);
+    const html = buildFlyerHtml(flyerData, validSize, brand);
+    const pngBuffer = await renderFlyerToPng(html, validSize);
+    result = { imageBase64: pngBuffer.toString('base64'), mimeType: 'image/png' };
+  } else {
+    result = await generateImage(enrichedPrompt, validSize, brand, resolvedStyle);
+  }
+
+  // Upload to S3
+  const ext = result.mimeType.includes('jpeg') ? 'jpg' : 'png';
+  const key = `creative/${orgId}/generated/${Date.now()}.${ext}`;
+  let imageUrl = `data:${result.mimeType};base64,${result.imageBase64}`;
+  let s3Key: string | null = null;
+  try {
+    const { storagePut: sp } = await import('./storage');
+    const buffer = Buffer.from(result.imageBase64, 'base64');
+    const s3Result = await sp(key, buffer, result.mimeType);
+    imageUrl = s3Result.url;
+    s3Key = s3Result.key;
+  } catch { /* non-blocking */ }
+
+  // Save to creative library
+  let assetId: number | null = null;
+  let savedToLibrary = false;
+  const db = await getDb();
+  if (db) {
+    try {
+      const inserted = await db.insert(creativeAssets).values({
+        orgId,
+        assetType: 'generated',
+        name: `Kai — ${prompt.slice(0, 60)}`,
+        url: imageUrl,
+        storageKey: s3Key,
+        prompt,
+        outputSize: validSize,
+        mimeType: result.mimeType,
+        createdBy: null,
+      }).$returningId();
+      assetId = (inserted as any)?.[0]?.id ?? null;
+      savedToLibrary = true;
+    } catch { /* non-blocking */ }
+  }
+
+  return {
+    imageUrl,
+    imageBase64: result.imageBase64,
+    mimeType: result.mimeType,
+    prompt,
+    size: validSize,
+    assetId,
+    savedToLibrary,
+  };
+}

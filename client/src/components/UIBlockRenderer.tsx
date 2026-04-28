@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, User, CheckCircle2, XCircle, AlertTriangle, Phone, MessageSquare, ChevronDown, ChevronUp, Send, DollarSign, Link } from 'lucide-react';
 import { KaiStudentCard, KaiStudentCardData } from './KaiStudentCard';
 import { FlyerCreationPanel } from './kai/FlyerCreationPanel';
+import { CreativePreviewCard, type CreativePreviewCardData } from './CreativePreviewCard';
 
 interface SmsBlastRecipient {
   name: string;
@@ -60,7 +61,15 @@ interface ProgramsPricingBlock {
 }
 
 interface UIBlock {
-  type: 'student_card' | 'student_list' | 'lead_card' | 'lead_list' | 'flyer_creation' | 'sms_blast_result' | 'contact_message_sent' | 'programs_pricing';
+  type: 'student_card' | 'student_list' | 'lead_card' | 'lead_list' | 'flyer_creation' | 'sms_blast_result' | 'contact_message_sent' | 'programs_pricing' | 'creative_image';
+  // creative_image fields
+  imageUrl?: string;
+  imageBase64?: string;
+  mimeType?: string;
+  prompt?: string;
+  size?: string;
+  assetId?: number | null;
+  savedToLibrary?: boolean;
   studentId?: number;
   studentIds?: number[];
   leadId?: number;
@@ -338,6 +347,27 @@ export function UIBlockRenderer({ blocks, onBlockClick, theme = 'light' }: UIBlo
             <ProgramsPricingCard
               key={index}
               block={block as unknown as ProgramsPricingBlock}
+            />
+          );
+        }
+
+        // Render inline creative image (generated flyer)
+        if (block.type === 'creative_image' && block.imageUrl) {
+          const cardData: CreativePreviewCardData = {
+            imageUrl: block.imageUrl,
+            imageBase64: block.imageBase64,
+            mimeType: block.mimeType || 'image/png',
+            prompt: block.prompt || '',
+            size: block.size || 'flyer',
+            assetId: block.assetId ?? null,
+            savedToLibrary: block.savedToLibrary ?? false,
+          };
+          return (
+            <CreativePreviewCard
+              key={index}
+              data={cardData}
+              isDark={isDark}
+              isCinematic={isCinematic}
             />
           );
         }

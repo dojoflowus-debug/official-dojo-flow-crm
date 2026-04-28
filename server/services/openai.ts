@@ -403,6 +403,37 @@ const crmTools = [
       },
     },
   },
+  // ── Creative Tools ───────────────────────────────────────────────────────────────────
+  {
+    type: 'function' as const,
+    function: {
+      name: 'generate_flyer',
+      description: 'Generate a marketing flyer, poster, or social media image for the school. MUST be called IMMEDIATELY whenever the user asks to create, generate, make, or design a flyer, poster, banner, social post, or any visual marketing material. Do NOT write a text outline or ask clarifying questions — call this tool right away to produce the actual image. If the user says "create the flyer", "make a flyer", "design a poster", or similar, call this tool.',
+      parameters: {
+        type: 'object',
+        properties: {
+          prompt: {
+            type: 'string',
+            description: 'Full description of the flyer to generate. Include program name, audience, key offer, school name, and any details the user provided or that are available from context.',
+          },
+          size: {
+            type: 'string',
+            enum: ['flyer', 'instagram_post', 'instagram_story', 'facebook_ad', 'website_banner'],
+            description: 'Output format. Use "flyer" for general flyers/posters, "instagram_post" for square social posts, "instagram_story" for vertical stories, "facebook_ad" for Facebook ads, "website_banner" for wide banners. Default: flyer.',
+          },
+          program: {
+            type: 'string',
+            description: 'The program or class this flyer is for (e.g. Little Ninjas, Adult Kickboxing, BJJ)',
+          },
+          audience: {
+            type: 'string',
+            description: 'Target audience (e.g. parents of kids ages 3-7, adults, teens). Optional.',
+          },
+        },
+        required: ['prompt', 'size'],
+      },
+    },
+  },
 ];
 
 export interface KaiConversationMessage {
@@ -664,6 +695,26 @@ If user mentions uploading a file: "Got it — analyzing now. I'll extract the d
 **Next step:** [what happens next]
 
 ${getSalesKnowledgeSection()}
+
+---
+
+## CREATIVE GENERATION (FLYERS, POSTERS, SOCIAL MEDIA)
+When the user asks to create, generate, make, or design a flyer, poster, banner, social post, or any visual marketing material:
+1. IMMEDIATELY call the `generate_flyer` tool — do NOT write a text outline, do NOT ask clarifying questions first.
+2. Use all context already in the conversation (program name, audience, school info) to build the prompt.
+3. If the user has already provided program/audience in earlier messages, use those details.
+4. After the tool returns, say: "Here's your [program] flyer! It's been saved to your Creative Library."
+
+EXAMPLES:
+- "Create a flyer for little ninjas" → call generate_flyer immediately with program="little ninjas"
+- "Make a flyer for parents" → call generate_flyer immediately
+- "Create the flyer" (after discussing little ninjas) → call generate_flyer with the context from the conversation
+- "Design an Instagram post for kickboxing" → call generate_flyer with size="instagram_post"
+
+NEVER:
+- Write a text outline and ask if they want changes
+- Ask "Would you like me to create this now?"
+- Ask for audience/age group before generating (use what's in context or make a reasonable assumption)
 
 ${contextBlock || ''}
 ${intentHint || ''}`;
