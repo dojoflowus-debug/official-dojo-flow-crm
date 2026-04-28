@@ -15,6 +15,7 @@
 import puppeteer from "puppeteer-core";
 import https from "https";
 import http from "http";
+import QRCode from "qrcode";
 
 // ── Pexels stock photo fetcher ────────────────────────────────────────────────
 const PROGRAM_PHOTO_QUERIES: Record<string, string> = {
@@ -128,6 +129,9 @@ export interface FlyerData {
 
   // Hero image (base64 data URL or external URL)
   heroImageUrl?: string | null;
+
+  // QR code (pre-generated data URL)
+  qrCodeDataUrl?: string | null;
 }
 
 // ── Dimensions ────────────────────────────────────────────────────────────────
@@ -235,6 +239,14 @@ export function buildFlyerHtml(data: FlyerData): string {
   const testimonialHtml = data.testimonial
     ? `<div class="testimonial-bar">
         <span class="testimonial-quote">"${escapeHtml(data.testimonial)}"</span>
+       </div>`
+    : "";
+
+  // QR code section (only shown if qrCodeDataUrl is provided)
+  const qrSection = data.qrCodeDataUrl
+    ? `<div class="qr-block">
+        <img class="qr-img" src="${data.qrCodeDataUrl}" alt="QR Code" />
+        <div class="qr-label">Scan to Enroll</div>
        </div>`
     : "";
 
@@ -471,6 +483,40 @@ export function buildFlyerHtml(data: FlyerData): string {
     font-weight: 700;
   }
 
+  /* ── QR code block ── */
+  .qr-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .qr-img {
+    width: ${Math.round(72 * scale)}px;
+    height: ${Math.round(72 * scale)}px;
+    border-radius: 4px;
+    background: #fff;
+    padding: 3px;
+  }
+  .qr-label {
+    color: rgba(255,255,255,0.75);
+    font-size: ${Math.round(10 * scale)}px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    text-align: center;
+  }
+
+  /* ── Footer with QR: two-column layout ── */
+  .footer-inner {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: ${isStory ? "16px" : "10px"};
+    flex-wrap: wrap;
+  }
+
   /* ── Bottom color stripe ── */
   .bottom-stripe {
     position: absolute;
@@ -520,8 +566,11 @@ export function buildFlyerHtml(data: FlyerData): string {
     </div>
   </div>
 
-  <!-- Footer contact strip -->
-  ${footerItems ? `<div class="footer">${footerItems}</div>` : ""}
+  <!-- Footer contact strip with QR code -->
+  ${(footerItems || qrSection) ? `<div class="footer">
+    <div class="footer-inner">${footerItems}</div>
+    ${qrSection}
+  </div>` : ""}
   <div class="bottom-stripe"></div>
 
 </div>
@@ -534,15 +583,31 @@ let _browser: puppeteer.Browser | null = null;
 
 async function getBrowser(): Promise<puppeteer.Browser> {
   if (_browser && _browser.connected) return _browser;
+  // Use @sparticuz/chromium in production (Cloud Run), fall back to local Chromium in dev
+  let executablePath: string;
+  let extraArgs: string[] = [];
+  try {
+    const chromium = await import('@sparticuz/chromium');
+    executablePath = await chromium.default.executablePath();
+    extraArgs = chromium.default.args;
+  } catch {
+    // Fallback for local development — try multiple common paths
+    const { existsSync } = await import('fs');
+    executablePath = process.env.CHROMIUM_PATH ||
+      ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome']
+        .find(p => existsSync(p)) ||
+      '/usr/bin/chromium';
+  }
   _browser = await puppeteer.launch({
-    executablePath: "/usr/bin/chromium-browser",
+    executablePath,
     headless: true,
     args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-      "--font-render-hinting=none",
+      ...extraArgs,
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--font-render-hinting=none',
     ],
   });
   return _browser;
@@ -667,6 +732,10 @@ export async function parseFlyerDataFromBrief(
   const orientation = size === "website_banner" ? "landscape" : "portrait";
   const heroPhoto = await fetchHeroPhotoAsBase64(programName, orientation);
 
+  // Generate QR code for the school website (or a fallback URL)
+  const qrUrl = brand.website || `https://www.google.com/search?q=${encodeURIComponent(brand.schoolName || 'martial arts school near me')}`;
+  const qrCodeDataUrl = await generateQrCodeDataUrl(qrUrl);
+
   return {
     schoolName: brand.schoolName || "Your Dojo",
     phone: brand.phone || null,
@@ -683,8 +752,25 @@ export async function parseFlyerDataFromBrief(
     benefits,
     callToAction: cta,
     heroImageUrl: heroPhoto?.dataUrl || null,
+    qrCodeDataUrl,
     size,
   };
+}
+
+// ── QR code generator ───────────────────────────────────────────────────────
+export async function generateQrCodeDataUrl(url: string): Promise<string | null> {
+  try {
+    const dataUrl = await QRCode.toDataURL(url, {
+      errorCorrectionLevel: 'M',
+      margin: 1,
+      width: 200,
+      color: { dark: '#000000', light: '#ffffff' },
+    });
+    return dataUrl;
+  } catch (err: any) {
+    console.warn('[FlyerRenderer] QR code generation failed:', err?.message);
+    return null;
+  }
 }
 
 function extractProgram(prompt: string): string | null {

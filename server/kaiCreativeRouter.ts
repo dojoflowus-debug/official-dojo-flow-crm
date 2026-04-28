@@ -40,6 +40,7 @@ import {
   buildFlyerHtml,
   renderFlyerToPng,
   parseFlyerDataFromBrief,
+  generateQrCodeDataUrl,
 } from "./flyerRenderer";
 
 // ── Zod schemas ───────────────────────────────────────────────────────────────
@@ -935,38 +936,77 @@ export async function generateFlyerFromKai(
     : 'flyer' as ImageSize;
 
   const brand = await getBrandDataForOrg(orgId);
-  const { enrichedPrompt: contextPrompt } = await runContextInjection(prompt, orgId, true);
 
-  let enrichedPrompt = contextPrompt;
+  // ── Hybrid pipeline: HTML compositor with real logo, fonts, QR code ──────────
+  // Step 1: Parse flyer data (fetches Pexels stock photo + generates QR code)
+  const flyerData = await parseFlyerDataFromBrief(prompt, {}, {
+    schoolName: brand.schoolName ?? null,
+    phone: brand.phone ?? null,
+    email: brand.email ?? null,
+    website: brand.website ?? null,
+    address: brand.address ?? null,
+    logoUrl: brand.logoUrl ?? null,
+    primaryColor: brand.primaryColor ?? null,
+    secondaryColor: brand.secondaryColor ?? null,
+  }, validSize);
+
+  // Step 2: Build the HTML flyer template
+  const flyerHtml = buildFlyerHtml(flyerData);
+
+  // Step 3: Render HTML to PNG using Puppeteer + @sparticuz/chromium
+  let pngBuffer: Buffer | null = null;
   try {
-    const aiDirection = await enrichPromptContext(prompt, {
-      schoolName: brand.schoolName ?? '',
-      phone: brand.phone ?? null,
-      logoUrl: brand.logoUrl ?? null,
-      programs: Array.isArray((brand as any).programs) ? (brand as any).programs : [],
-      primaryColor: brand.primaryColor ?? null,
-    });
-    if (aiDirection) enrichedPrompt = `${contextPrompt}\n\nCreative direction: ${aiDirection}`;
-  } catch { /* non-blocking */ }
+    pngBuffer = await renderFlyerToPng(flyerHtml, validSize);
+  } catch (renderErr: any) {
+    console.warn('[KaiCreative] Puppeteer render failed, falling back to AI generation:', renderErr?.message);
+  }
 
-  const resolvedStyle = parseStyleFromText(prompt);
-
-  // Use Gemini AI image generation for all sizes (Puppeteer/Chromium not available in production)
-  // This produces high-quality AI-generated marketing images without requiring a browser runtime
-  const result = await generateImage(enrichedPrompt, validSize, brand, resolvedStyle);
-
-  // Upload to S3
-  const ext = result.mimeType.includes('jpeg') ? 'jpg' : 'png';
-  const key = `creative/${orgId}/generated/${Date.now()}.${ext}`;
-  let imageUrl = `data:${result.mimeType};base64,${result.imageBase64}`;
+  let imageUrl: string;
+  let imageBase64: string;
+  let mimeType: string;
   let s3Key: string | null = null;
-  try {
-    const { storagePut: sp } = await import('./storage');
-    const buffer = Buffer.from(result.imageBase64, 'base64');
-    const s3Result = await sp(key, buffer, result.mimeType);
-    imageUrl = s3Result.url;
-    s3Key = s3Result.key;
-  } catch { /* non-blocking */ }
+
+  if (pngBuffer) {
+    // HTML pipeline succeeded — upload PNG to S3
+    imageBase64 = pngBuffer.toString('base64');
+    mimeType = 'image/png';
+    const key = `creative/${orgId}/generated/${Date.now()}.png`;
+    imageUrl = `data:image/png;base64,${imageBase64}`;
+    try {
+      const { storagePut: sp } = await import('./storage');
+      const s3Result = await sp(key, pngBuffer, 'image/png');
+      imageUrl = s3Result.url;
+      s3Key = s3Result.key;
+    } catch { /* non-blocking */ }
+  } else {
+    // Fallback: AI image generation
+    const { enrichedPrompt: contextPrompt } = await runContextInjection(prompt, orgId, true);
+    let enrichedPrompt = contextPrompt;
+    try {
+      const aiDirection = await enrichPromptContext(prompt, {
+        schoolName: brand.schoolName ?? '',
+        phone: brand.phone ?? null,
+        logoUrl: brand.logoUrl ?? null,
+        programs: Array.isArray((brand as any).programs) ? (brand as any).programs : [],
+        primaryColor: brand.primaryColor ?? null,
+      });
+      if (aiDirection) enrichedPrompt = `${contextPrompt}\n\nCreative direction: ${aiDirection}`;
+    } catch { /* non-blocking */ }
+    const resolvedStyle = parseStyleFromText(prompt);
+    const result = await generateImage(enrichedPrompt, validSize, brand, resolvedStyle);
+    imageBase64 = result.imageBase64;
+    mimeType = result.mimeType;
+    const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
+    const key = `creative/${orgId}/generated/${Date.now()}.${ext}`;
+    imageUrl = `data:${mimeType};base64,${imageBase64}`;
+    try {
+      const { storagePut: sp } = await import('./storage');
+      const buffer = Buffer.from(imageBase64, 'base64');
+      const s3Result = await sp(key, buffer, mimeType);
+      imageUrl = s3Result.url;
+      s3Key = s3Result.key;
+    } catch { /* non-blocking */ }
+  }
 
   // Save to creative library
   let assetId: number | null = null;
@@ -982,7 +1022,7 @@ export async function generateFlyerFromKai(
         storageKey: s3Key,
         prompt,
         outputSize: validSize,
-        mimeType: result.mimeType,
+        mimeType,
         createdBy: null,
       }).$returningId();
       assetId = (inserted as any)?.[0]?.id ?? null;
@@ -992,8 +1032,8 @@ export async function generateFlyerFromKai(
 
   return {
     imageUrl,
-    imageBase64: result.imageBase64,
-    mimeType: result.mimeType,
+    imageBase64,
+    mimeType,
     prompt,
     size: validSize,
     assetId,
