@@ -30,6 +30,7 @@ import { KaiBar } from '@/components/KaiBar'
 import { KaiBarProvider } from '@/contexts/KaiBarContext'
 import { EnvironmentSelectorModal } from '@/components/EnvironmentSelectorModal'
 import { KaiTutorialProvider } from '@/contexts/KaiTutorialContext'
+import { SubscriptionGate } from '@/components/SubscriptionGate'
 import { SpotlightOverlay } from '@/components/SpotlightOverlay'
 import { GhostModeOffer } from '@/components/GhostModeOffer'
 import { TutorialLayer } from '@/components/TutorialLayer'
@@ -135,6 +136,7 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
   return (
     <KaiTutorialProvider>
     <KaiBarProvider>
+    <SubscriptionGate>
       <div className={`app-shell flex flex-col`} style={{ minHeight: '100dvh', backgroundColor: isCinematic ? 'oklch(0.05 0 0)' : isDark ? 'oklch(0.05 0 0)' : '#ffffff' }}>
         {/* Universal Top Header */}
         {!hideHeader && <CommandHeader title={getPageTitle()} isDarkMode={isDark} />}
@@ -331,6 +333,7 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
 
       {/* Kai Tutorial System — Spotlight + Ghost Mode */}
       <TutorialLayer />
+    </SubscriptionGate>
     </KaiBarProvider>
     </KaiTutorialProvider>
   )

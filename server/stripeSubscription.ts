@@ -9,13 +9,13 @@ import { getDb } from './db';
 import { organizationSubscriptions, aiCreditBalance, subscriptionPlans, creditTopUps, aiCreditTransactions } from '../drizzle/schema';
 import { eq, and } from 'drizzle-orm';
 
-// Use STRIPE_SECRET_KEY (set to DojoFlow live key in Railway)
+// Use MYDOJO_STRIPE_SECRET_KEY (DojoFlow live Stripe account)
 let _stripeInstance: Stripe | null = null;
 function getStripeInstance(): Stripe {
   if (!_stripeInstance) {
-    const key = process.env.STRIPE_SECRET_KEY || '';
+    const key = process.env.MYDOJO_STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '';
     if (!key) {
-      throw new Error('STRIPE_SECRET_KEY is not configured');
+      throw new Error('MYDOJO_STRIPE_SECRET_KEY is not configured');
     }
     _stripeInstance = new Stripe(key, { apiVersion: '2025-11-17.clover' as any });
   }
@@ -60,25 +60,23 @@ export async function createSubscriptionCheckout(params: {
   
   const existingSubRecord = existingSub[0];
 
+  // Use existing Stripe price ID if available, otherwise fall back to price_data
+  const lineItem: Stripe.Checkout.SessionCreateParams.LineItem = plan.stripePriceId
+    ? { price: plan.stripePriceId, quantity: 1 }
+    : {
+        price_data: {
+          currency: 'usd',
+          product_data: { name: plan.name },
+          recurring: { interval: 'month' },
+          unit_amount: plan.monthlyPrice,
+        },
+        quantity: 1,
+      };
+
   const sessionParams: Stripe.Checkout.SessionCreateParams = {
     mode: 'subscription',
     payment_method_types: ['card'],
-    line_items: [
-      {
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: plan.name,
-            description: plan.name || undefined,
-          },
-          recurring: {
-            interval: 'month',
-          },
-          unit_amount: plan.monthlyPrice, // Already in cents
-        },
-        quantity: 1,
-      },
-    ],
+    line_items: [lineItem],
     success_url: successUrl,
     cancel_url: cancelUrl,
     metadata: {

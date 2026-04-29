@@ -1,10 +1,10 @@
 import Stripe from 'stripe';
 
-// Use STRIPE_SECRET_KEY (set to DojoFlow live key in Railway)
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+// Use MYDOJO_STRIPE_SECRET_KEY (DojoFlow live Stripe account)
+const stripeSecretKey = process.env.MYDOJO_STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
 
 if (!stripeSecretKey) {
-  console.warn('STRIPE_SECRET_KEY is not set — Stripe will be unavailable');
+  console.warn('MYDOJO_STRIPE_SECRET_KEY is not set — Stripe will be unavailable');
 }
 
 export const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, {

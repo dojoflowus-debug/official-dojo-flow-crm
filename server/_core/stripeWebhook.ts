@@ -18,8 +18,8 @@ import { getDb } from '../db';
 import { creditTopUps } from '../../drizzle/schema';
 import { eq } from 'drizzle-orm';
 
-// Use live webhook secret when available (live mode), fall back to test webhook secret
-const webhookSecret = process.env.STRIPE_LIVE_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET || '';
+// Use MYDOJO_STRIPE_WEBHOOK_SECRET (DojoFlow live Stripe account)
+const webhookSecret = process.env.MYDOJO_STRIPE_WEBHOOK_SECRET || process.env.STRIPE_LIVE_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET || '';
 
 /**
  * Handle Stripe webhook events

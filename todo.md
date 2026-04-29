@@ -9555,3 +9555,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] BUG-18: New staff member added but doesn't show in staff page
 - [ ] BUG-19: Programs not added to kiosk even when toggle is on
 - [ ] BUG-20: Kiosk removes bottom navigation completely
+
+## Subscription Paywall (Apr 29, 2026)
+- [x] Seed subscription plans into DB (Foundation $149, Black Belt $199, Leadership $249)
+- [x] Fix Stripe key references to use MYDOJO_STRIPE_SECRET_KEY across all files
+- [x] Create SubscriptionGate component with full-screen pricing wall
+- [x] Wire SubscriptionGate into AppShell to gate all protected routes
+- [x] Update createSubscriptionCheckout to use existing Stripe price IDs
+- [x] Fix stripeWebhook.ts to use MYDOJO_STRIPE_WEBHOOK_SECRET
