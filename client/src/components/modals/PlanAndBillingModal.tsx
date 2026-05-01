@@ -434,8 +434,8 @@ export function PlanAndBillingModal({ isOpen: propIsOpen = true, onClose: propOn
                       </>
                     )}
                   </button>
-                </div>
               </div>
+            </div>
             ) : null}
           </div>
 
@@ -587,6 +587,7 @@ export function PlanAndBillingModal({ isOpen: propIsOpen = true, onClose: propOn
                 <Loader size={24} style={{ animation: 'spin 1s linear infinite' }} />
               </div>
             ) : billing ? (
+              <>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {/* Credit Balance Cards */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
@@ -791,8 +792,7 @@ export function PlanAndBillingModal({ isOpen: propIsOpen = true, onClose: propOn
                   </button>
                 </div>
               </div>
-
-            </div>
+              </>
             ) : null}
           </div>
         </div>
