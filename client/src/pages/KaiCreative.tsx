@@ -15,6 +15,8 @@ import { trpc } from "@/lib/trpc";
 import ImageLightbox from "@/components/ImageLightbox";
 import { BrandDnaPanel } from "@/components/BrandDnaPanel";
 import { CreativeBriefPanel } from "@/components/CreativeBriefPanel";
+import { PlatformCopyPanel } from "@/components/kai/PlatformCopyPanel";
+import { VideoAdPanel } from "@/components/kai/VideoAdPanel";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
   Wand2,
@@ -39,6 +41,7 @@ import { Button } from "@/components/ui/button";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type Mode = "create" | "edit" | "logo";
+type StudioTab = "studio" | "platform-copy" | "video-ad" | "library";
 type ImageSize = "instagram_post" | "instagram_story" | "facebook_ad" | "flyer" | "website_banner" | "business_card";
 
 interface GeneratedResult {
@@ -165,7 +168,7 @@ export default function KaiCreative() {
   const [isOverlaying, setIsOverlaying] = useState(false);
 
   // Tabs
-  const [activeTab, setActiveTab] = useState<"studio" | "library">("studio");
+  const [activeTab, setActiveTab] = useState<StudioTab>("studio");
   // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
   // A/B Variations
@@ -427,17 +430,20 @@ export default function KaiCreative() {
             </div>
           </div>
 
-          {/* Studio / Library tabs */}
-          <div className={`flex rounded-lg p-0.5 ${isDark ? "bg-white/5" : "bg-slate-100"}`}>
-            {(["studio", "library"] as const).map((tab) => (
+          {/* Studio / Platform Copy / Video Ad / Library tabs */}
+          <div className={`flex rounded-lg p-0.5 gap-0.5 overflow-x-auto ${isDark ? "bg-white/5" : "bg-slate-100"}`}>
+            {([
+              { id: "studio" as StudioTab, label: "Studio" },
+              { id: "platform-copy" as StudioTab, label: "Platform Copy" },
+              { id: "video-ad" as StudioTab, label: "🎬 Video Ad" },
+              { id: "library" as StudioTab, label: assetsQuery.data?.assets.length ? `Library (${assetsQuery.data.assets.length})` : "Library" },
+            ]).map(({ id, label }) => (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all capitalize ${activeTab === tab ? tabActive : tabInactive}`}
+                key={id}
+                onClick={() => setActiveTab(id)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap ${activeTab === id ? tabActive : tabInactive}`}
               >
-                {tab === "library" && assetsQuery.data?.assets.length
-                  ? `Library (${assetsQuery.data.assets.length})`
-                  : tab === "library" ? "Library" : "Studio"}
+                {label}
               </button>
             ))}
           </div>
@@ -894,6 +900,20 @@ export default function KaiCreative() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Platform Copy Tab ───────────────────────────────────────────── */}
+      {activeTab === "platform-copy" && (
+        <div className="max-w-2xl mx-auto">
+          <PlatformCopyPanel />
+        </div>
+      )}
+
+      {/* ── Video Ad Tab ────────────────────────────────────────────────────── */}
+      {activeTab === "video-ad" && (
+        <div className="max-w-2xl mx-auto">
+          <VideoAdPanel />
         </div>
       )}
 

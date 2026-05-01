@@ -36,6 +36,8 @@ import {
   generateMarketingCopy,
   enrichPromptContext,
 } from "./kaiIntelligenceLayer";
+import { generatePlatformCopyVariants } from "./platformCopyService";
+import { generateVideoAd } from "./videoAdService";
 import {
   buildFlyerHtml,
   renderFlyerToPng,
@@ -911,6 +913,65 @@ export const kaiCreativeRouter = router({
         }
       );
       return copy;
+    }),
+
+  // ── generatePlatformCopy: Platform-specific copy for Facebook/Instagram/TikTok/Google/SMS ──
+  generatePlatformCopy: orgScopedProcedure
+    .input(
+      z.object({
+        program: z.string().min(1).max(200),
+        audience: z.string().optional().default("all ages"),
+        tone: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const orgId = ctx.currentOrganizationId as number;
+      const brand = await getBrandDataForOrg(orgId);
+      return generatePlatformCopyVariants({
+        program: input.program,
+        audience: input.audience ?? "all ages",
+        tone: input.tone ?? "bold and energetic",
+        brandContext: {
+          schoolName: brand.schoolName ?? "",
+          phone: brand.phone ?? null,
+          website: brand.website ?? null,
+          primaryColor: brand.primaryColor ?? null,
+        },
+        lockedValues: { programName: input.program },
+      });
+    }),
+
+  // ── generateVideoAd: AI video reel with ElevenLabs voiceover + ffmpeg assembly ──
+  generateVideoAd: orgScopedProcedure
+    .input(
+      z.object({
+        program: z.string().min(1).max(200),
+        audience: z.string().optional().default("all ages"),
+        tone: z.string().optional(),
+        format: z.enum(["reel", "story", "square"]).default("reel"),
+        backgroundImageBase64: z.string().optional(),
+        voiceId: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const orgId = ctx.currentOrganizationId as number;
+      const brand = await getBrandDataForOrg(orgId);
+      return generateVideoAd({
+        program: input.program,
+        audience: input.audience ?? "all ages",
+        tone: input.tone ?? "energetic and motivational",
+        format: input.format,
+        backgroundImageBase64: input.backgroundImageBase64,
+        voiceId: input.voiceId,
+        brandContext: {
+          schoolName: brand.schoolName ?? "",
+          phone: brand.phone ?? null,
+          website: brand.website ?? null,
+          primaryColor: brand.primaryColor ?? null,
+          logoUrl: brand.logoUrl ?? null,
+        },
+        orgId,
+      });
     }),
 });
 

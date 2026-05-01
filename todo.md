@@ -9563,3 +9563,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Wire SubscriptionGate into AppShell to gate all protected routes
 - [x] Update createSubscriptionCheckout to use existing Stripe price IDs
 - [x] Fix stripeWebhook.ts to use MYDOJO_STRIPE_WEBHOOK_SECRET
+
+## Kai Ad Generation Upgrades (May 1, 2026)
+- [x] Platform-specific copy variants (Facebook, Instagram, TikTok, Google Ads, SMS)
+- [x] AI Video Ad generator with ElevenLabs voiceover + ffmpeg assembly
+- [x] PlatformCopyPanel UI with per-platform tabs and one-click copy
+- [x] VideoAdPanel UI with script preview, text overlays, and video download
+- [x] New tabs in KaiCreative: "Platform Copy" and "🎬 Video Ad"
