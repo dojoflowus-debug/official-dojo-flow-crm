@@ -438,6 +438,45 @@ const crmTools = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'generate_platform_copy',
+      description: 'Generate platform-specific ad copy for Facebook, Instagram, TikTok, Google Ads, and SMS. Call this immediately when the user asks to create ad copy, marketing copy, social media captions, or content for a specific platform. Returns tailored copy for all 5 platforms at once.',
+      parameters: {
+        type: 'object',
+        properties: {
+          program: { type: 'string', description: 'The program or offer to promote (e.g. Little Ninjas, Adult BJJ, Summer Camp)' },
+          offer: { type: 'string', description: 'Special offer or promotion (e.g. Free first class, 50% off first month). Optional.' },
+          tone: { type: 'string', enum: ['energetic', 'professional', 'friendly', 'urgent', 'inspirational'], description: 'Tone of the copy. Default: energetic.' },
+          platforms: {
+            type: 'array',
+            items: { type: 'string', enum: ['facebook', 'instagram', 'tiktok', 'google', 'sms'] },
+            description: 'Which platforms to generate copy for. Default: all platforms.',
+          },
+        },
+        required: ['program'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'generate_video_ad',
+      description: 'Generate a complete AI video ad (15-30 seconds) with script, ElevenLabs voiceover, and assembled MP4 video with text overlays. Call this when the user asks to create a video ad, reel, TikTok video, or Instagram story video.',
+      parameters: {
+        type: 'object',
+        properties: {
+          program: { type: 'string', description: 'The program or class to promote (e.g. Little Ninjas, Kickboxing, BJJ)' },
+          duration: { type: 'number', enum: [15, 30, 60], description: 'Video duration in seconds. Default: 30.' },
+          format: { type: 'string', enum: ['reel', 'story', 'square'], description: 'Video format. reel/story = 9:16 vertical, square = 1:1. Default: reel.' },
+          offer: { type: 'string', description: 'Special offer to highlight (e.g. Free trial class). Optional.' },
+          style: { type: 'string', enum: ['energetic', 'inspirational', 'professional', 'fun'], description: 'Video style/tone. Default: energetic.' },
+        },
+        required: ['program'],
+      },
+    },
+  },
 ];
 
 export interface KaiConversationMessage {
@@ -625,6 +664,8 @@ Track multi-step workflows. Never repeat a completed step. Continue from where l
 - After tool results: natural conversational text (2-4 sentences)
 - UI auto-renders interactive cards for students/leads
 - **FLYER/POSTER/GRAPHIC REQUESTS: ALWAYS call generate_flyer tool immediately — NEVER write a text outline, NEVER ask clarifying questions first**
+- **PLATFORM COPY REQUESTS: ALWAYS call generate_platform_copy tool immediately when user asks for ad copy, social media captions, marketing copy, or content for Facebook/Instagram/TikTok/Google/SMS**
+- **VIDEO AD REQUESTS: ALWAYS call generate_video_ad tool immediately when user asks for a video ad, reel, TikTok video, Instagram story video, or promotional video**
 
 ## DATA TOOLS
 - get_dashboard_stats — student/lead counts, at-risk, attendance
@@ -647,6 +688,11 @@ Track multi-step workflows. Never repeat a completed step. Continue from where l
 - remove_student — archive student (ADMIN ONLY)
 - send_sms — text specific person
 - send_bulk_sms — text a group (preview first)
+
+## CREATIVE TOOLS
+- generate_flyer — create marketing flyer/poster/social image (call IMMEDIATELY, no questions)
+- generate_platform_copy — create ad copy for Facebook, Instagram, TikTok, Google Ads, SMS (call IMMEDIATELY)
+- generate_video_ad — create 15-60s video ad with voiceover and text overlays (call IMMEDIATELY)
 
 ## PERMISSION RULES
 - remove_student: admin-only, confirm first

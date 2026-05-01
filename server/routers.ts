@@ -911,6 +911,73 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
         return { error: `Flyer generation failed: ${err.message}` };
       }
     }
+    case 'generate_platform_copy': {
+      const orgIdCopy = ctx?.currentOrganizationId;
+      if (!orgIdCopy) return { error: 'No organization context — cannot generate copy.' };
+      try {
+        const { generatePlatformCopyVariants } = await import('./platformCopyService');
+        const { organizations: orgsTable } = await import('../drizzle/schema');
+        const db2 = await getDb();
+        let schoolName = 'our school';
+        let phone = '';
+        if (db2) {
+          const [org] = await db2.select({ name: orgsTable.name, phone: orgsTable.phone }).from(orgsTable).where(eq(orgsTable.id, orgIdCopy)).limit(1);
+          if (org) { schoolName = org.name || schoolName; phone = org.phone || ''; }
+        }
+        const copyResult = await generatePlatformCopyVariants({
+          schoolName,
+          program: args.program || 'our programs',
+          offer: args.offer,
+          tone: args.tone || 'energetic',
+          phone,
+          platforms: args.platforms,
+        });
+        return {
+          success: true,
+          type: 'platform_copy',
+          variants: copyResult.variants,
+          message: `Platform copy generated for ${copyResult.variants.length} platforms.`,
+        };
+      } catch (err: any) {
+        return { error: `Platform copy generation failed: ${err.message}` };
+      }
+    }
+    case 'generate_video_ad': {
+      const orgIdVideo = ctx?.currentOrganizationId;
+      if (!orgIdVideo) return { error: 'No organization context — cannot generate video ad.' };
+      try {
+        const { generateVideoAd } = await import('./videoAdService');
+        const { organizations: orgsTableV } = await import('../drizzle/schema');
+        const db3 = await getDb();
+        let schoolName = 'our school';
+        let brandColor = '#dc2626';
+        if (db3) {
+          const [org] = await db3.select({ name: orgsTableV.name }).from(orgsTableV).where(eq(orgsTableV.id, orgIdVideo)).limit(1);
+          if (org) { schoolName = org.name || schoolName; }
+        }
+        const videoResult = await generateVideoAd({
+          schoolName,
+          program: args.program || 'our programs',
+          offer: args.offer,
+          duration: args.duration || 30,
+          format: args.format || 'reel',
+          style: args.style || 'energetic',
+          brandColor,
+          organizationId: orgIdVideo,
+        });
+        return {
+          success: true,
+          type: 'video_ad',
+          videoUrl: videoResult.videoUrl,
+          script: videoResult.script,
+          duration: videoResult.duration,
+          format: videoResult.format,
+          message: `Video ad generated successfully (${videoResult.duration}s ${videoResult.format}).`,
+        };
+      } catch (err: any) {
+        return { error: `Video ad generation failed: ${err.message}` };
+      }
+    }
      default:
       return { error: 'Unknown function' };
   }
@@ -1119,6 +1186,32 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
     };
   }
 
+  // Handle platform_copy result (generate_platform_copy tool)
+  if (result.type === 'platform_copy' && result.variants) {
+    const platformNames = result.variants.map((v: any) => v.platform).join(', ');
+    return {
+      text: `Here's your platform-specific ad copy for ${platformNames}! Each version is optimized for that platform's audience and format.`,
+      ui_blocks: [{
+        type: 'platform_copy',
+        variants: result.variants,
+        label: 'Platform Ad Copy',
+      }],
+    };
+  }
+  // Handle video_ad result (generate_video_ad tool)
+  if (result.type === 'video_ad' && result.videoUrl) {
+    return {
+      text: `Your ${result.duration}-second ${result.format} video ad is ready! It's been saved to your Creative Library.`,
+      ui_blocks: [{
+        type: 'video_ad',
+        videoUrl: result.videoUrl,
+        script: result.script,
+        duration: result.duration,
+        format: result.format,
+        label: 'Video Ad',
+      }],
+    };
+  }
    // Handle creative_image result (generate_flyer tool)
   if (result.type === 'creative_image' && result.imageUrl) {
     return {

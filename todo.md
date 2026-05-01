@@ -9570,3 +9570,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] PlatformCopyPanel UI with per-platform tabs and one-click copy
 - [x] VideoAdPanel UI with script preview, text overlays, and video download
 - [x] New tabs in KaiCreative: "Platform Copy" and "🎬 Video Ad"
+
+## Kai Dashboard Creative Capabilities (May 1, 2026)
+- [x] generate_platform_copy tool added to Kai chat (Facebook, Instagram, TikTok, Google, SMS)
+- [x] generate_video_ad tool added to Kai chat (15-60s video with voiceover)
+- [x] UIBlockRenderer updated to render platform_copy and video_ad blocks inline in chat
+- [x] Kai system prompt updated with CREATIVE TOOLS section and immediate-call rules
+- [x] routers.ts executeCRMFunction updated with generate_platform_copy and generate_video_ad handlers

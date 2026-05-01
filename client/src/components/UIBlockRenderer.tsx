@@ -61,7 +61,14 @@ interface ProgramsPricingBlock {
 }
 
 interface UIBlock {
-  type: 'student_card' | 'student_list' | 'lead_card' | 'lead_list' | 'flyer_creation' | 'sms_blast_result' | 'contact_message_sent' | 'programs_pricing' | 'creative_image';
+  type: 'student_card' | 'student_list' | 'lead_card' | 'lead_list' | 'flyer_creation' | 'sms_blast_result' | 'contact_message_sent' | 'programs_pricing' | 'creative_image' | 'platform_copy' | 'video_ad';
+  // platform_copy fields
+  variants?: Array<{ platform: string; content: Record<string, string>; characterCount?: Record<string, number> }>;
+  // video_ad fields
+  videoUrl?: string;
+  script?: { hook: string; story: string; cta: string; fullScript: string };
+  duration?: number;
+  format?: string;
   // creative_image fields
   imageUrl?: string;
   imageBase64?: string;
@@ -369,6 +376,43 @@ export function UIBlockRenderer({ blocks, onBlockClick, theme = 'light' }: UIBlo
               isDark={isDark}
               isCinematic={isCinematic}
             />
+          );
+        }
+
+        // Render platform copy block
+        if (block.type === 'platform_copy' && block.variants) {
+          return (
+            <div key={index} className={`rounded-xl border p-4 space-y-3 ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <p className={`text-xs font-semibold uppercase tracking-wide ${isDark ? 'text-white/50' : 'text-slate-400'}`}>Platform Ad Copy</p>
+              {block.variants.map((v, vi) => (
+                <div key={vi} className={`rounded-lg p-3 border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
+                  <p className={`text-xs font-bold mb-2 capitalize ${isDark ? 'text-white' : 'text-slate-800'}`}>{v.platform}</p>
+                  {Object.entries(v.content).map(([field, value]) => (
+                    <div key={field} className="mb-2">
+                      <p className={`text-xs font-medium mb-0.5 capitalize ${isDark ? 'text-white/50' : 'text-slate-500'}`}>{field.replace(/_/g, ' ')}</p>
+                      <p className={`text-xs ${isDark ? 'text-white/80' : 'text-slate-700'}`}>{String(value)}</p>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          );
+        }
+
+        // Render video ad block
+        if (block.type === 'video_ad' && block.videoUrl) {
+          return (
+            <div key={index} className={`rounded-xl border p-4 space-y-3 ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <p className={`text-xs font-semibold uppercase tracking-wide ${isDark ? 'text-white/50' : 'text-slate-400'}`}>🎬 Video Ad · {block.duration}s {block.format}</p>
+              <video controls className="w-full rounded-lg" src={block.videoUrl} />
+              {block.script && (
+                <div className={`rounded-lg p-3 border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
+                  <p className={`text-xs font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-800'}`}>Script</p>
+                  <p className={`text-xs ${isDark ? 'text-white/70' : 'text-slate-600'}`}>{block.script.fullScript}</p>
+                </div>
+              )}
+              <a href={block.videoUrl} download className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium ${isDark ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>⬇ Download MP4</a>
+            </div>
           );
         }
 
