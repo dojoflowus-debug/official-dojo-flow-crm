@@ -8,6 +8,7 @@
 import { getDb } from "./db";
 import { aiCreditBalance, aiCreditTransactions } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { checkAndSendCreditAlert } from "./services/creditAlertService";
 
 /**
  * Credit costs for different operation types
@@ -179,6 +180,11 @@ export async function deductCredits(params: {
         balanceAfter: newBalance,
         createdAt:new Date().toISOString(),
       });
+
+    // Fire low-credit alert check asynchronously (non-blocking)
+    checkAndSendCreditAlert(organizationId, newBalance).catch(err =>
+      console.error('[CreditConsumption] Credit alert check failed:', err)
+    );
 
     return {
       success: true,

@@ -1,4 +1,5 @@
 import { aiCreditBalance, aiCreditTransactions, organizations } from '../drizzle/schema';
+import { checkAndSendCreditAlert } from './services/creditAlertService';
 import { eq, and, sql } from 'drizzle-orm';
 import { getDb } from './db';
 
@@ -197,6 +198,11 @@ export async function deductCredits(
       .where(eq(aiCreditBalance.organizationId, organizationId));
 
     console.log(`[creditMiddleware] Deducted ${creditCost} credits for ${featureType} (org ${organizationId}). New balance: ${newBalance}`);
+
+    // Fire low-credit alert check asynchronously (non-blocking)
+    checkAndSendCreditAlert(organizationId, newBalance).catch(err =>
+      console.error('[creditMiddleware] Credit alert check failed:', err)
+    );
 
     return {
       success: true,

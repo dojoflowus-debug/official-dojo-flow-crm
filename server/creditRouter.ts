@@ -16,6 +16,9 @@ import {
 } from "./creditConsumption";
 import { getCreditTransactions } from "./subscriptionDb";
 import { getManusCredits, getManusAddCreditsUrl } from "./_core/manusCredits";
+import { getDb } from "./db";
+import { aiCreditBalance } from "../drizzle/schema";
+import { eq } from "drizzle-orm";
 
 export const creditRouter = router({
   /**
@@ -42,7 +45,6 @@ export const creditRouter = router({
   getBalance: protectedProcedure.query(async ({ ctx }) => {
     const organizationId = ctx.currentOrganizationId;
     if (!organizationId) {
-      // Return empty balance for users without an organization (new accounts)
       return {
         creditsRemaining: 0,
         totalCredits: 0,
@@ -54,7 +56,6 @@ export const creditRouter = router({
 
     const balance = await getCreditBalance(organizationId);
     
-    // Calculate warning level
     let warningLevel: 'none' | 'warning' | 'critical' | 'blocking' = 'none';
     if (balance.creditsRemaining === CREDIT_THRESHOLDS.BLOCKING) {
       warningLevel = 'blocking';
@@ -82,7 +83,6 @@ export const creditRouter = router({
     .query(async ({ input, ctx }) => {
       const organizationId = ctx.currentOrganizationId;
       if (!organizationId) {
-        // Return insufficient balance for users without an organization
         return {
           sufficient: false,
           currentBalance: 0,
@@ -206,5 +206,56 @@ export const creditRouter = router({
         taskType: tx.taskType,
         metadata: tx.metadata ? JSON.parse(tx.metadata) : null,
       }));
+    }),
+
+  /**
+   * Get the current low-credit alert threshold for the organization
+   */
+  getAlertSettings: protectedProcedure.query(async ({ ctx }) => {
+    const organizationId = ctx.currentOrganizationId;
+    if (!organizationId) {
+      return { threshold: 50, alertEnabled: true };
+    }
+    const db = await getDb();
+    if (!db) return { threshold: 50, alertEnabled: true };
+
+    const rows = await db
+      .select({ lowCreditThreshold: aiCreditBalance.lowCreditThreshold, lowCreditAlertSent: aiCreditBalance.lowCreditAlertSent })
+      .from(aiCreditBalance)
+      .where(eq(aiCreditBalance.organizationId, organizationId))
+      .limit(1);
+
+    if (!rows.length) return { threshold: 50, alertEnabled: true };
+    return {
+      threshold: rows[0].lowCreditThreshold ?? 50,
+      alertEnabled: true,
+    };
+  }),
+
+  /**
+   * Update the low-credit alert threshold for the organization
+   */
+  updateAlertThreshold: protectedProcedure
+    .input(z.object({
+      threshold: z.number().min(0).max(10000),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const organizationId = ctx.currentOrganizationId;
+      if (!organizationId) throw new Error('No organization found.');
+
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+
+      // Upsert the threshold — reset lowCreditAlertSent so the next alert fires at the new threshold
+      await db
+        .update(aiCreditBalance)
+        .set({
+          lowCreditThreshold: input.threshold,
+          lowCreditAlertSent: 0, // reset cooldown so alert fires again at new threshold
+        })
+        .where(eq(aiCreditBalance.organizationId, organizationId));
+
+      console.log(`[Credits] Alert threshold updated for org ${organizationId}: ${input.threshold}`);
+      return { success: true, threshold: input.threshold };
     }),
 });

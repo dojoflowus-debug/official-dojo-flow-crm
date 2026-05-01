@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
-import { X, CreditCard, TrendingUp, Calendar, Zap, AlertCircle, Loader } from 'lucide-react';
+import { X, CreditCard, TrendingUp, Calendar, Zap, AlertCircle, Loader, Bell } from 'lucide-react';
 import AddCreditModal from './AddCreditModal';
 
 interface BillingSnapshot {
@@ -47,6 +47,8 @@ export function PlanAndBillingModal({ isOpen: propIsOpen = true, onClose: propOn
   const [isOpen, setIsOpen] = useState(propIsOpen);
   const [showAddCredit, setShowAddCredit] = useState(false);
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+  const [thresholdInput, setThresholdInput] = useState<string>('');
+  const [isSavingThreshold, setIsSavingThreshold] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
 
@@ -101,6 +103,28 @@ export function PlanAndBillingModal({ isOpen: propIsOpen = true, onClose: propOn
     { organizationId: organizationId || 0 },
     { enabled: !!organizationId && isOpen }
   );
+
+  const alertSettingsQuery = trpc.credits.getAlertSettings.useQuery(undefined, {
+    enabled: !!organizationId,
+    onSuccess: (data: any) => {
+      if (thresholdInput === '') setThresholdInput(String(data.threshold));
+    },
+  });
+  const updateThresholdMutation = trpc.credits.updateAlertThreshold.useMutation({
+    onSuccess: () => {
+      toast.success('Alert threshold updated');
+      alertSettingsQuery.refetch();
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to update threshold'),
+  });
+
+  const handleSaveThreshold = async () => {
+    const val = parseInt(thresholdInput, 10);
+    if (isNaN(val) || val < 0) { toast.error('Enter a valid number (0 or more)'); return; }
+    setIsSavingThreshold(true);
+    try { await updateThresholdMutation.mutateAsync({ threshold: val }); }
+    finally { setIsSavingThreshold(false); }
+  };
 
   const recentTransactionsQuery = trpc.credits.getRecentTransactions.useQuery(
     { limit: 10, offset: 0 },
@@ -709,6 +733,66 @@ export function PlanAndBillingModal({ isOpen: propIsOpen = true, onClose: propOn
                   )}
                 </div>
               </div>
+
+              {/* Low-Credit Alert Threshold Setting */}
+              <div
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  marginTop: '4px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                  <Bell size={15} style={{ color: '#f59e0b' }} />
+                  <h4 style={{ fontSize: '14px', fontWeight: '600', color: 'white', margin: 0 }}>Low-Credit Email Alert</h4>
+                </div>
+                <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', margin: '0 0 14px 0', lineHeight: '1.5' }}>
+                  Get an email when your balance drops below this number. Set to 0 to disable.
+                </p>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <input
+                    type="number"
+                    min={0}
+                    max={10000}
+                    value={thresholdInput !== '' ? thresholdInput : (alertSettingsQuery.data?.threshold ?? 50)}
+                    onChange={(e) => setThresholdInput(e.target.value)}
+                    style={{
+                      flex: 1,
+                      backgroundColor: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: '8px',
+                      color: 'white',
+                      fontSize: '14px',
+                      padding: '10px 14px',
+                      outline: 'none',
+                    }}
+                    placeholder="e.g. 50"
+                  />
+                  <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap' }}>credits</span>
+                  <button
+                    onClick={handleSaveThreshold}
+                    disabled={isSavingThreshold}
+                    style={{
+                      backgroundColor: '#f59e0b',
+                      color: '#000',
+                      fontWeight: '600',
+                      fontSize: '13px',
+                      padding: '10px 18px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      cursor: isSavingThreshold ? 'not-allowed' : 'pointer',
+                      opacity: isSavingThreshold ? 0.6 : 1,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {isSavingThreshold ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+              </div>
+
+            </div>
             ) : null}
           </div>
         </div>
