@@ -17,6 +17,7 @@ import { ModalProvider } from "./contexts/ModalContext";
 import { appRoutes } from "./routes/appRoutes";
 import { IndustryEnvironmentInitializer } from "./components/IndustryEnvironmentInitializer";
 import { CookieNotice } from "./components/CookieNotice";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import { SplashLoader } from "./components/SplashLoader";
 import { trpc } from "@/lib/trpc";
 
@@ -74,6 +75,7 @@ function AppWithSplashInner() {
           </Suspense>
         </AppShellGuard>
         <CookieNotice />
+        <PWAInstallPrompt />
       </div>
     </>
   );

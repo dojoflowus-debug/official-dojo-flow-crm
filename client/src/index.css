@@ -1118,3 +1118,127 @@ button, a, [role="button"], input, select, textarea, label {
   ::-webkit-scrollbar { display: none; }
   * { scrollbar-width: none; }
 }
+
+/* ─────────────────────────────────────────────
+   PWA / Mobile Polish
+   ───────────────────────────────────────────── */
+
+/* Prevent text size adjustment on orientation change */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Prevent double-tap zoom on buttons and links */
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* Full-height Kai chat on mobile */
+@media (max-width: 767px) {
+  /* Kai chat messages area fills available space */
+  .kai-chat-messages {
+    height: calc(100dvh - var(--bottom-nav-height, 72px) - 80px - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Modals take full screen on mobile */
+  [data-radix-dialog-content],
+  .modal-content {
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+  }
+
+  /* Drawers slide up from bottom on mobile */
+  [data-radix-drawer-content] {
+    max-height: 90dvh;
+    border-radius: 20px 20px 0 0;
+  }
+
+  /* Prevent horizontal overflow on all pages */
+  .page-container {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* KaiBar input area — ensure it doesn't get hidden behind keyboard */
+  .kaiBarContainer {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px) !important;
+  }
+
+  /* Creative Studio tabs — horizontal scroll on mobile */
+  .creative-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    white-space: nowrap;
+  }
+  .creative-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Stats cards — 2 columns on mobile */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Lead/Student cards — full width on mobile */
+  .lead-card, .student-card {
+    width: 100%;
+  }
+
+  /* Platform copy panel — stack vertically on mobile */
+  .platform-copy-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Video ad panel — full width on mobile */
+  .video-ad-panel {
+    padding: 12px !important;
+  }
+}
+
+/* Tablet (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Dynamic viewport height support (accounts for browser chrome) */
+@supports (height: 100dvh) {
+  .full-height {
+    height: 100dvh;
+  }
+  .min-full-height {
+    min-height: 100dvh;
+  }
+}
+
+/* PWA standalone mode — hide browser UI artifacts */
+@media (display-mode: standalone) {
+  /* Extra top padding for status bar */
+  .app-header {
+    padding-top: max(env(safe-area-inset-top, 0px), 0px);
+  }
+
+  /* Ensure bottom nav doesn't overlap home indicator */
+  .app-shell-bottom-nav {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px) !important;
+  }
+}
+
+/* Input zoom prevention on iOS — minimum 16px font size */
+@media (max-width: 767px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: max(16px, 1em) !important;
+  }
+}

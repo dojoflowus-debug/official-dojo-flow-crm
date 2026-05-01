@@ -9577,3 +9577,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] UIBlockRenderer updated to render platform_copy and video_ad blocks inline in chat
 - [x] Kai system prompt updated with CREATIVE TOOLS section and immediate-call rules
 - [x] routers.ts executeCRMFunction updated with generate_platform_copy and generate_video_ad handlers
+
+## Mobile / PWA (May 1, 2026)
+- [x] Add vite-plugin-pwa with service worker and Workbox caching
+- [x] Generate apple-touch-icon (180x180) and iOS splash screens for all iPhone/iPad sizes
+- [x] Add iOS splash screen meta tags to index.html
+- [x] Create PWAInstallPrompt component (Android banner + iOS step-by-step guide)
+- [x] Wire PWAInstallPrompt into App.tsx
+- [x] Add mobile CSS polish (input zoom prevention, safe-area insets, dvh support, PWA standalone mode)
