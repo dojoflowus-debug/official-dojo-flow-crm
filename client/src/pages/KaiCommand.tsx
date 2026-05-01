@@ -3546,8 +3546,12 @@ export default function KaiCommand() {
       
       <div ref={containerRef} className={`kai-command-page w-full overflow-hidden ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode && !isMobile && !isTablet ? 'focus-mode fixed inset-0 z-50' : isFocusMode ? 'focus-mode' : ''} transition-all duration-500 ease-in-out`} style={{
         display: 'grid',
-        height: 'calc(100vh - var(--topbar-h, 56px) - var(--bottomnav-h, 72px))',
-        maxHeight: 'calc(100vh - var(--topbar-h, 56px) - var(--bottomnav-h, 72px))',
+        height: isMobile
+          ? 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px) - env(safe-area-inset-bottom, 0px))'
+          : 'calc(100vh - var(--topbar-h, 56px) - var(--bottomnav-h, 72px))',
+        maxHeight: isMobile
+          ? 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px) - env(safe-area-inset-bottom, 0px))'
+          : 'calc(100vh - var(--topbar-h, 56px) - var(--bottomnav-h, 72px))',
         gridTemplateColumns: managementPanelOpen 
           ? `${isFocusMode ? 0 : effectiveCommandWidth}px ${effectiveCommandWidth === 0 ? '0px' : '8px'} minmax(${isMobile ? '100%' : '520px'}, 1fr) ${isMobile ? '0px' : 'clamp(360px, 30vw, 520px)'}`
           : `${isFocusMode ? 0 : effectiveCommandWidth}px ${effectiveCommandWidth === 0 ? '0px' : '8px'} 1fr`,
@@ -3562,7 +3566,8 @@ export default function KaiCommand() {
             opacity: isFocusMode ? 0 : 1,
             transform: isFocusMode ? 'translateX(-20px)' : 'translateX(0)',
             pointerEvents: isFocusMode ? 'none' : 'auto',
-            zIndex: 20
+            zIndex: 20,
+            display: isMobile ? 'none' : undefined
           }}
           className={`conversation-panel ${getSidebarBgClass()} border rounded-sm flex flex-col flex-shrink-0 m-4 mr-0 ${isDark || isCinematic ? 'shadow-[0_4px_24px_rgba(0,0,0,0.7)]' : 'shadow-lg'} overflow-hidden transition-all duration-300 ease-in-out ${isFocusMode ? 'invisible' : 'visible'} relative`}
         >
@@ -3744,16 +3749,17 @@ export default function KaiCommand() {
           </div>
         </div>
 
-        {/* Swivel/Drag Bar - Only show when not in Focus Mode */}
+        {/* Swivel/Drag Bar - Only show when not in Focus Mode and not on mobile */}
         <div 
           onMouseDown={handleMouseDown}
           onDoubleClick={() => setCommandCenterWidth(320)}
           style={{
-            opacity: isFocusMode ? 0 : 1,
-            width: isFocusMode ? '0px' : '8px',
-            pointerEvents: isFocusMode ? 'none' : 'auto',
+            opacity: isFocusMode || isMobile ? 0 : 1,
+            width: isFocusMode || isMobile ? '0px' : '8px',
+            pointerEvents: isFocusMode || isMobile ? 'none' : 'auto',
             zIndex: 100,
-            position: 'relative'
+            position: 'relative',
+            display: isMobile ? 'none' : undefined
           }}
           className={`cursor-col-resize flex items-center justify-center group transition-all duration-300 ease-in-out select-none ${
             isResizing ? 'bg-[#ED393D]' : 'bg-slate-200 hover:bg-[#ED393D]'
@@ -3891,7 +3897,7 @@ export default function KaiCommand() {
           {/* CONTENT LAYER - Top Banner - Hidden in Focus Mode for full-screen experience */}
           {!isFocusMode && (
           <div 
-            className={`relative px-6 py-3 border-b flex items-center justify-between ${
+            className={`relative ${isMobile ? 'px-3 py-2' : 'px-6 py-3'} border-b flex items-center justify-between ${
               isCinematic 
                 ? 'border-white/15' 
                 : isDark 
@@ -3911,17 +3917,19 @@ export default function KaiCommand() {
             >
               {isMobile ? 'KAI AI ASSISTANT' : 'KAI AI ASSISTANT • READY'}
             </p>
-            <div className="flex items-center gap-1">
+            <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-1'}`}>
               {/* Mobile: Ops list toggle button */}
               {isMobile && (
                 <button
                   onClick={() => setMobileOpsOpen(prev => !prev)}
-                  className={`h-8 w-8 flex items-center justify-center rounded-md transition-colors ${isDark || isCinematic ? 'hover:bg-white/10 text-white/70' : 'hover:bg-slate-100 text-slate-600'}`}
+                  className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${isDark || isCinematic ? 'hover:bg-white/10 text-white/70' : 'hover:bg-slate-100 text-slate-600'}`}
                   title="Operations list"
                 >
-                  <Menu className="w-4 h-4" />
+                  <Menu className="w-5 h-5" />
                 </button>
               )}
+              {/* Desktop: Summarize & Extract dropdown */}
+              {!isMobile && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
@@ -3955,6 +3963,9 @@ export default function KaiCommand() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              )}
+              {/* Desktop: Export dropdown */}
+              {!isMobile && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
@@ -4002,6 +4013,9 @@ export default function KaiCommand() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              )}
+              {/* Desktop: Delete button */}
+              {!isMobile && (
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -4012,6 +4026,9 @@ export default function KaiCommand() {
               >
                 <Trash2 className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
+              )}
+              {/* Desktop: Add Staff button */}
+              {!isMobile && (
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -4021,10 +4038,12 @@ export default function KaiCommand() {
               >
                 <Users className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
+              )}
+              {/* Volume button — visible on all devices (important for voice) */}
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''} ${voiceEnabled ? (isCinematic ? 'bg-[rgba(255,255,255,0.2)]' : isDark ? 'bg-[rgba(255,255,255,0.15)]' : 'bg-slate-200') : ''}`}
+                className={`${isMobile ? 'h-9 w-9' : 'h-8 w-8'} ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''} ${voiceEnabled ? (isCinematic ? 'bg-[rgba(255,255,255,0.2)]' : isDark ? 'bg-[rgba(255,255,255,0.15)]' : 'bg-slate-200') : ''}`}
                 title={voiceEnabled ? "Disable Voice Replies" : "Enable Voice Replies"}
                 onClick={() => {
                   setVoiceEnabled(!voiceEnabled);
@@ -4034,8 +4053,10 @@ export default function KaiCommand() {
                   }
                 }}
               >
-                <Volume2 className={`w-4 h-4 ${voiceEnabled ? (isCinematic ? 'text-white' : isDark ? 'text-white' : 'text-slate-900') : (isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500')}`} />
+                <Volume2 className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'} ${voiceEnabled ? (isCinematic ? 'text-white' : isDark ? 'text-white' : 'text-slate-900') : (isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500')}`} />
               </Button>
+              {/* Desktop: Fullscreen button */}
+              {!isMobile && (
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -4045,6 +4066,9 @@ export default function KaiCommand() {
               >
                 <Maximize2 className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
+              )}
+              {/* Desktop: Focus Mode button */}
+              {!isMobile && (
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -4058,6 +4082,66 @@ export default function KaiCommand() {
                   <Eye className={`w-4 h-4 ${isCinematic ? 'text-white' : 'text-slate-500'}`} />
                 )}
               </Button>
+              )}
+              {/* Mobile: More options dropdown (consolidates secondary actions) */}
+              {isMobile && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${isDark || isCinematic ? 'hover:bg-white/10 text-white/70' : 'hover:bg-slate-100 text-slate-600'}`}
+                    title="More options"
+                  >
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem
+                    onClick={handleSummarize}
+                    disabled={isSummarizing || !selectedConversationId || messages.length === 0}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    {isSummarizing ? 'Summarizing...' : 'Summarize Chat'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleExtract}
+                    disabled={isExtracting || !selectedConversationId}
+                  >
+                    <List className="w-4 h-4 mr-2" />
+                    {isExtracting ? 'Extracting...' : 'Extract Data'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleExport('markdown')}
+                    disabled={!selectedConversationId}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Chat
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleAddStaff}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Add Staff
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={toggleFocusMode}
+                  >
+                    {isFocusMode ? (
+                      <><EyeOff className="w-4 h-4 mr-2" />Exit Focus Mode</>
+                    ) : (
+                      <><Eye className="w-4 h-4 mr-2" />Focus Mode</>
+                    )}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleDeleteAllMessages}
+                    disabled={!selectedConversationId || messages.length === 0}
+                    className="text-red-500 focus:text-red-500"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Clear Chat
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              )}
             </div>
           </div>
           )}
@@ -4114,7 +4198,7 @@ export default function KaiCommand() {
             className={`content-layer flex-1 min-h-0 relative w-full overflow-y-auto scrollbar-visible ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'}`}
             style={{ 
               zIndex: 10,
-              paddingBottom: '140px'
+              paddingBottom: isMobile ? '96px' : '140px'
             }}
           >
             {/* Shared content column wrapper - constrained to chat bar width */}
@@ -5832,10 +5916,10 @@ export default function KaiCommand() {
             className="flex justify-center w-full flex-shrink-0 border-t border-white/10"
             style={{
               zIndex: LAYOUT_CONSTANTS.composerZIndex,
-              paddingBottom: '16px',
-              paddingTop: '16px',
-              paddingLeft: '16px',
-              paddingRight: '16px',
+              paddingBottom: isMobile ? '12px' : '16px',
+              paddingTop: isMobile ? '10px' : '16px',
+              paddingLeft: isMobile ? '12px' : '16px',
+              paddingRight: isMobile ? '12px' : '16px',
               boxSizing: 'border-box',
               background: 'transparent',
               marginBottom: '0px'
@@ -6239,9 +6323,18 @@ export default function KaiCommand() {
             {/* Drawer handle */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
               <span className={`text-xs font-semibold uppercase tracking-wider ${isDark || isCinematic ? 'text-white/60' : 'text-slate-500'}`}>Operations</span>
-              <button onClick={() => setMobileOpsOpen(false)} className="p-1">
-                <X className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/60' : 'text-slate-500'}`} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { handleNewChat(); setMobileOpsOpen(false); }}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium ${isDark || isCinematic ? 'bg-white/10 text-white/80 hover:bg-white/15' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  New Chat
+                </button>
+                <button onClick={() => setMobileOpsOpen(false)} className="p-1">
+                  <X className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/60' : 'text-slate-500'}`} />
+                </button>
+              </div>
             </div>
             {/* Ops list */}
             <div className="overflow-y-auto flex-1 p-3 space-y-2">
