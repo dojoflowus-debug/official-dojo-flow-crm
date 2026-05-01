@@ -1,5 +1,5 @@
-import { aiCreditBalance, aiCreditTransactions, platformSubscriptions, organizations } from '../drizzle/schema';
-import { eq, and } from 'drizzle-orm';
+import { aiCreditBalance, aiCreditTransactions, organizations } from '../drizzle/schema';
+import { eq, and, sql } from 'drizzle-orm';
 import { getDb } from './db';
 
 /**
@@ -18,6 +18,18 @@ export const CREDIT_COSTS = {
  * Feature types that require credits
  */
 export type FeatureType = keyof typeof CREDIT_COSTS;
+
+/**
+ * Map CREDIT_COSTS feature keys to the DB taskType enum values
+ */
+const FEATURE_TO_TASK_TYPE: Record<FeatureType, 'kai_chat' | 'ai_sms' | 'ai_email' | 'ai_phone_call' | 'automation' | 'data_analysis' | 'other'> = {
+  CHAT_MESSAGE: 'kai_chat',
+  SMS_MESSAGE: 'ai_sms',
+  EMAIL_MESSAGE: 'ai_email',
+  VOICE_CALL: 'ai_phone_call',
+  SCHEDULE_EXTRACTION: 'data_analysis',
+  CLASS_CREATION: 'automation',
+};
 
 /**
  * Subscription status types
@@ -133,7 +145,7 @@ export async function hasSufficientCredits(
 
 /**
  * Deduct credits for a feature usage
- * Returns true if deduction was successful, false if insufficient credits
+ * Returns success/failure with updated balance
  */
 export async function deductCredits(
   organizationId: number,
@@ -142,6 +154,7 @@ export async function deductCredits(
   metadata?: Record<string, any>
 ): Promise<{ success: boolean; newBalance: number; error?: string }> {
   const creditCost = CREDIT_COSTS[featureType];
+  const taskType = FEATURE_TO_TASK_TYPE[featureType] || 'other';
 
   try {
     const db = await getDb();
@@ -158,23 +171,32 @@ export async function deductCredits(
       };
     }
 
-    // Create transaction record
+    const newBalance = currentBalance - creditCost;
+
+    // Create transaction record with correct column names and enum values
     await db.insert(aiCreditTransactions).values({
       organizationId,
       userId,
       type: 'deduction',
       amount: creditCost,
-      featureType,
+      balanceAfter: newBalance,
+      taskType,
+      description: `${featureType} credit deduction`,
       metadata: JSON.stringify(metadata || {}),
-      createdAt: new Date(),
+      createdAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
     });
 
-    // Update balance
-    const newBalance = currentBalance - creditCost;
+    // Update balance and usage counters atomically
     await db
       .update(aiCreditBalance)
-      .set({ balance: newBalance })
+      .set({
+        balance: newBalance,
+        periodUsed: sql`${aiCreditBalance.periodUsed} + ${creditCost}`,
+        totalUsed: sql`${aiCreditBalance.totalUsed} + ${creditCost}`,
+      })
       .where(eq(aiCreditBalance.organizationId, organizationId));
+
+    console.log(`[creditMiddleware] Deducted ${creditCost} credits for ${featureType} (org ${organizationId}). New balance: ${newBalance}`);
 
     return {
       success: true,
@@ -203,25 +225,30 @@ export async function addCredits(
     const db = await getDb();
     if (!db) throw new Error('Database not available');
     
-    // Create transaction record
+    // Get current balance first
+    const currentBalance = await getCreditBalance(organizationId);
+    const newBalance = currentBalance + amount;
+
+    // Create transaction record with correct schema
     await db.insert(aiCreditTransactions).values({
       organizationId,
       userId: 0, // System transaction
-      type: 'addition',
+      type: 'allocation',
       amount,
-      featureType: 'CHAT_MESSAGE', // Default type for additions
+      balanceAfter: newBalance,
+      taskType: 'other',
+      description: reason,
       metadata: JSON.stringify({ reason, ...metadata }),
-      createdAt: new Date(),
+      createdAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
     });
-
-    // Get current balance
-    const currentBalance = await getCreditBalance(organizationId);
-    const newBalance = currentBalance + amount;
 
     // Update balance
     await db
       .update(aiCreditBalance)
-      .set({ balance: newBalance })
+      .set({
+        balance: newBalance,
+        totalPurchased: sql`${aiCreditBalance.totalPurchased} + ${amount}`,
+      })
       .where(eq(aiCreditBalance.organizationId, organizationId));
 
     return {
@@ -277,23 +304,19 @@ export async function getCreditUsageReport(organizationId: number, days: number 
     const db = await getDb();
     if (!db) throw new Error('Database not available');
     
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-
     const transactions = await db
       .select()
       .from(aiCreditTransactions)
       .where(
         and(
           eq(aiCreditTransactions.organizationId, organizationId),
-          // Add date filter if supported
         )
       );
 
-    // Group by feature type
+    // Group by task type
     const byFeature = transactions.reduce(
       (acc, tx) => {
-        const feature = tx.featureType || 'unknown';
+        const feature = tx.taskType || 'other';
         if (!acc[feature]) {
           acc[feature] = { count: 0, totalCredits: 0 };
         }
@@ -307,7 +330,7 @@ export async function getCreditUsageReport(organizationId: number, days: number 
     );
 
     return {
-      period: { startDate, endDate: new Date() },
+      period: { startDate: new Date(Date.now() - days * 86400000), endDate: new Date() },
       byFeature,
       totalTransactions: transactions.length,
     };
