@@ -9585,3 +9585,18 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Create PWAInstallPrompt component (Android banner + iOS step-by-step guide)
 - [x] Wire PWAInstallPrompt into App.tsx
 - [x] Add mobile CSS polish (input zoom prevention, safe-area insets, dvh support, PWA standalone mode)
+
+## Mobile Kai Redesign (Wealthy AI Reference)
+- [x] Mobile Kai redesign: hide bottom nav on /kai route for mobile only (≤768px)
+- [x] Mobile Kai redesign: add hamburger menu drawer with all nav items for mobile /kai
+- [x] Mobile Kai redesign: redesign CommandHeader for mobile /kai — hamburger left, KAI centered, avatar right
+- [x] Mobile Kai redesign: make Kai chat full-screen on mobile (no bottom nav space)
+- [x] Mobile Kai redesign: clean up input bar for mobile (no extra padding for bottom nav)
+
+## Mobile Kai Redesign (Wealthy AI Reference)
+- [x] Mobile Kai redesign: hide bottom nav on /kai route for mobile only
+- [x] Mobile Kai redesign: add hamburger menu drawer with all nav items for mobile /kai
+- [x] Mobile Kai redesign: redesign CommandHeader for mobile /kai
+- [x] Mobile Kai redesign: make Kai chat full-screen on mobile
+- [x] Mobile Kai redesign: clean up input bar for mobile
+

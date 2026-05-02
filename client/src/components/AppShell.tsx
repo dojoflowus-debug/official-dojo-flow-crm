@@ -34,6 +34,7 @@ import { SubscriptionGate } from '@/components/SubscriptionGate'
 import { SpotlightOverlay } from '@/components/SpotlightOverlay'
 import { GhostModeOffer } from '@/components/GhostModeOffer'
 import { TutorialLayer } from '@/components/TutorialLayer'
+import { KaiMobileNav } from '@/components/KaiMobileNav'
 
 // Navigation items for bottom bar
 const NAVIGATION = [
@@ -118,10 +119,22 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
     return () => mq.removeEventListener('change', handler)
   }, [])
 
+  // Detect phone-only (≤768px) — used to hide bottom nav on /kai route
+  const [isPhone, setIsPhone] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches
+  )
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)')
+    const handler = (e: MediaQueryListEvent) => setIsPhone(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
   // Should show bottom nav:
   // - Always on mobile/tablet (isMobileOrTablet) regardless of focus mode
   // - On desktop: only when not in focus mode and not explicitly hidden
-  const showBottomNav = !hideBottomNav && (!isFocusMode || isMobileOrTablet)
+  // - EXCEPTION: hide on phone when on /kai route (replaced by hamburger drawer)
+  const showBottomNav = !hideBottomNav && (!isFocusMode || isMobileOrTablet) && !(isKaiRoute && isPhone)
 
   // Determine page title based on route
   const getPageTitle = () => {
@@ -151,8 +164,17 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
             overflow: isKaiRoute ? 'hidden' : undefined,
             // Use height + maxHeight + flexShrink:0 so flex-1 doesn't grow past the
             // available space and push the composer behind the fixed bottom nav.
-            height: isKaiRoute ? 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px))' : undefined,
-            maxHeight: isKaiRoute ? 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px))' : undefined,
+            // On phone /kai route: bottom nav is hidden, so use full remaining height.
+            height: isKaiRoute
+              ? (isPhone
+                ? 'calc(100dvh - var(--topbar-h, 56px))'
+                : 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px))')
+              : undefined,
+            maxHeight: isKaiRoute
+              ? (isPhone
+                ? 'calc(100dvh - var(--topbar-h, 56px))'
+                : 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px))')
+              : undefined,
             flexShrink: isKaiRoute ? 0 : undefined
           }}
         >
@@ -340,6 +362,9 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
 
       {/* Kai Tutorial System — Spotlight + Ghost Mode */}
       <TutorialLayer />
+
+      {/* Mobile hamburger drawer — only active on /kai route, phone-only */}
+      {isKaiRoute && <KaiMobileNav />}
     </SubscriptionGate>
     </KaiBarProvider>
     </KaiTutorialProvider>
