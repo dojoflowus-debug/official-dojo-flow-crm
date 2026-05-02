@@ -65,6 +65,41 @@ export function KaiMobileNav() {
     return () => window.removeEventListener('kai-mobile-nav-open', handler)
   }, [])
 
+  // Swipe-right from left edge to open; swipe-left inside drawer to close
+  useEffect(() => {
+    let touchStartX = 0
+    let touchStartY = 0
+    const EDGE_ZONE = 32   // px from left edge that triggers open gesture
+    const MIN_SWIPE = 60  // minimum horizontal travel to register as swipe
+    const MAX_VERTICAL_DRIFT = 60 // max vertical drift to still count as horizontal swipe
+
+    const onTouchStart = (e: TouchEvent) => {
+      touchStartX = e.touches[0].clientX
+      touchStartY = e.touches[0].clientY
+    }
+
+    const onTouchEnd = (e: TouchEvent) => {
+      const dx = e.changedTouches[0].clientX - touchStartX
+      const dy = Math.abs(e.changedTouches[0].clientY - touchStartY)
+      if (dy > MAX_VERTICAL_DRIFT) return // mostly vertical — ignore
+
+      if (!open && touchStartX <= EDGE_ZONE && dx >= MIN_SWIPE) {
+        // Swipe right from left edge → open
+        setOpen(true)
+      } else if (open && dx <= -MIN_SWIPE) {
+        // Swipe left anywhere → close
+        setOpen(false)
+      }
+    }
+
+    document.addEventListener('touchstart', onTouchStart, { passive: true })
+    document.addEventListener('touchend', onTouchEnd, { passive: true })
+    return () => {
+      document.removeEventListener('touchstart', onTouchStart)
+      document.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [open])
+
   // Close drawer on route change
   useEffect(() => {
     setOpen(false)

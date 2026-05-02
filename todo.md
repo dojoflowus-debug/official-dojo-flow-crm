@@ -9600,3 +9600,4 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Mobile Kai redesign: make Kai chat full-screen on mobile
 - [x] Mobile Kai redesign: clean up input bar for mobile
 
+- [x] Swipe-right gesture to open hamburger drawer on mobile /kai route
