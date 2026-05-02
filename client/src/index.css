@@ -1242,3 +1242,48 @@ button, a, [role="button"] {
     font-size: max(16px, 1em) !important;
   }
 }
+
+/* ─────────────────────────────────────────────
+   MOBILE KAI CHAT — Pure CSS Layout Fix
+   Forces the kai-command-page to fill the
+   viewport on phone using position:fixed so it
+   cannot collapse regardless of JS state or
+   parent height inheritance chain.
+   ───────────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Force kai container to fill viewport below the sticky header */
+  .kai-command-page {
+    position: fixed !important;
+    top: var(--topbar-h, 56px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    width: 100% !important;
+    /* Force grid row to fill the container */
+    grid-template-rows: 1fr !important;
+    /* Ensure content is visible */
+    z-index: 10 !important;
+  }
+
+  /* Center panel must fill the grid cell */
+  .kai-command-page > .flex-1.flex.flex-col {
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Content layer (messages area) must scroll */
+  .kai-command-page .content-layer {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Hide bottom nav on /kai route on phone */
+  body.kai-route .app-shell-bottom-nav {
+    display: none !important;
+  }
+}

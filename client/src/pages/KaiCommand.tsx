@@ -3554,7 +3554,7 @@ export default function KaiCommand() {
       
       {/* Cinematic Mode Vignette Overlay - Now rendered inside main content area, not here */}
       
-      <div ref={containerRef} className={`kai-command-page w-full overflow-hidden ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode && !isMobile && !isTablet ? 'focus-mode fixed inset-0 z-50' : isFocusMode ? 'focus-mode' : ''} transition-all duration-500 ease-in-out`} style={{
+      <div ref={containerRef} className={`kai-command-page w-full ${isMobile ? '' : 'overflow-hidden'} ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode && !isMobile && !isTablet ? 'focus-mode fixed inset-0 z-50' : isFocusMode ? 'focus-mode' : ''} transition-all duration-500 ease-in-out`} style={{
         display: 'grid',
         // On mobile: use fixed positioning anchored to viewport so height never collapses
         // regardless of parent height inheritance chain or CSS variable values.
@@ -3800,11 +3800,12 @@ export default function KaiCommand() {
         {/* Row 3: Composer dock (flex-shrink-0, reserved height) */}
         <div 
           ref={centerPanelRef}
-          className="flex-1 flex flex-col relative min-w-0 min-h-0 overflow-hidden bg-transparent"
+          className={`flex-1 flex flex-col relative min-w-0 min-h-0 ${isMobile ? 'overflow-visible' : 'overflow-hidden'} bg-transparent`}
           style={{ 
             zIndex: LAYOUT_CONSTANTS.chatZIndex, 
             position: 'relative', 
             height: '100%',
+            minHeight: 0,
             paddingBottom: '0px'
           }}
           onDragEnter={handleDragEnter}
