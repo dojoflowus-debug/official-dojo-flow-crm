@@ -5912,7 +5912,7 @@ export default function KaiCommand() {
             className="flex justify-center w-full flex-shrink-0 border-t border-white/10"
             style={{
               zIndex: LAYOUT_CONSTANTS.composerZIndex,
-              paddingBottom: isMobile ? '12px' : '16px',
+              paddingBottom: isMobile ? 'max(12px, env(safe-area-inset-bottom, 0px))' : '16px',
               paddingTop: isMobile ? '10px' : '16px',
               paddingLeft: isMobile ? '12px' : '16px',
               paddingRight: isMobile ? '12px' : '16px',
