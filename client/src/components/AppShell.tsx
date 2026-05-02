@@ -160,22 +160,16 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
           style={{
             // KAI route manages its own height/padding internally; skip AppShell padding-bottom
             paddingBottom: (showBottomNav && !isKaiRoute) ? 'calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom, 0px) + 16px)' : '0px',
-            // On kai route, prevent main from growing beyond viewport (fixes iOS black screen)
+            // On phone /kai route: KaiCommand uses position:fixed so main is just a passthrough.
+            // On desktop/tablet /kai route: constrain height so composer stays above bottom nav.
             overflow: isKaiRoute ? 'hidden' : undefined,
-            // Use height + maxHeight + flexShrink:0 so flex-1 doesn't grow past the
-            // available space and push the composer behind the fixed bottom nav.
-            // On phone /kai route: bottom nav is hidden, so use full remaining height.
-            height: isKaiRoute
-              ? (isPhone
-                ? 'calc(100dvh - var(--topbar-h, 56px))'
-                : 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px))')
+            height: (isKaiRoute && !isPhone)
+              ? 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px))'
               : undefined,
-            maxHeight: isKaiRoute
-              ? (isPhone
-                ? 'calc(100dvh - var(--topbar-h, 56px))'
-                : 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px))')
+            maxHeight: (isKaiRoute && !isPhone)
+              ? 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px))'
               : undefined,
-            flexShrink: isKaiRoute ? 0 : undefined
+            flexShrink: (isKaiRoute && !isPhone) ? 0 : undefined
           }}
         >
           {children}

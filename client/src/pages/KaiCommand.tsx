@@ -3546,8 +3546,22 @@ export default function KaiCommand() {
       
       <div ref={containerRef} className={`kai-command-page w-full overflow-hidden ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode && !isMobile && !isTablet ? 'focus-mode fixed inset-0 z-50' : isFocusMode ? 'focus-mode' : ''} transition-all duration-500 ease-in-out`} style={{
         display: 'grid',
-        height: '100%',
-        maxHeight: '100%',
+        // On mobile: use fixed positioning anchored to viewport so height never collapses
+        // regardless of parent height inheritance chain or CSS variable values.
+        // On desktop/tablet: keep normal flow layout.
+        ...(isMobile && !isFocusMode ? {
+          position: 'fixed',
+          top: 'var(--topbar-h, 56px)',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 10,
+          height: 'auto',
+          maxHeight: 'none',
+        } : {
+          height: '100%',
+          maxHeight: '100%',
+        }),
         gridTemplateColumns: managementPanelOpen 
           ? `${isFocusMode ? 0 : effectiveCommandWidth}px ${effectiveCommandWidth === 0 ? '0px' : '8px'} minmax(${isMobile ? '100%' : '520px'}, 1fr) ${isMobile ? '0px' : 'clamp(360px, 30vw, 520px)'}`
           : `${isFocusMode ? 0 : effectiveCommandWidth}px ${effectiveCommandWidth === 0 ? '0px' : '8px'} 1fr`,
