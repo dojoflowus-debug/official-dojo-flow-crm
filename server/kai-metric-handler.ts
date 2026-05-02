@@ -4,7 +4,7 @@
  */
 
 import { classifyIntent } from './kai-nlp-router';
-import { db } from './db';
+import { getDb } from './db';
 import { eq } from 'drizzle-orm';
 import { students, leads, classes, studentAttendance, studentTuition } from "../drizzle/schema";
 
@@ -104,6 +104,8 @@ async function handleRevenueSummary(
   organizationId: number
 ): Promise<MetricResponse> {
   try {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
     const tuitionData = await db
       .select()
       .from(studentTuition)
@@ -140,6 +142,8 @@ async function handleOverdueAccounts(
   organizationId: number
 ): Promise<MetricResponse> {
   try {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
     const overdueData = await db
       .select()
       .from(studentTuition)
@@ -185,6 +189,8 @@ async function handleListClasses(
   organizationId: number
 ): Promise<MetricResponse> {
   try {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
     const classList = await db
       .select()
       .from(classes)
@@ -227,6 +233,8 @@ async function handleClassCapacity(
   organizationId: number
 ): Promise<MetricResponse> {
   try {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
     const classList = await db
       .select()
       .from(classes)
@@ -271,6 +279,8 @@ async function handleAttendanceSummary(
   organizationId: number
 ): Promise<MetricResponse> {
   try {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
     const attendanceData = await db
       .select()
       .from(studentAttendance)
@@ -313,6 +323,8 @@ async function handleKioskToday(
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
     const todayCheckins = await db
       .select()
       .from(studentAttendance)
@@ -351,6 +363,8 @@ async function handleNewVisitors(
   organizationId: number
 ): Promise<MetricResponse> {
   try {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
     const studentList = await db
       .select()
       .from(students)
@@ -391,6 +405,8 @@ async function handleStudentMetrics(
   organizationId: number
 ): Promise<MetricResponse> {
   try {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
     const studentList = await db
       .select()
       .from(students)
@@ -425,6 +441,8 @@ async function handleAtRiskStudents(
   organizationId: number
 ): Promise<MetricResponse> {
   try {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
     const studentList = await db
       .select()
       .from(students)
@@ -470,6 +488,8 @@ async function handleLeadMetrics(
   organizationId: number
 ): Promise<MetricResponse> {
   try {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
     const leadList = await db
       .select()
       .from(leads)

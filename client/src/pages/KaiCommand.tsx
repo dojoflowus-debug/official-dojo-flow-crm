@@ -610,6 +610,40 @@ export default function KaiCommand() {
       );
     }
     
+    // ── Inline markdown renderer ──────────────────────────────────────────
+    // Converts **bold**, *italic*, `code`, and ⚠️/✅/❌ emoji spans in a
+    // plain text segment into React elements.  Used below wherever raw text
+    // segments are added to the parts array.
+    const applyInlineMarkdown = (text: string, keyPrefix: string): (string | JSX.Element)[] => {
+      const result: (string | JSX.Element)[] = [];
+      // Combined regex: bold (**), italic (*), inline code (`)
+      const mdRegex = /\*\*([^*]+)\*\*|\*([^*]+)\*|`([^`]+)`/g;
+      let mdLast = 0;
+      let mdMatch;
+      let mdIdx = 0;
+      while ((mdMatch = mdRegex.exec(text)) !== null) {
+        if (mdMatch.index > mdLast) {
+          result.push(text.slice(mdLast, mdMatch.index));
+        }
+        if (mdMatch[1] !== undefined) {
+          result.push(<strong key={`${keyPrefix}-b${mdIdx}`}>{mdMatch[1]}</strong>);
+        } else if (mdMatch[2] !== undefined) {
+          result.push(<em key={`${keyPrefix}-i${mdIdx}`}>{mdMatch[2]}</em>);
+        } else if (mdMatch[3] !== undefined) {
+          result.push(
+            <code key={`${keyPrefix}-c${mdIdx}`} className={`px-1 py-0.5 rounded text-xs font-mono ${
+              isDark || isCinematic ? 'bg-white/10 text-orange-300' : 'bg-slate-100 text-orange-600'
+            }`}>{mdMatch[3]}</code>
+          );
+        }
+        mdLast = mdMatch.index + mdMatch[0].length;
+        mdIdx++;
+      }
+      if (mdLast < text.length) result.push(text.slice(mdLast));
+      return result.length > 0 ? result : [text];
+    };
+    // ────────────────────────────────────────────────────────────────────────
+
     // Match @mentions (e.g., @Coach Sarah, @Kai, @Mr. Chen)
     const mentionRegex = /@([A-Za-z][A-Za-z0-9.\s]*?)(?=\s|$|,|\.|!|\?)/g;
     const parts: (string | JSX.Element)[] = [];
@@ -617,9 +651,10 @@ export default function KaiCommand() {
     let match;
     
     while ((match = mentionRegex.exec(content)) !== null) {
-      // Add text before the mention
+      // Add text before the mention (with inline markdown applied)
       if (match.index > lastIndex) {
-        parts.push(content.slice(lastIndex, match.index));
+        const segment = content.slice(lastIndex, match.index);
+        parts.push(...applyInlineMarkdown(segment, `pre-${match.index}`));
       }
       
       const mentionName = match[1].trim();
@@ -688,9 +723,9 @@ export default function KaiCommand() {
       lastIndex = match.index + match[0].length;
     }
     
-    // Add remaining text
+    // Add remaining text (with inline markdown applied)
     if (lastIndex < content.length) {
-      parts.push(content.slice(lastIndex));
+      parts.push(...applyInlineMarkdown(content.slice(lastIndex), 'tail'));
     }
     
     // If there are schedule links, append actionable cards
@@ -739,7 +774,14 @@ export default function KaiCommand() {
       );
     }
     
-    return parts.length > 0 ? parts : content;
+    // If no mentions were found, apply inline markdown to the whole content
+    if (parts.length === 0) {
+      const mdParts = applyInlineMarkdown(content, 'full');
+      // If markdown was found (result has JSX), wrap in a span; otherwise return plain string
+      if (mdParts.length === 1 && typeof mdParts[0] === 'string') return mdParts[0];
+      return <span>{mdParts}</span>;
+    }
+    return parts;
   };
 
   // tRPC queries and mutations for Kai
