@@ -1261,6 +1261,9 @@ button, a, [role="button"] {
     height: auto !important;
     max-height: none !important;
     width: 100% !important;
+    /* Collapse 3-column grid (sidebar 320px + resizer 8px + main) to single column.
+       Without this, the sidebar column pushes the chat panel ~328px off-screen to the right. */
+    grid-template-columns: 1fr !important;
     /* Force grid row to fill the container */
     grid-template-rows: 1fr !important;
     /* Ensure content is visible */

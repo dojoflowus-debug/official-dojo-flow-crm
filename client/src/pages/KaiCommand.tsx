@@ -3572,9 +3572,13 @@ export default function KaiCommand() {
           height: '100%',
           maxHeight: '100%',
         }),
-        gridTemplateColumns: managementPanelOpen 
-          ? `${isFocusMode ? 0 : effectiveCommandWidth}px ${effectiveCommandWidth === 0 ? '0px' : '8px'} minmax(${isMobile ? '100%' : '520px'}, 1fr) ${isMobile ? '0px' : 'clamp(360px, 30vw, 520px)'}`
-          : `${isFocusMode ? 0 : effectiveCommandWidth}px ${effectiveCommandWidth === 0 ? '0px' : '8px'} 1fr`,
+        // On mobile: single column — sidebar is display:none, resizer is hidden.
+        // Without this, the 320px sidebar column pushes the chat panel off-screen.
+        gridTemplateColumns: isMobile
+          ? '1fr'
+          : managementPanelOpen 
+            ? `${isFocusMode ? 0 : effectiveCommandWidth}px ${effectiveCommandWidth === 0 ? '0px' : '8px'} minmax(520px, 1fr) clamp(360px, 30vw, 520px)`
+            : `${isFocusMode ? 0 : effectiveCommandWidth}px ${effectiveCommandWidth === 0 ? '0px' : '8px'} 1fr`,
         gridTemplateRows: '1fr',
         minHeight: 0,
         transition: 'grid-template-columns 0.3s ease-in-out'
