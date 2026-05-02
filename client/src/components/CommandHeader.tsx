@@ -10,7 +10,7 @@ import { useAuth } from '@/_core/hooks/useAuth'
 import { useEnvironment } from '@/contexts/EnvironmentContext'
 import { useModal } from '@/contexts/ModalContext'
 import { trpc } from '@/lib/trpc'
-import { Coins, Sun, Moon, Clapperboard, LogOut, Settings, User, Palette, Lock, Menu } from 'lucide-react'
+import { Coins, Sun, Moon, Clapperboard, LogOut, Settings, User, Palette, Lock, Menu, Plus } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { KaiVersionChip } from '@/components/KaiVersionChip'
 
@@ -53,6 +53,11 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
   // Open the mobile nav drawer via custom event
   const openMobileNav = () => {
     window.dispatchEvent(new CustomEvent('kai-mobile-nav-open'))
+  }
+
+  // Trigger new chat via custom event (KaiCommand listens for this)
+  const handleNewChatMobile = () => {
+    window.dispatchEvent(new CustomEvent('kai-new-chat'))
   }
 
   // Get real internal credit balance from DB
@@ -121,18 +126,21 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
           <KaiVersionChip />
         </div>
 
-        {/* Right: Avatar only */}
+        {/* Right: + New Chat + Avatar */}
         <div className="flex items-center justify-end gap-2">
-          {/* Credits (compact) */}
+          {/* + New Chat button */}
           <button
-            onClick={() => openSettings({ initialTab: 'account' })}
-            className={cn(
-              'flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold',
-              creditColor || (isCinematic ? 'text-white/70' : isDarkMode ? 'text-white/60' : 'text-gray-600')
-            )}
+            onClick={handleNewChatMobile}
+            className="flex items-center justify-center w-10 h-10 rounded-xl"
+            style={{
+              background: isDarkMode || isCinematic ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+              color: isDarkMode || isCinematic ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)',
+              minWidth: 40,
+              minHeight: 40,
+            }}
+            aria-label="New chat"
           >
-            <Coins className="h-3.5 w-3.5" />
-            <span>{displayCredits.toLocaleString()}</span>
+            <Plus className="h-5 w-5" />
           </button>
 
           {/* Avatar dropdown */}

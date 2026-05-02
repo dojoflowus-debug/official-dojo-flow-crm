@@ -1273,6 +1273,16 @@ export default function KaiCommand() {
   const conversations = convertedConversations;
 
   // Clear messages when switching conversations (both new and existing)
+  // Listen for kai-new-chat event dispatched by the mobile header + button
+  // Use a ref to avoid stale closure without needing handleNewChat in deps
+  const handleNewChatRef = useRef(handleNewChat);
+  useEffect(() => { handleNewChatRef.current = handleNewChat; });
+  useEffect(() => {
+    const handler = () => { handleNewChatRef.current(); };
+    window.addEventListener('kai-new-chat', handler);
+    return () => window.removeEventListener('kai-new-chat', handler);
+  }, []);
+
   useEffect(() => {
     // Always clear messages when conversation ID changes so old messages don't bleed into new conversation
     setMessages(prev => {
