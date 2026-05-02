@@ -9,9 +9,9 @@
   --nav-h: 72px;
   --kai-gap: 12px;
   --kai-max: 980px;
-  /* Kai Command Layout Variables */
-  --topbar-h: 64px;  /* Main header/menu height */
-  --bottomnav-h: 88px;  /* Bottom navigation height */
+  /* Kai Command Layout Variables - normalized to actual component heights */
+  --topbar-h: 56px;  /* CommandHeader h-14 = 56px */
+  --bottomnav-h: 72px;  /* Bottom nav actual height = var(--nav-h) */
   --composer-h: 84px;  /* Composer height */
 }
 

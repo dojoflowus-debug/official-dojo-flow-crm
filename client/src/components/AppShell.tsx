@@ -146,7 +146,10 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
           className={`flex-1 ${isDark ? '' : 'bg-background'}`}
           style={{
             // KAI route manages its own height/padding internally; skip AppShell padding-bottom
-            paddingBottom: (showBottomNav && !isKaiRoute) ? 'calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom, 0px) + 16px)' : '0px'
+            paddingBottom: (showBottomNav && !isKaiRoute) ? 'calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom, 0px) + 16px)' : '0px',
+            // On kai route, prevent main from growing beyond viewport (fixes iOS black screen)
+            overflow: isKaiRoute ? 'hidden' : undefined,
+            height: isKaiRoute ? 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px))' : undefined
           }}
         >
           {children}

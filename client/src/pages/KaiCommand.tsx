@@ -3546,12 +3546,8 @@ export default function KaiCommand() {
       
       <div ref={containerRef} className={`kai-command-page w-full overflow-hidden ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode && !isMobile && !isTablet ? 'focus-mode fixed inset-0 z-50' : isFocusMode ? 'focus-mode' : ''} transition-all duration-500 ease-in-out`} style={{
         display: 'grid',
-        height: isMobile
-          ? 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px) - env(safe-area-inset-bottom, 0px))'
-          : 'calc(100vh - var(--topbar-h, 56px) - var(--bottomnav-h, 72px))',
-        maxHeight: isMobile
-          ? 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px) - env(safe-area-inset-bottom, 0px))'
-          : 'calc(100vh - var(--topbar-h, 56px) - var(--bottomnav-h, 72px))',
+        height: '100%',
+        maxHeight: '100%',
         gridTemplateColumns: managementPanelOpen 
           ? `${isFocusMode ? 0 : effectiveCommandWidth}px ${effectiveCommandWidth === 0 ? '0px' : '8px'} minmax(${isMobile ? '100%' : '520px'}, 1fr) ${isMobile ? '0px' : 'clamp(360px, 30vw, 520px)'}`
           : `${isFocusMode ? 0 : effectiveCommandWidth}px ${effectiveCommandWidth === 0 ? '0px' : '8px'} 1fr`,
@@ -4198,7 +4194,7 @@ export default function KaiCommand() {
             className={`content-layer flex-1 min-h-0 relative w-full overflow-y-auto scrollbar-visible ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'}`}
             style={{ 
               zIndex: 10,
-              paddingBottom: isMobile ? '96px' : '140px'
+              paddingBottom: isMobile ? '24px' : '140px'
             }}
           >
             {/* Shared content column wrapper - constrained to chat bar width */}
@@ -5921,7 +5917,7 @@ export default function KaiCommand() {
               paddingLeft: isMobile ? '12px' : '16px',
               paddingRight: isMobile ? '12px' : '16px',
               boxSizing: 'border-box',
-              background: 'transparent',
+              background: isCinematic ? 'rgba(10, 10, 11, 0.9)' : isDark ? 'rgba(12, 12, 13, 0.95)' : 'rgba(255, 255, 255, 0.98)',
               marginBottom: '0px'
             }}
           >
