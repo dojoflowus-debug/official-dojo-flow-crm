@@ -3552,6 +3552,7 @@ export default function KaiCommand() {
           ? `${isFocusMode ? 0 : effectiveCommandWidth}px ${effectiveCommandWidth === 0 ? '0px' : '8px'} minmax(${isMobile ? '100%' : '520px'}, 1fr) ${isMobile ? '0px' : 'clamp(360px, 30vw, 520px)'}`
           : `${isFocusMode ? 0 : effectiveCommandWidth}px ${effectiveCommandWidth === 0 ? '0px' : '8px'} 1fr`,
         gridTemplateRows: '1fr',
+        minHeight: 0,
         transition: 'grid-template-columns 0.3s ease-in-out'
       }}>
         {/* Command Center - Left Panel - Floating Module Style */}
