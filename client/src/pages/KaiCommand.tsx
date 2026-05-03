@@ -348,6 +348,15 @@ export default function KaiCommand() {
     handleToolbarCommand: handleTutorialCommand,
   } = useKaiTutorial();
 
+  // Auto-show voice setup modal on first visit to /kai (once per device)
+  useEffect(() => {
+    const seen = localStorage.getItem('kai-voice-setup-seen') === 'true';
+    if (!seen) {
+      const t = setTimeout(() => setShowVoiceSetupModal(true), 1200);
+      return () => clearTimeout(t);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Inject tutorial messages into the chat when they arrive
   useEffect(() => {
     if (!tutorialPendingMessage) return;

@@ -456,6 +456,45 @@ async function startServer() {
     }
   });
   
+  // Speech-to-text endpoint — accepts raw audio blob, returns transcript via OpenAI Whisper
+  // Used by mobile voice conversation mode (iOS Safari doesn't support SpeechRecognition API)
+  app.post("/api/stt", async (req: any, res: any) => {
+    try {
+      const multer = (await import('multer')).default;
+      const upload = (multer as any)({ storage: (multer as any).memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+      await new Promise<void>((resolve, reject) => {
+        upload.single('audio')(req, res, (err: any) => {
+          if (err) reject(err); else resolve();
+        });
+      });
+      const file = (req as any).file;
+      if (!file) return res.status(400).json({ error: 'No audio file provided' });
+      const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+      if (!OPENAI_API_KEY) return res.status(500).json({ error: 'STT service not configured' });
+      const { FormData: NodeFormData, Blob: NodeBlob } = await import('node-fetch') as any;
+      const fd = new (global.FormData || NodeFormData)();
+      const audioBlob = new Blob([file.buffer], { type: file.mimetype || 'audio/webm' });
+      fd.append('file', audioBlob, 'audio.webm');
+      fd.append('model', 'whisper-1');
+      fd.append('language', 'en');
+      const whisperRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${OPENAI_API_KEY}` },
+        body: fd as any,
+      });
+      if (!whisperRes.ok) {
+        const err = await whisperRes.text();
+        console.error('[STT] Whisper error:', err);
+        return res.status(500).json({ error: 'Transcription failed' });
+      }
+      const data = await whisperRes.json() as { text: string };
+      return res.json({ text: data.text?.trim() || '' });
+    } catch (error) {
+      console.error('[STT] endpoint error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // REST API endpoint for subscription credits (for backward compatibility)
   app.get("/api/subscription/credits/balance", async (req, res) => {
     try {
