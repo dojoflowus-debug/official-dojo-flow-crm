@@ -426,11 +426,45 @@ export const kaiConversationsRouter = router({
         createdAt: new Date().toISOString(),
       });
 
-      // Step 2: Detect if user wants to create a flyer
+      // Step 2: Load prior conversation history (last 20 messages, excluding the one just inserted)
+      const { asc } = await import("drizzle-orm");
+      const priorMessages = await db
+        .select()
+        .from(kaiMessages)
+        .where(
+          and(
+            eq(kaiMessages.conversationId, input.conversationId),
+            eq(kaiMessages.organizationId, ctx.currentOrganizationId)
+          )
+        )
+        .orderBy(asc(kaiMessages.createdAt))
+        .limit(40); // fetch up to 40, we'll take last 20 before current
+
+      // Exclude the user message we just inserted (last item) to avoid duplication
+      const historyMessages = priorMessages.slice(0, -1).slice(-20);
+
+      // Build OpenAI-compatible history array (user/assistant only — no tool roles stored)
+      const conversationHistory = historyMessages.map((msg) => ({
+        role: msg.role as "user" | "assistant" | "system",
+        content: typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content),
+      }));
+
+      // Detect if this looks like a correction/follow-up to a prior Kai response
+      // (short queries that reference prior context, e.g. "That's not true", "Are you sure?", "What about leads?")
+      const isCorrectionOrFollowUp = (
+        conversationHistory.length > 0 &&
+        (
+          /^(that'?s? not|are you sure|actually|wait|no,|wrong|incorrect|you said|but you|i have|i do have|what about|how about|and|also|tell me more|explain|why|how many|show me)/i.test(input.query.trim()) ||
+          input.query.trim().split(' ').length <= 6
+        )
+      );
+
+      // Step 3: Detect if user wants to create a flyer
       const isFlyerRequest = detectFlyerRequest(input.query);
       
-      // Step 3: Classify intent (rule-based NLP + OpenAI fallback for low-confidence cases)
-      const classification = classifyIntent(input.query);
+      // Step 4: Classify intent (rule-based NLP + OpenAI fallback for low-confidence cases)
+      // If this is a correction/follow-up, skip the metric handler and go straight to LLM with history
+      const classification = isCorrectionOrFollowUp ? null : classifyIntent(input.query);
       let aiResponse = "";
       let metricData = null;
       let uiBlocks = null;
@@ -517,6 +551,12 @@ CAPABILITIES — you CAN perform ALL of the following directly. NEVER refuse or 
 When asked to invite or add a staff member, ALWAYS use the invite_staff tool immediately — do not ask the user to contact HR or IT.
 When asked to send a message, text, or SMS to a specific person, ALWAYS use the send_contact_message tool — do not use send_sms_blast for individual contacts.
 
+CONVERSATION CONTEXT RULES:
+1. You have access to the full conversation history above. Use it to understand follow-up questions and corrections.
+2. If the user says your previous answer was wrong, incorrect, or "that's not true" — immediately re-query the database using the appropriate tool and provide the corrected answer. Do NOT defend the previous answer.
+3. If the user asks a follow-up like "what about leads?" or "show me more" — use the conversation context to understand what they're referring to.
+4. Short messages (under 6 words) are almost always follow-ups or corrections — treat them as such.
+
 DATA GROUNDING RULES:
 1. NEVER invent or guess metrics. If you don't have data, state: "No data available for [specific metric]." Do not apologize.
 2. ALWAYS use available tools to query the database for factual information:
@@ -579,15 +619,17 @@ Do NOT skip this block — it is required for the user to click and view student
 For lead lists, use: [LEAD_LIST:id1,id2,id3:N leads]
 Always place the UI block on its own line after your text response.`;
 
-          // First attempt: Call LLM with tools
+          // First attempt: Call LLM with tools + full conversation history
           let response = await invokeLLM({
             messages: [
               {
-                role: "system",
+                role: "system" as const,
                 content: groundedSystemPrompt,
               },
+              // Inject prior conversation turns so Kai has full context
+              ...conversationHistory,
               {
-                role: "user",
+                role: "user" as const,
                 content: input.query,
               },
             ],
@@ -685,12 +727,14 @@ Always place the UI block on its own line after your text response.`;
               } catch (_) {}
             }
 
-            // Second call: Send tool results back to LLM for final response
+            // Second call: Send tool results back to LLM for final response (with history)
             const messagesWithTools = [
               {
                 role: "system" as const,
                 content: groundedSystemPrompt,
               },
+              // Include prior conversation history for context continuity
+              ...conversationHistory,
               {
                 role: "user" as const,
                 content: input.query,
