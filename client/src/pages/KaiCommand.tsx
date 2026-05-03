@@ -286,21 +286,7 @@ export default function KaiCommand() {
   // Get subscription status - use 0 as fallback to ensure hook is always called with a number
   const { canAccessFeature, shouldShowPaywall, getTrialDaysRemaining, isLoading: subscriptionStatusLoading } = useSubscriptionStatus(user?.activeOrgId || 0);
 
-  // ── Voice Conversation Mode ──────────────────────────────────────────────
-  const voiceTranscriptCallbackRef = useRef<(text: string) => void>(() => {});
-  const kaiVoice = useKaiVoice({
-    onTranscript: useCallback((text: string) => voiceTranscriptCallbackRef.current(text), []),
-    latestAssistantText,
-    voiceGender: voiceConvGender,
-    enabled: voiceConvEnabled,
-    onEnabledChange: (val) => {
-      setVoiceConvEnabled(val);
-      localStorage.setItem('kai-voice-conv-enabled', val.toString());
-    },
-  });
-  // ────────────────────────────────────────────────────────────────────────
-
-  // Memoize the organizationId to prevent unnecessary re-renders
+  // Memoize the organizationId to prevent unnecessary re-renderss
   const memoizedOrgId = user?.activeOrgId || 0;
 
   // KAI onboarding file input ref (for logo upload during onboarding)
@@ -466,7 +452,21 @@ export default function KaiCommand() {
     localStorage.getItem('kai-voice-setup-seen') === 'true'
   );
   const [latestAssistantText, setLatestAssistantText] = useState<string | null>(null);
-  
+
+  // ── Voice Conversation Mode hook (must come AFTER all state declarations above) ──
+  const voiceTranscriptCallbackRef = useRef<(text: string) => void>(() => {});
+  const kaiVoice = useKaiVoice({
+    onTranscript: useCallback((text: string) => voiceTranscriptCallbackRef.current(text), []),
+    latestAssistantText,
+    voiceGender: voiceConvGender,
+    enabled: voiceConvEnabled,
+    onEnabledChange: (val) => {
+      setVoiceConvEnabled(val);
+      localStorage.setItem('kai-voice-conv-enabled', val.toString());
+    },
+  });
+  // ────────────────────────────────────────────────────────────────────────
+
   // Fullscreen and Add Staff state
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showAddStaffModal, setShowAddStaffModal] = useState(false);
