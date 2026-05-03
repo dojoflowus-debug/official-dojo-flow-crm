@@ -407,14 +407,21 @@ async function handleStudentMetrics(
   try {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
+    console.log('[Kai][handleStudentMetrics] Querying with organizationId:', organizationId, typeof organizationId);
     const studentList = await db
       .select()
       .from(students)
       .where(eq(students.organizationId, organizationId));
+    console.log('[Kai][handleStudentMetrics] Result count:', studentList.length, 'statuses:', studentList.slice(0,5).map(s => s.status));
+    // Also do a raw count without org filter to detect org mismatch
+    const allStudents = await db.select().from(students);
+    console.log('[Kai][handleStudentMetrics] Total students in DB (no org filter):', allStudents.length, 'distinct orgIds:', [...new Set(allStudents.map(s => s.organizationId))]);
 
     const activeStudents = studentList.filter((s) => s.status === 'Active').length;
+    const inactiveStudents = studentList.filter((s) => s.status === 'Inactive').length;
+    const onHoldStudents = studentList.filter((s) => s.status === 'On Hold').length;
 
-    const message = `You have ${studentList.length} total students, with ${activeStudents} currently active. Your student base is growing!`;
+    const message = `You have **${activeStudents} active students** on your roster. (${inactiveStudents} inactive, ${onHoldStudents} on hold — ${studentList.length} total)`;
 
     return {
       success: true,

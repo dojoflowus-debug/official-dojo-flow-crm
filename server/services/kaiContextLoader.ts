@@ -128,7 +128,7 @@ export async function loadKaiContext(
       phone: leads.phone, email: leads.email, interestedProgram: leads.interestedProgram })
       .from(leads).where(eq(leads.organizationId, orgId)).orderBy(desc(leads.createdAt)).limit(10),
     db.select({ count: sql`count(*)` }).from(students)
-      .where(and(eq(students.organizationId, orgId), eq(students.status, 'inactive'))),
+      .where(and(eq(students.organizationId, orgId), eq(students.status, 'Inactive'))),
     db.select({ count: sql`count(*)` }).from(students)
       .where(and(eq(students.organizationId, orgId), eq(students.billingStatus, 'past_due'))),
   ]);
@@ -139,8 +139,10 @@ export async function loadKaiContext(
   let activeStudents = 0, inactiveStudents = 0;
   if (studentCountRows.status === 'fulfilled') {
     for (const row of studentCountRows.value as any[]) {
-      if (row.status === 'active') activeStudents = Number(row.count);
-      else if (row.status === 'inactive') inactiveStudents = Number(row.count);
+      // DB enum values are 'Active', 'Inactive', 'On Hold' (capital first letter)
+      const s = String(row.status || '');
+      if (s === 'Active' || s.toLowerCase() === 'active') activeStudents = Number(row.count);
+      else if (s === 'Inactive' || s.toLowerCase() === 'inactive') inactiveStudents = Number(row.count);
     }
   }
 
