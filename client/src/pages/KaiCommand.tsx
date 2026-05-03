@@ -44,7 +44,8 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { useMobileLayout } from '@/hooks/useMobileLayout';
 import '@/styles/kai-light-command-center.css';
 import VoiceInput from '@/components/VoiceInput';
-
+import { KaiVoiceSetupModal, type VoiceSetupResult } from '@/components/KaiVoiceSetupModal';
+import { useKaiVoice } from '@/hooks/useKaiVoice';
 // Global layout constants for unified chat layout
 const LAYOUT_CONSTANTS = {
   bottomNavHeight: '88px',
@@ -284,6 +285,21 @@ export default function KaiCommand() {
   
   // Get subscription status - use 0 as fallback to ensure hook is always called with a number
   const { canAccessFeature, shouldShowPaywall, getTrialDaysRemaining, isLoading: subscriptionStatusLoading } = useSubscriptionStatus(user?.activeOrgId || 0);
+
+  // ── Voice Conversation Mode ──────────────────────────────────────────────
+  const voiceTranscriptCallbackRef = useRef<(text: string) => void>(() => {});
+  const kaiVoice = useKaiVoice({
+    onTranscript: useCallback((text: string) => voiceTranscriptCallbackRef.current(text), []),
+    latestAssistantText,
+    voiceGender: voiceConvGender,
+    enabled: voiceConvEnabled,
+    onEnabledChange: (val) => {
+      setVoiceConvEnabled(val);
+      localStorage.setItem('kai-voice-conv-enabled', val.toString());
+    },
+  });
+  // ────────────────────────────────────────────────────────────────────────
+
   // Memoize the organizationId to prevent unnecessary re-renders
   const memoizedOrgId = user?.activeOrgId || 0;
 
@@ -438,6 +454,18 @@ export default function KaiCommand() {
   // Voice state management
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [currentSpeechMessageId, setCurrentSpeechMessageId] = useState<string | null>(null);
+  // Voice conversation mode
+  const [voiceConvEnabled, setVoiceConvEnabled] = useState(() =>
+    localStorage.getItem('kai-voice-conv-enabled') === 'true'
+  );
+  const [voiceConvGender, setVoiceConvGender] = useState<'male' | 'female'>(() =>
+    (localStorage.getItem('kai-voice-conv-gender') as 'male' | 'female') || 'female'
+  );
+  const [showVoiceSetupModal, setShowVoiceSetupModal] = useState(false);
+  const [voiceSetupSeen, setVoiceSetupSeen] = useState(() =>
+    localStorage.getItem('kai-voice-setup-seen') === 'true'
+  );
+  const [latestAssistantText, setLatestAssistantText] = useState<string | null>(null);
   
   // Fullscreen and Add Staff state
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -3229,6 +3257,10 @@ export default function KaiCommand() {
           showFeedback: true,
         };
         setMessages(prev => [...prev, aiMessage]);
+        // Update latest assistant text for voice conversation mode
+        if (voiceConvEnabled) {
+          setLatestAssistantText(cleanedResponse);
+        }
         
         // Parse response for structured data to populate InfoPanel
         const infoPanelContent = parseResponse(response.response);
@@ -3346,6 +3378,14 @@ export default function KaiCommand() {
         toast.info('In group conversations, use @Kai to get AI assistance or @Staff to message team members');
       }
     }
+   };
+
+  // Wire voice transcript callback to handleSendMessage (avoids circular dep at hook init)
+  voiceTranscriptCallbackRef.current = (text: string) => {
+    setMessageInput(text);
+    kaiVoice.notifyProcessing();
+    // Small delay to let state settle before sending
+    setTimeout(() => handleSendMessage('submit', text), 50);
   };
 
   // Removed handleKeyPress - Enter key is now handled by MentionInput.tsx via form.requestSubmit()
@@ -3984,6 +4024,26 @@ export default function KaiCommand() {
               style={isCinematic ? { textShadow: '0 2px 4px rgba(0,0,0,0.75)' } : {}}
             >
               {isMobile ? 'KAI AI ASSISTANT' : 'KAI AI ASSISTANT • READY'}
+              {/* Voice conversation status indicator */}
+              {voiceConvEnabled && (
+                <span className={`ml-2 inline-flex items-center gap-1 text-[9px] uppercase tracking-widest font-semibold px-1.5 py-0.5 rounded-full ${
+                  kaiVoice.isListening
+                    ? 'bg-red-500/20 text-red-400'
+                    : kaiVoice.isSpeaking
+                    ? 'bg-blue-500/20 text-blue-400'
+                    : kaiVoice.isProcessing
+                    ? 'bg-amber-500/20 text-amber-400'
+                    : 'bg-white/10 text-white/40'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    kaiVoice.isListening ? 'bg-red-400 animate-pulse' :
+                    kaiVoice.isSpeaking ? 'bg-blue-400 animate-pulse' :
+                    kaiVoice.isProcessing ? 'bg-amber-400 animate-pulse' :
+                    'bg-white/30'
+                  }`} />
+                  {kaiVoice.isListening ? 'Listening' : kaiVoice.isSpeaking ? 'Speaking' : kaiVoice.isProcessing ? 'Thinking' : 'Voice'}
+                </span>
+              )}
             </p>
             <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-1'}`}>
               {/* Mobile: Ops list toggle button */}
@@ -4107,21 +4167,40 @@ export default function KaiCommand() {
                 <Users className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
               )}
-              {/* Volume button — visible on all devices (important for voice) */}
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={`${isMobile ? 'h-9 w-9' : 'h-8 w-8'} ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''} ${voiceEnabled ? (isCinematic ? 'bg-[rgba(255,255,255,0.2)]' : isDark ? 'bg-[rgba(255,255,255,0.15)]' : 'bg-slate-200') : ''}`}
-                title={voiceEnabled ? "Disable Voice Replies" : "Enable Voice Replies"}
+              {/* Voice Conversation button — shows setup modal on first use */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`${isMobile ? 'h-9 w-9' : 'h-8 w-8'} relative ${
+                  voiceConvEnabled
+                    ? (isCinematic ? 'bg-[rgba(255,255,255,0.2)]' : isDark ? 'bg-[rgba(255,255,255,0.15)]' : 'bg-red-50')
+                    : (isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : '')
+                }`}
+                title={voiceConvEnabled ? 'Disable Voice Conversation' : 'Enable Voice Conversation'}
                 onClick={() => {
-                  setVoiceEnabled(!voiceEnabled);
-                  if (voiceEnabled) {
-                    // Stop current speech when disabling
+                  if (!voiceConvEnabled) {
+                    if (!voiceSetupSeen) {
+                      setShowVoiceSetupModal(true);
+                    } else {
+                      setVoiceConvEnabled(true);
+                      localStorage.setItem('kai-voice-conv-enabled', 'true');
+                    }
+                  } else {
+                    setVoiceConvEnabled(false);
+                    localStorage.setItem('kai-voice-conv-enabled', 'false');
                     setCurrentSpeechMessageId(null);
                   }
                 }}
               >
-                <Volume2 className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'} ${voiceEnabled ? (isCinematic ? 'text-white' : isDark ? 'text-white' : 'text-slate-900') : (isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500')}`} />
+                {/* Pulse ring when listening */}
+                {voiceConvEnabled && kaiVoice.isListening && (
+                  <span className="absolute inset-0 rounded-md border-2 border-red-400/60 animate-ping" style={{ animationDuration: '1.5s' }} />
+                )}
+                <Volume2 className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'} ${
+                  voiceConvEnabled
+                    ? (isCinematic ? 'text-white' : isDark ? 'text-white' : 'text-red-500')
+                    : (isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500')
+                }`} />
               </Button>
               {/* Desktop: Fullscreen button */}
               {!isMobile && (
@@ -6338,6 +6417,22 @@ export default function KaiCommand() {
           onSkip={handleSkipNotice}
         />
       )}
+
+      {/* Voice Conversation Setup Modal */}
+      <KaiVoiceSetupModal
+        open={showVoiceSetupModal}
+        onClose={(result) => {
+          setShowVoiceSetupModal(false);
+          setVoiceSetupSeen(true);
+          localStorage.setItem('kai-voice-setup-seen', 'true');
+          if (result.enabled) {
+            setVoiceConvGender(result.gender);
+            localStorage.setItem('kai-voice-conv-gender', result.gender);
+            setVoiceConvEnabled(true);
+            localStorage.setItem('kai-voice-conv-enabled', 'true');
+          }
+        }}
+      />
       
       {/* Paywall Modal */}
       <PaywallModal
