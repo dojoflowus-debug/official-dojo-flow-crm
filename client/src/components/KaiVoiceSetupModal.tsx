@@ -127,11 +127,13 @@ export function KaiVoiceSetupModal({ open, onClose, assistantName = 'Kai' }: Kai
               <button
                 key={gender}
                 onClick={() => playPreview(gender)}
-                className={`relative rounded-xl p-4 border transition-all text-left group ${
-                  selectedGender === gender
-                    ? 'border-red-500/60 bg-red-500/10'
-                    : 'border-white/10 bg-white/5 hover:bg-white/8 hover:border-white/20'
-                }`}
+                className="relative rounded-xl p-4 border transition-all text-left group"
+                style={{
+                  borderColor: selectedGender === gender ? 'rgba(239,68,68,0.6)' : 'rgba(255,255,255,0.15)',
+                  background: selectedGender === gender
+                    ? 'rgba(239,68,68,0.12)'
+                    : 'rgba(255,255,255,0.06)',
+                }}
               >
                 <div className="flex items-center gap-2 mb-1">
                   <div className={`w-2 h-2 rounded-full ${selectedGender === gender ? 'bg-red-400' : 'bg-white/20'}`} />
