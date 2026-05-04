@@ -4359,11 +4359,11 @@ export default function KaiCommand() {
           >
             {/* Shared content column wrapper - constrained to chat bar width */}
             <div className="w-full" style={{
-              maxWidth: '664px',
+              maxWidth: '860px',
               marginLeft: 'auto',
               marginRight: 'auto',
-              paddingLeft: '16px',
-              paddingRight: '16px',
+              paddingLeft: '24px',
+              paddingRight: '24px',
               boxSizing: 'border-box'
             }}>
               {messages.length === 0 ? (
@@ -6091,7 +6091,7 @@ export default function KaiCommand() {
               background: isCinematic ? 'rgba(20, 20, 20, 0.85)' : (isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.95)'),
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
-              maxWidth: '664px',
+              maxWidth: '860px',
               width: '100%',
               minHeight: '56px',
               borderRadius: '999px',

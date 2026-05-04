@@ -124,9 +124,13 @@ export function CreativePreviewCard({ data, onRetry, onEdit }: CreativePreviewCa
     ? "border-white/15 text-white/70 hover:bg-white/8 hover:text-white"
     : "border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900";
 
+  // Portrait formats (flyer, story) need taller preview; landscape/square get standard height
+  const isPortrait = data.size === 'flyer' || data.size === 'instagram_story' || data.size === 'facebook_ad';
+  const previewMaxH = isPortrait ? 'max-h-[520px]' : 'max-h-72';
+
   return (
     <>
-      <div className={`rounded-2xl border overflow-hidden shadow-lg ${cardBg} max-w-sm w-full`}>
+      <div className={`rounded-2xl border overflow-hidden shadow-lg ${cardBg} w-full`} style={{ maxWidth: isPortrait ? '360px' : '384px' }}>
         {/* Image — click to open lightbox */}
         <div
           className="relative bg-black/20 cursor-zoom-in group"
@@ -135,7 +139,7 @@ export function CreativePreviewCard({ data, onRetry, onEdit }: CreativePreviewCa
           <img
             src={data.imageUrl}
             alt={data.prompt}
-            className="w-full object-contain max-h-72"
+            className={`w-full object-contain ${previewMaxH}`}
             loading="lazy"
           />
           {/* Zoom hint — shows on hover */}
