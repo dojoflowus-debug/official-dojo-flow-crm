@@ -1634,6 +1634,78 @@ async function startServer() {
     }
   });
   
+  // ── MyDojo Auto-Sync endpoint (called by Manus scheduled task every 15 min) ──────────────
+  app.post("/api/scheduled/mydojo-sync", async (req: any, res: any) => {
+    try {
+      // Auth: accept session cookie (user role) OR MYDOJO_WEBHOOK_SECRET header
+      const webhookSecret = req.headers["x-webhook-secret"];
+      const isWebhookAuth = webhookSecret === (process.env.MYDOJO_WEBHOOK_SECRET || "dojo-flow-mydojo-sync-2026");
+      const isSessionAuth = req.user && ["owner", "admin", "user"].includes(req.user.role);
+      if (!isWebhookAuth && !isSessionAuth) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      const orgId = parseInt(req.headers["x-org-id"] as string) || req.user?.organizationId || 210001;
+      // Fetch from MyDojo sync-export
+      const MYDOJO_API_KEY = process.env.MYDOJO_API_KEY || "man-zone-outdoor";
+      const MYDOJO_EXPORT_URL = process.env.MYDOJO_EXPORT_URL || "https://mydojoma.com/api/sync-export";
+      const fetchRes = await fetch(MYDOJO_EXPORT_URL, { headers: { "x-api-key": MYDOJO_API_KEY } });
+      if (!fetchRes.ok) return res.status(502).json({ error: `MyDojo export returned ${fetchRes.status}` });
+      const data = await fetchRes.json() as any;
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      if (!db) return res.status(500).json({ error: "DB unavailable" });
+      const { leads, students } = await import("../../drizzle/schema");
+      const { eq, and } = await import("drizzle-orm");
+      const splitName = (full: string) => { const p = (full||'').trim().split(/\s+/); return { firstName: p[0]||'', lastName: p.slice(1).join(' ')||'' }; };
+      const mapStage = (stage: string): string => {
+        // Must match leads.status enum: 'New Lead','Attempting Contact','Contact Made','Intro Scheduled','Offer Presented','Enrolled','Nurture','Lost/Winback'
+        if (!stage) return 'New Lead';
+        const s = stage.toLowerCase();
+        if (s.includes('enroll')) return 'Enrolled';
+        if (s.includes('intro') || s.includes('scheduled') || s.includes('trial')) return 'Intro Scheduled';
+        if (s.includes('offer')) return 'Offer Presented';
+        if (s.includes('contact made') || s.includes('contacted')) return 'Contact Made';
+        if (s.includes('attempt') || s.includes('contact')) return 'Attempting Contact';
+        if (s.includes('nurture')) return 'Nurture';
+        if (s.includes('lost') || s.includes('winback')) return 'Lost/Winback';
+        return 'New Lead';
+      };
+      let leadsCreated=0, leadsUpdated=0, studentsCreated=0, studentsUpdated=0;
+      const errors: string[] = [];
+      // Sync intro appointments → leads
+      for (const appt of (data.introAppointments || [])) {
+        try {
+          const email = (appt.email||'').trim().toLowerCase()||null;
+          const phone = (appt.phone||'').replace(/[^0-9+]/g,'')||null;
+          const { firstName, lastName } = splitName(appt.name);
+          const leadStatus = mapStage(appt.pipelineStage||appt.status);
+          let existingId: number|null = null;
+          if (email) { const [f] = await db.select({id:leads.id}).from(leads).where(and(eq(leads.organizationId,orgId),eq(leads.email,email))); if (f) existingId=f.id; }
+          const ts = new Date().toISOString().slice(0,19).replace('T',' ');
+          if (existingId!==null) { await db.update(leads).set({status:leadStatus,updatedAt:ts}).where(eq(leads.id,existingId)); leadsUpdated++; }
+          else { await db.insert(leads).values({firstName,lastName,email,phone,status:leadStatus,source:appt.source||'mydojo_website',interestedProgram:appt.program||null,notes:appt.notes||null,organizationId:orgId,createdAt:appt.createdAt?new Date(appt.createdAt).toISOString().slice(0,19).replace('T',' '):ts,updatedAt:ts}); leadsCreated++; }
+        } catch(err:any) { errors.push(`Lead "${appt.name}": ${err.message}`); }
+      }
+      // Sync students
+      for (const s of (data.students || [])) {
+        try {
+          const fullName = s.studentName||s.customerName||'';
+          const { firstName, lastName } = splitName(fullName);
+          const email = (s.customerEmail||'').trim().toLowerCase()||null;
+          const phone = (s.customerPhone||'').replace(/[^0-9+]/g,'')||null;
+          const st: 'Active'|'Inactive'|'On Hold' = s.status==='active'?'Active':s.status==='frozen'?'On Hold':'Inactive';
+          let existingId: number|null = null;
+          if (email) { const [f] = await db.select({id:students.id}).from(students).where(and(eq(students.organizationId,orgId),eq(students.email,email))); if (f) existingId=f.id; }
+          const ts = new Date().toISOString().slice(0,19).replace('T',' ');
+          if (existingId!==null) { await db.update(students).set({status:st,membershipStatus:s.packageName||undefined,updatedAt:ts}).where(eq(students.id,existingId)); studentsUpdated++; }
+          else { await db.insert(students).values({firstName,lastName,email,phone,beltRank:s.beltRank||null,status:st,membershipStatus:s.packageName||null,program:s.packageName||null,organizationId:orgId,createdAt:s.createdAt?new Date(s.createdAt).toISOString().slice(0,19).replace('T',' '):ts,updatedAt:ts}); studentsCreated++; }
+        } catch(err:any) { errors.push(`Student "${s.studentName||s.customerName}": ${err.message}`); }
+      }
+      console.log(`[MyDojo AutoSync] org=${orgId} leads+${leadsCreated}/~${leadsUpdated} students+${studentsCreated}/~${studentsUpdated} errors=${errors.length}`);
+      return res.json({success:true,syncedAt:new Date().toISOString(),orgId,leads:{created:leadsCreated,updated:leadsUpdated},students:{created:studentsCreated,updated:studentsUpdated},errors:errors.slice(0,10)});
+    } catch(err:any) { console.error('[MyDojo AutoSync] Error:',err.message); return res.status(500).json({error:err.message}); }
+  });
+
   // Stripe webhook (must be before body parser middleware for raw body)
   app.post("/api/webhook/stripe", express.raw({ type: 'application/json' }), async (req, res) => {
     const { handleStripeWebhook } = await import("./stripeWebhook");
