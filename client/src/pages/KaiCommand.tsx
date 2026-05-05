@@ -3895,7 +3895,7 @@ export default function KaiCommand() {
         {/* Row 3: Composer dock (flex-shrink-0, reserved height) */}
         <div 
           ref={centerPanelRef}
-          className={`flex-1 flex flex-col relative min-w-0 min-h-0 ${isMobile ? 'overflow-visible' : 'overflow-hidden'} bg-transparent`}
+          className={`flex-1 flex flex-col relative min-w-0 min-h-0 overflow-hidden bg-transparent`}
           style={{ 
             zIndex: LAYOUT_CONSTANTS.chatZIndex, 
             position: 'relative', 
