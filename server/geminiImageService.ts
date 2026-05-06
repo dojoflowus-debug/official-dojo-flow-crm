@@ -9,6 +9,11 @@
  * NOTE: ai.models.editImage() is Vertex AI only and NOT available via the
  * standard Gemini API key. All three modes (generate, logo branding, edit)
  * use generateImages() with prompt-based context injection instead.
+ *
+ * UPGRADE (May 2026):
+ * - generateImageVariations(): generates 4 style variants in parallel using
+ *   imagen-4.0-generate-001 with numberOfImages: 4
+ * - Improved prompt quality for each style variant
  */
 
 import { GoogleGenAI } from "@google/genai";
@@ -57,8 +62,9 @@ export interface BrandContext {
 
 async function callGenerateImages(
   prompt: string,
-  aspectRatio: string
-): Promise<{ imageBase64: string; mimeType: string }> {
+  aspectRatio: string,
+  count: number = 1
+): Promise<{ imageBase64: string; mimeType: string }[]> {
   const ai = getClient();
 
   const response = await ai.models.generateImages({
@@ -66,19 +72,19 @@ async function callGenerateImages(
     prompt,
     config: {
       aspectRatio,
-      numberOfImages: 1,
+      numberOfImages: Math.min(count, 4) as 1 | 2 | 3 | 4,
     },
   });
 
-  const generated = response.generatedImages?.[0];
-  if (!generated?.image?.imageBytes) {
+  const images = response.generatedImages ?? [];
+  if (images.length === 0) {
     throw new Error("No image returned from Gemini");
   }
 
-  return {
-    imageBase64: generated.image.imageBytes,
-    mimeType: generated.image.mimeType ?? "image/png",
-  };
+  return images.map((generated) => ({
+    imageBase64: generated.image?.imageBytes ?? "",
+    mimeType: generated.image?.mimeType ?? "image/png",
+  }));
 }
 
 // ── Generate image (text → image) ─────────────────────────────────────────────
@@ -117,10 +123,98 @@ export async function generateImage(
   });
 
   try {
-    return await callGenerateImages(enhancedPrompt, aspectRatio);
+    const results = await callGenerateImages(enhancedPrompt, aspectRatio, 1);
+    return results[0];
   } catch (err: any) {
     const msg = err?.message ?? String(err);
     throw new Error(`Gemini image generation failed: ${msg}`);
+  }
+}
+
+// ── Generate 4 style variations (text → 4 images) ─────────────────────────────
+// Generates 4 variants with distinct style prompts in a single API call.
+// Returns all 4 images for the user to pick from.
+
+export interface ImageVariation {
+  imageBase64: string;
+  mimeType: string;
+  styleLabel: string;
+  styleId: string;
+}
+
+export interface GenerateVariationsResult {
+  variations: ImageVariation[];
+}
+
+const VARIATION_STYLES: Array<{ id: StylePreset; label: string; modifier: string }> = [
+  {
+    id: "energetic",
+    label: "Energetic",
+    modifier: "Bold, high-energy, dynamic action, vibrant colors, powerful typography, motivational",
+  },
+  {
+    id: "premium",
+    label: "Premium",
+    modifier: "Sleek, sophisticated, dark luxury feel, gold accents, premium quality, professional",
+  },
+  {
+    id: "kids_playful",
+    label: "Kids Playful",
+    modifier: "Fun, colorful, cartoon-friendly, bright and cheerful, child-safe, playful energy",
+  },
+  {
+    id: "high_converting_ad",
+    label: "High-Converting",
+    modifier: "Direct response ad style, urgent CTA, benefit-focused, clean layout, conversion-optimized",
+  },
+];
+
+export async function generateImageVariations(
+  prompt: string,
+  size: ImageSize = "instagram_post",
+  brand?: BrandContext
+): Promise<GenerateVariationsResult> {
+  const aspectRatio = SIZE_TO_ASPECT[size];
+
+  // Build 4 style-specific prompts
+  const stylePrompts = VARIATION_STYLES.map(({ id, modifier }) =>
+    enhancePrompt({
+      userPrompt: `${prompt}. Style: ${modifier}`,
+      style: id,
+      brand: brand
+        ? {
+            schoolName: brand.schoolName ?? undefined,
+            primaryColor: brand.primaryColor ?? undefined,
+            secondaryColor: brand.secondaryColor ?? undefined,
+            accentColor: brand.accentColor ?? undefined,
+            phone: brand.phone ?? undefined,
+            website: brand.website ?? undefined,
+            tagline: brand.tagline ?? undefined,
+            address: brand.address ?? undefined,
+            logoUrl: brand.logoUrl ?? undefined,
+          }
+        : undefined,
+      size,
+    })
+  );
+
+  // Generate all 4 in parallel (4 separate API calls for distinct style control)
+  try {
+    const results = await Promise.all(
+      stylePrompts.map((p) => callGenerateImages(p, aspectRatio, 1))
+    );
+
+    return {
+      variations: results.map((result, i) => ({
+        imageBase64: result[0].imageBase64,
+        mimeType: result[0].mimeType,
+        styleLabel: VARIATION_STYLES[i].label,
+        styleId: VARIATION_STYLES[i].id,
+      })),
+    };
+  } catch (err: any) {
+    const msg = err?.message ?? String(err);
+    throw new Error(`Gemini image variations failed: ${msg}`);
   }
 }
 
@@ -168,7 +262,8 @@ Apply the requested changes or style adjustments. Create a new high-quality mark
   });
 
   try {
-    return await callGenerateImages(enhancedPrompt, aspectRatio);
+    const results = await callGenerateImages(enhancedPrompt, aspectRatio, 1);
+    return results[0];
   } catch (err: any) {
     const msg = err?.message ?? String(err);
     throw new Error(`Gemini image edit failed: ${msg}`);
@@ -218,7 +313,8 @@ This is a branded marketing design for ${schoolName}. The school logo has been u
   });
 
   try {
-    return await callGenerateImages(enhancedPrompt, aspectRatio);
+    const results = await callGenerateImages(enhancedPrompt, aspectRatio, 1);
+    return results[0];
   } catch (err: any) {
     const msg = err?.message ?? String(err);
     throw new Error(`Gemini logo branding failed: ${msg}`);

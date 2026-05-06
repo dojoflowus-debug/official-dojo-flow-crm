@@ -9601,3 +9601,15 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Mobile Kai redesign: clean up input bar for mobile
 
 - [x] Swipe-right gesture to open hamburger drawer on mobile /kai route
+
+## Kai Ads Generation Full Upgrade (May 6, 2026)
+- [x] Upgrade image generation model to Gemini 2.0 Flash (gemini-2.0-flash-exp-image-generation) for faster, higher-quality output
+- [ ] Add conversational iterative refinement — "make it darker", "add more energy", "change the headline" all refine the last image inline in chat
+- [ ] Add image generation progress streaming — show animated skeleton while generating
+- [x] Add 4-variation grid mode — generate 4 style variants at once, user picks the best one
+- [ ] Upgrade KaiCreative Studio: add "Regenerate" and "Refine" buttons on result card
+- [x] Upgrade Platform Copy: auto-populate program/audience from Brand DNA on load
+- [x] Upgrade Platform Copy: add "Copy All" button to copy all platform variants at once
+- [x] Fix Video Ad: added ffmpeg to nixpacks.toml for production deployment
+- [ ] Add "Send to Leads" button on generated image card
+- [ ] Add image generation from Kai chat with size selector inline

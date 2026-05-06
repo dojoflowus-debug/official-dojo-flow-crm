@@ -25,6 +25,7 @@ import {
   generateImage,
   editImage,
   generateWithLogo,
+  generateImageVariations,
   type ImageSize,
   type BrandContext,
 } from "./geminiImageService";
@@ -600,9 +601,6 @@ export const kaiCreativeRouter = router({
       z.object({
         prompt: z.string().min(3).max(2000),
         size: imageSizeSchema.default("instagram_post"),
-        // The two style presets to compare. Defaults to energetic vs premium.
-        styleA: stylePresetSchema.default("energetic"),
-        styleB: stylePresetSchema.default("premium"),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -610,84 +608,60 @@ export const kaiCreativeRouter = router({
       const brand = await getBrandDataForOrg(orgId);
       const { enrichedPrompt: enrichedVarPrompt } = await runContextInjection(input.prompt, orgId, true);
 
-      // Resolve auto styles
-      const resolvedA = (input.styleA === "auto" || !input.styleA)
-        ? parseStyleFromText(input.prompt)
-        : input.styleA as StylePreset;
-      const resolvedB = (input.styleB === "auto" || !input.styleB)
-        ? "premium" as StylePreset
-        : input.styleB as StylePreset;
+      // Generate 4 style variations in parallel using the new service
+      const { variations } = await generateImageVariations(
+        enrichedVarPrompt,
+        input.size as ImageSize,
+        brand
+      );
 
-      // Run both generations in parallel
-      const [resultA, resultB] = await Promise.all([
-        generateImage(enrichedVarPrompt, input.size as ImageSize, brand, resolvedA),
-        generateImage(enrichedVarPrompt, input.size as ImageSize, brand, resolvedB),
-      ]);
+      // Save all 4 to S3 in parallel (best-effort)
+      const saves = await Promise.all(
+        variations.map((v, i) =>
+          saveImageToS3(v.imageBase64, v.mimeType, orgId, `variation-${i + 1}-${v.styleId}`)
+        )
+      );
 
-      // Save both to S3 (best-effort) and DB in parallel
-      const [saveA, saveB] = await Promise.all([
-        saveImageToS3(resultA.imageBase64, resultA.mimeType, orgId, "variation-a"),
-        saveImageToS3(resultB.imageBase64, resultB.mimeType, orgId, "variation-b"),
-      ]);
-
-      const imageUrlA = saveA.url ?? `data:${resultA.mimeType};base64,${resultA.imageBase64}`;
-      const imageUrlB = saveB.url ?? `data:${resultB.mimeType};base64,${resultB.imageBase64}`;
-
+      // Build result array with URLs and save to DB
       const dbConn = await getDb();
-      let assetIdA: number | null = null;
-      let assetIdB: number | null = null;
-
-      if (dbConn) {
-        try {
-          const [insA, insB] = await Promise.all([
-            dbConn.insert(creativeAssets).values({
-              orgId,
-              assetType: "generated",
-              name: `Variation A (${resolvedA}) — ${input.prompt.slice(0, 50)}`,
-              url: imageUrlA,
-              storageKey: saveA.key ?? null,
-              prompt: input.prompt,
-              outputSize: input.size,
-              mimeType: resultA.mimeType,
-              createdBy: ctx.user?.id ?? null,
-            }).$returningId(),
-            dbConn.insert(creativeAssets).values({
-              orgId,
-              assetType: "generated",
-              name: `Variation B (${resolvedB}) — ${input.prompt.slice(0, 50)}`,
-              url: imageUrlB,
-              storageKey: saveB.key ?? null,
-              prompt: input.prompt,
-              outputSize: input.size,
-              mimeType: resultB.mimeType,
-              createdBy: ctx.user?.id ?? null,
-            }).$returningId(),
-          ]);
-          assetIdA = (insA as any)?.[0]?.id ?? null;
-          assetIdB = (insB as any)?.[0]?.id ?? null;
-        } catch (dbErr: any) {
-          console.warn("[KaiCreative] generateVariations DB insert failed:", dbErr?.message ?? dbErr);
-        }
-      }
+      const results = await Promise.all(
+        variations.map(async (v, i) => {
+          const imageUrl = saves[i].url ?? `data:${v.mimeType};base64,${v.imageBase64}`;
+          let assetId: number | null = null;
+          if (dbConn) {
+            try {
+              const [ins] = await dbConn.insert(creativeAssets).values({
+                orgId,
+                assetType: "generated",
+                name: `${v.styleLabel} — ${input.prompt.slice(0, 50)}`,
+                url: imageUrl,
+                storageKey: saves[i].key ?? null,
+                prompt: input.prompt,
+                outputSize: input.size,
+                mimeType: v.mimeType,
+                createdBy: ctx.user?.id ?? null,
+              }).$returningId();
+              assetId = (ins as any)?.id ?? null;
+            } catch (dbErr: any) {
+              console.warn("[KaiCreative] generateVariations DB insert failed:", dbErr?.message ?? dbErr);
+            }
+          }
+          return {
+            imageUrl,
+            imageBase64: v.imageBase64,
+            mimeType: v.mimeType,
+            styleLabel: v.styleLabel,
+            styleId: v.styleId,
+            assetId,
+          };
+        })
+      );
 
       return {
-        variantA: {
-          imageUrl: imageUrlA,
-          imageBase64: resultA.imageBase64,
-          mimeType: resultA.mimeType,
-          style: resolvedA,
-          assetId: assetIdA,
-        },
-        variantB: {
-          imageUrl: imageUrlB,
-          imageBase64: resultB.imageBase64,
-          mimeType: resultB.mimeType,
-          style: resolvedB,
-          assetId: assetIdB,
-        },
+        variations: results,
         prompt: input.prompt,
         size: input.size,
-        savedToLibrary: !!(assetIdA || assetIdB),
+        savedToLibrary: results.some((r) => r.assetId !== null),
       };
     }),
 

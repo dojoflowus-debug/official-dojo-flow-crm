@@ -171,11 +171,10 @@ export default function KaiCreative() {
   const [activeTab, setActiveTab] = useState<StudioTab>("studio");
   // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  // A/B Variations
-  type VariantResult = { imageUrl: string; imageBase64: string; mimeType: string; style: string; assetId: number | null };
+  // 4-Style Variations
+  type VariationResult = { imageUrl: string; imageBase64: string; mimeType: string; styleLabel: string; styleId: string; assetId: number | null };
   const [abVariations, setAbVariations] = useState<{
-    variantA: VariantResult;
-    variantB: VariantResult;
+    variations: VariationResult[];
     prompt: string;
     size: string;
   } | null>(null);
@@ -785,8 +784,6 @@ export default function KaiCreative() {
                 variationsMutation.mutate({
                   prompt: prompt.trim(),
                   size,
-                  styleA: "energetic",
-                  styleB: "premium",
                 });
               }}
               disabled={isLoading || isLoadingVariations || !prompt.trim()}
@@ -794,18 +791,19 @@ export default function KaiCreative() {
               className={`h-12 px-4 rounded-xl border font-medium text-sm transition-all disabled:opacity-50 ${
                 isDark ? "border-white/15 text-white/70 hover:bg-white/5 hover:border-white/25" : "border-slate-200 text-slate-600 hover:bg-slate-50"
               }`}
-              title="Generate 2 versions with different styles (Energetic vs Premium)"
+              title="Generate 4 style variations — Energetic, Premium, Kids Playful, High-Converting"
             >
               {isLoadingVariations ? (
                 <span className="flex items-center gap-1.5">
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span className="hidden sm:inline">Generating…</span>
+                  <span className="hidden sm:inline">Generating 4 styles…</span>
+                  <span className="sm:hidden">…</span>
                 </span>
               ) : (
                 <span className="flex items-center gap-1.5">
                   <Layers className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">2 Versions</span>
-                  <span className="sm:hidden">A/B</span>
+                  <span className="hidden sm:inline">4 Styles</span>
+                  <span className="sm:hidden">4</span>
                 </span>
               )}
             </Button>
@@ -995,11 +993,11 @@ export default function KaiCreative() {
         </div>
       )}
 
-      {/* ── A/B Variations Result ──────────────────────────────────────── */}
+      {/* ── 4-Style Variations Result ─────────────────────────────────── */}
       {abVariations && !isLoadingVariations && activeTab === "studio" && (
         <div className="px-4 pb-6 max-w-2xl mx-auto space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className={`text-sm font-semibold ${text}`}>A/B Versions</h3>
+            <h3 className={`text-sm font-semibold ${text}`}>4 Style Variations — Pick Your Favorite</h3>
             <button
               onClick={() => setAbVariations(null)}
               className={`text-xs ${muted} hover:opacity-80 flex items-center gap-1`}
@@ -1008,21 +1006,23 @@ export default function KaiCreative() {
             </button>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            {(["variantA", "variantB"] as const).map((key, idx) => {
-              const v = abVariations[key];
-              const label = idx === 0 ? "A — Energetic" : "B — Premium";
+            {abVariations.variations.map((v, idx) => {
+              const styleColors = [
+                "bg-orange-500/80",
+                "bg-purple-600/80",
+                "bg-pink-500/80",
+                "bg-emerald-600/80",
+              ];
               return (
-                <div key={key} className={`rounded-2xl border overflow-hidden ${card}`}>
+                <div key={v.styleId} className={`rounded-2xl border overflow-hidden ${card}`}>
                   <div
                     className="relative cursor-zoom-in"
                     onClick={() => setAbLightbox({ url: v.imageUrl, base64: v.imageBase64, mimeType: v.mimeType, prompt: abVariations.prompt })}
                   >
-                    <img src={v.imageUrl} alt={label} className="w-full object-cover aspect-square" />
+                    <img src={v.imageUrl} alt={v.styleLabel} className="w-full object-cover aspect-square" />
                     <div className="absolute top-2 left-2">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium backdrop-blur-sm ${
-                        idx === 0 ? "bg-orange-500/80 text-white" : "bg-purple-600/80 text-white"
-                      }`}>
-                        {label}
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium backdrop-blur-sm text-white ${styleColors[idx] ?? "bg-slate-600/80"}`}>
+                        {v.styleLabel}
                       </span>
                     </div>
                     <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white/70 text-xs px-1.5 py-0.5 rounded-full pointer-events-none">
@@ -1054,7 +1054,7 @@ export default function KaiCreative() {
                       onClick={() => {
                         const a = document.createElement("a");
                         a.href = v.imageUrl;
-                        a.download = `kai-${key}-${Date.now()}.png`;
+                        a.download = `kai-${v.styleId}-${Date.now()}.png`;
                         a.target = "_blank";
                         a.click();
                       }}
@@ -1066,7 +1066,7 @@ export default function KaiCreative() {
               );
             })}
           </div>
-          <p className={`text-xs ${muted} text-center`}>Both versions saved to Creative Library</p>
+          <p className={`text-xs ${muted} text-center`}>All 4 variations saved to Creative Library</p>
         </div>
       )}
 
