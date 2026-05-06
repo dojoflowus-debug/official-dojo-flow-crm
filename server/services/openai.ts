@@ -439,6 +439,28 @@ const crmTools = [
     },
   },
   {
+    type: 'function' as const,
+    function: {
+      name: 'generate_variations',
+      description: 'Generate 4 style variations of a marketing image at once — Energetic, Premium, Kids Playful, and High-Converting. MUST be called when the user says "give me 4 versions", "show me variations", "4 styles", "multiple options", "different versions", "let me compare", or "show me options". Returns a 2x2 grid of images the user can pick from. Do NOT use generate_flyer for this — use this tool instead.',
+      parameters: {
+        type: 'object',
+        properties: {
+          prompt: {
+            type: 'string',
+            description: 'Full description of the image to generate variations of. Include program name, audience, key offer, and school context.',
+          },
+          size: {
+            type: 'string',
+            enum: ['flyer', 'instagram_post', 'instagram_story', 'facebook_ad', 'website_banner', 'business_card'],
+            description: 'Output format. Default: instagram_post.',
+          },
+        },
+        required: ['prompt'],
+      },
+    },
+  },
+  {
     type: 'function',
     function: {
       name: 'generate_platform_copy',

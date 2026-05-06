@@ -9613,3 +9613,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix Video Ad: added ffmpeg to nixpacks.toml for production deployment
 - [ ] Add "Send to Leads" button on generated image card
 - [ ] Add image generation from Kai chat with size selector inline
+
+## Kai Creative Manus-Like Upgrade Phase 2 (May 6, 2026)
+- [ ] Add "4 versions" trigger to Kai chat — generates 4-style grid inline
+- [ ] Add iterative refinement memory — carry forward last image as source for edits
+- [ ] Add quick-reply refinement chips after every generated image in chat
+- [ ] Add generate_variations tool to Kai LLM tool definitions
+- [ ] Add variations result rendering in UIBlockRenderer (2x2 grid)

@@ -911,6 +911,47 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
         return { error: `Flyer generation failed: ${err.message}` };
       }
     }
+    case 'generate_variations': {
+      const orgIdVariations = ctx?.currentOrganizationId;
+      if (!orgIdVariations) return { error: 'No organization context — cannot generate variations.' };
+      try {
+        const { generateImageVariations } = await import('./geminiImageService');
+        const { organizations: orgsTableVar } = await import('../drizzle/schema');
+        const dbVar = await getDb();
+        let brandCtxVar: any = undefined;
+        if (dbVar) {
+          const [orgVar] = await dbVar.select().from(orgsTableVar).where(eq(orgsTableVar.id, orgIdVariations)).limit(1);
+          if (orgVar) {
+            brandCtxVar = {
+              schoolName: (orgVar as any).name,
+              primaryColor: (orgVar as any).primaryColor,
+              secondaryColor: (orgVar as any).secondaryColor,
+              accentColor: (orgVar as any).accentColor,
+              phone: (orgVar as any).phone,
+              website: (orgVar as any).website,
+              tagline: (orgVar as any).tagline,
+              address: (orgVar as any).address,
+              logoUrl: (orgVar as any).logoUrl,
+            };
+          }
+        }
+        const variationsResult = await generateImageVariations(
+          args.prompt || 'Marketing image for martial arts school',
+          (args.size || 'instagram_post') as any,
+          brandCtxVar
+        );
+        return {
+          success: true,
+          type: 'creative_variations',
+          variations: variationsResult.variations,
+          prompt: args.prompt,
+          size: args.size || 'instagram_post',
+          message: 'Generated 4 style variations.',
+        };
+      } catch (err: any) {
+        return { error: `Variations generation failed: ${err.message}` };
+      }
+    }
     case 'generate_platform_copy': {
       const orgIdCopy = ctx?.currentOrganizationId;
       if (!orgIdCopy) return { error: 'No organization context — cannot generate copy.' };
@@ -1226,6 +1267,19 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
         assetId: result.assetId,
         savedToLibrary: result.savedToLibrary,
         label: 'Generated Flyer',
+      }],
+    };
+  }
+  // Handle creative_variations result (generate_variations tool)
+  if (result.type === 'creative_variations' && result.variations) {
+    return {
+      text: `Here are 4 style variations! Pick the one you like best — I can refine any of them further.`,
+      ui_blocks: [{
+        type: 'creative_variations',
+        variations: result.variations,
+        prompt: result.prompt,
+        size: result.size,
+        label: '4 Style Variations',
       }],
     };
   }

@@ -495,6 +495,7 @@ export default function KaiCommand() {
   const sendingRef = useRef(false);
   const pendingMessageIdsRef = useRef(new Set<string>());
   const isScrollingRef = useRef(false);
+  const [showScrollToBottomBtn, setShowScrollToBottomBtn] = useState(false);
   const IDLE_TIMEOUT = 2500; // 2.5 seconds
   const SCROLL_DEBOUNCE = 500; // 500ms after scroll stops
   
@@ -1543,13 +1544,38 @@ export default function KaiCommand() {
   const totalPages = Math.ceil(sortedQuickCommands.length / PAGE_SIZE);
   const pageItems = sortedQuickCommands.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
-  const scrollToBottom = () => {
+   // Track whether user has manually scrolled up
+  const userScrolledUpRef = useRef(false);
+
+  const scrollToBottom = useCallback((force = false) => {
+    if (!force && userScrolledUpRef.current) return; // Don't snap if user scrolled up
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, []);
+
+  // Force scroll to bottom when user sends a message
+  const forceScrollToBottom = useCallback(() => {
+    userScrolledUpRef.current = false;
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  // Listen for manual scroll events to detect when user scrolls up
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const handleUserScroll = () => {
+      const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+      // If user is more than 100px from the bottom, they've scrolled up
+      const scrolledUp = distanceFromBottom > 100;
+      userScrolledUpRef.current = scrolledUp;
+      setShowScrollToBottomBtn(scrolledUp);
+    };
+    container.addEventListener('scroll', handleUserScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleUserScroll);
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
   // Auto-select first conversation on initial load
   // Don't auto-select if onboarding is active — onboarding runs in a clean state without existing messages
@@ -3141,6 +3167,9 @@ export default function KaiCommand() {
       attachments: [...inputAttachments]
     };
     setMessages(prev => [...prev, optimisticUserMessage]);
+    // Force scroll to bottom when user sends a new message
+    userScrolledUpRef.current = false;
+    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
     
     if (conversationId) {
       try {
@@ -4354,7 +4383,7 @@ export default function KaiCommand() {
             className={`content-layer flex-1 min-h-0 relative w-full overflow-y-auto scrollbar-visible ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'}`}
             style={{ 
               zIndex: 10,
-              paddingBottom: isMobile ? '24px' : '140px'
+              paddingBottom: '24px'
             }}
           >
             {/* Shared content column wrapper - constrained to chat bar width */}
@@ -6053,7 +6082,27 @@ export default function KaiCommand() {
                   )}
 
                   <div ref={messagesEndRef} />
-                  
+
+                  {/* Scroll-to-bottom button — appears when user has scrolled up */}
+                  {showScrollToBottomBtn && (
+                    <button
+                      onClick={() => {
+                        userScrolledUpRef.current = false;
+                        setShowScrollToBottomBtn(false);
+                        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className={`fixed bottom-32 right-6 z-50 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold shadow-lg transition-all ${
+                        isDark || isCinematic
+                          ? 'bg-[#E53935] text-white hover:bg-[#c62828]'
+                          : 'bg-[#E53935] text-white hover:bg-[#c62828]'
+                      }`}
+                      title="Scroll to latest message"
+                    >
+                      <ChevronDown className="w-3.5 h-3.5" />
+                      Latest
+                    </button>
+                  )}
+
                   {/* Kai Thinking Indicator during PDF parsing - at bottom before composer */}
                   {isParsingStudents && (
                     <KaiThinkingIndicator
