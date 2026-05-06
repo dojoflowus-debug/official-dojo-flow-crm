@@ -19,24 +19,24 @@ import QRCode from "qrcode";
 
 // ── Pexels stock photo fetcher ────────────────────────────────────────────────
 const PROGRAM_PHOTO_QUERIES: Record<string, string> = {
-  "little ninjas": "children karate class kids martial arts dojo",
-  ninja: "children karate class kids martial arts dojo",
-  karate: "karate martial arts class students training dojo",
-  "adult karate": "adult karate martial arts training dojo",
-  kickboxing: "kickboxing class fitness training gym",
-  bjj: "brazilian jiu jitsu grappling class",
-  "jiu-jitsu": "jiu jitsu martial arts class",
-  taekwondo: "taekwondo martial arts class kicking",
-  boxing: "boxing training class gym",
-  "muay thai": "muay thai kickboxing training",
-  mma: "mixed martial arts training class",
-  wrestling: "wrestling training class",
-  judo: "judo martial arts class",
-  "self defense": "self defense class training women empowerment",
-  "self-defense": "self defense class training",
-  fitness: "fitness class workout training gym",
-  yoga: "yoga class studio peaceful",
-  dance: "dance class studio performance",
+  "little ninjas": "children karate martial arts kids training dojo white gi",
+  ninja: "children karate martial arts kids training dojo white gi",
+  karate: "karate martial arts student training kick punch dojo",
+  "adult karate": "adult karate martial arts training kick powerful dojo",
+  kickboxing: "kickboxing martial arts training punch kick powerful",
+  bjj: "jiu jitsu grappling martial arts training mat",
+  "jiu-jitsu": "jiu jitsu grappling martial arts training mat",
+  taekwondo: "taekwondo martial arts high kick training powerful",
+  boxing: "boxing training punch powerful athlete gym",
+  "muay thai": "muay thai kickboxing training powerful kick",
+  mma: "mixed martial arts training powerful athlete",
+  wrestling: "wrestling martial arts training athlete",
+  judo: "judo martial arts throw training",
+  "self defense": "self defense martial arts training women empowerment",
+  "self-defense": "self defense martial arts training women empowerment",
+  fitness: "fitness workout training gym athlete powerful",
+  yoga: "yoga class studio peaceful meditation",
+  dance: "dance class studio performance energy",
 };
 
 function getPhotoQuery(programName: string): string {
@@ -365,12 +365,22 @@ export function buildFlyerHtml(data: FlyerData): string {
     inset: 0;
     background: linear-gradient(
       90deg,
-      rgba(0,0,0,0.92) 0%,
-      rgba(0,0,0,0.55) 35%,
-      rgba(0,0,0,0.10) 65%,
-      rgba(0,0,0,0.0) 100%
+      rgba(0,0,0,0.95) 0%,
+      rgba(0,0,0,0.65) 30%,
+      rgba(0,0,0,0.20) 60%,
+      rgba(0,0,0,0.05) 100%
     );
     z-index: 2;
+  }
+
+  /* Dark vignette on top and bottom of right panel */
+  .right-panel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,0.5) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.5) 100%);
+    z-index: 3;
   }
 
   /* ── PROGRAM NAME — massive bold 3D text ── */
