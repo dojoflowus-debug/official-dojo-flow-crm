@@ -73,6 +73,7 @@ async function callGenerateImages(
     config: {
       aspectRatio,
       numberOfImages: Math.min(count, 4) as 1 | 2 | 3 | 4,
+      personGeneration: "allow_all",  // Allow adults and children in martial arts ads
     },
   });
 

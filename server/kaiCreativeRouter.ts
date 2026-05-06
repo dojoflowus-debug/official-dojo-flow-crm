@@ -1002,11 +1002,12 @@ export async function generateFlyerFromKai(
   // Build a visuals-first prompt that tells Imagen what to DRAW, not what text to render
   const programContext = (() => {
     const lower = prompt.toLowerCase();
-    if (lower.includes('little ninja') || lower.includes('tiny ninja')) return { program: 'Little Ninjas', ages: '3-5', visual: 'two happy young children (ages 3-5) in white karate gi doing a high kick together, big smiles, energetic, professional sports photography' };
-    if (lower.includes('kids') || lower.includes('children') || lower.includes('youth')) return { program: 'Kids Karate', ages: '6-12', visual: 'a confident child (age 8-10) in white karate gi doing a powerful punch, dramatic lighting, professional sports photography' };
-    if (lower.includes('teen') || lower.includes('teenage')) return { program: 'Teen Karate', ages: '13-17', visual: 'a confident teenager in black karate gi in a powerful stance, cinematic dark background, dramatic lighting' };
-    if (lower.includes('adult') || lower.includes('women') || lower.includes('self defense')) return { program: 'Adult Karate', ages: 'Adults 18+', visual: 'a confident adult martial artist in gi doing a powerful kick, cinematic, dark dramatic background' };
-    if (lower.includes('summer camp') || lower.includes('camp')) return { program: 'Summer Camp', ages: '5-12', visual: 'group of happy children in karate uniforms outdoors, summer energy, professional photography' };
+    if (lower.includes('little ninja') || lower.includes('tiny ninja')) return { program: 'Little Ninjas', ages: '3-5', visual: 'two happy young students in white karate gi doing a high kick together, big smiles, energetic, professional sports photography, bright studio lighting' };
+    if (lower.includes('kids') || lower.includes('children') || lower.includes('youth')) return { program: 'Kids Karate', ages: '6-12', visual: 'a confident young student in white karate gi doing a powerful punch, dramatic studio lighting, professional sports photography' };
+    if (lower.includes('teen') || lower.includes('teenage')) return { program: 'Teen Karate', ages: '13-17', visual: 'a confident young martial artist in black karate gi in a powerful stance, cinematic dark background, dramatic lighting' };
+    if (lower.includes('adult') || lower.includes('women') || lower.includes('self defense')) return { program: 'Adult Karate', ages: 'Adults', visual: 'a confident adult martial artist in gi doing a powerful kick, cinematic, dark dramatic background' };
+    if (lower.includes('kickbox') || lower.includes('muay thai') || lower.includes('boxing')) return { program: 'Kickboxing', ages: 'All Ages', visual: 'a powerful martial artist in kickboxing stance with gloves, dramatic cinematic lighting, dark background, professional sports photography' };
+    if (lower.includes('summer camp') || lower.includes('camp')) return { program: 'Summer Camp', ages: '5-12', visual: 'group of happy young students in karate uniforms outdoors, summer energy, professional photography' };
     if (lower.includes('belt test') || lower.includes('graduation')) return { program: 'Belt Test', ages: 'All Students', visual: 'martial arts student receiving a new belt from instructor, proud moment, cinematic lighting' };
     return { program: 'Martial Arts', ages: 'All Ages', visual: 'a powerful martial artist in gi doing a dramatic kick, cinematic dark background, professional sports photography' };
   })();
