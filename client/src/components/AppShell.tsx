@@ -165,8 +165,18 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
             // iOS Safari clips position:fixed children inside overflow:hidden parents.
             // On phone /kai route, use overflow:visible so KaiCommand (position:fixed) is visible.
             overflow: isKaiRoute ? (isPhone ? 'visible' : 'hidden') : undefined,
-            // On /kai desktop: let flex-1 + min-h-0 handle height naturally within the 100dvh container
-            // This avoids double-constraining with both flex-1 and explicit height
+            // On /kai desktop: explicitly set height to exclude both topbar AND bottom nav
+            // so the composer is always visible above the bottom nav
+            height: (isKaiRoute && !isPhone && showBottomNav)
+              ? 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px))'
+              : (isKaiRoute && !isPhone)
+                ? 'calc(100dvh - var(--topbar-h, 56px))'
+                : undefined,
+            maxHeight: (isKaiRoute && !isPhone && showBottomNav)
+              ? 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px))'
+              : (isKaiRoute && !isPhone)
+                ? 'calc(100dvh - var(--topbar-h, 56px))'
+                : undefined,
             flexShrink: (isKaiRoute && !isPhone) ? 0 : undefined
           }}
         >
