@@ -134,7 +134,6 @@ const trpcClient = trpc.createClient({
         if (response.status === 429) {
           const text = await response.text();
           console.warn('[tRPC] Rate limit hit (HTTP 429):', text);
-          // Return a synthetic JSON error response that tRPC can parse
           return new Response(
             JSON.stringify([{
               error: {
@@ -145,10 +144,25 @@ const trpcClient = trpc.createClient({
                 },
               },
             }]),
-            {
-              status: 429,
-              headers: { 'Content-Type': 'application/json' },
-            }
+            { status: 429, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+        // Handle 503 Service Unavailable (Cloud Run timeout/overload) — returns HTML, not JSON.
+        // Without this, tRPC throws "Unexpected token 'S', 'Service Unavailable' is not valid JSON".
+        if (response.status === 503 || response.status === 502 || response.status === 504) {
+          const text = await response.text();
+          console.warn(`[tRPC] Server unavailable (HTTP ${response.status}):`, text.slice(0, 200));
+          return new Response(
+            JSON.stringify([{
+              error: {
+                json: {
+                  message: 'The server is temporarily unavailable. Please try again in a moment.',
+                  code: -32003,
+                  data: { code: 'INTERNAL_SERVER_ERROR', httpStatus: response.status },
+                },
+              },
+            }]),
+            { status: response.status, headers: { 'Content-Type': 'application/json' } }
           );
         }
         return response;

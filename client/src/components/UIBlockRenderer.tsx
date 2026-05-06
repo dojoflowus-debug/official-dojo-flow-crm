@@ -72,6 +72,7 @@ interface UIBlock {
   // creative_image fields
   imageUrl?: string;
   imageBase64?: string;
+  flyerHtml?: string | null;
   mimeType?: string;
   prompt?: string;
   size?: string;
@@ -359,15 +360,16 @@ export function UIBlockRenderer({ blocks, onBlockClick, theme = 'light' }: UIBlo
         }
 
         // Render inline creative image (generated flyer)
-        if (block.type === 'creative_image' && block.imageUrl) {
+        if (block.type === 'creative_image' && (block.imageUrl || block.flyerHtml)) {
           const cardData: CreativePreviewCardData = {
-            imageUrl: block.imageUrl,
-            imageBase64: block.imageBase64,
+            imageUrl: block.imageUrl || '',
+            imageBase64: block.imageBase64 || '',
             mimeType: block.mimeType || 'image/png',
             prompt: block.prompt || '',
             size: block.size || 'flyer',
             assetId: block.assetId ?? null,
             savedToLibrary: block.savedToLibrary ?? false,
+            flyerHtml: block.flyerHtml || null,
           };
           return (
             <CreativePreviewCard

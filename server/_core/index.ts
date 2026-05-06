@@ -1718,6 +1718,74 @@ async function startServer() {
     await handleFluidPayWebhook(req, res);
   });
   
+  // ── /api/upload-flyer: accepts a base64 PNG from the client (html2canvas render) ──
+  // The client renders the flyer HTML via html2canvas and uploads the resulting PNG here.
+  // This avoids running Puppeteer/Chromium on the server (Cloud Run memory/timeout issues).
+  app.post('/api/upload-flyer', async (req: any, res: any) => {
+    try {
+      const { imageBase64, mimeType = 'image/png', prompt = '', size = 'flyer', assetId } = req.body || {};
+      if (!imageBase64) return res.status(400).json({ error: 'imageBase64 is required' });
+      // Get org ID from session cookie or header (same pattern as other REST endpoints)
+      let orgId: number | null = null;
+      const sessionCookie = req.cookies?.session || req.cookies?.app_session_id;
+      if (sessionCookie) {
+        try { const sd = JSON.parse(sessionCookie); orgId = sd.currentOrganizationId || null; } catch {}
+      }
+      if (!orgId) {
+        const h = req.headers['x-organization-id'];
+        if (h) { const p = parseInt(String(h)); if (!isNaN(p)) orgId = p; }
+      }
+      if (!orgId) return res.status(401).json({ error: 'No organization context' });
+
+      const buffer = Buffer.from(imageBase64, 'base64');
+      const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
+      const key = `creative/${orgId}/generated/${Date.now()}.${ext}`;
+
+      let imageUrl: string = `data:${mimeType};base64,${imageBase64}`;
+      let s3Key: string | null = null;
+      try {
+        const { storagePut: sp } = await import('../storage');
+        const s3Result = await sp(key, buffer, mimeType);
+        imageUrl = s3Result.url;
+        s3Key = s3Result.key;
+      } catch { /* non-blocking — fall back to data URL */ }
+
+      // If assetId provided, update the placeholder record; otherwise insert new
+      const { getDb: getDbLocal } = await import('../db');
+      const db = await getDbLocal();
+      let finalAssetId: number | null = assetId ?? null;
+      if (db) {
+        const { creativeAssets } = await import('../../drizzle/schema');
+        const { eq } = await import('drizzle-orm');
+        try {
+          if (assetId) {
+            await db.update(creativeAssets)
+              .set({ url: imageUrl, storageKey: s3Key })
+              .where(eq(creativeAssets.id, assetId));
+          } else {
+            const inserted = await db.insert(creativeAssets).values({
+              orgId,
+              assetType: 'generated',
+              name: `Kai — ${(prompt as string).slice(0, 60)}`,
+              url: imageUrl,
+              storageKey: s3Key,
+              prompt: prompt as string,
+              outputSize: size as string,
+              mimeType: mimeType as string,
+              createdBy: null,
+            }).$returningId();
+            finalAssetId = (inserted as any)?.[0]?.id ?? null;
+          }
+        } catch { /* non-blocking */ }
+      }
+
+      res.json({ success: true, imageUrl, assetId: finalAssetId });
+    } catch (err: any) {
+      console.error('[upload-flyer] Error:', err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // tRPC API (must be BEFORE Vite/static setup so it's not caught by catch-all)
   app.use(
     "/api/trpc",

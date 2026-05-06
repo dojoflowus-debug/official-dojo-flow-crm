@@ -12,7 +12,8 @@
  * the Manus reference flyer style.
  */
 
-import puppeteer from "puppeteer-core";
+// puppeteer-core is dynamically imported inside renderFlyerToPng to avoid
+// TypeScript namespace errors when @types/puppeteer is not installed.
 import https from "https";
 import http from "http";
 import QRCode from "qrcode";
@@ -898,11 +899,13 @@ export function buildBusinessCardHtml(data: FlyerData): string {
 </html>`;
 }
 
-// ── Puppeteer renderer ────────────────────────────────────────────────────────
-let _browser: puppeteer.Browser | null = null;
+// ── Puppeteer renderer (dev/local only — not used in production Cloud Run) ────
+// Uses dynamic import to avoid TypeScript namespace errors.
+let _browser: any = null;
 
-async function getBrowser(): Promise<puppeteer.Browser> {
+async function getBrowser(): Promise<any> {
   if (_browser && _browser.connected) return _browser;
+  const puppeteer = (await import('puppeteer-core')).default;
   // Use @sparticuz/chromium in production (Cloud Run), fall back to local Chromium in dev
   let executablePath: string;
   let extraArgs: string[] = [];

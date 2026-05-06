@@ -969,6 +969,7 @@ export async function generateFlyerFromKai(
   size: string;
   assetId: number | null;
   savedToLibrary: boolean;
+  flyerHtml?: string;
 }> {
   const validSize = ['flyer', 'instagram_post', 'instagram_story', 'facebook_ad', 'website_banner', 'business_card'].includes(size)
     ? size as ImageSize
@@ -997,27 +998,19 @@ export async function generateFlyerFromKai(
 
   console.log(`[KaiCreative] FlyerData: program="${flyerData.programName}", headline="${flyerData.headline}", heroPhoto=${!!flyerData.heroImageUrl}`);
 
+  // ── HTML-only pipeline (no Puppeteer) ────────────────────────────────────────
+  // Rendering is done client-side via html2canvas to avoid Puppeteer/Chromium
+  // memory/timeout issues in Cloud Run. The server just returns the HTML string.
   const flyerHtml = buildFlyerHtml(flyerData);
-  const pngBuffer = await renderFlyerToPng(flyerHtml, validSize);
 
-  let imageBase64 = pngBuffer.toString('base64');
-  let mimeType = 'image/png';
+  console.log(`[KaiCreative] HTML flyer built: ${flyerHtml.length} chars`);
 
-  console.log(`[KaiCreative] Puppeteer rendered flyer: ${pngBuffer.length} bytes`);
+  // Placeholder imageUrl — client will replace this after html2canvas render + S3 upload
+  const imageUrl = `data:text/html;charset=utf-8,flyer-pending`;
+  const imageBase64 = '';
+  const mimeType = 'image/png';
 
-  const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
-  const key = `creative/${orgId}/generated/${Date.now()}.${ext}`;
-  let imageUrl: string = `data:${mimeType};base64,${imageBase64}`;
-  let s3Key: string | null = null;
-  try {
-    const { storagePut: sp } = await import('./storage');
-    const buffer = Buffer.from(imageBase64, 'base64');
-    const s3Result = await sp(key, buffer, mimeType);
-    imageUrl = s3Result.url;
-    s3Key = s3Result.key;
-  } catch { /* non-blocking */ }
-
-  // Save to creative library
+  // Pre-create a creative library placeholder so the client can update it after rendering
   let assetId: number | null = null;
   let savedToLibrary = false;
   const db = await getDb();
@@ -1028,14 +1021,14 @@ export async function generateFlyerFromKai(
         assetType: 'generated',
         name: `Kai — ${prompt.slice(0, 60)}`,
         url: imageUrl,
-        storageKey: s3Key,
+        storageKey: null,
         prompt,
         outputSize: validSize,
         mimeType,
         createdBy: null,
       }).$returningId();
       assetId = (inserted as any)?.[0]?.id ?? null;
-      savedToLibrary = true;
+      savedToLibrary = false; // Will be marked saved after client uploads PNG
     } catch { /* non-blocking */ }
   }
 
@@ -1047,5 +1040,6 @@ export async function generateFlyerFromKai(
     size: validSize,
     assetId,
     savedToLibrary,
+    flyerHtml,
   };
 }
