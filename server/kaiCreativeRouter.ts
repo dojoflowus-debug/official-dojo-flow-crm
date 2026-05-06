@@ -1025,77 +1025,73 @@ export async function generateFlyerFromKai(
         ``,
         `COLOR PALETTE: Deep dark background (near-black or dark navy), ${primaryColor} as the dominant accent color, white text.`,
         ``,
-        `TYPOGRAPHY — render ONLY these 2 text elements (nothing else):`,
-        `  1. HEADLINE at top: Bold, condensed, white text on dark background — 3-5 words maximum`,
-        `  2. CTA BUTTON at bottom: Bold red/accent button — "ENROLL TODAY" or "FREE TRIAL"`,
-        ``,
         `LAYOUT:`,
-        `  - TOP 15%: Dark header strip — leave clean (logo will be composited here)`,
-        `  - MIDDLE 60%: Hero photography — ${programContext.visual}`,
-        `  - BOTTOM 25%: Dark footer strip — leave clean (contact info will be composited here)`,
+        `  - TOP 15%: Dark solid header strip — completely empty, no text, no logos`,
+        `  - MIDDLE 65%: Hero photography — ${programContext.visual}`,
+        `  - BOTTOM 20%: Dark solid footer strip — completely empty, no text`,
         ``,
-        `STYLE: Cinematic sports poster quality. Think Nike or Under Armour ad. Bold. High contrast. Premium.`,
-        `DO NOT render: phone numbers, addresses, websites, QR codes, benefit lists, bullet points, or any small text.`,
-        `DO NOT render: any logo, emblem, shield, or crest — leave the header strip clean.`,
-        `ONLY render: the hero image, headline text, and CTA button.`,
+        `STYLE: Cinematic sports photography background. Think Nike or Under Armour campaign photo. Bold. High contrast. Premium.`,
+        `CRITICAL — DO NOT RENDER ANY TEXT WHATSOEVER. No headlines, no taglines, no CTAs, no phone numbers, no addresses, no websites, no bullet points, no labels, no captions. ZERO text.`,
+        `CRITICAL — DO NOT RENDER ANY LOGOS, EMBLEMS, SHIELDS, CRESTS, OR BADGES. ZERO logos.`,
+        `CRITICAL — DO NOT RENDER ANY BUTTONS, BANNERS, OR GRAPHIC OVERLAYS. Pure photography only.`,
+        `The image must be a clean photographic background that text will be composited on top of separately.`,
       ].join('\n');
 
   const result = await generateImage(imagenPrompt, validSize, brand, resolvedStyle);
   let imageBase64 = result.imageBase64;
   let mimeType = result.mimeType;
 
-  // ── Step 2: Composite logo + footer strip using sharp ──────────────────────────
-  // This step adds professional branding elements that Imagen can't reliably render:
-  // - School logo with a dark semi-transparent background pill at top-center
-  // - Dark footer strip with school name, phone, address, website
-  // - Real scannable QR code in the bottom-right corner
-
+  // ── Step 2: Composite branding elements using sharp ──────────────────────────
+  // Layout:
+  //   HEADER BAR (top 14%): solid dark bar, school logo centered
+  //   PHOTO (middle 65%): Imagen-generated hero photo — NO text from Imagen
+  //   FOOTER BAR (bottom 21%): solid dark bar, school name (left) + phone + QR (right)
   try {
     const sharp = (await import('sharp')).default;
     const mainBuf = Buffer.from(imageBase64, 'base64');
     const mainMeta = await sharp(mainBuf).metadata();
     const w = mainMeta.width || 800;
     const h = mainMeta.height || 1000;
-
     const compositeInputs: sharp.OverlayOptions[] = [];
 
-    // ── Footer strip: dark semi-transparent bar at the bottom ────────────────────
-    // Height: ~22% of image height, contains school name + contact info
-    const footerH = Math.round(h * 0.22);
-    const footerTop = h - footerH;
-    // Build SVG footer with school name, phone, address, website
-    const contactLines: string[] = [];
-    if (phone) contactLines.push(phone);
-    if (address) contactLines.push(address);
-    if (website) contactLines.push(website);
-    const contactText = contactLines.join('  ·  ');
-    const footerSvg = `<svg width="${w}" height="${footerH}" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="footerGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="rgba(0,0,0,0)" />
-      <stop offset="40%" stop-color="rgba(0,0,0,0.85)" />
-      <stop offset="100%" stop-color="rgba(0,0,0,0.95)" />
-    </linearGradient>
-  </defs>
-  <rect width="${w}" height="${footerH}" fill="url(#footerGrad)" />
-  <text x="${w / 2}" y="${Math.round(footerH * 0.42)}" 
-    font-family="Arial Black, Arial, sans-serif" 
-    font-size="${Math.round(w * 0.045)}" 
-    font-weight="900" 
-    fill="white" 
-    text-anchor="middle" 
-    letter-spacing="2">${schoolName.toUpperCase()}</text>
-  ${contactText ? `<text x="${w / 2}" y="${Math.round(footerH * 0.68)}" 
-    font-family="Arial, sans-serif" 
-    font-size="${Math.round(w * 0.022)}" 
-    font-weight="400" 
-    fill="rgba(255,255,255,0.8)" 
-    text-anchor="middle">${contactText}</text>` : ''}
+    // ── HEADER BAR ────────────────────────────────────────────────────────────────
+    const headerH = Math.round(h * 0.14);
+    const headerSvg = `<svg width="${w}" height="${headerH}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="${w}" height="${headerH}" fill="rgba(0,0,0,0.90)" />
 </svg>`;
-    const footerBuf = Buffer.from(footerSvg);
-    compositeInputs.push({ input: footerBuf, top: footerTop, left: 0, blend: 'over' });
+    compositeInputs.push({ input: Buffer.from(headerSvg), top: 0, left: 0, blend: 'over' });
 
-    // ── Logo: centered at top with dark pill background ─────────────────────────
+    // ── FOOTER BAR ────────────────────────────────────────────────────────────────
+    const footerH = Math.round(h * 0.21);
+    const footerTop = h - footerH;
+    // Truncate school name to prevent SVG overflow
+    const rawName = schoolName || 'Martial Arts';
+    const safeSchoolName = rawName.length > 26 ? rawName.substring(0, 24) + '..' : rawName;
+    const escapedName = safeSchoolName.toUpperCase().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const safePhone = (phone || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const nameFontSize = Math.round(w * 0.046);
+    const phoneFontSize = Math.round(w * 0.027);
+    // QR will be placed on the right — leave 22% of width for it
+    const textAreaW = Math.round(w * 0.72);
+    const footerSvg = `<svg width="${w}" height="${footerH}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="${w}" height="${footerH}" fill="rgba(0,0,0,0.93)" />
+  <text x="${Math.round(w * 0.05)}" y="${Math.round(footerH * 0.43)}"
+    font-family="Arial Black, Arial, sans-serif"
+    font-size="${nameFontSize}"
+    font-weight="900"
+    fill="white"
+    text-anchor="start"
+    letter-spacing="1">${escapedName}</text>
+  ${safePhone ? `<text x="${Math.round(w * 0.05)}" y="${Math.round(footerH * 0.73)}"
+    font-family="Arial, sans-serif"
+    font-size="${phoneFontSize}"
+    font-weight="400"
+    fill="rgba(255,255,255,0.72)"
+    text-anchor="start">${safePhone}</text>` : ''}
+</svg>`;
+    compositeInputs.push({ input: Buffer.from(footerSvg), top: footerTop, left: 0, blend: 'over' });
+
+    // ── LOGO in header bar (centered) ─────────────────────────────────────────────
     const logoUrl = brand.logoUrl;
     if (logoUrl && (logoUrl.startsWith('http') || logoUrl.startsWith('data:'))) {
       try {
@@ -1116,9 +1112,9 @@ export async function generateFlyerFromKai(
             }).on('error', reject);
           });
         }
-        // Target logo size: max 220px wide, 80px tall
-        const logoMaxW = Math.round(w * 0.28);
-        const logoMaxH = Math.round(h * 0.08);
+        const logoPad = 10;
+        const logoMaxH = headerH - logoPad * 2;
+        const logoMaxW = Math.round(w * 0.60);
         const logoResized = await sharp(logoBuf)
           .resize(logoMaxW, logoMaxH, { fit: 'inside', withoutEnlargement: true })
           .png()
@@ -1126,42 +1122,30 @@ export async function generateFlyerFromKai(
         const logoMeta = await sharp(logoResized).metadata();
         const lw = logoMeta.width || logoMaxW;
         const lh = logoMeta.height || logoMaxH;
-        // Dark pill background behind logo
-        const pillPadX = 24;
-        const pillPadY = 12;
-        const pillW = lw + pillPadX * 2;
-        const pillH = lh + pillPadY * 2;
-        const pillLeft = Math.round((w - pillW) / 2);
-        const pillTop = 20;
-        const pillSvg = `<svg width="${pillW}" height="${pillH}" xmlns="http://www.w3.org/2000/svg">
-  <rect width="${pillW}" height="${pillH}" rx="${Math.round(pillH / 2)}" ry="${Math.round(pillH / 2)}" fill="rgba(0,0,0,0.72)" />
-</svg>`;
-        compositeInputs.push({ input: Buffer.from(pillSvg), top: pillTop, left: pillLeft, blend: 'over' });
-        // Logo centered inside the pill
-        const logoLeft = pillLeft + pillPadX;
-        const logoTop = pillTop + pillPadY;
+        const logoLeft = Math.round((w - lw) / 2);
+        const logoTop = Math.round((headerH - lh) / 2);
         compositeInputs.push({ input: logoResized, top: logoTop, left: logoLeft, blend: 'over' });
-        console.log('[KaiCreative] Logo composited with pill background at top-center');
+        console.log('[KaiCreative] Logo composited in header bar');
       } catch (logoErr: any) {
         console.warn('[KaiCreative] Logo compositing failed (non-blocking):', logoErr?.message);
       }
     }
 
-    // ── QR code: bottom-right corner ───────────────────────────────────────────────
+    // ── QR code in footer bar (right side) ────────────────────────────────────────
     try {
       const { generateQrCodeDataUrl } = await import('./flyerRenderer');
-      const qrUrl = website || `https://www.google.com/search?q=${encodeURIComponent(schoolName + ' martial arts')}`;
+      const qrUrl = website || `https://www.google.com/search?q=${encodeURIComponent((schoolName || 'martial arts') + ' martial arts')}`;
       const qrDataUrl = await generateQrCodeDataUrl(qrUrl);
       if (qrDataUrl) {
         const qrBase64 = qrDataUrl.replace(/^data:image\/png;base64,/, '');
         const qrBuf = Buffer.from(qrBase64, 'base64');
-        const qrSize = Math.round(w * 0.14); // ~14% of width
+        const qrSize = Math.round(footerH * 0.70);
         const qrResized = await sharp(qrBuf).resize(qrSize, qrSize).png().toBuffer();
-        // White background behind QR for scannability
-        const qrPad = 6;
-        const qrBgSvg = `<svg width="${qrSize + qrPad * 2}" height="${qrSize + qrPad * 2}" xmlns="http://www.w3.org/2000/svg"><rect width="${qrSize + qrPad * 2}" height="${qrSize + qrPad * 2}" rx="4" fill="white"/></svg>`;
-        const qrBgLeft = w - qrSize - qrPad * 2 - 16;
-        const qrBgTop = h - footerH + Math.round((footerH - qrSize - qrPad * 2) / 2);
+        const qrPad = 5;
+        const qrBgSize = qrSize + qrPad * 2;
+        const qrBgSvg = `<svg width="${qrBgSize}" height="${qrBgSize}" xmlns="http://www.w3.org/2000/svg"><rect width="${qrBgSize}" height="${qrBgSize}" rx="4" fill="white"/></svg>`;
+        const qrBgLeft = w - qrBgSize - 18;
+        const qrBgTop = footerTop + Math.round((footerH - qrBgSize) / 2);
         compositeInputs.push({ input: Buffer.from(qrBgSvg), top: qrBgTop, left: qrBgLeft, blend: 'over' });
         compositeInputs.push({ input: qrResized, top: qrBgTop + qrPad, left: qrBgLeft + qrPad, blend: 'over' });
         console.log('[KaiCreative] QR code composited in footer');
@@ -1170,7 +1154,7 @@ export async function generateFlyerFromKai(
       console.warn('[KaiCreative] QR compositing failed (non-blocking):', qrErr?.message);
     }
 
-    // Apply all composites in one sharp pass
+    // ── Apply all composites in one sharp pass ────────────────────────────────────
     if (compositeInputs.length > 0) {
       const finalBuf = await sharp(mainBuf).composite(compositeInputs).png().toBuffer();
       imageBase64 = finalBuf.toString('base64');
@@ -1180,7 +1164,6 @@ export async function generateFlyerFromKai(
   } catch (compErr: any) {
     console.warn('[KaiCreative] Compositing failed (non-blocking):', compErr?.message);
   }
-
   const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
   const key = `creative/${orgId}/generated/${Date.now()}.${ext}`;
   let imageUrl: string = `data:${mimeType};base64,${imageBase64}`;
