@@ -98,7 +98,10 @@ async function getBrandDataForOrg(orgId: number): Promise<
     const primaryColor = (dna?.primaryColor as string | null) ?? profile?.brandColorPrimary ?? null;
     const secondaryColor = (dna?.secondaryColor as string | null) ?? profile?.brandColorSecondary ?? null;
     const accentColor = (dna?.accentColor as string | null) ?? profile?.brandColorTertiary ?? null;
-    const logoUrl = (dna?.logoUrl as string | null) ?? profile?.logoLightUrl ?? profile?.logoDarkUrl ?? null;
+    // PRIORITY: School profile logos (from Settings > School Profile > Branding) always win.
+    // Check both URL fields and inline base64 data fields.
+    // brandDna.logoUrl is the app/onboarding logo and should only be used as a last resort.
+    const logoUrl = profile?.logoLightUrl ?? profile?.logoLightData ?? profile?.logoDarkUrl ?? profile?.logoDarkData ?? (dna?.logoUrl as string | null) ?? null;
     return {
       schoolName: profile?.schoolName ?? null,
       tagline: profile?.tagline ?? null,
