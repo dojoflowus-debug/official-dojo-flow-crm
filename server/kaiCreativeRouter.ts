@@ -976,194 +976,35 @@ export async function generateFlyerFromKai(
 
   const brand = await getBrandDataForOrg(orgId);
 
-  // ── Pipeline: Gemini AI generation + sharp compositing ──────────────────────
-  // 1. Use kaiPromptEngine to build a premium, conversion-focused prompt
-  // 2. Gemini Imagen generates the full cinematic background + hero image + headline
-  // 3. sharp composites the real school logo (with background strip) on top
-  // 4. sharp composites a real scannable QR code in the bottom-right
+  // ── Pipeline: HTML/CSS template → Puppeteer PNG ──────────────────────────────
+  // 1. parseFlyerDataFromBrief: extracts program, benefits, fetches Pexels hero photo, generates QR code
+  // 2. buildFlyerHtml: renders a bold 3D reference-quality HTML template
+  // 3. renderFlyerToPng: Puppeteer screenshots the HTML at full resolution
+  // This approach gives 100% design control — no text garbling, no AI hallucinations.
 
-  const schoolName = brand.schoolName || 'Your Dojo';
-  const phone = brand.phone || '';
-  const address = brand.address || '';
-  const website = brand.website || '';
-  const isBusinessCard = validSize === 'business_card';
+  console.log(`[KaiCreative] Starting HTML/CSS flyer pipeline for: "${prompt}" (${validSize})`);
 
-  // ── Build the Imagen prompt ──────────────────────────────────────────────────
-  // KEY INSIGHT: Imagen 4 produces the best results when the prompt focuses on
-  // VISUAL DESIGN (background, hero image, color, mood, typography style) and
-  // keeps text to an absolute minimum (1-2 text elements max).
-  // All contact info, phone numbers, and detailed copy are composited via sharp.
-  //
-  // The kaiPromptEngine is used for the full marketing context, but we override
-  // the text-heavy sections with a visuals-first directive.
+  const flyerData = await parseFlyerDataFromBrief(prompt, {}, {
+    schoolName: brand.schoolName,
+    phone: brand.phone,
+    email: brand.email,
+    website: brand.website,
+    address: brand.address,
+    primaryColor: brand.primaryColor,
+    secondaryColor: brand.secondaryColor,
+    logoUrl: brand.logoUrl,
+  }, validSize);
 
-  const resolvedStyle = parseStyleFromText(prompt);
+  console.log(`[KaiCreative] FlyerData: program="${flyerData.programName}", headline="${flyerData.headline}", heroPhoto=${!!flyerData.heroImageUrl}`);
 
-  // Build a visuals-first prompt that tells Imagen what to DRAW, not what text to render
-  const programContext = (() => {
-    const lower = prompt.toLowerCase();
-    if (lower.includes('little ninja') || lower.includes('tiny ninja')) return { program: 'Little Ninjas', ages: '3-5', visual: 'two happy young students in white karate gi doing a high kick together, big smiles, energetic, professional sports photography, bright studio lighting' };
-    if (lower.includes('kids') || lower.includes('children') || lower.includes('youth')) return { program: 'Kids Karate', ages: '6-12', visual: 'a confident young student in white karate gi doing a powerful punch, dramatic studio lighting, professional sports photography' };
-    if (lower.includes('teen') || lower.includes('teenage')) return { program: 'Teen Karate', ages: '13-17', visual: 'a confident young martial artist in black karate gi in a powerful stance, cinematic dark background, dramatic lighting' };
-    if (lower.includes('adult') || lower.includes('women') || lower.includes('self defense')) return { program: 'Adult Karate', ages: 'Adults', visual: 'a confident adult martial artist in gi doing a powerful kick, cinematic, dark dramatic background' };
-    if (lower.includes('kickbox') || lower.includes('muay thai') || lower.includes('boxing')) return { program: 'Kickboxing', ages: 'All Ages', visual: 'a powerful martial artist in kickboxing stance with gloves, dramatic cinematic lighting, dark background, professional sports photography' };
-    if (lower.includes('summer camp') || lower.includes('camp')) return { program: 'Summer Camp', ages: '5-12', visual: 'group of happy young students in karate uniforms outdoors, summer energy, professional photography' };
-    if (lower.includes('belt test') || lower.includes('graduation')) return { program: 'Belt Test', ages: 'All Students', visual: 'martial arts student receiving a new belt from instructor, proud moment, cinematic lighting' };
-    return { program: 'Martial Arts', ages: 'All Ages', visual: 'a powerful martial artist in gi doing a dramatic kick, cinematic dark background, professional sports photography' };
-  })();
+  const flyerHtml = buildFlyerHtml(flyerData);
+  const pngBuffer = await renderFlyerToPng(flyerHtml, validSize);
 
-  const primaryColor = brand.primaryColor || '#C8102E';
-  const hasLogo = !!(brand.logoUrl && (brand.logoUrl.startsWith('http') || brand.logoUrl.startsWith('data:')));
+  let imageBase64 = pngBuffer.toString('base64');
+  let mimeType = 'image/png';
 
-  const imagenPrompt = isBusinessCard
-    ? `Professional martial arts school business card design. School: "${schoolName}". Dark background with ${primaryColor} accents. Clean modern typography. Martial arts themed. Horizontal layout. Premium, sleek, print-ready. NO generic clip art. Real photography style background.`
-    : [
-        `Create a CINEMATIC, PHOTOREALISTIC martial arts marketing poster/flyer.`,
-        ``,
-        `HERO IMAGE (fills 60% of the design): ${programContext.visual}`,
-        `PHOTOREALISM MANDATE: Real photography style. NO cartoons. NO illustrations. NO anime. NO 3D renders.`,
-        ``,
-        `COLOR PALETTE: Deep dark background (near-black or dark navy), ${primaryColor} as the dominant accent color, white text.`,
-        ``,
-        `LAYOUT:`,
-        `  - TOP 15%: Dark solid header strip — completely empty, no text, no logos`,
-        `  - MIDDLE 65%: Hero photography — ${programContext.visual}`,
-        `  - BOTTOM 20%: Dark solid footer strip — completely empty, no text`,
-        ``,
-        `STYLE: Cinematic sports photography background. Think Nike or Under Armour campaign photo. Bold. High contrast. Premium.`,
-        `CRITICAL — DO NOT RENDER ANY TEXT WHATSOEVER. No headlines, no taglines, no CTAs, no phone numbers, no addresses, no websites, no bullet points, no labels, no captions. ZERO text.`,
-        `CRITICAL — DO NOT RENDER ANY LOGOS, EMBLEMS, SHIELDS, CRESTS, OR BADGES. ZERO logos.`,
-        `CRITICAL — DO NOT RENDER ANY BUTTONS, BANNERS, OR GRAPHIC OVERLAYS. Pure photography only.`,
-        `The image must be a clean photographic background that text will be composited on top of separately.`,
-      ].join('\n');
+  console.log(`[KaiCreative] Puppeteer rendered flyer: ${pngBuffer.length} bytes`);
 
-  const result = await generateImage(imagenPrompt, validSize, brand, resolvedStyle);
-  let imageBase64 = result.imageBase64;
-  let mimeType = result.mimeType;
-
-  // ── Step 2: Composite branding elements using sharp ──────────────────────────
-  // Layout:
-  //   HEADER BAR (top 14%): solid dark bar, school logo centered
-  //   PHOTO (middle 65%): Imagen-generated hero photo — NO text from Imagen
-  //   FOOTER BAR (bottom 21%): solid dark bar, school name (left) + phone + QR (right)
-  try {
-    const sharp = (await import('sharp')).default;
-    const mainBuf = Buffer.from(imageBase64, 'base64');
-    const mainMeta = await sharp(mainBuf).metadata();
-    const w = mainMeta.width || 800;
-    const h = mainMeta.height || 1000;
-    const compositeInputs: sharp.OverlayOptions[] = [];
-
-    // ── HEADER BAR ────────────────────────────────────────────────────────────────
-    const headerH = Math.round(h * 0.14);
-    const headerSvg = `<svg width="${w}" height="${headerH}" xmlns="http://www.w3.org/2000/svg">
-  <rect width="${w}" height="${headerH}" fill="rgba(0,0,0,0.90)" />
-</svg>`;
-    compositeInputs.push({ input: Buffer.from(headerSvg), top: 0, left: 0, blend: 'over' });
-
-    // ── FOOTER BAR ────────────────────────────────────────────────────────────────
-    const footerH = Math.round(h * 0.21);
-    const footerTop = h - footerH;
-    // Truncate school name to prevent SVG overflow
-    const rawName = schoolName || 'Martial Arts';
-    const safeSchoolName = rawName.length > 26 ? rawName.substring(0, 24) + '..' : rawName;
-    const escapedName = safeSchoolName.toUpperCase().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const safePhone = (phone || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const nameFontSize = Math.round(w * 0.046);
-    const phoneFontSize = Math.round(w * 0.027);
-    // QR will be placed on the right — leave 22% of width for it
-    const textAreaW = Math.round(w * 0.72);
-    const footerSvg = `<svg width="${w}" height="${footerH}" xmlns="http://www.w3.org/2000/svg">
-  <rect width="${w}" height="${footerH}" fill="rgba(0,0,0,0.93)" />
-  <text x="${Math.round(w * 0.05)}" y="${Math.round(footerH * 0.43)}"
-    font-family="Arial Black, Arial, sans-serif"
-    font-size="${nameFontSize}"
-    font-weight="900"
-    fill="white"
-    text-anchor="start"
-    letter-spacing="1">${escapedName}</text>
-  ${safePhone ? `<text x="${Math.round(w * 0.05)}" y="${Math.round(footerH * 0.73)}"
-    font-family="Arial, sans-serif"
-    font-size="${phoneFontSize}"
-    font-weight="400"
-    fill="rgba(255,255,255,0.72)"
-    text-anchor="start">${safePhone}</text>` : ''}
-</svg>`;
-    compositeInputs.push({ input: Buffer.from(footerSvg), top: footerTop, left: 0, blend: 'over' });
-
-    // ── LOGO in header bar (centered) ─────────────────────────────────────────────
-    const logoUrl = brand.logoUrl;
-    if (logoUrl && (logoUrl.startsWith('http') || logoUrl.startsWith('data:'))) {
-      try {
-        let logoBuf: Buffer;
-        if (logoUrl.startsWith('data:')) {
-          const b64 = logoUrl.replace(/^data:[^;]+;base64,/, '');
-          logoBuf = Buffer.from(b64, 'base64');
-        } else {
-          const { default: https } = await import('https');
-          const { default: http } = await import('http');
-          logoBuf = await new Promise<Buffer>((resolve, reject) => {
-            const client = logoUrl.startsWith('https') ? https : http;
-            client.get(logoUrl, (res) => {
-              const chunks: Buffer[] = [];
-              res.on('data', (c: Buffer) => chunks.push(c));
-              res.on('end', () => resolve(Buffer.concat(chunks)));
-              res.on('error', reject);
-            }).on('error', reject);
-          });
-        }
-        const logoPad = 10;
-        const logoMaxH = headerH - logoPad * 2;
-        const logoMaxW = Math.round(w * 0.60);
-        const logoResized = await sharp(logoBuf)
-          .resize(logoMaxW, logoMaxH, { fit: 'inside', withoutEnlargement: true })
-          .png()
-          .toBuffer();
-        const logoMeta = await sharp(logoResized).metadata();
-        const lw = logoMeta.width || logoMaxW;
-        const lh = logoMeta.height || logoMaxH;
-        const logoLeft = Math.round((w - lw) / 2);
-        const logoTop = Math.round((headerH - lh) / 2);
-        compositeInputs.push({ input: logoResized, top: logoTop, left: logoLeft, blend: 'over' });
-        console.log('[KaiCreative] Logo composited in header bar');
-      } catch (logoErr: any) {
-        console.warn('[KaiCreative] Logo compositing failed (non-blocking):', logoErr?.message);
-      }
-    }
-
-    // ── QR code in footer bar (right side) ────────────────────────────────────────
-    try {
-      const { generateQrCodeDataUrl } = await import('./flyerRenderer');
-      const qrUrl = website || `https://www.google.com/search?q=${encodeURIComponent((schoolName || 'martial arts') + ' martial arts')}`;
-      const qrDataUrl = await generateQrCodeDataUrl(qrUrl);
-      if (qrDataUrl) {
-        const qrBase64 = qrDataUrl.replace(/^data:image\/png;base64,/, '');
-        const qrBuf = Buffer.from(qrBase64, 'base64');
-        const qrSize = Math.round(footerH * 0.70);
-        const qrResized = await sharp(qrBuf).resize(qrSize, qrSize).png().toBuffer();
-        const qrPad = 5;
-        const qrBgSize = qrSize + qrPad * 2;
-        const qrBgSvg = `<svg width="${qrBgSize}" height="${qrBgSize}" xmlns="http://www.w3.org/2000/svg"><rect width="${qrBgSize}" height="${qrBgSize}" rx="4" fill="white"/></svg>`;
-        const qrBgLeft = w - qrBgSize - 18;
-        const qrBgTop = footerTop + Math.round((footerH - qrBgSize) / 2);
-        compositeInputs.push({ input: Buffer.from(qrBgSvg), top: qrBgTop, left: qrBgLeft, blend: 'over' });
-        compositeInputs.push({ input: qrResized, top: qrBgTop + qrPad, left: qrBgLeft + qrPad, blend: 'over' });
-        console.log('[KaiCreative] QR code composited in footer');
-      }
-    } catch (qrErr: any) {
-      console.warn('[KaiCreative] QR compositing failed (non-blocking):', qrErr?.message);
-    }
-
-    // ── Apply all composites in one sharp pass ────────────────────────────────────
-    if (compositeInputs.length > 0) {
-      const finalBuf = await sharp(mainBuf).composite(compositeInputs).png().toBuffer();
-      imageBase64 = finalBuf.toString('base64');
-      mimeType = 'image/png';
-      console.log(`[KaiCreative] Composited ${compositeInputs.length} elements onto flyer`);
-    }
-  } catch (compErr: any) {
-    console.warn('[KaiCreative] Compositing failed (non-blocking):', compErr?.message);
-  }
   const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
   const key = `creative/${orgId}/generated/${Date.now()}.${ext}`;
   let imageUrl: string = `data:${mimeType};base64,${imageBase64}`;

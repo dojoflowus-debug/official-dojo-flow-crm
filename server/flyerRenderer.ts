@@ -186,24 +186,31 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#039;");
 }
 
-// ── HTML template builder — Cinematic full-bleed layout ────────────────────────────────────
+// ── HTML template builder — Bold 3D Reference-Quality Layout ─────────────────
 export function buildFlyerHtml(data: FlyerData): string {
   // Route business card to its own template
   if (data.size === 'business_card') return buildBusinessCardHtml(data);
 
+  // Route banner to its own layout
+  if (data.size === 'website_banner') return buildBannerHtml(data);
+
   const primary = data.primaryColor || "#C8102E";
   const secondary = data.secondaryColor || "#1A1A1A";
   const darkPrimary = darken(primary, 0.3);
+  const primaryRgb = (() => {
+    const c = primary.replace('#', '');
+    return `${parseInt(c.substring(0,2),16)}, ${parseInt(c.substring(2,4),16)}, ${parseInt(c.substring(4,6),16)}`;
+  })();
 
   const size = data.size || "flyer";
   const dims = SIZE_DIMS[size] || SIZE_DIMS.flyer;
   const isSquare = size === "instagram_post";
   const isStory = size === "instagram_story";
-  const isBanner = size === "website_banner";
+  const isFacebookAd = size === "facebook_ad";
 
-  const headline = data.headline || `Join Our ${data.programName} Program!`;
-  const subheadline = data.subheadline || (data.audience ? `${data.programName} · ${data.audience}` : data.programName);
-  const cta = data.callToAction || "Start Your FREE 7-Day Trial!";
+  const programName = escapeHtml(data.programName);
+  const headline = escapeHtml(data.headline || `Join Our ${data.programName} Program!`);
+  const cta = escapeHtml(data.callToAction || "Start Your FREE 7-Day Trial!");
   const benefits = data.benefits || [
     "Build confidence, focus & discipline",
     "Fun, safe learning environment",
@@ -211,63 +218,62 @@ export function buildFlyerHtml(data: FlyerData): string {
     "FREE 7-Day Trial — no commitment required",
   ];
 
-  const scale = isStory ? 1.5 : isSquare ? 1.1 : isBanner ? 0.75 : 1;
-  const headlinePx = Math.round(52 * scale);
-  const subPx = Math.round(22 * scale);
-  const benefitPx = Math.round(17 * scale);
-  const ctaPx = Math.round(20 * scale);
-  const contactPx = Math.round(14 * scale);
-  const logoMaxH = Math.round(48 * scale);
+  // Scale factors for different sizes
+  const scale = isStory ? 1.4 : isSquare ? 1.0 : isFacebookAd ? 1.1 : 1.0;
+  const programNamePx = Math.round(isStory ? 88 : isSquare ? 72 : 80);
+  const headlinePx = Math.round(isStory ? 40 : isSquare ? 34 : 36);
+  const benefitPx = Math.round(isStory ? 26 : isSquare ? 21 : 22);
+  const ctaPx = Math.round(isStory ? 30 : isSquare ? 24 : 26);
+  const contactPx = Math.round(isStory ? 22 : isSquare ? 17 : 18);
+  const logoMaxH = Math.round(isStory ? 90 : isSquare ? 70 : 72);
+  const logoMaxW = Math.round(isStory ? 280 : isSquare ? 220 : 240);
 
-  // Smart headline coloring — last word in primary color
-  const headlineWords = escapeHtml(headline).split(" ");
-  const coloredHeadline = headlineWords.length > 2
-    ? headlineWords.slice(0, -1).join(" ") + ` <span class="hl-accent">${headlineWords[headlineWords.length - 1]}</span>`
-    : `<span class="hl-accent">${escapeHtml(headline)}</span>`;
-
-  // Logo or school name wordmark
+  // Logo section — centered at top
   const logoSection = data.logoUrl
     ? `<img class="school-logo" src="${data.logoUrl}" alt="${escapeHtml(data.schoolName)}" />`
     : `<div class="school-wordmark">${escapeHtml(data.schoolName)}</div>`;
 
-  // Background: full-bleed photo or cinematic gradient fallback
-  const bgStyle = data.heroImageUrl
+  // Hero image: right side background
+  const heroStyle = data.heroImageUrl
     ? `background-image: url('${data.heroImageUrl}'); background-size: cover; background-position: center top;`
-    : `background: linear-gradient(160deg, ${secondary} 0%, ${darken(secondary, 0.2)} 40%, ${darkPrimary} 100%);`;
+    : `background: linear-gradient(160deg, ${darken(primary, 0.5)} 0%, #111 100%);`;
 
-  // Benefits icons (clean bullet style)
-  const benefitItems = benefits.slice(0, isBanner ? 3 : 4).map(b =>
-    `<li><span class="benefit-dot"></span><span>${escapeHtml(b)}</span></li>`
-  ).join("\n      ");
+  // Benefit items with shield SVG icons
+  const shieldSvg = (color: string) => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;margin-top:1px"><path d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4z" fill="${color}" opacity="0.9"/><path d="M10.5 14.5l-2.5-2.5 1.06-1.06 1.44 1.44 3.44-3.44 1.06 1.06-4.5 4.5z" fill="white"/></svg>`;
 
-  // Contact footer items
-  const footerItems = [
-    data.phone ? `<div class="footer-item"><span class="footer-icon">📞</span>${escapeHtml(data.phone)}</div>` : "",
-    data.email ? `<div class="footer-item"><span class="footer-icon">✉</span>${escapeHtml(data.email)}</div>` : "",
-    data.website ? `<div class="footer-item"><span class="footer-icon">🌐</span>${escapeHtml(data.website)}</div>` : "",
-    data.address ? `<div class="footer-item footer-address"><span class="footer-icon">📍</span>${escapeHtml(data.address)}</div>` : "",
-  ].filter(Boolean).join('<div class="footer-sep">·</div>');
+  const benefitItems = benefits.slice(0, 4).map(b =>
+    `<li class="benefit-item">
+      ${shieldSvg(primary)}
+      <span>${escapeHtml(b)}</span>
+    </li>`
+  ).join("\n");
 
-  const testimonialHtml = data.testimonial
-    ? `<div class="testimonial-bar">
-        <span class="testimonial-quote">"${escapeHtml(data.testimonial)}"</span>
-       </div>`
-    : "";
+  // Contact info for footer
+  const contactParts = [
+    data.phone ? `<span class="contact-item">📞 ${escapeHtml(data.phone)}</span>` : "",
+    data.website ? `<span class="contact-item">🌐 ${escapeHtml(data.website)}</span>` : "",
+    data.address ? `<span class="contact-item">📍 ${escapeHtml(data.address)}</span>` : "",
+  ].filter(Boolean).join('<span class="contact-sep">·</span>');
 
-  // QR code section (only shown if qrCodeDataUrl is provided)
-  const qrSection = data.qrCodeDataUrl
+  // QR code
+  const qrHtml = data.qrCodeDataUrl
     ? `<div class="qr-block">
         <img class="qr-img" src="${data.qrCodeDataUrl}" alt="QR Code" />
         <div class="qr-label">Scan to Enroll</div>
        </div>`
     : "";
 
+  // Program name split into lines for big bold display
+  const programWords = data.programName.toUpperCase().split(' ');
+  const programLine1 = programWords.slice(0, Math.ceil(programWords.length / 2)).join(' ');
+  const programLine2 = programWords.slice(Math.ceil(programWords.length / 2)).join(' ');
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=Open+Sans:wght@400;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto:wght@400;500;700;900&family=Bebas+Neue&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -275,266 +281,289 @@ export function buildFlyerHtml(data: FlyerData): string {
     width: ${dims.width}px;
     height: ${dims.height}px;
     overflow: hidden;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Roboto', sans-serif;
+    background: #0a0a0a;
   }
 
-  /* ── Full-bleed canvas ── */
+  /* ── Main canvas ── */
   .flyer {
     width: ${dims.width}px;
     height: ${dims.height}px;
     position: relative;
     overflow: hidden;
-    ${bgStyle}
-  }
-
-  /* ── Cinematic gradient overlay ── */
-  .overlay {
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(
-        to bottom,
-        rgba(0,0,0,0.72) 0%,
-        rgba(0,0,0,0.28) 35%,
-        rgba(0,0,0,0.18) 55%,
-        rgba(0,0,0,0.82) 100%
-      );
-  }
-
-  /* ── Color accent stripe at top ── */
-  .top-stripe {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: ${Math.round(6 * scale)}px;
-    background: ${primary};
-  }
-
-  /* ── Content layer ── */
-  .content {
-    position: absolute;
-    inset: 0;
+    background: #0a0a0a;
     display: flex;
     flex-direction: column;
-    padding: ${isStory ? "48px 52px" : isBanner ? "28px 48px" : "32px 44px"};
   }
 
-  /* ── TOP: Logo + program badge ── */
-  .top-bar {
+  /* ── TOP HEADER: Logo centered ── */
+  .header {
+    flex-shrink: 0;
+    height: ${Math.round(dims.height * (isStory ? 0.10 : 0.11))}px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.95) 0%, rgba(10,10,10,0.85) 100%);
+    border-bottom: 3px solid ${primary};
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: auto;
-    padding-bottom: ${isStory ? "32px" : "20px"};
+    justify-content: center;
+    padding: 0 32px;
+    position: relative;
+    z-index: 10;
   }
 
   .school-logo {
     max-height: ${logoMaxH}px;
-    max-width: ${Math.round(180 * scale)}px;
+    max-width: ${logoMaxW}px;
     object-fit: contain;
-    filter: brightness(0) invert(1) drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+    filter: drop-shadow(0 2px 12px rgba(${primaryRgb}, 0.4));
   }
 
   .school-wordmark {
     color: #ffffff;
-    font-size: ${Math.round(20 * scale)}px;
-    font-weight: 900;
-    letter-spacing: 0.5px;
+    font-family: 'Oswald', sans-serif;
+    font-size: ${Math.round(logoMaxH * 0.6)}px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 0 2px 16px rgba(${primaryRgb}, 0.5);
+  }
+
+  /* ── MIDDLE BODY: split left/right ── */
+  .body {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+    position: relative;
+  }
+
+  /* ── LEFT PANEL: program name + headline + benefits + CTA ── */
+  .left-panel {
+    width: ${isStory ? '100%' : '52%'};
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: ${isStory ? '32px 44px' : '28px 36px 28px 40px'};
+    position: relative;
+    z-index: 5;
+    background: linear-gradient(90deg, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.90) 70%, rgba(0,0,0,0.0) 100%);
+  }
+
+  /* ── RIGHT PANEL: hero photo ── */
+  .right-panel {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: ${isStory ? '100%' : '60%'};
+    ${heroStyle}
+    z-index: 1;
+  }
+
+  /* Gradient mask on right panel so left content reads clearly */
+  .right-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      rgba(0,0,0,0.92) 0%,
+      rgba(0,0,0,0.55) 35%,
+      rgba(0,0,0,0.10) 65%,
+      rgba(0,0,0,0.0) 100%
+    );
+    z-index: 2;
+  }
+
+  /* ── PROGRAM NAME — massive bold 3D text ── */
+  .program-name-block {
+    margin-bottom: ${Math.round(16 * scale)}px;
+    line-height: 0.88;
+  }
+
+  .program-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: ${programNamePx}px;
+    font-weight: 700;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    line-height: 0.9;
+    display: block;
+    /* 3D fire/glow effect */
+    text-shadow:
+      0 0 20px rgba(${primaryRgb}, 0.9),
+      0 0 40px rgba(${primaryRgb}, 0.6),
+      0 0 80px rgba(${primaryRgb}, 0.3),
+      3px 3px 0px ${darkPrimary},
+      6px 6px 0px rgba(0,0,0,0.4),
+      0 4px 20px rgba(0,0,0,0.8);
+    -webkit-text-stroke: 1px rgba(${primaryRgb}, 0.3);
+  }
+
+  .program-name.accent {
+    color: ${primary};
+    text-shadow:
+      0 0 20px rgba(${primaryRgb}, 1.0),
+      0 0 40px rgba(${primaryRgb}, 0.8),
+      0 0 80px rgba(${primaryRgb}, 0.5),
+      3px 3px 0px ${darkPrimary},
+      6px 6px 0px rgba(0,0,0,0.5),
+      0 4px 20px rgba(0,0,0,0.8);
+    -webkit-text-stroke: 1px rgba(255,255,255,0.1);
+  }
+
+  /* Glow orb behind program name */
+  .program-glow {
+    position: absolute;
+    top: ${Math.round(dims.height * 0.12)}px;
+    left: -60px;
+    width: ${Math.round(dims.width * 0.55)}px;
+    height: ${Math.round(dims.height * 0.35)}px;
+    background: radial-gradient(ellipse at center, rgba(${primaryRgb}, 0.18) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── HEADLINE ── */
+  .headline {
+    font-family: 'Roboto', sans-serif;
+    font-size: ${headlinePx}px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.95);
+    line-height: 1.2;
+    margin-bottom: ${Math.round(20 * scale)}px;
     text-shadow: 0 2px 12px rgba(0,0,0,0.7);
   }
 
-  .program-badge {
+  /* ── DIVIDER ── */
+  .divider {
+    width: 60px;
+    height: 4px;
     background: ${primary};
-    color: #ffffff;
-    font-size: ${Math.round(11 * scale)}px;
-    font-weight: 800;
-    padding: ${Math.round(6 * scale)}px ${Math.round(16 * scale)}px;
-    border-radius: 40px;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    white-space: nowrap;
-    box-shadow: 0 4px 16px ${hexToRgba(primary, 0.5)};
+    border-radius: 2px;
+    margin-bottom: ${Math.round(18 * scale)}px;
+    box-shadow: 0 0 12px rgba(${primaryRgb}, 0.7);
   }
 
-  /* ── MIDDLE: spacer to push content to bottom ── */
-  .spacer { flex: 1; }
-
-  /* ── BOTTOM: headline + benefits + CTA ── */
-  .bottom-content {
-    display: flex;
-    flex-direction: column;
-    gap: ${isStory ? "20px" : "14px"};
-  }
-
-  .headline {
-    font-size: ${headlinePx}px;
-    font-weight: 900;
-    line-height: 1.05;
-    color: #ffffff;
-    letter-spacing: -0.5px;
-    text-shadow: 0 3px 20px rgba(0,0,0,0.6);
-  }
-
-  .hl-accent { color: ${primary}; }
-
-  .subheadline {
-    font-size: ${subPx}px;
-    font-weight: 700;
-    color: rgba(255,255,255,0.88);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-  }
-
-  /* ── Benefits ── */
+  /* ── BENEFITS LIST ── */
   .benefits {
     list-style: none;
     display: flex;
-    flex-direction: ${isBanner ? "row" : "column"};
-    gap: ${isStory ? "10px" : "7px"};
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: ${Math.round(10 * scale)}px;
+    margin-bottom: ${Math.round(24 * scale)}px;
   }
 
-  .benefits li {
+  .benefit-item {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    align-items: flex-start;
+    gap: 12px;
     font-size: ${benefitPx}px;
-    color: rgba(255,255,255,0.92);
-    font-weight: 600;
-    text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+    font-weight: 500;
+    color: rgba(255,255,255,0.90);
+    line-height: 1.3;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.6);
   }
 
-  .benefit-dot {
-    width: ${Math.round(8 * scale)}px;
-    height: ${Math.round(8 * scale)}px;
-    min-width: ${Math.round(8 * scale)}px;
-    background: ${primary};
-    border-radius: 50%;
-    box-shadow: 0 0 8px ${hexToRgba(primary, 0.7)};
-  }
-
-  /* ── CTA button ── */
-  .cta-section {
-    display: flex;
-    align-items: center;
-    gap: ${isStory ? "20px" : "14px"};
-    flex-wrap: wrap;
-    margin-top: ${isStory ? "8px" : "4px"};
-  }
-
+  /* ── CTA BUTTON ── */
   .cta-button {
+    display: inline-block;
     background: ${primary};
     color: #ffffff;
+    font-family: 'Oswald', sans-serif;
     font-size: ${ctaPx}px;
-    font-weight: 800;
-    padding: ${Math.round(14 * scale)}px ${Math.round(32 * scale)}px;
+    font-weight: 600;
+    padding: ${Math.round(14 * scale)}px ${Math.round(36 * scale)}px;
     border-radius: 6px;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
     white-space: nowrap;
-    box-shadow: 0 6px 24px ${hexToRgba(primary, 0.6)};
+    box-shadow:
+      0 6px 24px rgba(${primaryRgb}, 0.55),
+      0 2px 8px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.15);
+    margin-bottom: ${Math.round(8 * scale)}px;
   }
 
-  .cta-phone {
-    color: rgba(255,255,255,0.9);
-    font-size: ${Math.round(ctaPx * 0.85)}px;
-    font-weight: 700;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
-  }
-
-  /* ── Testimonial bar ── */
-  .testimonial-bar {
-    background: ${hexToRgba(primary, 0.2)};
-    border-left: 4px solid ${primary};
-    padding: ${isStory ? "12px 18px" : "8px 14px"};
-    border-radius: 0 4px 4px 0;
-  }
-
-  .testimonial-quote {
-    color: rgba(255,255,255,0.88);
-    font-size: ${Math.round(14 * scale)}px;
-    font-style: italic;
-    font-weight: 500;
-    text-shadow: 0 1px 6px rgba(0,0,0,0.4);
-  }
-
-  /* ── Footer contact strip ── */
+  /* ── FOOTER: school info + QR ── */
   .footer {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    background: rgba(0,0,0,0.75);
-    backdrop-filter: blur(4px);
-    padding: ${isStory ? "16px 52px" : "10px 44px"};
+    flex-shrink: 0;
+    height: ${Math.round(dims.height * (isStory ? 0.09 : 0.10))}px;
+    background: linear-gradient(0deg, rgba(0,0,0,0.98) 0%, rgba(10,10,10,0.90) 100%);
+    border-top: 3px solid ${primary};
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: ${isStory ? "16px" : "10px"};
-    flex-wrap: wrap;
-    border-top: 2px solid ${hexToRgba(primary, 0.5)};
+    justify-content: space-between;
+    padding: 0 ${isStory ? '44px' : '36px'};
+    position: relative;
+    z-index: 10;
+    gap: 16px;
   }
 
-  .footer-item {
-    color: rgba(255,255,255,0.85);
-    font-size: ${contactPx}px;
-    font-weight: 500;
+  .footer-left {
     display: flex;
-    align-items: center;
-    gap: 5px;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
   }
 
-  .footer-icon { font-size: ${Math.round(contactPx * 0.9)}px; }
-
-  .footer-address {
-    color: rgba(255,255,255,0.65);
-    font-size: ${Math.round(contactPx * 0.85)}px;
-  }
-
-  .footer-sep {
-    color: ${hexToRgba(primary, 0.7)};
-    font-size: ${contactPx}px;
+  .school-name-footer {
+    font-family: 'Oswald', sans-serif;
+    font-size: ${contactPx + 2}px;
     font-weight: 700;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  /* ── QR code block ── */
+  .contact-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .contact-item {
+    font-size: ${contactPx - 2}px;
+    color: rgba(255,255,255,0.70);
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .contact-sep {
+    color: ${primary};
+    font-weight: 700;
+    font-size: ${contactPx - 2}px;
+    margin: 0 2px;
+  }
+
+  /* ── QR code ── */
   .qr-block {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     flex-shrink: 0;
   }
+
   .qr-img {
-    width: ${Math.round(72 * scale)}px;
-    height: ${Math.round(72 * scale)}px;
-    border-radius: 4px;
+    width: ${Math.round(dims.height * (isStory ? 0.065 : 0.072))}px;
+    height: ${Math.round(dims.height * (isStory ? 0.065 : 0.072))}px;
     background: #fff;
     padding: 3px;
+    border-radius: 4px;
   }
+
   .qr-label {
-    color: rgba(255,255,255,0.75);
-    font-size: ${Math.round(10 * scale)}px;
+    font-size: ${Math.round(contactPx * 0.75)}px;
+    color: rgba(255,255,255,0.55);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.8px;
     text-align: center;
-  }
-
-  /* ── Footer with QR: two-column layout ── */
-  .footer-inner {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: ${isStory ? "16px" : "10px"};
-    flex-wrap: wrap;
-  }
-
-  /* ── Bottom color stripe ── */
-  .bottom-stripe {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: ${Math.round(4 * scale)}px;
-    background: ${primary};
   }
 
 </style>
@@ -542,52 +571,109 @@ export function buildFlyerHtml(data: FlyerData): string {
 <body>
 <div class="flyer">
 
-  <!-- Cinematic overlay -->
-  <div class="overlay"></div>
-  <div class="top-stripe"></div>
+  <!-- Header: school logo centered -->
+  <div class="header">
+    ${logoSection}
+  </div>
 
-  <!-- Content layer -->
-  <div class="content">
+  <!-- Body: left content + right hero photo -->
+  <div class="body">
 
-    <!-- Top bar: logo + program badge -->
-    <div class="top-bar">
-      ${logoSection}
-      ${data.audience ? `<div class="program-badge">${escapeHtml(data.audience)}</div>` : `<div class="program-badge">${escapeHtml(data.programName)}</div>`}
-    </div>
+    <!-- Right panel: hero photo (behind left content) -->
+    <div class="right-panel"></div>
 
-    <!-- Spacer pushes headline to bottom half -->
-    <div class="spacer"></div>
+    <!-- Glow orb behind program name -->
+    <div class="program-glow"></div>
 
-    <!-- Bottom content block -->
-    <div class="bottom-content">
+    <!-- Left panel: all text content -->
+    <div class="left-panel">
 
-      <h1 class="headline">${coloredHeadline}</h1>
-      <p class="subheadline">${escapeHtml(subheadline)}</p>
+      <!-- Program name: massive bold 3D -->
+      <div class="program-name-block">
+        <span class="program-name">${escapeHtml(programLine1)}</span>
+        ${programLine2 ? `<span class="program-name accent">${escapeHtml(programLine2)}</span>` : ''}
+      </div>
 
+      <!-- Headline -->
+      <p class="headline">${headline}</p>
+
+      <!-- Colored divider -->
+      <div class="divider"></div>
+
+      <!-- Benefits with shield icons -->
       <ul class="benefits">
         ${benefitItems}
       </ul>
 
-      ${testimonialHtml}
-
-      <div class="cta-section">
-        <div class="cta-button">${escapeHtml(cta)}</div>
-        ${data.phone ? `<div class="cta-phone">📞 ${escapeHtml(data.phone)}</div>` : ""}
-      </div>
+      <!-- CTA button -->
+      <div class="cta-button">${cta}</div>
 
     </div>
   </div>
 
-  <!-- Footer contact strip with QR code -->
-  ${(footerItems || qrSection) ? `<div class="footer">
-    <div class="footer-inner">${footerItems}</div>
-    ${qrSection}
-  </div>` : ""}
-  <div class="bottom-stripe"></div>
+  <!-- Footer: school name + contact + QR -->
+  <div class="footer">
+    <div class="footer-left">
+      <div class="school-name-footer">${escapeHtml(data.schoolName)}</div>
+      <div class="contact-row">${contactParts}</div>
+    </div>
+    ${qrHtml}
+  </div>
 
 </div>
 </body>
 </html>`;
+}
+
+// ── Website banner layout ─────────────────────────────────────────────────────
+function buildBannerHtml(data: FlyerData): string {
+  const primary = data.primaryColor || "#C8102E";
+  const secondary = data.secondaryColor || "#1A1A1A";
+  const dims = SIZE_DIMS.website_banner; // 1200 × 628
+  const primaryRgb = (() => {
+    const c = primary.replace('#', '');
+    return `${parseInt(c.substring(0,2),16)}, ${parseInt(c.substring(2,4),16)}, ${parseInt(c.substring(4,6),16)}`;
+  })();
+
+  const headline = escapeHtml(data.headline || `Join Our ${data.programName} Program!`);
+  const cta = escapeHtml(data.callToAction || "Start Your FREE 7-Day Trial!");
+  const benefits = (data.benefits || []).slice(0, 3);
+  const heroStyle = data.heroImageUrl
+    ? `background-image: url('${data.heroImageUrl}'); background-size: cover; background-position: center;`
+    : `background: linear-gradient(135deg, ${darken(primary, 0.5)} 0%, #111 100%);`;
+
+  const logoSection = data.logoUrl
+    ? `<img style="max-height:52px;max-width:180px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(${primaryRgb},0.4))" src="${data.logoUrl}" alt="${escapeHtml(data.schoolName)}" />`
+    : `<div style="font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:2px">${escapeHtml(data.schoolName)}</div>`;
+
+  const shieldSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><path d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4z" fill="${primary}" opacity="0.9"/><path d="M10.5 14.5l-2.5-2.5 1.06-1.06 1.44 1.44 3.44-3.44 1.06 1.06-4.5 4.5z" fill="white"/></svg>`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width:${dims.width}px; height:${dims.height}px; overflow:hidden; font-family:'Roboto',sans-serif; background:#0a0a0a; }
+  .banner { width:${dims.width}px; height:${dims.height}px; position:relative; overflow:hidden; display:flex; }
+  .bg { position:absolute; inset:0; ${heroStyle} }
+  .bg::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.75) 45%, rgba(0,0,0,0.2) 100%); }
+  .left { position:relative; z-index:5; width:55%; display:flex; flex-direction:column; justify-content:center; padding:40px 48px; gap:16px; }
+  .logo-row { margin-bottom:8px; }
+  .headline { font-family:'Oswald',sans-serif; font-size:52px; font-weight:700; color:#fff; line-height:1.0; text-shadow:0 2px 16px rgba(0,0,0,0.7); }
+  .benefits-row { display:flex; flex-direction:column; gap:8px; }
+  .benefit { display:flex; align-items:center; gap:10px; font-size:18px; color:rgba(255,255,255,0.88); font-weight:500; }
+  .cta { display:inline-block; background:${primary}; color:#fff; font-family:'Oswald',sans-serif; font-size:22px; font-weight:600; padding:14px 36px; border-radius:6px; text-transform:uppercase; letter-spacing:2px; box-shadow:0 6px 24px rgba(${primaryRgb},0.5); }
+</style></head>
+<body><div class="banner">
+  <div class="bg"></div>
+  <div class="left">
+    <div class="logo-row">${logoSection}</div>
+    <div class="headline">${headline}</div>
+    <div class="benefits-row">${benefits.map(b => `<div class="benefit">${shieldSvg}<span>${escapeHtml(b)}</span></div>`).join('')}</div>
+    <div class="cta">${cta}</div>
+  </div>
+</div></body></html>`;
 }
 
 // ── Business card HTML template ─────────────────────────────────────────────
