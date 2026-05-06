@@ -1290,3 +1290,46 @@ button, a, [role="button"] {
     display: none !important;
   }
 }
+
+/* ─────────────────────────────────────────────
+   DESKTOP KAI CHAT — Layout Fix
+   Ensures the kai-command-page fills the
+   AppShell main container on desktop and that
+   the messages area scrolls while the sidebar
+   stays fixed.
+   ───────────────────────────────────────────── */
+@media (min-width: 768px) {
+  /* Kai outer container must fill the AppShell main (flex-1 min-h-0) */
+  .kai-command-page {
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  /* Center panel must fill the grid cell and enable flex column layout */
+  .kai-command-page > .flex-1.flex.flex-col {
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Content layer (messages area) must scroll internally — NOT the page */
+  .kai-command-page .content-layer {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Sidebar conversation panel must NOT cause page scroll */
+  .kai-command-page .conversation-panel {
+    overflow: hidden !important;
+    max-height: 100% !important;
+  }
+
+  /* Sidebar conversation list must scroll internally */
+  .kai-command-page .conversation-panel .flex-1.overflow-y-auto {
+    overflow-y: auto !important;
+    min-height: 0 !important;
+  }
+}

@@ -150,13 +150,13 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
     <KaiTutorialProvider>
     <KaiBarProvider>
     <SubscriptionGate>
-      <div className={`app-shell flex flex-col`} style={{ minHeight: '100dvh', backgroundColor: isCinematic ? 'oklch(0.05 0 0)' : isDark ? 'oklch(0.05 0 0)' : '#ffffff' }}>
+      <div className={`app-shell flex flex-col`} style={{ height: isKaiRoute ? '100dvh' : undefined, minHeight: '100dvh', overflow: isKaiRoute ? 'hidden' : undefined, backgroundColor: isCinematic ? 'oklch(0.05 0 0)' : isDark ? 'oklch(0.05 0 0)' : '#ffffff' }}>
         {/* Universal Top Header */}
         {!hideHeader && <CommandHeader title={getPageTitle()} isDarkMode={isDark} />}
         
         {/* Main Content - with bottom padding for fixed nav and KaiBar (on /kai route only) */}
         <main 
-          className={`flex-1 ${isDark ? '' : 'bg-background'}`}
+          className={`flex-1 ${isKaiRoute && !isPhone ? 'min-h-0' : ''} ${isDark ? '' : 'bg-background'}`}
           style={{
             // KAI route manages its own height/padding internally; skip AppShell padding-bottom
             paddingBottom: (showBottomNav && !isKaiRoute) ? 'calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom, 0px) + 16px)' : '0px',
@@ -165,12 +165,8 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
             // iOS Safari clips position:fixed children inside overflow:hidden parents.
             // On phone /kai route, use overflow:visible so KaiCommand (position:fixed) is visible.
             overflow: isKaiRoute ? (isPhone ? 'visible' : 'hidden') : undefined,
-            height: (isKaiRoute && !isPhone)
-              ? 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px))'
-              : undefined,
-            maxHeight: (isKaiRoute && !isPhone)
-              ? 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px))'
-              : undefined,
+            // On /kai desktop: let flex-1 + min-h-0 handle height naturally within the 100dvh container
+            // This avoids double-constraining with both flex-1 and explicit height
             flexShrink: (isKaiRoute && !isPhone) ? 0 : undefined
           }}
         >
