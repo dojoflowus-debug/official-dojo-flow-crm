@@ -204,15 +204,15 @@ export function buildFlyerHtml(data: FlyerData): string {
 
   // Font sizes scale with canvas height
   const baseUnit = H / 1056;
-  const programNamePx = Math.round((isStory ? 128 : isSquare ? 110 : 130) * baseUnit);
-  const taglinePx     = Math.round((isStory ? 36  : isSquare ? 32  : 36 ) * baseUnit);
-  const benefitPx     = Math.round((isStory ? 30  : isSquare ? 26  : 28 ) * baseUnit);
-  const ctaPx         = Math.round((isStory ? 34  : isSquare ? 29  : 32 ) * baseUnit);
-  const contactPx     = Math.round((isStory ? 22  : isSquare ? 18  : 20 ) * baseUnit);
-  const logoMaxH      = Math.round((isStory ? 88  : isSquare ? 68  : 72 ) * baseUnit);
-  const contentPad    = Math.round(W * 0.05);
-  const footerH       = Math.round(H * 0.095);
-  const headerH       = Math.round(H * 0.105);
+  const programNamePx = Math.round((isStory ? 148 : isSquare ? 120 : 148) * baseUnit);
+  const taglinePx     = Math.round((isStory ? 34  : isSquare ? 30  : 34 ) * baseUnit);
+  const benefitPx     = Math.round((isStory ? 28  : isSquare ? 24  : 26 ) * baseUnit);
+  const ctaPx         = Math.round((isStory ? 32  : isSquare ? 28  : 30 ) * baseUnit);
+  const contactPx     = Math.round((isStory ? 20  : isSquare ? 16  : 18 ) * baseUnit);
+  const logoMaxH      = Math.round((isStory ? 80  : isSquare ? 60  : 64 ) * baseUnit);
+  const contentPad    = Math.round(W * 0.045);
+  const footerH       = Math.round(H * 0.09);
+  const headerH       = Math.round(H * 0.095);
 
   // Hero image — full bleed background
   const heroStyle = data.heroImageUrl
@@ -225,14 +225,17 @@ export function buildFlyerHtml(data: FlyerData): string {
     : `<span style="font-family:'Oswald',sans-serif;font-size:${Math.round(logoMaxH*0.55)}px;font-weight:700;color:#fff;letter-spacing:3px;text-transform:uppercase;text-shadow:0 2px 16px rgba(${primaryRgb},0.6)">${escapeHtml(data.schoolName)}</span>`;
 
   // Program name — each word on its own line for maximum impact
+  // Metallic beveled effect: layered text-shadows simulate 3D extrusion
   const programWords = data.programName.toUpperCase().split(' ');
   const programNameHtml = programWords.map((word, i) => {
     const isLastWord = i === programWords.length - 1;
     const color = isLastWord ? primary : '#ffffff';
+    // Metallic 3D extrusion: multiple offset shadows create depth
     const shadow = isLastWord
-      ? `0 0 30px rgba(${primaryRgb},1.0), 0 0 60px rgba(${primaryRgb},0.7), 0 0 100px rgba(${primaryRgb},0.4), 4px 4px 0 ${darkPrimary}, 8px 8px 0 rgba(0,0,0,0.5)`
-      : `0 0 20px rgba(${primaryRgb},0.5), 4px 4px 0 rgba(0,0,0,0.6), 8px 8px 0 rgba(0,0,0,0.3)`;
-    return `<div style="font-family:'Oswald',sans-serif;font-size:${programNamePx}px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:4px;line-height:0.92;text-shadow:${shadow};-webkit-text-stroke:1.5px rgba(${isLastWord ? '255,255,255' : primaryRgb},0.15)">${escapeHtml(word)}</div>`;
+      ? `1px 1px 0 ${darkPrimary}, 2px 2px 0 ${darkPrimary}, 3px 3px 0 rgba(0,0,0,0.5), 4px 4px 0 rgba(0,0,0,0.4), 5px 5px 0 rgba(0,0,0,0.3), 0 0 40px rgba(${primaryRgb},1.0), 0 0 80px rgba(${primaryRgb},0.6), 0 0 120px rgba(${primaryRgb},0.3)`
+      : `1px 1px 0 rgba(80,80,80,0.8), 2px 2px 0 rgba(60,60,60,0.7), 3px 3px 0 rgba(40,40,40,0.6), 4px 4px 0 rgba(0,0,0,0.5), 5px 5px 0 rgba(0,0,0,0.4), 0 0 30px rgba(255,255,255,0.15)`;
+    const stroke = isLastWord ? `1.5px rgba(255,200,200,0.3)` : `1px rgba(200,200,200,0.2)`;
+    return `<div style="font-family:'Oswald',sans-serif;font-size:${programNamePx}px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:3px;line-height:0.90;text-shadow:${shadow};-webkit-text-stroke:${stroke}">${escapeHtml(word)}</div>`;
   }).join('');
 
   // Benefit items — shield icon + bold title + subtitle format (matching reference)
@@ -293,18 +296,31 @@ export function buildFlyerHtml(data: FlyerData): string {
 
   const tagline = escapeHtml(data.headline || `Unleash Your Child's Inner Warrior`);
 
-  // Split layout: left text panel (55%), right hero image (45%)
-  const leftW = Math.round(W * (isStory ? 1.0 : isSquare ? 0.60 : 0.62));
-  const rightW = W - leftW;
+  // Split layout: left text panel (50%), right hero image (55% — overlaps for depth)
+  const leftW = Math.round(W * (isStory ? 1.0 : isSquare ? 0.58 : 0.55));
+  // Hero takes up right 60% of canvas, overlapping slightly with left panel
+  const heroW = Math.round(W * (isStory ? 0 : isSquare ? 0.55 : 0.60));
   const heroImageHtml = data.heroImageUrl
-    ? `<div style="position:absolute;top:0;right:0;width:${rightW}px;height:${H}px;overflow:hidden;z-index:1">
-        <img src="${data.heroImageUrl}" style="width:100%;height:100%;object-fit:cover;object-position:center top;filter:contrast(1.1) saturate(1.2)" />
-        <!-- Gradient fade left edge to blend with dark background -->
-        <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,5,5,1.0) 0%,rgba(5,5,5,0.4) 25%,rgba(5,5,5,0.0) 55%)"></div>
+    ? `<div style="position:absolute;top:0;right:0;width:${heroW}px;height:${H}px;overflow:hidden;z-index:1">
+        <img src="${data.heroImageUrl}" style="width:100%;height:100%;object-fit:cover;object-position:center 15%;filter:contrast(1.15) saturate(1.25) brightness(1.05)" />
+        <!-- Strong gradient fade left edge — hero bleeds into dark panel -->
+        <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(3,3,3,1.0) 0%,rgba(3,3,3,0.55) 18%,rgba(3,3,3,0.1) 40%,rgba(3,3,3,0.0) 60%)"></div>
         <!-- Subtle bottom fade -->
-        <div style="position:absolute;bottom:0;left:0;right:0;height:${Math.round(H*0.25)}px;background:linear-gradient(180deg,transparent 0%,rgba(5,5,5,0.85) 100%)"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:${Math.round(H*0.18)}px;background:linear-gradient(180deg,transparent 0%,rgba(3,3,3,0.7) 100%)"></div>
       </div>`
-    : `<div style="position:absolute;top:0;right:0;width:${rightW}px;height:${H}px;background:radial-gradient(ellipse at center,rgba(${primaryRgb},0.15) 0%,transparent 70%);z-index:1"></div>`;
+    : `<div style="position:absolute;top:0;right:0;width:${Math.round(W*0.6)}px;height:${H}px;background:radial-gradient(ellipse at center,rgba(${primaryRgb},0.15) 0%,transparent 70%);z-index:1"></div>`;
+
+  // ── Ember particle SVGs for atmosphere ──────────────────────────────────────
+  const embers = [
+    { x: 8, y: 12, r: 2.5, o: 0.7 }, { x: 15, y: 6, r: 1.8, o: 0.5 },
+    { x: 22, y: 18, r: 3, o: 0.6 }, { x: 5, y: 28, r: 1.5, o: 0.4 },
+    { x: 30, y: 8, r: 2, o: 0.65 }, { x: 38, y: 22, r: 1.2, o: 0.5 },
+    { x: 12, y: 35, r: 2.2, o: 0.55 }, { x: 45, y: 15, r: 1.8, o: 0.45 },
+  ].map(e => `<circle cx="${e.x}" cy="${e.y}" r="${e.r}" fill="rgba(${primaryRgb},${e.o})"/>`).join('');
+  const emberSvg = `<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">${embers}</svg>`;
+
+  // ── Red glow accent lines ─────────────────────────────────────────────────────
+  const glowLine = `<div style="position:absolute;left:0;top:${Math.round(H*0.14)}px;width:${Math.round(W*0.005)}px;height:${Math.round(H*0.72)}px;background:linear-gradient(180deg,transparent 0%,${primary} 20%,${primary} 80%,transparent 100%);box-shadow:0 0 20px 4px rgba(${primaryRgb},0.8);z-index:15"></div>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -313,49 +329,65 @@ export function buildFlyerHtml(data: FlyerData): string {
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto:wght@400;500;600;700;900&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { width:${W}px; height:${H}px; overflow:hidden; background:#050505; }
+  body { width:${W}px; height:${H}px; overflow:hidden; background:#030303; }
 </style>
 </head>
 <body>
-<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#050505">
+<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#030303">
 
-  <!-- DARK TEXTURED BACKGROUND -->
-  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(${primaryRgb},0.12) 0%,transparent 55%),radial-gradient(ellipse at 80% 20%,rgba(${primaryRgb},0.08) 0%,transparent 45%);z-index:0"></div>
+  <!-- DEEP DARK BACKGROUND with red radial glow -->
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 60%,rgba(${primaryRgb},0.18) 0%,rgba(${primaryRgb},0.06) 35%,transparent 65%),radial-gradient(ellipse at 70% 30%,rgba(${primaryRgb},0.08) 0%,transparent 50%),linear-gradient(180deg,#0a0505 0%,#030303 40%,#050202 100%);z-index:0"></div>
 
-  <!-- RIGHT HERO IMAGE -->
+  <!-- EMBER PARTICLES overlay -->
+  ${emberSvg}
+
+  <!-- RIGHT HERO IMAGE — takes up 55% of canvas -->
   ${heroImageHtml}
 
-  <!-- LEFT PANEL DARK OVERLAY -->
-  <div style="position:absolute;top:0;left:0;width:${leftW}px;height:${H}px;background:linear-gradient(90deg,rgba(5,5,5,0.98) 0%,rgba(5,5,5,0.95) 70%,rgba(5,5,5,0.0) 100%);z-index:2"></div>
+  <!-- LEFT PANEL GRADIENT OVERLAY — deep dark to transparent -->
+  <div style="position:absolute;top:0;left:0;width:${Math.round(W*0.72)}px;height:${H}px;background:linear-gradient(90deg,rgba(3,3,3,1.0) 0%,rgba(3,3,3,0.97) 55%,rgba(3,3,3,0.7) 72%,rgba(3,3,3,0.0) 100%);z-index:4"></div>
 
-  <!-- HEADER: logo top-left -->
-  <div style="position:absolute;top:0;left:0;right:0;height:${headerH}px;display:flex;align-items:center;padding:0 ${contentPad}px;z-index:10">
+  <!-- RED GLOW LEFT EDGE LINE -->
+  ${glowLine}
+
+  <!-- TOP HEADER BAR — school name/logo -->
+  <div style="position:absolute;top:0;left:0;right:0;height:${headerH}px;display:flex;align-items:center;padding:0 ${contentPad}px;z-index:20;border-bottom:1px solid rgba(${primaryRgb},0.15)">
     ${logoSection}
   </div>
 
-  <!-- LEFT CONTENT PANEL -->
-  <div style="position:absolute;top:${headerH}px;left:0;width:${leftW}px;bottom:0;z-index:10;padding:${Math.round(H*0.02)}px ${contentPad}px ${Math.round(H*0.04)}px;display:flex;flex-direction:column;justify-content:space-between">
+  <!-- MAIN LEFT CONTENT PANEL -->
+  <div style="position:absolute;top:${headerH}px;left:0;width:${leftW}px;bottom:0;z-index:20;padding:${Math.round(H*0.018)}px ${contentPad}px ${Math.round(H*0.035)}px;display:flex;flex-direction:column;justify-content:space-between">
 
-    <!-- TOP: Program name + tagline + benefits -->
+    <!-- TOP SECTION: Program name + tagline + benefits -->
     <div>
-      <!-- PROGRAM NAME -->
-      <div style="margin-bottom:${Math.round(H*0.012)}px;line-height:0.90">
+
+      <!-- PROGRAM NAME — metallic beveled style -->
+      <div style="margin-bottom:${Math.round(H*0.008)}px">
         ${programNameHtml}
       </div>
 
+      <!-- FREE TRIAL OFFER BADGE -->
+      <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(${primaryRgb},0.12);border:1.5px solid rgba(${primaryRgb},0.5);border-radius:4px;padding:${Math.round(H*0.008)}px ${Math.round(W*0.025)}px;margin-bottom:${Math.round(H*0.022)}px">
+        <div style="width:8px;height:8px;border-radius:50%;background:${primary};box-shadow:0 0 10px rgba(${primaryRgb},1.0)"></div>
+        <span style="font-family:'Oswald',sans-serif;font-size:${Math.round(taglinePx*0.95)}px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:3px">${escapeHtml(data.callToAction || 'FREE TRIAL CLASS')}</span>
+      </div>
+
       <!-- TAGLINE -->
-      <div style="font-family:'Roboto',sans-serif;font-size:${taglinePx}px;font-weight:700;color:rgba(255,255,255,0.90);letter-spacing:0.5px;margin-bottom:${Math.round(H*0.025)}px;line-height:1.25;max-width:${Math.round(leftW*0.88)}px">${tagline}</div>
+      <div style="font-family:'Roboto',sans-serif;font-size:${Math.round(taglinePx*0.82)}px;font-weight:400;color:rgba(255,255,255,0.70);letter-spacing:0.3px;margin-bottom:${Math.round(H*0.022)}px;line-height:1.3;max-width:${Math.round(leftW*0.9)}px">${tagline}</div>
 
-      <!-- ACCENT DIVIDER -->
-      <div style="width:${Math.round(W*0.07)}px;height:3px;background:${primary};border-radius:2px;margin-bottom:${Math.round(H*0.025)}px;box-shadow:0 0 16px rgba(${primaryRgb},0.9)"></div>
+      <!-- RED ACCENT DIVIDER -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:${Math.round(H*0.022)}px">
+        <div style="width:${Math.round(W*0.055)}px;height:2px;background:linear-gradient(90deg,${primary},rgba(${primaryRgb},0));box-shadow:0 0 12px rgba(${primaryRgb},0.9)"></div>
+        <div style="width:6px;height:6px;border-radius:50%;background:${primary};box-shadow:0 0 8px rgba(${primaryRgb},1.0)"></div>
+      </div>
 
-      <!-- BENEFITS -->
-      <div style="max-width:${Math.round(leftW*0.92)}px">
+      <!-- BENEFITS with shield icons -->
+      <div>
         ${benefitItems}
       </div>
     </div>
 
-    <!-- BOTTOM: QR code -->
+    <!-- BOTTOM SECTION: QR code + CTA -->
     <div>
       ${qrHtml}
     </div>
@@ -365,6 +397,7 @@ export function buildFlyerHtml(data: FlyerData): string {
 </div>
 </body>
 </html>`;
+
 }
 
 // ── Website banner layout ─────────────────────────────────────────────────────
@@ -553,13 +586,13 @@ export async function parseFlyerDataFromBrief(
     const programLower = programName.toLowerCase();
     let heroPrompt = "";
     if (isKidsProgram) {
-      heroPrompt = `A young child aged 5-8 wearing a crisp white karate gi uniform with a white belt, performing a powerful front punch pose with a fierce determined expression, full body visible, isolated on a dramatic dark background with glowing red and orange fire embers and sparks swirling around them, cinematic lighting, professional martial arts photography style, high contrast, vibrant colors`;
+      heroPrompt = `Ultra-realistic cinematic martial arts advertisement photography. A highly energetic young child aged 4-5 wearing a pristine white karate gi uniform performing an explosive aggressive forward punch directly toward the camera with intense determined confident expression. The child is isolated against a dramatic dark cinematic background with deep blacks, glowing red energy aura emanating from behind the subject, floating ember particles, volumetric smoke, subtle floor reflections. Dramatic red rim lighting illuminates the edges of the white uniform creating a powerful silhouette effect. The composition is dynamic with the fist closest to camera in sharp focus. Style: UFC promotional poster meets Call of Duty key art meets Cobra Kai marketing. Hyper-detailed skin texture, crisp facial features, premium commercial photography quality. Shot on RED camera, cinematic color grading, deep shadows, high contrast. The uniform has a small circular logo patch on the chest. No text in image. Vertical portrait orientation. Full body visible from head to feet.`;
     } else if (programLower.includes("kickbox") || programLower.includes("muay")) {
-      heroPrompt = `A powerful adult martial artist wearing boxing gloves and shorts, throwing a dramatic high kick, isolated on a dark background with glowing red fire embers and sparks, cinematic dramatic lighting, professional sports photography, high contrast vibrant colors`;
+      heroPrompt = `Ultra-realistic cinematic martial arts advertisement photography. A powerful athletic adult wearing boxing gloves and shorts throwing an explosive high kick directly toward the camera with intense fierce expression. Isolated against a dramatic dark background with glowing red energy aura, floating ember particles, volumetric smoke, dramatic red rim lighting. Style: UFC promotional poster meets Call of Duty key art. Premium commercial photography quality, cinematic color grading, deep shadows, high contrast. No text in image. Vertical portrait orientation. Full body visible.`;
     } else if (programLower.includes("bjj") || programLower.includes("jiu")) {
-      heroPrompt = `A martial artist in a white gi performing a dynamic jiu-jitsu technique, isolated on a dark background with glowing red fire embers and sparks, cinematic dramatic lighting, professional sports photography, high contrast`;
+      heroPrompt = `Ultra-realistic cinematic martial arts advertisement photography. A powerful martial artist in a white gi performing a dynamic grappling technique with intense focused expression. Isolated against a dramatic dark background with glowing red energy, floating ember particles, dramatic rim lighting. Style: UFC promotional poster quality. Premium commercial photography, cinematic color grading, high contrast. No text in image. Vertical portrait orientation.`;
     } else {
-      heroPrompt = `A martial artist in a white karate gi performing a powerful high kick, isolated on a dark background with glowing red and orange fire embers and sparks swirling around them, cinematic dramatic lighting, professional sports photography, high contrast vibrant colors`;
+      heroPrompt = `Ultra-realistic cinematic martial arts advertisement photography. A powerful martial artist in a pristine white karate gi performing an explosive high kick toward the camera with intense fierce expression. Isolated against a dramatic dark background with glowing red energy aura, floating ember particles, volumetric smoke, dramatic red rim lighting creating a powerful silhouette. Style: UFC promotional poster meets Cobra Kai marketing. Premium commercial photography quality, cinematic color grading, deep shadows, high contrast. No text in image. Vertical portrait orientation. Full body visible.`;
     }
     const result = await generateImage({ prompt: heroPrompt });
     if (result.url) {
