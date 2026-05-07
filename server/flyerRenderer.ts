@@ -4,8 +4,10 @@
  * Builds HTML flyer templates for client-side rendering via srcdoc iframe + html2canvas.
  * The server generates the HTML string; the browser renders it and captures a PNG.
  *
- * Design: Full-bleed hero background (AI-generated), text overlaid on top.
- * Matches reference: MyDojo Little Ninjas UFC/Cobra Kai aesthetic.
+ * Design: FULL-BLEED hero image fills entire canvas.
+ * Logo is large at top center. Program name has massive 3D metallic letters.
+ * Text overlays the naturally dark left/bottom portion of the image.
+ * Reference: MyDojo Little Ninjas poster aesthetic.
  */
 
 import https from "https";
@@ -57,28 +59,12 @@ const SIZE_DIMS: Record<string, { width: number; height: number }> = {
 };
 
 // ── Color helpers ─────────────────────────────────────────────────────────────
-function lighten(hex: string, amount = 0.9): string {
-  const clean = hex.replace("#", "");
-  const r = Math.min(255, Math.round(parseInt(clean.substring(0, 2), 16) + (255 - parseInt(clean.substring(0, 2), 16)) * amount));
-  const g = Math.min(255, Math.round(parseInt(clean.substring(2, 4), 16) + (255 - parseInt(clean.substring(2, 4), 16)) * amount));
-  const b = Math.min(255, Math.round(parseInt(clean.substring(4, 6), 16) + (255 - parseInt(clean.substring(4, 6), 16)) * amount));
-  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
-}
-
 function darken(hex: string, amount = 0.4): string {
   const clean = hex.replace("#", "");
   const r = Math.max(0, Math.round(parseInt(clean.substring(0, 2), 16) * (1 - amount)));
   const g = Math.max(0, Math.round(parseInt(clean.substring(2, 4), 16) * (1 - amount)));
   const b = Math.max(0, Math.round(parseInt(clean.substring(4, 6), 16) * (1 - amount)));
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
-}
-
-function hexToRgba(hex: string, alpha: number): string {
-  const clean = hex.replace("#", "");
-  const r = parseInt(clean.substring(0, 2), 16);
-  const g = parseInt(clean.substring(2, 4), 16);
-  const b = parseInt(clean.substring(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 function hexToRgb(hex: string): string {
@@ -105,7 +91,8 @@ export function buildFlyerHtml(data: FlyerData): string {
 
   const primary = data.primaryColor || "#C8102E";
   const primaryRgb = hexToRgb(primary);
-  const darkPrimary = darken(primary, 0.3);
+  const darkPrimary = darken(primary, 0.25);
+  const deepPrimary = darken(primary, 0.55);
 
   const size = data.size || "flyer";
   const dims = SIZE_DIMS[size] || SIZE_DIMS.flyer;
@@ -117,52 +104,103 @@ export function buildFlyerHtml(data: FlyerData): string {
   // Scale factor relative to base flyer (816x1056)
   const scale = H / 1056;
 
-  // ── FONT SIZES (all scale with canvas) ──────────────────────────────────────
-  const programNamePx = Math.round(168 * scale * (isStory ? 1.1 : isSquare ? 0.9 : 1.0));
-  const subtitlePx    = Math.round(44  * scale);
-  const benefitTitlePx = Math.round(28 * scale);
-  const benefitSubPx  = Math.round(20 * scale);
-  const schoolNamePx  = Math.round(22 * scale);
-  const qrLabelPx     = Math.round(26 * scale);
-  const qrLabelBigPx  = Math.round(42 * scale);
-  const pad           = Math.round(48 * scale);
-  const qrSize        = Math.round(160 * scale);
-  const iconSize      = Math.round(52 * scale);
-
-  // ── LAYOUT WIDTHS (declared early so ctaBadge can reference leftW) ───────────
-  const leftW = Math.round(W * (isStory ? 1.0 : isSquare ? 0.62 : 0.58));
+  // ── FONT SIZES ───────────────────────────────────────────────────────────────
+  const programNamePx  = Math.round(155 * scale * (isStory ? 1.0 : isSquare ? 0.82 : 1.0));
+  const ctaTextPx      = Math.round(64  * scale * (isStory ? 1.0 : isSquare ? 0.85 : 1.0));
+  const benefitTitlePx = Math.round(28  * scale);
+  const benefitSubPx   = Math.round(19  * scale);
+  const qrLabelSmPx    = Math.round(26  * scale);
+  const qrLabelLgPx    = Math.round(52  * scale);
+  const pad            = Math.round(44  * scale);
+  const qrSize         = Math.round(155 * scale);
+  const iconSize       = Math.round(48  * scale);
 
   // ── HERO IMAGE (full-bleed background) ──────────────────────────────────────
   const heroBg = data.heroImageUrl
-    ? `background-image:url('${data.heroImageUrl}');background-size:cover;background-position:right center;`
-    : `background:linear-gradient(160deg,${darken(primary,0.7)} 0%,#050505 60%,#0a0202 100%);`;
+    ? `background-image:url('${data.heroImageUrl}');background-size:cover;background-position:center top;`
+    : `background:radial-gradient(ellipse at 65% 35%,${darken(primary,0.3)} 0%,${darken(primary,0.6)} 35%,#050505 75%);`;
 
-  // ── LOGO / SCHOOL NAME ───────────────────────────────────────────────────────
+  // ── LOGO at TOP CENTER — large and prominent ──────────────────────────────────
+  // Logo sits over the hero image at the top, centered
+  const logoH = Math.round(72 * scale);
   const logoHtml = data.logoUrl
-    ? `<img src="${data.logoUrl}" alt="${escapeHtml(data.schoolName)}" style="max-height:${Math.round(50*scale)}px;max-width:${Math.round(W*0.5)}px;object-fit:contain;filter:drop-shadow(0 2px 12px rgba(0,0,0,0.9)) brightness(1.1)" />`
-    : `<span style="font-family:'Oswald',sans-serif;font-size:${schoolNamePx}px;font-weight:700;color:#fff;letter-spacing:3px;text-transform:uppercase;text-shadow:0 2px 12px rgba(0,0,0,0.9)">${escapeHtml(data.schoolName)}</span>`;
+    ? `<img src="${data.logoUrl}" alt="${escapeHtml(data.schoolName)}"
+         style="max-height:${logoH}px;max-width:${Math.round(W * 0.55)}px;object-fit:contain;
+                filter:drop-shadow(0 2px 20px rgba(0,0,0,0.95)) drop-shadow(0 0 12px rgba(0,0,0,0.8)) brightness(1.1)" />`
+    : `<div style="display:inline-flex;align-items:center;gap:${Math.round(10*scale)}px">
+        <div style="width:${Math.round(44*scale)}px;height:${Math.round(44*scale)}px;border-radius:50%;
+                    background:${primary};display:flex;align-items:center;justify-content:center;
+                    box-shadow:0 0 20px rgba(${primaryRgb},0.8),0 2px 12px rgba(0,0,0,0.9);flex-shrink:0">
+          <svg width="${Math.round(26*scale)}" height="${Math.round(26*scale)}" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4z" fill="white" opacity="0.95"/>
+          </svg>
+        </div>
+        <span style="font-family:'Oswald',sans-serif;font-size:${Math.round(22*scale)}px;font-weight:700;
+                     color:#fff;letter-spacing:2.5px;text-transform:uppercase;
+                     text-shadow:0 2px 16px rgba(0,0,0,0.95),0 0 8px rgba(0,0,0,0.8)">${escapeHtml(data.schoolName)}</span>
+      </div>`;
 
-  // ── PROGRAM NAME (massive, metallic, each word on its own line) ──────────────
+  // ── PROGRAM NAME — massive 3D metallic letters ────────────────────────────────
+  // Each word on its own line, same size, metallic silver/white with red glow border
   const words = data.programName.toUpperCase().split(' ');
-  const programNameHtml = words.map((word, i) => {
-    const isLast = i === words.length - 1;
-    const color = isLast ? primary : '#ffffff';
-    // Layered text-shadow creates metallic 3D extrusion effect
-    const shadow = isLast
-      ? `2px 2px 0 ${darkPrimary},4px 4px 0 ${darken(primary,0.5)},6px 6px 0 rgba(0,0,0,0.6),8px 8px 0 rgba(0,0,0,0.4),0 0 60px rgba(${primaryRgb},1.0),0 0 120px rgba(${primaryRgb},0.5)`
-      : `2px 2px 0 #333,4px 4px 0 #222,6px 6px 0 rgba(0,0,0,0.7),8px 8px 0 rgba(0,0,0,0.5),0 0 40px rgba(255,255,255,0.1)`;
-    const stroke = isLast ? `2px rgba(255,180,180,0.25)` : `1px rgba(200,200,200,0.15)`;
-    return `<div style="font-family:'Oswald',sans-serif;font-size:${programNamePx}px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:-1px;line-height:0.88;text-shadow:${shadow};-webkit-text-stroke:${stroke};display:block">${escapeHtml(word)}</div>`;
-  }).join('');
+  const wordCount = words.length;
+  // Scale down for 3+ word programs
+  const nameFontPx = wordCount >= 3
+    ? Math.round(programNamePx * 0.72)
+    : wordCount === 2
+    ? programNamePx
+    : Math.round(programNamePx * 1.1);
 
-  // ── CTA BADGE ────────────────────────────────────────────────────────────────
-  const ctaText = escapeHtml(data.callToAction || 'FREE TRIAL CLASS');
-  const ctaBadge = `<div style="display:inline-flex;align-items:center;gap:${Math.round(8*scale)}px;background:rgba(${primaryRgb},0.15);border:2px solid rgba(${primaryRgb},0.7);border-radius:4px;padding:${Math.round(8*scale)}px ${Math.round(18*scale)}px;margin-top:${Math.round(10*scale)}px;margin-bottom:${Math.round(14*scale)}px;white-space:nowrap;max-width:${Math.round(leftW*0.95)}px">
-    <div style="flex-shrink:0;width:${Math.round(8*scale)}px;height:${Math.round(8*scale)}px;border-radius:50%;background:${primary};box-shadow:0 0 10px rgba(${primaryRgb},1.0)"></div>
-    <span style="font-family:'Oswald',sans-serif;font-size:${Math.round(subtitlePx*0.85)}px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:3px;text-shadow:0 2px 12px rgba(0,0,0,0.9);white-space:nowrap">${ctaText}</span>
-  </div>`;
+  // 3D metallic text-shadow: thick extrusion + red glow (matching reference's chunky beveled letters)
+  const metalShadow = [
+    // Thick downward extrusion for 3D depth
+    `1px 2px 0 ${darkPrimary}`,
+    `2px 4px 0 ${darkPrimary}`,
+    `3px 6px 0 ${deepPrimary}`,
+    `4px 8px 0 ${deepPrimary}`,
+    `5px 10px 0 rgba(0,0,0,0.85)`,
+    `6px 12px 0 rgba(0,0,0,0.7)`,
+    `7px 14px 0 rgba(0,0,0,0.55)`,
+    `8px 16px 0 rgba(0,0,0,0.4)`,
+    `9px 18px 0 rgba(0,0,0,0.25)`,
+    // Outer glow
+    `0 0 30px rgba(${primaryRgb},1.0)`,
+    `0 0 60px rgba(${primaryRgb},0.7)`,
+    `0 0 100px rgba(${primaryRgb},0.4)`,
+    `0 0 160px rgba(${primaryRgb},0.2)`,
+  ].join(',');
 
-  // ── BENEFITS with shield icons ───────────────────────────────────────────────
+  const programNameHtml = words.map(word =>
+    `<div style="font-family:'Oswald',sans-serif;font-size:${nameFontPx}px;font-weight:700;
+                 color:#f8f8f8;text-transform:uppercase;letter-spacing:3px;line-height:0.88;
+                 text-shadow:${metalShadow};
+                 -webkit-text-stroke:3px rgba(${primaryRgb},0.85);
+                 display:block;white-space:nowrap;padding-bottom:${Math.round(4*scale)}px">${escapeHtml(word)}</div>`
+  ).join('');
+
+  // ── CTA TEXT — large, bold, below program name ────────────────────────────────
+  const ctaText = data.callToAction || 'FREE TRIAL CLASS';
+  // Split into two lines if it contains spaces
+  const ctaParts = ctaText.toUpperCase().split(/\s+/);
+  // Group into 2 lines: first half and second half
+  const midpoint = Math.ceil(ctaParts.length / 2);
+  const ctaLine1 = ctaParts.slice(0, midpoint).join(' ');
+  const ctaLine2 = ctaParts.slice(midpoint).join(' ');
+  const ctaShadow = `2px 2px 0 rgba(0,0,0,0.8),4px 4px 0 rgba(0,0,0,0.6),0 0 30px rgba(0,0,0,0.9)`;
+  const ctaHtml = ctaLine2
+    ? `<div style="font-family:'Oswald',sans-serif;font-size:${ctaTextPx}px;font-weight:700;
+                   color:#ffffff;text-transform:uppercase;letter-spacing:3px;line-height:0.95;
+                   text-shadow:${ctaShadow};-webkit-text-stroke:1px rgba(255,255,255,0.15);
+                   display:block">${escapeHtml(ctaLine1)}</div>
+       <div style="font-family:'Oswald',sans-serif;font-size:${ctaTextPx}px;font-weight:700;
+                   color:#ffffff;text-transform:uppercase;letter-spacing:3px;line-height:0.95;
+                   text-shadow:${ctaShadow};-webkit-text-stroke:1px rgba(255,255,255,0.15);
+                   display:block">${escapeHtml(ctaLine2)}</div>`
+    : `<div style="font-family:'Oswald',sans-serif;font-size:${ctaTextPx}px;font-weight:700;
+                   color:#ffffff;text-transform:uppercase;letter-spacing:3px;line-height:0.95;
+                   text-shadow:${ctaShadow};display:block">${escapeHtml(ctaLine1)}</div>`;
+
+  // ── BENEFITS with circular dark-red icons ────────────────────────────────────
   const rawBenefits = data.benefits || [
     "Builds Character|Confidence. Respect. Discipline.",
     "Better Listeners|Focus. Attention. Following Directions.",
@@ -174,83 +212,137 @@ export function buildFlyerHtml(data: FlyerData): string {
     return { title: (title || b).trim(), sub: (sub || '').trim() };
   });
 
-  // Shield icon variants
-  const shieldPaths = [
-    `<path d="M${iconSize/2} ${iconSize*0.15}l-${iconSize*0.33} ${iconSize*0.15}v${iconSize*0.21}c0 ${iconSize*0.19} ${iconSize*0.13} ${iconSize*0.37} ${iconSize*0.33} ${iconSize*0.42}c${iconSize*0.2}-${iconSize*0.05} ${iconSize*0.33}-${iconSize*0.23} ${iconSize*0.33}-${iconSize*0.42}v-${iconSize*0.21}z" fill="${primary}" opacity="0.9"/><path d="M${iconSize*0.38} ${iconSize*0.5}l${iconSize*0.08} ${iconSize*0.08} ${iconSize*0.17}-${iconSize*0.17}" stroke="white" stroke-width="${Math.round(2.5*scale)}" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
-    `<circle cx="${iconSize/2}" cy="${iconSize*0.38}" r="${iconSize*0.17}" fill="${primary}" opacity="0.9"/><path d="M${iconSize*0.21} ${iconSize*0.75}c0-${iconSize*0.16} ${iconSize*0.13}-${iconSize*0.29} ${iconSize*0.29}-${iconSize*0.29}s${iconSize*0.29} ${iconSize*0.13} ${iconSize*0.29} ${iconSize*0.29}" stroke="${primary}" stroke-width="${Math.round(2.5*scale)}" stroke-linecap="round" fill="none" opacity="0.9"/>`,
-    `<circle cx="${iconSize/2}" cy="${iconSize/2}" r="${iconSize*0.25}" stroke="${primary}" stroke-width="${Math.round(2.5*scale)}" fill="none" opacity="0.9"/><circle cx="${iconSize/2}" cy="${iconSize/2}" r="${iconSize*0.08}" fill="${primary}" opacity="0.9"/>`,
-    `<path d="M${iconSize*0.25} ${iconSize*0.38}h${iconSize*0.5}M${iconSize*0.25} ${iconSize*0.5}h${iconSize*0.38}M${iconSize*0.25} ${iconSize*0.62}h${iconSize*0.25}" stroke="${primary}" stroke-width="${Math.round(2.5*scale)}" stroke-linecap="round" opacity="0.9"/>`,
+  // Circular icons matching the reference (shield, headphones, smiley, person)
+  const iconPaths = [
+    // Shield with checkmark
+    `<path d="M${iconSize*0.5} ${iconSize*0.18}l-${iconSize*0.3} ${iconSize*0.14}v${iconSize*0.19}c0 ${iconSize*0.17} ${iconSize*0.12} ${iconSize*0.33} ${iconSize*0.3} ${iconSize*0.38}c${iconSize*0.18}-${iconSize*0.05} ${iconSize*0.3}-${iconSize*0.21} ${iconSize*0.3}-${iconSize*0.38}v-${iconSize*0.19}z" fill="white" opacity="0.9"/><path d="M${iconSize*0.37} ${iconSize*0.52}l${iconSize*0.07} ${iconSize*0.07} ${iconSize*0.15}-${iconSize*0.15}" stroke="${primary}" stroke-width="${Math.round(2*scale)}" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    // Headphones
+    `<path d="M${iconSize*0.25} ${iconSize*0.5}v-${iconSize*0.08}a${iconSize*0.25} ${iconSize*0.25} 0 0 1 ${iconSize*0.5} 0v${iconSize*0.08}" stroke="white" stroke-width="${Math.round(2*scale)}" fill="none" opacity="0.9"/><rect x="${iconSize*0.2}" y="${iconSize*0.5}" width="${iconSize*0.1}" height="${iconSize*0.16}" rx="${iconSize*0.03}" fill="white" opacity="0.9"/><rect x="${iconSize*0.7}" y="${iconSize*0.5}" width="${iconSize*0.1}" height="${iconSize*0.16}" rx="${iconSize*0.03}" fill="white" opacity="0.9"/>`,
+    // Smiley face
+    `<circle cx="${iconSize*0.5}" cy="${iconSize*0.5}" r="${iconSize*0.27}" stroke="white" stroke-width="${Math.round(2*scale)}" fill="none" opacity="0.9"/><circle cx="${iconSize*0.38}" cy="${iconSize*0.44}" r="${iconSize*0.04}" fill="white" opacity="0.9"/><circle cx="${iconSize*0.62}" cy="${iconSize*0.44}" r="${iconSize*0.04}" fill="white" opacity="0.9"/><path d="M${iconSize*0.37} ${iconSize*0.57}q${iconSize*0.13} ${iconSize*0.1} ${iconSize*0.26} 0" stroke="white" stroke-width="${Math.round(2*scale)}" stroke-linecap="round" fill="none" opacity="0.9"/>`,
+    // Person/user
+    `<circle cx="${iconSize*0.5}" cy="${iconSize*0.35}" r="${iconSize*0.16}" fill="white" opacity="0.9"/><path d="M${iconSize*0.22} ${iconSize*0.75}c0-${iconSize*0.15} ${iconSize*0.13}-${iconSize*0.27} ${iconSize*0.28}-${iconSize*0.27}h${iconSize*0.2}c${iconSize*0.15} 0 ${iconSize*0.28} ${iconSize*0.12} ${iconSize*0.28} ${iconSize*0.27}" fill="white" opacity="0.9"/>`,
   ];
 
   const benefitItems = parsedBenefits.map((b, i) => `
-    <div style="display:flex;align-items:center;gap:${Math.round(16*scale)}px;margin-bottom:${Math.round(18*scale)}px">
-      <div style="flex-shrink:0;width:${iconSize}px;height:${iconSize}px;border-radius:50%;background:rgba(${primaryRgb},0.12);border:1.5px solid rgba(${primaryRgb},0.5);display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(${primaryRgb},0.3)">
-        <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 ${iconSize} ${iconSize}" fill="none" xmlns="http://www.w3.org/2000/svg">${shieldPaths[i % shieldPaths.length]}</svg>
+    <div style="display:flex;align-items:center;gap:${Math.round(14*scale)}px;margin-bottom:${Math.round(16*scale)}px">
+      <div style="flex-shrink:0;width:${iconSize}px;height:${iconSize}px;border-radius:50%;
+                  background:rgba(${primaryRgb},0.85);border:2px solid rgba(${primaryRgb},0.4);
+                  display:flex;align-items:center;justify-content:center;
+                  box-shadow:0 2px 12px rgba(0,0,0,0.7),0 0 16px rgba(${primaryRgb},0.4)">
+        <svg width="${Math.round(iconSize*0.7)}" height="${Math.round(iconSize*0.7)}"
+             viewBox="0 0 ${iconSize} ${iconSize}" fill="none" xmlns="http://www.w3.org/2000/svg">
+          ${iconPaths[i % iconPaths.length]}
+        </svg>
       </div>
       <div>
-        <div style="font-family:'Oswald',sans-serif;font-size:${benefitTitlePx}px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:1.5px;line-height:1.1;text-shadow:0 1px 8px rgba(0,0,0,0.9)">${escapeHtml(b.title)}</div>
-        ${b.sub ? `<div style="font-family:'Roboto',sans-serif;font-size:${benefitSubPx}px;font-weight:400;color:rgba(255,255,255,0.6);letter-spacing:0.3px;margin-top:${Math.round(2*scale)}px">${escapeHtml(b.sub)}</div>` : ''}
+        <div style="font-family:'Oswald',sans-serif;font-size:${benefitTitlePx}px;font-weight:700;
+                    color:#fff;text-transform:uppercase;letter-spacing:1.5px;line-height:1.1;
+                    text-shadow:0 1px 8px rgba(0,0,0,0.95),0 2px 16px rgba(0,0,0,0.8)">${escapeHtml(b.title)}</div>
+        ${b.sub ? `<div style="font-family:'Roboto',sans-serif;font-size:${benefitSubPx}px;font-weight:400;
+                               color:rgba(255,255,255,0.65);letter-spacing:0.3px;
+                               margin-top:${Math.round(1*scale)}px;
+                               text-shadow:0 1px 6px rgba(0,0,0,0.9)">${escapeHtml(b.sub)}</div>` : ''}
       </div>
     </div>`).join('');
 
-  // ── QR CODE with SCAN TO START YOUR JOURNEY ──────────────────────────────────
+  // ── QR CODE — large, bottom left, matching reference ─────────────────────────
   const qrSection = data.qrCodeDataUrl ? `
-    <div style="display:flex;align-items:center;gap:${Math.round(20*scale)}px">
-      <div style="background:#fff;padding:${Math.round(8*scale)}px;border-radius:${Math.round(10*scale)}px;box-shadow:0 0 30px rgba(${primaryRgb},0.4),0 4px 20px rgba(0,0,0,0.8);flex-shrink:0">
+    <div style="display:flex;align-items:flex-end;gap:${Math.round(20*scale)}px">
+      <div style="background:#fff;padding:${Math.round(8*scale)}px;border-radius:${Math.round(8*scale)}px;
+                  box-shadow:0 0 30px rgba(0,0,0,0.8),0 4px 20px rgba(0,0,0,0.9);flex-shrink:0;
+                  position:relative">
         <img src="${data.qrCodeDataUrl}" alt="QR" style="width:${qrSize}px;height:${qrSize}px;display:block" />
       </div>
-      <div style="display:flex;flex-direction:column;gap:${Math.round(2*scale)}px">
-        <div style="font-family:'Oswald',sans-serif;font-size:${qrLabelPx}px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:2px;line-height:1.1;text-shadow:0 2px 10px rgba(0,0,0,0.9)">SCAN TO</div>
-        <div style="font-family:'Oswald',sans-serif;font-size:${Math.round(qrLabelBigPx*1.1)}px;font-weight:700;color:${primary};text-transform:uppercase;letter-spacing:1px;line-height:1.0;text-shadow:0 0 30px rgba(${primaryRgb},0.9),0 2px 10px rgba(0,0,0,0.9)">START YOUR</div>
-        <div style="font-family:'Oswald',sans-serif;font-size:${Math.round(qrLabelBigPx*1.1)}px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:1px;line-height:1.0;text-shadow:0 2px 10px rgba(0,0,0,0.9)">JOURNEY</div>
+      <div style="display:flex;flex-direction:column;gap:${Math.round(0*scale)}px;padding-bottom:${Math.round(6*scale)}px">
+        <div style="font-family:'Oswald',sans-serif;font-size:${qrLabelSmPx}px;font-weight:600;
+                    color:#fff;text-transform:uppercase;letter-spacing:3px;line-height:1.2;
+                    text-shadow:0 2px 10px rgba(0,0,0,0.95)">SCAN TO</div>
+        <div style="font-family:'Oswald',sans-serif;font-size:${qrLabelLgPx}px;font-weight:700;
+                    color:${primary};text-transform:uppercase;letter-spacing:1px;line-height:0.95;
+                    text-shadow:0 0 30px rgba(${primaryRgb},0.9),0 2px 10px rgba(0,0,0,0.95)">START</div>
+        <div style="font-family:'Oswald',sans-serif;font-size:${Math.round(qrLabelLgPx*0.82)}px;font-weight:700;
+                    color:#fff;text-transform:uppercase;letter-spacing:1px;line-height:1.0;
+                    text-shadow:0 2px 10px rgba(0,0,0,0.95)">YOUR JOURNEY</div>
       </div>
     </div>` : '';
 
-  // ── EMBER PARTICLES ──────────────────────────────────────────────────────────
+  // ── DARK GRADIENT OVERLAY — creates readable text area on left/bottom ─────────
+  // This is the key: the hero image shows through on the right/top
+  // but the left and bottom are darkened for text readability
+  const darkOverlay = `
+    <!-- Left-side dark gradient for text readability -->
+    <div style="position:absolute;inset:0;
+                background:linear-gradient(105deg,
+                  rgba(0,0,0,0.88) 0%,
+                  rgba(0,0,0,0.82) 18%,
+                  rgba(0,0,0,0.65) 32%,
+                  rgba(0,0,0,0.25) 52%,
+                  rgba(0,0,0,0.0) 70%);
+                z-index:2"></div>
+    <!-- Bottom dark gradient for QR area -->
+    <div style="position:absolute;bottom:0;left:0;right:0;
+                height:${Math.round(H*0.35)}px;
+                background:linear-gradient(180deg,transparent 0%,rgba(0,0,0,0.75) 60%,rgba(0,0,0,0.88) 100%);
+                z-index:2"></div>
+    <!-- Top dark gradient for logo area -->
+    <div style="position:absolute;top:0;left:0;right:0;
+                height:${Math.round(H*0.18)}px;
+                background:linear-gradient(180deg,rgba(0,0,0,0.82) 0%,rgba(0,0,0,0.4) 60%,transparent 100%);
+                z-index:2"></div>`;
+
+  // ── EMBER PARTICLES (subtle, on top of everything) ────────────────────────────
   const embers = [
-    {x:8,y:15,r:3,o:0.7},{x:18,y:7,r:2,o:0.5},{x:28,y:20,r:3.5,o:0.6},
-    {x:5,y:35,r:1.8,o:0.45},{x:35,y:10,r:2.5,o:0.65},{x:45,y:28,r:1.5,o:0.5},
-    {x:12,y:45,r:2.8,o:0.55},{x:50,y:18,r:2,o:0.4},{x:22,y:55,r:1.5,o:0.35},
-    {x:60,y:8,r:2.2,o:0.5},{x:70,y:35,r:1.8,o:0.45},{x:80,y:15,r:2.5,o:0.55},
-    {x:88,y:45,r:1.5,o:0.4},{x:92,y:22,r:2,o:0.5},{x:75,y:55,r:1.2,o:0.35},
+    {x:5,y:12,r:2.5,o:0.6},{x:15,y:5,r:1.8,o:0.45},{x:25,y:18,r:3,o:0.55},
+    {x:3,y:30,r:1.5,o:0.4},{x:32,y:8,r:2,o:0.5},{x:42,y:25,r:1.2,o:0.45},
+    {x:10,y:42,r:2.2,o:0.5},{x:48,y:15,r:1.8,o:0.35},{x:20,y:52,r:1.2,o:0.3},
+    {x:55,y:6,r:2,o:0.45},{x:65,y:30,r:1.5,o:0.4},{x:78,y:12,r:2.2,o:0.5},
+    {x:85,y:42,r:1.2,o:0.35},{x:90,y:20,r:1.8,o:0.45},{x:72,y:50,r:1,o:0.3},
   ].map(e=>`<circle cx="${e.x}" cy="${e.y}" r="${e.r}" fill="rgba(${primaryRgb},${e.o})"/>`).join('');
-  const emberSvg = `<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5" viewBox="0 0 100 65" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">${embers}</svg>`;
+  const emberSvg = `<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4"
+                        viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg"
+                        preserveAspectRatio="xMidYMid slice">${embers}</svg>`;
 
   // ── LEFT EDGE GLOW LINE ──────────────────────────────────────────────────────
-  const glowLine = `<div style="position:absolute;left:0;top:${Math.round(H*0.12)}px;width:${Math.round(4*scale)}px;height:${Math.round(H*0.76)}px;background:linear-gradient(180deg,transparent 0%,${primary} 15%,${primary} 85%,transparent 100%);box-shadow:0 0 24px 6px rgba(${primaryRgb},0.8);z-index:20"></div>`;
+  const glowLine = `<div style="position:absolute;left:0;top:${Math.round(H*0.1)}px;
+                                width:${Math.round(4*scale)}px;height:${Math.round(H*0.8)}px;
+                                background:linear-gradient(180deg,transparent 0%,${primary} 10%,${primary} 90%,transparent 100%);
+                                box-shadow:0 0 20px 5px rgba(${primaryRgb},0.7);z-index:20"></div>`;
 
-  // ── HEADER ───────────────────────────────────────────────────────────────────
-  const headerH = Math.round(80 * scale);
+  // ── LOGO HEADER (top center) ──────────────────────────────────────────────────
+  const headerH = Math.round(90 * scale);
   const headerHtml = `
-    <div style="position:absolute;top:0;left:0;right:0;height:${headerH}px;display:flex;align-items:center;padding:0 ${pad}px;z-index:30;background:linear-gradient(180deg,rgba(0,0,0,0.75) 0%,rgba(0,0,0,0.0) 100%)">
+    <div style="position:absolute;top:0;left:0;right:0;height:${headerH}px;
+                display:flex;align-items:center;justify-content:center;
+                padding:${Math.round(12*scale)}px ${pad}px;z-index:30">
       ${logoHtml}
     </div>`;
 
-  // ── MAIN CONTENT (left half overlay) ─────────────────────────────────────────────────────
+  // ── MAIN CONTENT AREA (left side, below logo) ─────────────────────────────────
+  const contentW = Math.round(W * (isStory ? 0.92 : isSquare ? 0.7 : 0.62));
   const mainContent = `
-    <div style="position:absolute;top:${headerH}px;left:0;width:${leftW}px;bottom:0;z-index:20;padding:${Math.round(20*scale)}px ${pad}px ${Math.round(36*scale)}px;display:flex;flex-direction:column;justify-content:space-between">
+    <div style="position:absolute;top:${headerH}px;left:0;width:${contentW}px;bottom:0;
+                z-index:20;padding:${Math.round(14*scale)}px ${pad}px ${Math.round(32*scale)}px;
+                display:flex;flex-direction:column;justify-content:space-between">
       <div>
-        <!-- PROGRAM NAME -->
-        <div style="margin-bottom:0">${programNameHtml}</div>
-        <!-- CTA BADGE -->
-        ${ctaBadge}
-        <!-- RED ACCENT LINE -->
-        <div style="display:flex;align-items:center;gap:${Math.round(10*scale)}px;margin-bottom:${Math.round(22*scale)}px">
-          <div style="width:${Math.round(60*scale)}px;height:${Math.round(2.5*scale)}px;background:linear-gradient(90deg,${primary},transparent);box-shadow:0 0 16px rgba(${primaryRgb},0.9)"></div>
-          <div style="width:${Math.round(8*scale)}px;height:${Math.round(8*scale)}px;border-radius:50%;background:${primary};box-shadow:0 0 12px rgba(${primaryRgb},1.0)"></div>
+        <!-- PROGRAM NAME — massive 3D metallic -->
+        <div style="margin-bottom:${Math.round(10*scale)}px">${programNameHtml}</div>
+        <!-- CTA TEXT — large bold below program name -->
+        <div style="margin-bottom:${Math.round(20*scale)}px">${ctaHtml}</div>
+        <!-- THIN RED ACCENT LINE -->
+        <div style="display:flex;align-items:center;gap:${Math.round(8*scale)}px;margin-bottom:${Math.round(20*scale)}px">
+          <div style="width:${Math.round(55*scale)}px;height:${Math.round(2.5*scale)}px;
+                      background:linear-gradient(90deg,${primary},transparent);
+                      box-shadow:0 0 14px rgba(${primaryRgb},0.9)"></div>
+          <div style="width:${Math.round(7*scale)}px;height:${Math.round(7*scale)}px;border-radius:50%;
+                      background:${primary};box-shadow:0 0 12px rgba(${primaryRgb},1.0)"></div>
         </div>
         <!-- BENEFITS -->
         <div>${benefitItems}</div>
       </div>
-      <!-- QR CODE -->
+      <!-- QR CODE at bottom -->
       <div>${qrSection}</div>
     </div>`;
-
-  // ── LEFT PANEL DARK OVERLAY (so text is readable over hero image) ─────────────
-  const leftOverlay = `<div style="position:absolute;top:0;left:0;width:${Math.round(leftW * 1.2)}px;height:${H}px;background:linear-gradient(90deg,rgba(2,2,2,0.98) 0%,rgba(2,2,2,0.95) 40%,rgba(2,2,2,0.82) 65%,rgba(2,2,2,0.0) 100%);z-index:10"></div>`;
-
-  // ── BOTTOM DARK FADE ─────────────────────────────────────────────────────────
-  const bottomFade = `<div style="position:absolute;bottom:0;left:0;right:0;height:${Math.round(H*0.15)}px;background:linear-gradient(180deg,transparent 0%,rgba(0,0,0,0.6) 100%);z-index:8"></div>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -266,16 +358,10 @@ export function buildFlyerHtml(data: FlyerData): string {
 <div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#030303">
 
   <!-- HERO IMAGE — full bleed background -->
-  <div style="position:absolute;inset:0;${heroBg}z-index:1;filter:contrast(1.1) saturate(1.2)"></div>
+  <div style="position:absolute;inset:0;${heroBg}z-index:1;filter:contrast(1.08) saturate(1.15) brightness(0.95)"></div>
 
-  <!-- DARK VIGNETTE over hero -->
-  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 40%,transparent 30%,rgba(0,0,0,0.4) 70%);z-index:2"></div>
-
-  <!-- LEFT PANEL DARK OVERLAY -->
-  ${leftOverlay}
-
-  <!-- BOTTOM FADE -->
-  ${bottomFade}
+  <!-- DARK OVERLAY GRADIENTS for text readability -->
+  ${darkOverlay}
 
   <!-- EMBER PARTICLES -->
   ${emberSvg}
@@ -283,10 +369,10 @@ export function buildFlyerHtml(data: FlyerData): string {
   <!-- LEFT EDGE GLOW LINE -->
   ${glowLine}
 
-  <!-- HEADER -->
+  <!-- LOGO HEADER — top center, large and prominent -->
   ${headerHtml}
 
-  <!-- MAIN CONTENT -->
+  <!-- MAIN CONTENT — program name, CTA, benefits, QR -->
   ${mainContent}
 
 </div>
@@ -390,8 +476,15 @@ function buildBusinessCardHtml(data: FlyerData): string {
 
 // ── Pexels stock photo fetcher (fallback when Forge AI unavailable) ────────────
 const PROGRAM_PHOTO_QUERIES: Record<string, string> = {
-  "little ninjas": "children karate martial arts kids training dojo white gi",
-  ninja: "children karate martial arts kids training dojo white gi",
+  "little ninjas": "young child karate white gi martial arts training energetic",
+  "little ninja": "young child karate white gi martial arts training energetic",
+  ninja: "young child karate martial arts kids training dojo white gi",
+  "warrior kids": "child karate martial arts training punch kick energetic",
+  "warrior teen": "teenager karate martial arts training punch kick powerful",
+  "warrior youth": "youth teenager karate martial arts training powerful",
+  teen: "teenager karate martial arts training kick punch powerful",
+  youth: "youth teenager karate martial arts training powerful",
+  junior: "young teenager karate martial arts training",
   karate: "karate martial arts student training kick punch dojo",
   "adult karate": "adult karate martial arts training kick powerful dojo",
   kickboxing: "kickboxing martial arts training punch kick powerful",
@@ -478,8 +571,6 @@ export async function fetchHeroPhotoAsBase64(
 }
 
 // ── parseFlyerDataFromBrief ───────────────────────────────────────────────────
-// Parses a natural language brief into structured FlyerData.
-// Uses Forge AI to generate the hero image.
 export async function parseFlyerDataFromBrief(
   brief: string,
   brandData: {
@@ -495,28 +586,37 @@ export async function parseFlyerDataFromBrief(
   },
   overrides?: Partial<FlyerData>
 ): Promise<FlyerData> {
-  // Extract program name from brief
-  // Try to find the last occurrence of "for <program>" pattern, prioritizing known program names
-  const knownPrograms = ['little ninjas', 'little ninja', 'kickboxing', 'karate', 'bjj', 'jiu-jitsu', 'jiu jitsu', 'taekwondo', 'boxing', 'muay thai', 'mma', 'wrestling', 'judo', 'self defense', 'self-defense', 'ninja', 'adult karate', 'kids karate', 'youth karate'];
+  // ── PROGRAM NAME EXTRACTION ──────────────────────────────────────────────────
+  const knownPrograms = [
+    'little ninjas', 'little ninja', 'warrior kids', 'warrior teen', 'warrior teens',
+    'warrior youth', 'junior warriors', 'mini warriors',
+    'teen karate', 'teen kickboxing', 'teen bjj', 'teen martial arts', 'youth karate',
+    'youth kickboxing', 'youth martial arts',
+    'adult karate', 'adult kickboxing', 'adult bjj', 'adult martial arts',
+    'kickboxing', 'muay thai', 'jiu-jitsu', 'jiu jitsu', 'bjj', 'taekwondo',
+    'boxing', 'wrestling', 'judo', 'mma',
+    'self defense', 'self-defense', 'womens self defense', "women's self defense",
+    'karate', 'ninja', 'kids karate', 'kids kickboxing',
+  ].sort((a, b) => b.length - a.length);
+
   let programName = overrides?.programName || null;
   if (!programName) {
     const lowerBrief = brief.toLowerCase();
     for (const kp of knownPrograms) {
       if (lowerBrief.includes(kp)) {
-        // Title-case the known program name
         programName = kp.replace(/\b\w/g, c => c.toUpperCase());
         break;
       }
     }
   }
   if (!programName) {
-    // Fallback: try to match the last "for <words>" pattern
-    const allMatches = [...brief.matchAll(/\bfor\s+([A-Za-z][A-Za-z\s&-]{2,30}?)(?=\s*(?:program|class|flyer|ad|$|\.|,))/gi)];
-    const lastMatch = allMatches[allMatches.length - 1];
-    programName = lastMatch?.[1]?.trim() || "Martial Arts";
+    // Capture words after "for" or "a/an" before program-related words
+    const forMatch = brief.match(/\bfor\s+(?:a\s+|an\s+)?([A-Z][A-Za-z\s&-]{2,35}?)(?:\s+(?:program|class|flyer|ad|poster)|$|\.|,)/i);
+    const aMatch = brief.match(/\bcreate\s+(?:a\s+|an\s+)?([A-Z][A-Za-z\s&-]{2,35}?)(?:\s+(?:flyer|poster|ad|program|class)|$|\.|,)/i);
+    programName = forMatch?.[1]?.trim() || aMatch?.[1]?.trim() || "Martial Arts";
   }
 
-  // Extract size from brief
+  // ── SIZE EXTRACTION ──────────────────────────────────────────────────────────
   let size: FlyerData['size'] = 'flyer';
   if (/instagram story/i.test(brief)) size = 'instagram_story';
   else if (/instagram/i.test(brief)) size = 'instagram_post';
@@ -524,27 +624,40 @@ export async function parseFlyerDataFromBrief(
   else if (/banner/i.test(brief)) size = 'website_banner';
   else if (/business card/i.test(brief)) size = 'business_card';
 
-  // Extract offer/price from brief
+  // ── OFFER / PRICE EXTRACTION ─────────────────────────────────────────────────
   const priceMatch = brief.match(/\$?([\d.]+)\s*(?:for\s+(\d+)\s+class(?:es)?)?/i);
   const price = priceMatch?.[1];
   const classCount = priceMatch?.[2];
-  const offer = price
-    ? `$${price}${classCount ? ` for ${classCount} classes` : ''}`
-    : null;
+  const offer = price ? `$${price}${classCount ? ` for ${classCount} classes` : ''}` : null;
 
-  // Extract age from brief
+  // ── AGE EXTRACTION ───────────────────────────────────────────────────────────
   const ageMatch = brief.match(/age[sd]?\s*([\d-]+(?:\s*(?:to|-)\s*[\d]+)?)/i);
   const audience = ageMatch?.[1] ? `Ages ${ageMatch[1]}` : null;
 
-  // Determine benefits based on program
+  // ── BENEFITS based on program ────────────────────────────────────────────────
   const lowerProgram = programName.toLowerCase();
   let benefits: string[];
-  if (lowerProgram.includes('ninja') || lowerProgram.includes('little') || lowerProgram.includes('kid')) {
+
+  if (lowerProgram.includes('little ninja') || (lowerProgram.includes('ninja') && !lowerProgram.includes('teen') && !lowerProgram.includes('adult'))) {
     benefits = [
       "Builds Character|Confidence. Respect. Discipline.",
       "Better Listeners|Focus. Attention. Following Directions.",
       "Fun & Engaging|Active. Exciting. Age-Appropriate.",
       "Ages 3–5|The perfect start for your child.",
+    ];
+  } else if (lowerProgram.includes('warrior kid') || lowerProgram.includes('kids') || lowerProgram.includes('junior')) {
+    benefits = [
+      "Builds Confidence|Bully-proof your child.",
+      "Focus & Discipline|Better grades, better behavior.",
+      "Fun & Fitness|Active, exciting, age-appropriate.",
+      "Ages 6–12|The perfect martial arts foundation.",
+    ];
+  } else if (lowerProgram.includes('teen') || lowerProgram.includes('warrior teen') || lowerProgram.includes('youth')) {
+    benefits = [
+      "Build Real Confidence|Stand tall, lead with strength.",
+      "Self Defense Skills|Real-world protection techniques.",
+      "Fitness & Discipline|Body and mind transformation.",
+      "Ages 13–17|Train with your peers.",
     ];
   } else if (lowerProgram.includes('kickbox')) {
     benefits = [
@@ -560,6 +673,13 @@ export async function parseFlyerDataFromBrief(
       "Full Body Strength|Functional fitness every class.",
       "All Ages Welcome|Kids, teens & adults.",
     ];
+  } else if (lowerProgram.includes('self defense') || lowerProgram.includes('self-defense')) {
+    benefits = [
+      "Real-World Skills|Techniques that actually work.",
+      "Build Confidence|Walk tall, feel safe anywhere.",
+      "Situational Awareness|Prevent threats before they start.",
+      "All Welcome|No experience necessary.",
+    ];
   } else {
     benefits = [
       "Builds Confidence|Mental & physical strength.",
@@ -569,7 +689,7 @@ export async function parseFlyerDataFromBrief(
     ];
   }
 
-  // Generate hero image via Forge AI
+  // ── HERO IMAGE via Forge AI ──────────────────────────────────────────────────
   let heroImageUrl: string | null = null;
   try {
     const { generateImage } = await import("./_core/imageGeneration");
@@ -577,7 +697,6 @@ export async function parseFlyerDataFromBrief(
     const forgeApiUrl = process.env.BUILT_IN_FORGE_API_URL;
 
     if (forgeApiKey && forgeApiUrl) {
-      // Build a program-specific hero image prompt
       const heroPrompt = buildHeroImagePrompt(programName, lowerProgram, brandData.primaryColor || "#C8102E");
       const imageResult = await generateImage({
         prompt: heroPrompt,
@@ -595,14 +714,13 @@ export async function parseFlyerDataFromBrief(
     }
   } catch (err: any) {
     console.warn("[FlyerRenderer] Forge AI hero generation failed, falling back to Pexels:", err?.message);
-    // Fallback to Pexels
     const pexelsResult = await fetchHeroPhotoAsBase64(programName);
     if (pexelsResult) {
       heroImageUrl = pexelsResult.dataUrl;
     }
   }
 
-  // Generate QR code
+  // ── QR CODE ──────────────────────────────────────────────────────────────────
   let qrCodeDataUrl: string | null = null;
   try {
     const qrTarget = brandData.website || brandData.phone || `https://mydojo.com`;
@@ -627,7 +745,7 @@ export async function parseFlyerDataFromBrief(
     tagline: brandData.tagline || null,
     programName,
     audience,
-    headline: offer ? `${offer} — Limited Spots` : `Unleash Your Child's Inner Warrior`,
+    headline: offer ? `${offer} — Limited Spots` : `Unleash Your Inner Warrior`,
     subheadline: null,
     benefits,
     callToAction: offer ? `Enroll Today — Limited Spots` : `FREE TRIAL CLASS`,
@@ -641,19 +759,31 @@ export async function parseFlyerDataFromBrief(
 
 // ── Hero image prompt builder ─────────────────────────────────────────────────
 function buildHeroImagePrompt(programName: string, lowerProgram: string, primaryColor: string): string {
-  const isKids = lowerProgram.includes('ninja') || lowerProgram.includes('little') || lowerProgram.includes('kid') || lowerProgram.includes('junior');
+  const isToddler = lowerProgram.includes('little ninja');
+  const isKids = !isToddler && (lowerProgram.includes('warrior kid') || lowerProgram.includes('kids') || lowerProgram.includes('junior') || lowerProgram.includes('mini') || (lowerProgram.includes('ninja') && !lowerProgram.includes('teen') && !lowerProgram.includes('adult')));
+  const isTeen = lowerProgram.includes('teen') || lowerProgram.includes('warrior teen') || lowerProgram.includes('youth') || lowerProgram.includes('junior warrior');
   const isKickboxing = lowerProgram.includes('kickbox');
   const isBJJ = lowerProgram.includes('bjj') || lowerProgram.includes('jiu');
-  const isBoxing = lowerProgram.includes('boxing') && !isKickboxing;
+  const isSelfDefense = lowerProgram.includes('self defense') || lowerProgram.includes('self-defense');
 
-  if (isKids) {
-    return `Hyper-realistic cinematic photograph of a highly energetic young child aged 4-5 years old in a pristine white karate gi uniform with a white belt, performing an aggressive powerful forward punch directly toward the camera with intense determined expression, mouth slightly open showing excitement and confidence. The child is positioned on the RIGHT side of the frame, slightly off-center, with their punching fist closest to camera creating dramatic perspective. Dark cinematic background with deep red and orange glowing energy, floating ember particles, volumetric smoke, dramatic red rim lighting from behind creating a halo effect around the child. The floor has subtle reflections. Style: UFC promotional poster meets Call of Duty key art meets Cobra Kai marketing. Unreal Engine quality lighting. Hyper-detailed skin texture, crisp facial features. Sharp subject isolation with bokeh background. High contrast, deep blacks, glowing red accents. Commercial print quality. The right half of the image should be slightly darker/more atmospheric to allow text overlay on the left. No text in image. Vertical portrait orientation.`;
+  // CRITICAL: All prompts specify the subject is on the RIGHT side of frame
+  // so the LEFT side is naturally darker for text overlay
+  const baseStyle = `Style: UFC promotional poster meets Cobra Kai marketing meets Call of Duty key art. Unreal Engine quality lighting. Sharp subject isolation. High contrast, deep blacks, glowing red accents. Commercial print quality. No text in image. Vertical portrait orientation. IMPORTANT: Subject positioned on the RIGHT side of the frame, leaving the LEFT side naturally darker for text overlay.`;
+
+  if (isToddler) {
+    return `Hyper-realistic cinematic photograph. Subject: ONE small child, clearly aged 3-5 years old (toddler/preschool age), in a pristine white karate gi uniform with a white belt. The child is performing an energetic forward punch toward the camera with a fierce excited expression, mouth open in a battle cry. Dark cinematic background with deep red glowing energy, floating ember particles, volumetric smoke, dramatic red rim lighting from behind creating a halo effect. Floor reflections visible. IMPORTANT: The subject must look like a toddler/preschool child (3-5 years old), NOT a teenager or adult. ${baseStyle}`;
+  } else if (isKids) {
+    return `Hyper-realistic cinematic photograph. Subject: ONE child clearly aged 8-10 years old (elementary school age), in a pristine white karate gi uniform with a colored belt, performing a powerful side kick or punch toward the camera with an intense focused expression. Dark cinematic background with deep red and orange glowing energy, floating ember particles, volumetric smoke, dramatic red rim lighting. IMPORTANT: The subject must look like an elementary school child (8-10 years old), NOT a teenager or adult. ${baseStyle}`;
+  } else if (isTeen) {
+    return `Hyper-realistic cinematic photograph. Subject: ONE teenager clearly aged 15-16 years old (high school age), athletic build, in a black or white karate gi or athletic training gear, performing a powerful high kick or aggressive fighting stance toward the camera with intense determined expression. Dark cinematic background with deep red glowing energy, ember particles, volumetric smoke, dramatic red rim lighting. IMPORTANT: The subject must look like a teenager (15-16 years old), NOT a young child or adult. ${baseStyle}`;
   } else if (isKickboxing) {
-    return `Hyper-realistic cinematic photograph of a powerful athletic adult in kickboxing gear — black shorts, red gloves, no shirt (male) or sports top (female) — executing a devastating high roundhouse kick with explosive energy. Positioned on the RIGHT side of the frame. Dark cinematic background with red energy glow, ember particles, volumetric smoke, dramatic rim lighting. UFC fight poster aesthetic. Unreal Engine quality lighting. High contrast, deep blacks, glowing red accents. Commercial print quality. No text in image. Vertical portrait orientation.`;
+    return `Hyper-realistic cinematic photograph. Subject: ONE powerful athletic adult (25-35 years old) in kickboxing gear — black shorts, red boxing gloves, athletic top — executing a devastating high roundhouse kick with explosive energy. Dark cinematic background with red energy glow, ember particles, volumetric smoke, dramatic rim lighting. ${baseStyle}`;
   } else if (isBJJ) {
-    return `Hyper-realistic cinematic photograph of a BJJ practitioner in a white gi performing a dominant ground control position or standing ready in fighting stance, intense focused expression. Positioned on the RIGHT side of the frame. Dark cinematic dojo background with subtle blue-red energy lighting, dramatic rim lighting. Premium sports advertisement aesthetic. High contrast, deep blacks. Commercial print quality. No text in image. Vertical portrait orientation.`;
+    return `Hyper-realistic cinematic photograph. Subject: ONE BJJ practitioner (adult, 25-35 years old) in a white gi performing a dominant ground control position or standing ready in fighting stance, intense focused expression. Dark cinematic dojo background with subtle blue-red energy lighting, dramatic rim lighting. ${baseStyle}`;
+  } else if (isSelfDefense) {
+    return `Hyper-realistic cinematic photograph. Subject: ONE confident adult woman (25-35 years old) in athletic wear or gi, performing a powerful defensive strike or confident fighting stance, strong determined expression. Dark cinematic background with red energy glow, dramatic rim lighting. Empowerment and strength aesthetic. ${baseStyle}`;
   } else {
-    return `Hyper-realistic cinematic photograph of a martial artist in a clean white karate gi performing a powerful dynamic kick or punch toward the camera with intense determined expression. Positioned on the RIGHT side of the frame. Dark cinematic background with deep red glowing energy, floating ember particles, volumetric smoke, dramatic red rim lighting. UFC promotional poster aesthetic. Unreal Engine quality lighting. High contrast, deep blacks, glowing red accents. Commercial print quality. No text in image. Vertical portrait orientation.`;
+    return `Hyper-realistic cinematic photograph. Subject: ONE martial artist (adult, 25-35 years old) in a clean white karate gi performing a powerful dynamic kick or punch toward the camera with intense determined expression. Dark cinematic background with deep red glowing energy, floating ember particles, volumetric smoke, dramatic red rim lighting. ${baseStyle}`;
   }
 }
 
