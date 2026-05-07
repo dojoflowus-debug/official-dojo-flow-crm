@@ -204,13 +204,13 @@ export function buildFlyerHtml(data: FlyerData): string {
 
   // Font sizes scale with canvas height
   const baseUnit = H / 1056;
-  const programNamePx = Math.round((isStory ? 112 : isSquare ? 100 : 108) * baseUnit);
-  const taglinePx     = Math.round((isStory ? 34  : isSquare ? 30  : 32 ) * baseUnit);
-  const benefitPx     = Math.round((isStory ? 28  : isSquare ? 24  : 25 ) * baseUnit);
-  const ctaPx         = Math.round((isStory ? 32  : isSquare ? 27  : 29 ) * baseUnit);
+  const programNamePx = Math.round((isStory ? 128 : isSquare ? 110 : 130) * baseUnit);
+  const taglinePx     = Math.round((isStory ? 36  : isSquare ? 32  : 36 ) * baseUnit);
+  const benefitPx     = Math.round((isStory ? 30  : isSquare ? 26  : 28 ) * baseUnit);
+  const ctaPx         = Math.round((isStory ? 34  : isSquare ? 29  : 32 ) * baseUnit);
   const contactPx     = Math.round((isStory ? 22  : isSquare ? 18  : 20 ) * baseUnit);
   const logoMaxH      = Math.round((isStory ? 88  : isSquare ? 68  : 72 ) * baseUnit);
-  const contentPad    = Math.round(W * 0.055);
+  const contentPad    = Math.round(W * 0.05);
   const footerH       = Math.round(H * 0.095);
   const headerH       = Math.round(H * 0.105);
 
@@ -235,39 +235,76 @@ export function buildFlyerHtml(data: FlyerData): string {
     return `<div style="font-family:'Oswald',sans-serif;font-size:${programNamePx}px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:4px;line-height:0.92;text-shadow:${shadow};-webkit-text-stroke:1.5px rgba(${isLastWord ? '255,255,255' : primaryRgb},0.15)">${escapeHtml(word)}</div>`;
   }).join('');
 
-  // Benefit items with circle-check icons
-  const checkSvg = `<svg width="${Math.round(benefitPx*1.15)}" height="${Math.round(benefitPx*1.15)}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="11" fill="${primary}" opacity="0.95"/><path d="M7 12.5l3.5 3.5 6.5-7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  const benefitItems = (data.benefits || [
-    "Build confidence, focus &amp; discipline",
-    "Develop motor skills &amp; coordination",
-    "Fun, safe environment for all ages",
-    "FREE 7-Day Trial — no commitment required",
-  ]).slice(0, 4).map(b =>
-    `<div style="display:flex;align-items:flex-start;gap:${Math.round(benefitPx*0.6)}px;margin-bottom:${Math.round(benefitPx*0.5)}px">
-      ${checkSvg}
-      <span style="font-family:'Roboto',sans-serif;font-size:${benefitPx}px;font-weight:600;color:rgba(255,255,255,0.93);line-height:1.35;text-shadow:0 1px 8px rgba(0,0,0,0.9)">${escapeHtml(b)}</span>
+  // Benefit items — shield icon + bold title + subtitle format (matching reference)
+  const benefitList = (data.benefits || [
+    "Builds Character|Confidence. Respect. Discipline.",
+    "Better Listeners|Focus. Attention. Following Directions.",
+    "Fun & Engaging|Active. Exciting. Age-Appropriate.",
+    "Ages 3-12|The perfect start for your child.",
+  ]);
+
+  // Parse benefits: if they contain | separator, split into title/subtitle
+  const parsedBenefits = benefitList.slice(0, 4).map(b => {
+    const parts = b.split('|');
+    return { title: parts[0].trim(), sub: parts[1]?.trim() || '' };
+  });
+
+  const shieldIconSvg = (color: string, iconPath: string) =>
+    `<svg width="${Math.round(benefitPx*2.2)}" height="${Math.round(benefitPx*2.2)}" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+      <circle cx="24" cy="24" r="23" fill="${color}" opacity="0.15" stroke="${color}" stroke-width="1.5" opacity="0.6"/>
+      <circle cx="24" cy="24" r="17" fill="${color}" opacity="0.25"/>
+      ${iconPath}
+    </svg>`;
+
+  const shieldIcons = [
+    shieldIconSvg(primary, `<path d="M24 14l-8 3.5v5c0 4.6 3.2 8.9 8 10 4.8-1.1 8-5.4 8-10v-5l-8-3.5z" fill="${primary}" opacity="0.9"/><path d="M21 24l2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`),
+    shieldIconSvg(primary, `<circle cx="24" cy="20" r="5" fill="${primary}" opacity="0.9"/><path d="M14 34c0-5.5 4.5-10 10-10s10 4.5 10 10" stroke="${primary}" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.9"/>`),
+    shieldIconSvg(primary, `<circle cx="24" cy="24" r="8" stroke="${primary}" stroke-width="2.5" fill="none" opacity="0.9"/><path d="M21 24l2 2 4-4" stroke="${primary}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`),
+    shieldIconSvg(primary, `<path d="M16 20h16M16 24h12M16 28h8" stroke="${primary}" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>`),
+  ];
+
+  const benefitItems = parsedBenefits.map((b, i) =>
+    `<div style="display:flex;align-items:center;gap:${Math.round(benefitPx*0.7)}px;margin-bottom:${Math.round(benefitPx*0.55)}px">
+      ${shieldIcons[i % shieldIcons.length]}
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-family:'Oswald',sans-serif;font-size:${Math.round(benefitPx*1.05)}px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:1.5px;text-shadow:0 1px 8px rgba(0,0,0,0.9)">${escapeHtml(b.title)}</span>
+        ${b.sub ? `<span style="font-family:'Roboto',sans-serif;font-size:${Math.round(benefitPx*0.78)}px;font-weight:400;color:rgba(255,255,255,0.65);letter-spacing:0.5px">${escapeHtml(b.sub)}</span>` : ''}
+      </div>
     </div>`
   ).join('');
 
-  // Contact info
-  const contactParts = [
-    data.phone   ? `<span style="color:rgba(255,255,255,0.85);font-size:${contactPx}px;font-family:'Roboto',sans-serif">&#128222;&nbsp;${escapeHtml(data.phone)}</span>` : '',
-    data.website ? `<span style="color:rgba(255,255,255,0.85);font-size:${contactPx}px;font-family:'Roboto',sans-serif">&#127760;&nbsp;${escapeHtml(data.website)}</span>` : '',
-    data.address ? `<span style="color:rgba(255,255,255,0.75);font-size:${Math.round(contactPx*0.9)}px;font-family:'Roboto',sans-serif">&#128205;&nbsp;${escapeHtml(data.address)}</span>` : '',
-  ].filter(Boolean).join(`<span style="color:${primary};margin:0 8px;font-weight:700">&middot;</span>`);
-
-  // QR code
-  const qrSize = Math.round(H * 0.075);
+  // QR code — large, bottom-left, with SCAN TO START YOUR JOURNEY
+  const qrSize = Math.round(H * 0.135);
+  const scanLine1 = "SCAN TO";
+  const scanLine2 = "START";
+  const scanLine3 = "YOUR JOURNEY";
   const qrHtml = data.qrCodeDataUrl
-    ? `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0">
-        <img src="${data.qrCodeDataUrl}" alt="QR" style="width:${qrSize}px;height:${qrSize}px;background:#fff;padding:4px;border-radius:6px;display:block" />
-        <span style="font-family:'Oswald',sans-serif;font-size:${Math.round(contactPx*0.75)}px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px">Scan to Enroll</span>
-       </div>`
+    ? `<div style="display:flex;align-items:center;gap:${Math.round(W*0.025)}px">
+        <div style="background:#fff;padding:8px;border-radius:10px;display:inline-block;box-shadow:0 4px 24px rgba(0,0,0,0.8)">
+          <img src="${data.qrCodeDataUrl}" alt="QR" style="width:${qrSize}px;height:${qrSize}px;display:block" />
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0">
+          <span style="font-family:'Oswald',sans-serif;font-size:${Math.round(ctaPx*0.9)}px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:2px;line-height:1.1">${scanLine1}</span>
+          <span style="font-family:'Oswald',sans-serif;font-size:${Math.round(ctaPx*1.5)}px;font-weight:700;color:${primary};text-transform:uppercase;letter-spacing:2px;line-height:1.0;text-shadow:0 0 20px rgba(${primaryRgb},0.8)">${scanLine2}</span>
+          <span style="font-family:'Oswald',sans-serif;font-size:${Math.round(ctaPx*0.9)}px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:2px;line-height:1.1">${scanLine3}</span>
+        </div>
+      </div>`
     : '';
 
-  const cta = escapeHtml(data.callToAction || "START YOUR FREE 7-DAY TRIAL");
   const tagline = escapeHtml(data.headline || `Unleash Your Child's Inner Warrior`);
-  const bandH = Math.round(H * (isStory ? 0.40 : isSquare ? 0.44 : 0.42));
+
+  // Split layout: left text panel (55%), right hero image (45%)
+  const leftW = Math.round(W * (isStory ? 1.0 : isSquare ? 0.60 : 0.62));
+  const rightW = W - leftW;
+  const heroImageHtml = data.heroImageUrl
+    ? `<div style="position:absolute;top:0;right:0;width:${rightW}px;height:${H}px;overflow:hidden;z-index:1">
+        <img src="${data.heroImageUrl}" style="width:100%;height:100%;object-fit:cover;object-position:center top;filter:contrast(1.1) saturate(1.2)" />
+        <!-- Gradient fade left edge to blend with dark background -->
+        <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,5,5,1.0) 0%,rgba(5,5,5,0.4) 25%,rgba(5,5,5,0.0) 55%)"></div>
+        <!-- Subtle bottom fade -->
+        <div style="position:absolute;bottom:0;left:0;right:0;height:${Math.round(H*0.25)}px;background:linear-gradient(180deg,transparent 0%,rgba(5,5,5,0.85) 100%)"></div>
+      </div>`
+    : `<div style="position:absolute;top:0;right:0;width:${rightW}px;height:${H}px;background:radial-gradient(ellipse at center,rgba(${primaryRgb},0.15) 0%,transparent 70%);z-index:1"></div>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -276,65 +313,53 @@ export function buildFlyerHtml(data: FlyerData): string {
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto:wght@400;500;600;700;900&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { width:${W}px; height:${H}px; overflow:hidden; background:#080808; }
+  body { width:${W}px; height:${H}px; overflow:hidden; background:#050505; }
 </style>
 </head>
 <body>
-<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#080808">
+<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#050505">
 
-  <!-- FULL-BLEED HERO PHOTO -->
-  <div style="position:absolute;inset:0;${heroStyle}z-index:0;filter:contrast(1.15) saturate(1.25) brightness(0.95)"></div>
+  <!-- DARK TEXTURED BACKGROUND -->
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(${primaryRgb},0.12) 0%,transparent 55%),radial-gradient(ellipse at 80% 20%,rgba(${primaryRgb},0.08) 0%,transparent 45%);z-index:0"></div>
 
-  <!-- CINEMATIC GRADIENT OVERLAYS -->
-  <!-- Heavy dark gradient from bottom so text pops -->
-  <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.05) 0%,rgba(0,0,0,0.10) 25%,rgba(0,0,0,0.75) 58%,rgba(0,0,0,0.97) 100%);z-index:1"></div>
-  <!-- Subtle left-side darkening for text readability -->
-  <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,0.35) 0%,rgba(0,0,0,0.05) 50%,rgba(0,0,0,0.0) 100%);z-index:1"></div>
-  <!-- Colored glow from bottom-left corner -->
-  <div style="position:absolute;bottom:0;left:0;width:${Math.round(W*0.80)}px;height:${Math.round(H*0.60)}px;background:radial-gradient(ellipse at bottom left,rgba(${primaryRgb},0.30) 0%,transparent 60%);z-index:2"></div>
+  <!-- RIGHT HERO IMAGE -->
+  ${heroImageHtml}
+
+  <!-- LEFT PANEL DARK OVERLAY -->
+  <div style="position:absolute;top:0;left:0;width:${leftW}px;height:${H}px;background:linear-gradient(90deg,rgba(5,5,5,0.98) 0%,rgba(5,5,5,0.95) 70%,rgba(5,5,5,0.0) 100%);z-index:2"></div>
 
   <!-- HEADER: logo top-left -->
-  <div style="position:absolute;top:0;left:0;right:0;height:${headerH}px;background:linear-gradient(180deg,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.0) 100%);display:flex;align-items:center;padding:0 ${contentPad}px;z-index:10">
+  <div style="position:absolute;top:0;left:0;right:0;height:${headerH}px;display:flex;align-items:center;padding:0 ${contentPad}px;z-index:10">
     ${logoSection}
   </div>
 
-  <!-- DIAGONAL ACCENT BAND (behind text) -->
-  <div style="position:absolute;left:0;right:0;bottom:${footerH}px;height:${bandH}px;overflow:hidden;z-index:3">
-    <div style="position:absolute;inset:0;background:linear-gradient(135deg,${primary} 0%,${darkPrimary} 100%);clip-path:polygon(0 38%,100% 0%,100% 62%,0 100%);opacity:0.88"></div>
-    <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,0.6) 0%,rgba(0,0,0,0.1) 60%,rgba(0,0,0,0.0) 100%);clip-path:polygon(0 38%,100% 0%,100% 62%,0 100%)"></div>
-  </div>
+  <!-- LEFT CONTENT PANEL -->
+  <div style="position:absolute;top:${headerH}px;left:0;width:${leftW}px;bottom:0;z-index:10;padding:${Math.round(H*0.02)}px ${contentPad}px ${Math.round(H*0.04)}px;display:flex;flex-direction:column;justify-content:space-between">
 
-  <!-- MAIN CONTENT: anchored to bottom above footer -->
-  <div style="position:absolute;left:0;right:0;bottom:${footerH}px;z-index:10;padding:0 ${contentPad}px ${Math.round(H*0.048)}px">
+    <!-- TOP: Program name + tagline + benefits -->
+    <div>
+      <!-- PROGRAM NAME -->
+      <div style="margin-bottom:${Math.round(H*0.012)}px;line-height:0.90">
+        ${programNameHtml}
+      </div>
 
-    <!-- PROGRAM NAME: massive, each word on its own line -->
-    <div style="margin-bottom:${Math.round(H*0.016)}px;line-height:0.92">
-      ${programNameHtml}
+      <!-- TAGLINE -->
+      <div style="font-family:'Roboto',sans-serif;font-size:${taglinePx}px;font-weight:700;color:rgba(255,255,255,0.90);letter-spacing:0.5px;margin-bottom:${Math.round(H*0.025)}px;line-height:1.25;max-width:${Math.round(leftW*0.88)}px">${tagline}</div>
+
+      <!-- ACCENT DIVIDER -->
+      <div style="width:${Math.round(W*0.07)}px;height:3px;background:${primary};border-radius:2px;margin-bottom:${Math.round(H*0.025)}px;box-shadow:0 0 16px rgba(${primaryRgb},0.9)"></div>
+
+      <!-- BENEFITS -->
+      <div style="max-width:${Math.round(leftW*0.92)}px">
+        ${benefitItems}
+      </div>
     </div>
 
-    <!-- TAGLINE -->
-    <div style="font-family:'Roboto',sans-serif;font-size:${taglinePx}px;font-weight:700;color:rgba(255,255,255,0.95);letter-spacing:0.5px;margin-bottom:${Math.round(H*0.022)}px;text-shadow:0 2px 14px rgba(0,0,0,0.95);max-width:${Math.round(W*0.75)}px;line-height:1.3">${tagline}</div>
-
-    <!-- ACCENT DIVIDER -->
-    <div style="width:${Math.round(W*0.08)}px;height:4px;background:${primary};border-radius:2px;margin-bottom:${Math.round(H*0.022)}px;box-shadow:0 0 18px rgba(${primaryRgb},0.85)"></div>
-
-    <!-- BENEFITS -->
-    <div style="margin-bottom:${Math.round(H*0.026)}px;max-width:${Math.round(W*0.72)}px">
-      ${benefitItems}
+    <!-- BOTTOM: QR code -->
+    <div>
+      ${qrHtml}
     </div>
 
-    <!-- CTA BUTTON -->
-    <div style="display:inline-block;background:${primary};color:#fff;font-family:'Oswald',sans-serif;font-size:${ctaPx}px;font-weight:700;padding:${Math.round(H*0.016)}px ${Math.round(W*0.055)}px;border-radius:8px;text-transform:uppercase;letter-spacing:3px;box-shadow:0 8px 32px rgba(${primaryRgb},0.7),0 3px 12px rgba(0,0,0,0.7),inset 0 1px 0 rgba(255,255,255,0.2);white-space:nowrap">${cta}</div>
-
-  </div>
-
-  <!-- FOOTER BAR -->
-  <div style="position:absolute;bottom:0;left:0;right:0;height:${footerH}px;background:rgba(0,0,0,0.96);border-top:3px solid ${primary};display:flex;align-items:center;justify-content:space-between;padding:0 ${contentPad}px;z-index:20;gap:16px">
-    <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:0">
-      <div style="font-family:'Oswald',sans-serif;font-size:${Math.round(contactPx*1.15)}px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(data.schoolName)}</div>
-      <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">${contactParts}</div>
-    </div>
-    ${qrHtml}
   </div>
 
 </div>
@@ -501,18 +526,18 @@ export async function parseFlyerDataFromBrief(
   const isFreeTrialPrompt = promptLower.includes("free trial") || promptLower.includes("free class");
   const callToAction = briefAnswers.cta || (isFreeTrialPrompt ? "START YOUR FREE 7-DAY TRIAL" : "ENROLL TODAY — LIMITED SPOTS");
 
-  // Benefits tailored to program
+  // Benefits tailored to program — title|subtitle format for shield icon display
   const isKids = audience.toLowerCase().includes("kid") || audience.toLowerCase().includes("child") || programName.toLowerCase().includes("ninja") || programName.toLowerCase().includes("little");
   const benefits = isKids ? [
-    "Build confidence, focus & discipline",
-    "Develop motor skills & coordination",
-    "Fun, safe environment for ages 4-12",
-    isFreeTrialPrompt ? "FREE 7-Day Trial — no commitment required" : "Expert instructors, small class sizes",
+    "Builds Character|Confidence. Respect. Discipline.",
+    "Better Listeners|Focus. Attention. Following Directions.",
+    "Fun & Engaging|Active. Exciting. Age-Appropriate.",
+    isFreeTrialPrompt ? "Free Trial Class|No commitment required." : "Small Class Sizes|Expert instructors, ages 4-12.",
   ] : [
-    "Build strength, confidence & discipline",
-    "Learn real self-defense techniques",
-    "Expert instructors, all skill levels welcome",
-    isFreeTrialPrompt ? "FREE 7-Day Trial — no commitment required" : "Flexible class schedules",
+    "Builds Confidence|Strength. Discipline. Focus.",
+    "Real Self-Defense|Practical techniques that work.",
+    "All Skill Levels|Beginners to advanced welcome.",
+    isFreeTrialPrompt ? "Free Trial Class|No commitment required." : "Flexible Schedules|Morning & evening classes.",
   ];
 
   // Headline
@@ -520,8 +545,32 @@ export async function parseFlyerDataFromBrief(
     ? `Unleash Your Child's Inner Warrior`
     : `Transform Your Mind, Body & Spirit`;
 
-  // Fetch hero photo
-  const heroPhoto = await fetchHeroPhotoAsBase64(programName, "portrait");
+  // Generate AI hero image using Forge API
+  let heroImageUrl: string | null = null;
+  try {
+    const { generateImage } = await import("./_core/imageGeneration");
+    const isKidsProgram = isKids;
+    const programLower = programName.toLowerCase();
+    let heroPrompt = "";
+    if (isKidsProgram) {
+      heroPrompt = `A young child aged 5-8 wearing a crisp white karate gi uniform with a white belt, performing a powerful front punch pose with a fierce determined expression, full body visible, isolated on a dramatic dark background with glowing red and orange fire embers and sparks swirling around them, cinematic lighting, professional martial arts photography style, high contrast, vibrant colors`;
+    } else if (programLower.includes("kickbox") || programLower.includes("muay")) {
+      heroPrompt = `A powerful adult martial artist wearing boxing gloves and shorts, throwing a dramatic high kick, isolated on a dark background with glowing red fire embers and sparks, cinematic dramatic lighting, professional sports photography, high contrast vibrant colors`;
+    } else if (programLower.includes("bjj") || programLower.includes("jiu")) {
+      heroPrompt = `A martial artist in a white gi performing a dynamic jiu-jitsu technique, isolated on a dark background with glowing red fire embers and sparks, cinematic dramatic lighting, professional sports photography, high contrast`;
+    } else {
+      heroPrompt = `A martial artist in a white karate gi performing a powerful high kick, isolated on a dark background with glowing red and orange fire embers and sparks swirling around them, cinematic dramatic lighting, professional sports photography, high contrast vibrant colors`;
+    }
+    const result = await generateImage({ prompt: heroPrompt });
+    if (result.url) {
+      heroImageUrl = result.url;
+    }
+  } catch (err: any) {
+    console.warn("[FlyerRenderer] Forge hero image generation failed, falling back to Pexels:", err?.message);
+    // Fallback to Pexels
+    const heroPhoto = await fetchHeroPhotoAsBase64(programName, "portrait");
+    heroImageUrl = heroPhoto?.dataUrl || null;
+  }
 
   // Generate QR code
   const qrUrl = brand.website || "https://example.com";
@@ -541,7 +590,7 @@ export async function parseFlyerDataFromBrief(
     headline,
     benefits,
     callToAction,
-    heroImageUrl: heroPhoto?.dataUrl || null,
+    heroImageUrl: heroImageUrl,
     qrCodeDataUrl,
     size,
   };
