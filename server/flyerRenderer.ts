@@ -640,37 +640,4 @@ function buildHeroImagePrompt(programName: string, lowerProgram: string, primary
   }
 }
 
-// ── Puppeteer-based PNG renderer (server-side, used as fallback) ──────────────
-let _browserInstance: any = null;
-
-async function getBrowser(): Promise<any> {
-  if (_browserInstance) return _browserInstance;
-  try {
-    const chromium = await import("@sparticuz/chromium");
-    const puppeteer = await import("puppeteer-core");
-    const executablePath = await (chromium as any).default.executablePath();
-    _browserInstance = await (puppeteer as any).default.launch({
-      args: (chromium as any).default.args,
-      defaultViewport: (chromium as any).default.defaultViewport,
-      executablePath,
-      headless: true,
-    });
-    return _browserInstance;
-  } catch (err: any) {
-    throw new Error(`Failed to launch browser: ${err?.message}`);
-  }
-}
-
-export async function renderFlyerToPng(html: string, width: number, height: number): Promise<Buffer> {
-  const browser = await getBrowser();
-  const page = await browser.newPage();
-  try {
-    await page.setViewport({ width, height, deviceScaleFactor: 1 });
-    await page.setContent(html, { waitUntil: "networkidle0", timeout: 30000 });
-    await page.waitForTimeout(1500);
-    const screenshot = await page.screenshot({ type: "png", clip: { x: 0, y: 0, width, height } });
-    return screenshot as Buffer;
-  } finally {
-    await page.close();
-  }
-}
+// renderFlyerToPng removed — flyer PNG capture is now handled client-side via html2canvas

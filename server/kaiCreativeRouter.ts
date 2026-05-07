@@ -41,7 +41,6 @@ import { generatePlatformCopyVariants } from "./platformCopyService";
 import { generateVideoAd } from "./videoAdService";
 import {
   buildFlyerHtml,
-  renderFlyerToPng,
   parseFlyerDataFromBrief,
   generateQrCodeDataUrl,
 } from "./flyerRenderer";
