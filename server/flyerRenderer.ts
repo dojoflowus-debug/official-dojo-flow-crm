@@ -118,7 +118,7 @@ export function buildFlyerHtml(data: FlyerData): string {
   const scale = H / 1056;
 
   // ── FONT SIZES (all scale with canvas) ──────────────────────────────────────
-  const programNamePx = Math.round(160 * scale * (isStory ? 1.1 : isSquare ? 0.9 : 1.0));
+  const programNamePx = Math.round(168 * scale * (isStory ? 1.1 : isSquare ? 0.9 : 1.0));
   const subtitlePx    = Math.round(44  * scale);
   const benefitTitlePx = Math.round(28 * scale);
   const benefitSubPx  = Math.round(20 * scale);
@@ -134,7 +134,7 @@ export function buildFlyerHtml(data: FlyerData): string {
 
   // ── HERO IMAGE (full-bleed background) ──────────────────────────────────────
   const heroBg = data.heroImageUrl
-    ? `background-image:url('${data.heroImageUrl}');background-size:cover;background-position:center top;`
+    ? `background-image:url('${data.heroImageUrl}');background-size:cover;background-position:right center;`
     : `background:linear-gradient(160deg,${darken(primary,0.7)} 0%,#050505 60%,#0a0202 100%);`;
 
   // ── LOGO / SCHOOL NAME ───────────────────────────────────────────────────────
@@ -199,10 +199,10 @@ export function buildFlyerHtml(data: FlyerData): string {
       <div style="background:#fff;padding:${Math.round(8*scale)}px;border-radius:${Math.round(10*scale)}px;box-shadow:0 0 30px rgba(${primaryRgb},0.4),0 4px 20px rgba(0,0,0,0.8);flex-shrink:0">
         <img src="${data.qrCodeDataUrl}" alt="QR" style="width:${qrSize}px;height:${qrSize}px;display:block" />
       </div>
-      <div style="display:flex;flex-direction:column;gap:0">
-        <div style="font-family:'Oswald',sans-serif;font-size:${qrLabelPx}px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:3px;line-height:1.1;text-shadow:0 2px 10px rgba(0,0,0,0.9)">SCAN TO</div>
-        <div style="font-family:'Oswald',sans-serif;font-size:${qrLabelBigPx}px;font-weight:700;color:${primary};text-transform:uppercase;letter-spacing:2px;line-height:1.0;text-shadow:0 0 30px rgba(${primaryRgb},0.9),0 2px 10px rgba(0,0,0,0.9)">START</div>
-        <div style="font-family:'Oswald',sans-serif;font-size:${qrLabelPx}px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:3px;line-height:1.1;text-shadow:0 2px 10px rgba(0,0,0,0.9)">YOUR JOURNEY</div>
+      <div style="display:flex;flex-direction:column;gap:${Math.round(2*scale)}px">
+        <div style="font-family:'Oswald',sans-serif;font-size:${qrLabelPx}px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:2px;line-height:1.1;text-shadow:0 2px 10px rgba(0,0,0,0.9)">SCAN TO</div>
+        <div style="font-family:'Oswald',sans-serif;font-size:${Math.round(qrLabelBigPx*1.1)}px;font-weight:700;color:${primary};text-transform:uppercase;letter-spacing:1px;line-height:1.0;text-shadow:0 0 30px rgba(${primaryRgb},0.9),0 2px 10px rgba(0,0,0,0.9)">START YOUR</div>
+        <div style="font-family:'Oswald',sans-serif;font-size:${Math.round(qrLabelBigPx*1.1)}px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:1px;line-height:1.0;text-shadow:0 2px 10px rgba(0,0,0,0.9)">JOURNEY</div>
       </div>
     </div>` : '';
 
@@ -247,7 +247,7 @@ export function buildFlyerHtml(data: FlyerData): string {
     </div>`;
 
   // ── LEFT PANEL DARK OVERLAY (so text is readable over hero image) ─────────────
-  const leftOverlay = `<div style="position:absolute;top:0;left:0;width:${Math.round(leftW * 1.15)}px;height:${H}px;background:linear-gradient(90deg,rgba(3,3,3,0.97) 0%,rgba(3,3,3,0.93) 50%,rgba(3,3,3,0.7) 72%,rgba(3,3,3,0.0) 100%);z-index:10"></div>`;
+  const leftOverlay = `<div style="position:absolute;top:0;left:0;width:${Math.round(leftW * 1.2)}px;height:${H}px;background:linear-gradient(90deg,rgba(2,2,2,0.98) 0%,rgba(2,2,2,0.95) 40%,rgba(2,2,2,0.82) 65%,rgba(2,2,2,0.0) 100%);z-index:10"></div>`;
 
   // ── BOTTOM DARK FADE ─────────────────────────────────────────────────────────
   const bottomFade = `<div style="position:absolute;bottom:0;left:0;right:0;height:${Math.round(H*0.15)}px;background:linear-gradient(180deg,transparent 0%,rgba(0,0,0,0.6) 100%);z-index:8"></div>`;
@@ -266,7 +266,7 @@ export function buildFlyerHtml(data: FlyerData): string {
 <div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#030303">
 
   <!-- HERO IMAGE — full bleed background -->
-  <div style="position:absolute;inset:0;${heroBg}background-size:cover;background-position:center top;z-index:1;filter:contrast(1.1) saturate(1.2)"></div>
+  <div style="position:absolute;inset:0;${heroBg}z-index:1;filter:contrast(1.1) saturate(1.2)"></div>
 
   <!-- DARK VIGNETTE over hero -->
   <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 40%,transparent 30%,rgba(0,0,0,0.4) 70%);z-index:2"></div>
@@ -496,8 +496,25 @@ export async function parseFlyerDataFromBrief(
   overrides?: Partial<FlyerData>
 ): Promise<FlyerData> {
   // Extract program name from brief
-  const programMatch = brief.match(/for\s+([A-Za-z\s&-]+?)(?:\s+program|\s+class|\s+flyer|\s+ad|$)/i);
-  const programName = overrides?.programName || programMatch?.[1]?.trim() || "Martial Arts";
+  // Try to find the last occurrence of "for <program>" pattern, prioritizing known program names
+  const knownPrograms = ['little ninjas', 'little ninja', 'kickboxing', 'karate', 'bjj', 'jiu-jitsu', 'jiu jitsu', 'taekwondo', 'boxing', 'muay thai', 'mma', 'wrestling', 'judo', 'self defense', 'self-defense', 'ninja', 'adult karate', 'kids karate', 'youth karate'];
+  let programName = overrides?.programName || null;
+  if (!programName) {
+    const lowerBrief = brief.toLowerCase();
+    for (const kp of knownPrograms) {
+      if (lowerBrief.includes(kp)) {
+        // Title-case the known program name
+        programName = kp.replace(/\b\w/g, c => c.toUpperCase());
+        break;
+      }
+    }
+  }
+  if (!programName) {
+    // Fallback: try to match the last "for <words>" pattern
+    const allMatches = [...brief.matchAll(/\bfor\s+([A-Za-z][A-Za-z\s&-]{2,30}?)(?=\s*(?:program|class|flyer|ad|$|\.|,))/gi)];
+    const lastMatch = allMatches[allMatches.length - 1];
+    programName = lastMatch?.[1]?.trim() || "Martial Arts";
+  }
 
   // Extract size from brief
   let size: FlyerData['size'] = 'flyer';
