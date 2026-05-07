@@ -905,6 +905,7 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
           size: flyerResult.size,
           assetId: flyerResult.assetId,
           savedToLibrary: flyerResult.savedToLibrary,
+          flyerHtml: flyerResult.flyerHtml ?? null,
           message: 'Flyer generated successfully.',
         };
       } catch (err: any) {

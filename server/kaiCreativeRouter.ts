@@ -715,17 +715,18 @@ export const kaiCreativeRouter = router({
         ? parseStyleFromText(input.prompt)
         : input.style as StylePreset;
 
-      let result: { imageBase64: string; mimeType: string };
+      let result: { imageBase64: string; mimeType: string; flyerHtml?: string };
 
       // ── FLYER/POSTER ROUTE: use HTML renderer for clean typography ──────────
-      // ALL flyer/poster/social sizes use the HTML-to-PNG renderer unconditionally.
-      // Pure image generation models cannot render readable text in structured layouts.
-      // We never fall back to Imagen for these sizes — if the renderer fails, we throw.
+      // ALL flyer/poster/social sizes use the HTML template approach.
+      // The server returns the HTML string; the client renders it via srcdoc iframe
+      // + html2canvas and uploads the PNG. This avoids Puppeteer/Chromium which
+      // times out in Cloud Run cold-start scenarios.
       const isFlyerSize = input.size === "flyer" || input.size === "instagram_post" ||
         input.size === "instagram_story" || input.size === "facebook_ad";
 
       if (!input.sourceImageBase64 && isFlyerSize) {
-        // Use HTML renderer for structured flyer output — unconditional, no Imagen fallback
+        // Build HTML flyer and return it to the client for rendering
         const flyerData = await parseFlyerDataFromBrief(
           input.prompt,
           input.briefAnswers ?? {},
@@ -742,10 +743,13 @@ export const kaiCreativeRouter = router({
           input.size as "flyer" | "instagram_post" | "instagram_story" | "facebook_ad" | "website_banner"
         );
         const html = buildFlyerHtml(flyerData);
-        const pngBuffer = await renderFlyerToPng(html, flyerData.size);
+        console.log(`[KaiCreative] HTML flyer built for chat: ${html.length} chars, size=${flyerData.size}`);
+        // Return HTML to client — no Puppeteer, no S3 upload at this stage.
+        // Client will render via iframe + html2canvas and call /api/upload-flyer.
         result = {
-          imageBase64: pngBuffer.toString("base64"),
+          imageBase64: "",
           mimeType: "image/png",
+          flyerHtml: html,
         };
       } else if (input.sourceImageBase64) {
         // Edit mode — source image was uploaded in chat
@@ -767,42 +771,73 @@ export const kaiCreativeRouter = router({
         );
       }
 
-      const { url: s3Url, key } = await saveImageToS3(
-        result.imageBase64,
-        result.mimeType,
-        orgId,
-        "chat-gen"
-      );
-
-      const imageUrl = s3Url ?? `data:${result.mimeType};base64,${result.imageBase64}`;
-
-      // Always save to Creative Library.
-      // If S3 is available, store the CDN URL. Otherwise store the base64 data URL
-      // (url column is MEDIUMTEXT, supports up to 16MB).
-      const urlToStore = s3Url ?? `data:${result.mimeType};base64,${result.imageBase64}`;
+      // For flyer HTML mode: skip S3 upload (client will upload after rendering).
+      // For image mode: upload to S3 immediately.
+      let imageUrl: string;
+      let s3Key: string | null = null;
       let assetId: number | null = null;
       let savedToLibrary = false;
-      const dbConn = await getDb();
-      if (dbConn) {
-        try {
-          const inserted = await dbConn
-            .insert(creativeAssets)
-            .values({
-              orgId,
-              assetType: "generated",
-              name: `Chat — ${input.prompt.slice(0, 60)}`,
-              url: urlToStore,
-              storageKey: key ?? null,
-              prompt: input.prompt,
-              outputSize: input.size,
-              mimeType: result.mimeType,
-              createdBy: ctx.user?.id ?? null,
-            })
-            .$returningId();
-          assetId = (inserted as any)?.[0]?.id ?? null;
-          savedToLibrary = true;
-        } catch (dbErr: any) {
-          console.warn("[KaiCreative] DB insert failed:", dbErr?.message ?? dbErr);
+
+      if (result.flyerHtml) {
+        // Flyer HTML mode — placeholder URL, client will replace after rendering
+        imageUrl = `data:text/html;charset=utf-8,flyer-pending`;
+        // Pre-create a Creative Library placeholder so client can update it
+        const dbConn = await getDb();
+        if (dbConn) {
+          try {
+            const inserted = await dbConn
+              .insert(creativeAssets)
+              .values({
+                orgId,
+                assetType: "generated",
+                name: `Chat — ${input.prompt.slice(0, 60)}`,
+                url: imageUrl,
+                storageKey: null,
+                prompt: input.prompt,
+                outputSize: input.size,
+                mimeType: result.mimeType,
+                createdBy: ctx.user?.id ?? null,
+              })
+              .$returningId();
+            assetId = (inserted as any)?.[0]?.id ?? null;
+            savedToLibrary = false; // Will be marked saved after client uploads PNG
+          } catch (dbErr: any) {
+            console.warn("[KaiCreative] DB insert failed:", dbErr?.message ?? dbErr);
+          }
+        }
+      } else {
+        // Image mode — upload to S3 immediately
+        const { url: s3Url, key } = await saveImageToS3(
+          result.imageBase64,
+          result.mimeType,
+          orgId,
+          "chat-gen"
+        );
+        imageUrl = s3Url ?? `data:${result.mimeType};base64,${result.imageBase64}`;
+        s3Key = key;
+        const urlToStore = s3Url ?? `data:${result.mimeType};base64,${result.imageBase64}`;
+        const dbConn = await getDb();
+        if (dbConn) {
+          try {
+            const inserted = await dbConn
+              .insert(creativeAssets)
+              .values({
+                orgId,
+                assetType: "generated",
+                name: `Chat — ${input.prompt.slice(0, 60)}`,
+                url: urlToStore,
+                storageKey: s3Key ?? null,
+                prompt: input.prompt,
+                outputSize: input.size,
+                mimeType: result.mimeType,
+                createdBy: ctx.user?.id ?? null,
+              })
+              .$returningId();
+            assetId = (inserted as any)?.[0]?.id ?? null;
+            savedToLibrary = true;
+          } catch (dbErr: any) {
+            console.warn("[KaiCreative] DB insert failed:", dbErr?.message ?? dbErr);
+          }
         }
       }
 
@@ -814,6 +849,7 @@ export const kaiCreativeRouter = router({
         size: input.size,
         assetId,
         savedToLibrary,
+        flyerHtml: result.flyerHtml ?? null,
       };
     }),
 
