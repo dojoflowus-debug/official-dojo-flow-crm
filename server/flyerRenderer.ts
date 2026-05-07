@@ -1,15 +1,11 @@
 /**
  * Flyer Renderer Service
  *
- * Uses puppeteer-core + system Chromium to render HTML flyer templates
- * to high-quality PNG images. This produces professional, print-ready
- * flyers with clean typography and structured layouts — far superior to
- * asking an image generation model to "draw a flyer" (which garbles text).
+ * Builds HTML flyer templates for client-side rendering via srcdoc iframe + html2canvas.
+ * The server generates the HTML string; the browser renders it and captures a PNG.
  *
- * Hero images are fetched from Pexels (real stock photography) using
- * program-specific search queries. The template uses a full-bleed hero
- * photo as the background with a cinematic gradient overlay — matching
- * the Manus reference flyer style.
+ * Design: Cinematic full-bleed poster layout — hero photo fills the entire canvas,
+ * bold program name at bottom, diagonal accent band, and clean footer bar.
  */
 
 // puppeteer-core is dynamically imported inside renderFlyerToPng to avoid
@@ -56,7 +52,6 @@ async function fetchUrlBuffer(url: string, headers: Record<string, string> = {})
         fetchUrlBuffer(res.headers.location as string, headers).then(resolve).catch(reject);
         return;
       }
-      // Reject on non-2xx (e.g. 503 Service Unavailable from Pexels)
       if (res.statusCode < 200 || res.statusCode >= 300) {
         const errChunks: Buffer[] = [];
         res.on("data", (c: Buffer) => errChunks.push(c));
@@ -149,7 +144,6 @@ const SIZE_DIMS: Record<string, { width: number; height: number }> = {
   instagram_story: { width: 1080, height: 1920 },
   facebook_ad:     { width: 1200, height: 1500 },
   website_banner:  { width: 1200, height: 628 },
-  // Business card: 3.5" × 2" at 300dpi = 1050 × 600px
   business_card:   { width: 1050, height: 600 },
 };
 
@@ -187,17 +181,15 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#039;");
 }
 
-// ── HTML template builder — Bold 3D Reference-Quality Layout ─────────────────
+// ── HTML template builder — Cinematic Full-Bleed Poster Layout ───────────────
 export function buildFlyerHtml(data: FlyerData): string {
   // Route business card to its own template
   if (data.size === 'business_card') return buildBusinessCardHtml(data);
-
   // Route banner to its own layout
   if (data.size === 'website_banner') return buildBannerHtml(data);
 
   const primary = data.primaryColor || "#C8102E";
-  const secondary = data.secondaryColor || "#1A1A1A";
-  const darkPrimary = darken(primary, 0.3);
+  const darkPrimary = darken(primary, 0.35);
   const primaryRgb = (() => {
     const c = primary.replace('#', '');
     return `${parseInt(c.substring(0,2),16)}, ${parseInt(c.substring(2,4),16)}, ${parseInt(c.substring(4,6),16)}`;
@@ -207,426 +199,140 @@ export function buildFlyerHtml(data: FlyerData): string {
   const dims = SIZE_DIMS[size] || SIZE_DIMS.flyer;
   const isSquare = size === "instagram_post";
   const isStory = size === "instagram_story";
-  const isFacebookAd = size === "facebook_ad";
+  const W = dims.width;
+  const H = dims.height;
 
-  const programName = escapeHtml(data.programName);
-  const headline = escapeHtml(data.headline || `Join Our ${data.programName} Program!`);
-  const cta = escapeHtml(data.callToAction || "Start Your FREE 7-Day Trial!");
-  const benefits = data.benefits || [
-    "Build confidence, focus & discipline",
-    "Fun, safe learning environment",
-    "Expert instructors, small class sizes",
-    "FREE 7-Day Trial — no commitment required",
-  ];
+  // Font sizes scale with canvas height
+  const baseUnit = H / 1056;
+  const programNamePx = Math.round((isStory ? 112 : isSquare ? 100 : 108) * baseUnit);
+  const taglinePx     = Math.round((isStory ? 34  : isSquare ? 30  : 32 ) * baseUnit);
+  const benefitPx     = Math.round((isStory ? 28  : isSquare ? 24  : 25 ) * baseUnit);
+  const ctaPx         = Math.round((isStory ? 32  : isSquare ? 27  : 29 ) * baseUnit);
+  const contactPx     = Math.round((isStory ? 22  : isSquare ? 18  : 20 ) * baseUnit);
+  const logoMaxH      = Math.round((isStory ? 88  : isSquare ? 68  : 72 ) * baseUnit);
+  const contentPad    = Math.round(W * 0.055);
+  const footerH       = Math.round(H * 0.095);
+  const headerH       = Math.round(H * 0.105);
 
-  // Scale factors for different sizes
-  const scale = isStory ? 1.4 : isSquare ? 1.0 : isFacebookAd ? 1.1 : 1.0;
-  const programNamePx = Math.round(isStory ? 88 : isSquare ? 72 : 80);
-  const headlinePx = Math.round(isStory ? 40 : isSquare ? 34 : 36);
-  const benefitPx = Math.round(isStory ? 26 : isSquare ? 21 : 22);
-  const ctaPx = Math.round(isStory ? 30 : isSquare ? 24 : 26);
-  const contactPx = Math.round(isStory ? 22 : isSquare ? 17 : 18);
-  const logoMaxH = Math.round(isStory ? 90 : isSquare ? 70 : 72);
-  const logoMaxW = Math.round(isStory ? 280 : isSquare ? 220 : 240);
-
-  // Logo section — centered at top
-  const logoSection = data.logoUrl
-    ? `<img class="school-logo" src="${data.logoUrl}" alt="${escapeHtml(data.schoolName)}" />`
-    : `<div class="school-wordmark">${escapeHtml(data.schoolName)}</div>`;
-
-  // Hero image: right side background
+  // Hero image — full bleed background
   const heroStyle = data.heroImageUrl
-    ? `background-image: url('${data.heroImageUrl}'); background-size: cover; background-position: center top;`
-    : `background: linear-gradient(160deg, ${darken(primary, 0.5)} 0%, #111 100%);`;
+    ? `background-image: url('${data.heroImageUrl}'); background-size: cover; background-position: center 20%;`
+    : `background: linear-gradient(160deg, ${darken(primary, 0.6)} 0%, #0a0a0a 100%);`;
 
-  // Benefit items with shield SVG icons
-  const shieldSvg = (color: string) => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;margin-top:1px"><path d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4z" fill="${color}" opacity="0.9"/><path d="M10.5 14.5l-2.5-2.5 1.06-1.06 1.44 1.44 3.44-3.44 1.06 1.06-4.5 4.5z" fill="white"/></svg>`;
+  // Logo or school wordmark
+  const logoSection = data.logoUrl
+    ? `<img style="max-height:${logoMaxH}px;max-width:${Math.round(W*0.45)}px;object-fit:contain;display:block;filter:drop-shadow(0 2px 12px rgba(${primaryRgb},0.5)) brightness(1.1)" src="${data.logoUrl}" alt="${escapeHtml(data.schoolName)}" />`
+    : `<span style="font-family:'Oswald',sans-serif;font-size:${Math.round(logoMaxH*0.55)}px;font-weight:700;color:#fff;letter-spacing:3px;text-transform:uppercase;text-shadow:0 2px 16px rgba(${primaryRgb},0.6)">${escapeHtml(data.schoolName)}</span>`;
 
-  const benefitItems = benefits.slice(0, 4).map(b =>
-    `<li class="benefit-item">
-      ${shieldSvg(primary)}
-      <span>${escapeHtml(b)}</span>
-    </li>`
-  ).join("\n");
+  // Program name — each word on its own line for maximum impact
+  const programWords = data.programName.toUpperCase().split(' ');
+  const programNameHtml = programWords.map((word, i) => {
+    const isLastWord = i === programWords.length - 1;
+    const color = isLastWord ? primary : '#ffffff';
+    const shadow = isLastWord
+      ? `0 0 30px rgba(${primaryRgb},1.0), 0 0 60px rgba(${primaryRgb},0.7), 0 0 100px rgba(${primaryRgb},0.4), 4px 4px 0 ${darkPrimary}, 8px 8px 0 rgba(0,0,0,0.5)`
+      : `0 0 20px rgba(${primaryRgb},0.5), 4px 4px 0 rgba(0,0,0,0.6), 8px 8px 0 rgba(0,0,0,0.3)`;
+    return `<div style="font-family:'Oswald',sans-serif;font-size:${programNamePx}px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:4px;line-height:0.92;text-shadow:${shadow};-webkit-text-stroke:1.5px rgba(${isLastWord ? '255,255,255' : primaryRgb},0.15)">${escapeHtml(word)}</div>`;
+  }).join('');
 
-  // Contact info for footer
+  // Benefit items with circle-check icons
+  const checkSvg = `<svg width="${Math.round(benefitPx*1.15)}" height="${Math.round(benefitPx*1.15)}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="11" fill="${primary}" opacity="0.95"/><path d="M7 12.5l3.5 3.5 6.5-7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const benefitItems = (data.benefits || [
+    "Build confidence, focus &amp; discipline",
+    "Develop motor skills &amp; coordination",
+    "Fun, safe environment for all ages",
+    "FREE 7-Day Trial — no commitment required",
+  ]).slice(0, 4).map(b =>
+    `<div style="display:flex;align-items:flex-start;gap:${Math.round(benefitPx*0.6)}px;margin-bottom:${Math.round(benefitPx*0.5)}px">
+      ${checkSvg}
+      <span style="font-family:'Roboto',sans-serif;font-size:${benefitPx}px;font-weight:600;color:rgba(255,255,255,0.93);line-height:1.35;text-shadow:0 1px 8px rgba(0,0,0,0.9)">${escapeHtml(b)}</span>
+    </div>`
+  ).join('');
+
+  // Contact info
   const contactParts = [
-    data.phone ? `<span class="contact-item">📞 ${escapeHtml(data.phone)}</span>` : "",
-    data.website ? `<span class="contact-item">🌐 ${escapeHtml(data.website)}</span>` : "",
-    data.address ? `<span class="contact-item">📍 ${escapeHtml(data.address)}</span>` : "",
-  ].filter(Boolean).join('<span class="contact-sep">·</span>');
+    data.phone   ? `<span style="color:rgba(255,255,255,0.85);font-size:${contactPx}px;font-family:'Roboto',sans-serif">&#128222;&nbsp;${escapeHtml(data.phone)}</span>` : '',
+    data.website ? `<span style="color:rgba(255,255,255,0.85);font-size:${contactPx}px;font-family:'Roboto',sans-serif">&#127760;&nbsp;${escapeHtml(data.website)}</span>` : '',
+    data.address ? `<span style="color:rgba(255,255,255,0.75);font-size:${Math.round(contactPx*0.9)}px;font-family:'Roboto',sans-serif">&#128205;&nbsp;${escapeHtml(data.address)}</span>` : '',
+  ].filter(Boolean).join(`<span style="color:${primary};margin:0 8px;font-weight:700">&middot;</span>`);
 
   // QR code
+  const qrSize = Math.round(H * 0.075);
   const qrHtml = data.qrCodeDataUrl
-    ? `<div class="qr-block">
-        <img class="qr-img" src="${data.qrCodeDataUrl}" alt="QR Code" />
-        <div class="qr-label">Scan to Enroll</div>
+    ? `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0">
+        <img src="${data.qrCodeDataUrl}" alt="QR" style="width:${qrSize}px;height:${qrSize}px;background:#fff;padding:4px;border-radius:6px;display:block" />
+        <span style="font-family:'Oswald',sans-serif;font-size:${Math.round(contactPx*0.75)}px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px">Scan to Enroll</span>
        </div>`
-    : "";
+    : '';
 
-  // Program name split into lines for big bold display
-  const programWords = data.programName.toUpperCase().split(' ');
-  const programLine1 = programWords.slice(0, Math.ceil(programWords.length / 2)).join(' ');
-  const programLine2 = programWords.slice(Math.ceil(programWords.length / 2)).join(' ');
+  const cta = escapeHtml(data.callToAction || "START YOUR FREE 7-DAY TRIAL");
+  const tagline = escapeHtml(data.headline || `Unleash Your Child's Inner Warrior`);
+  const bandH = Math.round(H * (isStory ? 0.40 : isSquare ? 0.44 : 0.42));
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto:wght@400;500;700;900&family=Bebas+Neue&display=swap');
-
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto:wght@400;500;600;700;900&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    width: ${dims.width}px;
-    height: ${dims.height}px;
-    overflow: hidden;
-    font-family: 'Roboto', sans-serif;
-    background: #0a0a0a;
-  }
-
-  /* ── Main canvas ── */
-  .flyer {
-    width: ${dims.width}px;
-    height: ${dims.height}px;
-    position: relative;
-    overflow: hidden;
-    background: #0a0a0a;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* ── TOP HEADER: Logo centered ── */
-  .header {
-    flex-shrink: 0;
-    height: ${Math.round(dims.height * (isStory ? 0.10 : 0.11))}px;
-    background: linear-gradient(180deg, rgba(0,0,0,0.95) 0%, rgba(10,10,10,0.85) 100%);
-    border-bottom: 3px solid ${primary};
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 32px;
-    position: relative;
-    z-index: 10;
-  }
-
-  .school-logo {
-    max-height: ${logoMaxH}px;
-    max-width: ${logoMaxW}px;
-    object-fit: contain;
-    filter: drop-shadow(0 2px 12px rgba(${primaryRgb}, 0.4));
-  }
-
-  .school-wordmark {
-    color: #ffffff;
-    font-family: 'Oswald', sans-serif;
-    font-size: ${Math.round(logoMaxH * 0.6)}px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    text-shadow: 0 2px 16px rgba(${primaryRgb}, 0.5);
-  }
-
-  /* ── MIDDLE BODY: split left/right ── */
-  .body {
-    flex: 1;
-    display: flex;
-    min-height: 0;
-    position: relative;
-  }
-
-  /* ── LEFT PANEL: program name + headline + benefits + CTA ── */
-  .left-panel {
-    width: ${isStory ? '100%' : '52%'};
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: ${isStory ? '32px 44px' : '28px 36px 28px 40px'};
-    position: relative;
-    z-index: 5;
-    background: linear-gradient(90deg, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.90) 70%, rgba(0,0,0,0.0) 100%);
-  }
-
-  /* ── RIGHT PANEL: hero photo ── */
-  .right-panel {
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: ${isStory ? '100%' : '60%'};
-    ${heroStyle}
-    z-index: 1;
-  }
-
-  /* Gradient mask on right panel so left content reads clearly */
-  .right-panel::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      90deg,
-      rgba(0,0,0,0.95) 0%,
-      rgba(0,0,0,0.65) 30%,
-      rgba(0,0,0,0.20) 60%,
-      rgba(0,0,0,0.05) 100%
-    );
-    z-index: 2;
-  }
-
-  /* Dark vignette on top and bottom of right panel */
-  .right-panel::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(180deg, rgba(0,0,0,0.5) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.5) 100%);
-    z-index: 3;
-  }
-
-  /* ── PROGRAM NAME — massive bold 3D text ── */
-  .program-name-block {
-    margin-bottom: ${Math.round(16 * scale)}px;
-    line-height: 0.88;
-  }
-
-  .program-name {
-    font-family: 'Oswald', sans-serif;
-    font-size: ${programNamePx}px;
-    font-weight: 700;
-    color: #ffffff;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    line-height: 0.9;
-    display: block;
-    /* 3D fire/glow effect */
-    text-shadow:
-      0 0 20px rgba(${primaryRgb}, 0.9),
-      0 0 40px rgba(${primaryRgb}, 0.6),
-      0 0 80px rgba(${primaryRgb}, 0.3),
-      3px 3px 0px ${darkPrimary},
-      6px 6px 0px rgba(0,0,0,0.4),
-      0 4px 20px rgba(0,0,0,0.8);
-    -webkit-text-stroke: 1px rgba(${primaryRgb}, 0.3);
-  }
-
-  .program-name.accent {
-    color: ${primary};
-    text-shadow:
-      0 0 20px rgba(${primaryRgb}, 1.0),
-      0 0 40px rgba(${primaryRgb}, 0.8),
-      0 0 80px rgba(${primaryRgb}, 0.5),
-      3px 3px 0px ${darkPrimary},
-      6px 6px 0px rgba(0,0,0,0.5),
-      0 4px 20px rgba(0,0,0,0.8);
-    -webkit-text-stroke: 1px rgba(255,255,255,0.1);
-  }
-
-  /* Glow orb behind program name */
-  .program-glow {
-    position: absolute;
-    top: ${Math.round(dims.height * 0.12)}px;
-    left: -60px;
-    width: ${Math.round(dims.width * 0.55)}px;
-    height: ${Math.round(dims.height * 0.35)}px;
-    background: radial-gradient(ellipse at center, rgba(${primaryRgb}, 0.18) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* ── HEADLINE ── */
-  .headline {
-    font-family: 'Roboto', sans-serif;
-    font-size: ${headlinePx}px;
-    font-weight: 700;
-    color: rgba(255,255,255,0.95);
-    line-height: 1.2;
-    margin-bottom: ${Math.round(20 * scale)}px;
-    text-shadow: 0 2px 12px rgba(0,0,0,0.7);
-  }
-
-  /* ── DIVIDER ── */
-  .divider {
-    width: 60px;
-    height: 4px;
-    background: ${primary};
-    border-radius: 2px;
-    margin-bottom: ${Math.round(18 * scale)}px;
-    box-shadow: 0 0 12px rgba(${primaryRgb}, 0.7);
-  }
-
-  /* ── BENEFITS LIST ── */
-  .benefits {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: ${Math.round(10 * scale)}px;
-    margin-bottom: ${Math.round(24 * scale)}px;
-  }
-
-  .benefit-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    font-size: ${benefitPx}px;
-    font-weight: 500;
-    color: rgba(255,255,255,0.90);
-    line-height: 1.3;
-    text-shadow: 0 1px 6px rgba(0,0,0,0.6);
-  }
-
-  /* ── CTA BUTTON ── */
-  .cta-button {
-    display: inline-block;
-    background: ${primary};
-    color: #ffffff;
-    font-family: 'Oswald', sans-serif;
-    font-size: ${ctaPx}px;
-    font-weight: 600;
-    padding: ${Math.round(14 * scale)}px ${Math.round(36 * scale)}px;
-    border-radius: 6px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    white-space: nowrap;
-    box-shadow:
-      0 6px 24px rgba(${primaryRgb}, 0.55),
-      0 2px 8px rgba(0,0,0,0.5),
-      inset 0 1px 0 rgba(255,255,255,0.15);
-    margin-bottom: ${Math.round(8 * scale)}px;
-  }
-
-  /* ── FOOTER: school info + QR ── */
-  .footer {
-    flex-shrink: 0;
-    height: ${Math.round(dims.height * (isStory ? 0.09 : 0.10))}px;
-    background: linear-gradient(0deg, rgba(0,0,0,0.98) 0%, rgba(10,10,10,0.90) 100%);
-    border-top: 3px solid ${primary};
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 ${isStory ? '44px' : '36px'};
-    position: relative;
-    z-index: 10;
-    gap: 16px;
-  }
-
-  .footer-left {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .school-name-footer {
-    font-family: 'Oswald', sans-serif;
-    font-size: ${contactPx + 2}px;
-    font-weight: 700;
-    color: #ffffff;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .contact-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .contact-item {
-    font-size: ${contactPx - 2}px;
-    color: rgba(255,255,255,0.70);
-    font-weight: 400;
-    white-space: nowrap;
-  }
-
-  .contact-sep {
-    color: ${primary};
-    font-weight: 700;
-    font-size: ${contactPx - 2}px;
-    margin: 0 2px;
-  }
-
-  /* ── QR code ── */
-  .qr-block {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    flex-shrink: 0;
-  }
-
-  .qr-img {
-    width: ${Math.round(dims.height * (isStory ? 0.065 : 0.072))}px;
-    height: ${Math.round(dims.height * (isStory ? 0.065 : 0.072))}px;
-    background: #fff;
-    padding: 3px;
-    border-radius: 4px;
-  }
-
-  .qr-label {
-    font-size: ${Math.round(contactPx * 0.75)}px;
-    color: rgba(255,255,255,0.55);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    text-align: center;
-  }
-
+  body { width:${W}px; height:${H}px; overflow:hidden; background:#080808; }
 </style>
 </head>
 <body>
-<div class="flyer">
+<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#080808">
 
-  <!-- Header: school logo centered -->
-  <div class="header">
+  <!-- FULL-BLEED HERO PHOTO -->
+  <div style="position:absolute;inset:0;${heroStyle}z-index:0;filter:contrast(1.15) saturate(1.25) brightness(0.95)"></div>
+
+  <!-- CINEMATIC GRADIENT OVERLAYS -->
+  <!-- Heavy dark gradient from bottom so text pops -->
+  <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.05) 0%,rgba(0,0,0,0.10) 25%,rgba(0,0,0,0.75) 58%,rgba(0,0,0,0.97) 100%);z-index:1"></div>
+  <!-- Subtle left-side darkening for text readability -->
+  <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,0.35) 0%,rgba(0,0,0,0.05) 50%,rgba(0,0,0,0.0) 100%);z-index:1"></div>
+  <!-- Colored glow from bottom-left corner -->
+  <div style="position:absolute;bottom:0;left:0;width:${Math.round(W*0.80)}px;height:${Math.round(H*0.60)}px;background:radial-gradient(ellipse at bottom left,rgba(${primaryRgb},0.30) 0%,transparent 60%);z-index:2"></div>
+
+  <!-- HEADER: logo top-left -->
+  <div style="position:absolute;top:0;left:0;right:0;height:${headerH}px;background:linear-gradient(180deg,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.0) 100%);display:flex;align-items:center;padding:0 ${contentPad}px;z-index:10">
     ${logoSection}
   </div>
 
-  <!-- Body: left content + right hero photo -->
-  <div class="body">
-
-    <!-- Right panel: hero photo (behind left content) -->
-    <div class="right-panel"></div>
-
-    <!-- Glow orb behind program name -->
-    <div class="program-glow"></div>
-
-    <!-- Left panel: all text content -->
-    <div class="left-panel">
-
-      <!-- Program name: massive bold 3D -->
-      <div class="program-name-block">
-        <span class="program-name">${escapeHtml(programLine1)}</span>
-        ${programLine2 ? `<span class="program-name accent">${escapeHtml(programLine2)}</span>` : ''}
-      </div>
-
-      <!-- Headline -->
-      <p class="headline">${headline}</p>
-
-      <!-- Colored divider -->
-      <div class="divider"></div>
-
-      <!-- Benefits with shield icons -->
-      <ul class="benefits">
-        ${benefitItems}
-      </ul>
-
-      <!-- CTA button -->
-      <div class="cta-button">${cta}</div>
-
-    </div>
+  <!-- DIAGONAL ACCENT BAND (behind text) -->
+  <div style="position:absolute;left:0;right:0;bottom:${footerH}px;height:${bandH}px;overflow:hidden;z-index:3">
+    <div style="position:absolute;inset:0;background:linear-gradient(135deg,${primary} 0%,${darkPrimary} 100%);clip-path:polygon(0 38%,100% 0%,100% 62%,0 100%);opacity:0.88"></div>
+    <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,0.6) 0%,rgba(0,0,0,0.1) 60%,rgba(0,0,0,0.0) 100%);clip-path:polygon(0 38%,100% 0%,100% 62%,0 100%)"></div>
   </div>
 
-  <!-- Footer: school name + contact + QR -->
-  <div class="footer">
-    <div class="footer-left">
-      <div class="school-name-footer">${escapeHtml(data.schoolName)}</div>
-      <div class="contact-row">${contactParts}</div>
+  <!-- MAIN CONTENT: anchored to bottom above footer -->
+  <div style="position:absolute;left:0;right:0;bottom:${footerH}px;z-index:10;padding:0 ${contentPad}px ${Math.round(H*0.048)}px">
+
+    <!-- PROGRAM NAME: massive, each word on its own line -->
+    <div style="margin-bottom:${Math.round(H*0.016)}px;line-height:0.92">
+      ${programNameHtml}
+    </div>
+
+    <!-- TAGLINE -->
+    <div style="font-family:'Roboto',sans-serif;font-size:${taglinePx}px;font-weight:700;color:rgba(255,255,255,0.95);letter-spacing:0.5px;margin-bottom:${Math.round(H*0.022)}px;text-shadow:0 2px 14px rgba(0,0,0,0.95);max-width:${Math.round(W*0.75)}px;line-height:1.3">${tagline}</div>
+
+    <!-- ACCENT DIVIDER -->
+    <div style="width:${Math.round(W*0.08)}px;height:4px;background:${primary};border-radius:2px;margin-bottom:${Math.round(H*0.022)}px;box-shadow:0 0 18px rgba(${primaryRgb},0.85)"></div>
+
+    <!-- BENEFITS -->
+    <div style="margin-bottom:${Math.round(H*0.026)}px;max-width:${Math.round(W*0.72)}px">
+      ${benefitItems}
+    </div>
+
+    <!-- CTA BUTTON -->
+    <div style="display:inline-block;background:${primary};color:#fff;font-family:'Oswald',sans-serif;font-size:${ctaPx}px;font-weight:700;padding:${Math.round(H*0.016)}px ${Math.round(W*0.055)}px;border-radius:8px;text-transform:uppercase;letter-spacing:3px;box-shadow:0 8px 32px rgba(${primaryRgb},0.7),0 3px 12px rgba(0,0,0,0.7),inset 0 1px 0 rgba(255,255,255,0.2);white-space:nowrap">${cta}</div>
+
+  </div>
+
+  <!-- FOOTER BAR -->
+  <div style="position:absolute;bottom:0;left:0;right:0;height:${footerH}px;background:rgba(0,0,0,0.96);border-top:3px solid ${primary};display:flex;align-items:center;justify-content:space-between;padding:0 ${contentPad}px;z-index:20;gap:16px">
+    <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:0">
+      <div style="font-family:'Oswald',sans-serif;font-size:${Math.round(contactPx*1.15)}px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(data.schoolName)}</div>
+      <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">${contactParts}</div>
     </div>
     ${qrHtml}
   </div>
@@ -640,7 +346,7 @@ export function buildFlyerHtml(data: FlyerData): string {
 function buildBannerHtml(data: FlyerData): string {
   const primary = data.primaryColor || "#C8102E";
   const secondary = data.secondaryColor || "#1A1A1A";
-  const dims = SIZE_DIMS.website_banner; // 1200 × 628
+  const dims = SIZE_DIMS.website_banner;
   const primaryRgb = (() => {
     const c = primary.replace('#', '');
     return `${parseInt(c.substring(0,2),16)}, ${parseInt(c.substring(2,4),16)}, ${parseInt(c.substring(4,6),16)}`;
@@ -691,7 +397,7 @@ function buildBannerHtml(data: FlyerData): string {
 export function buildBusinessCardHtml(data: FlyerData): string {
   const primary = data.primaryColor || "#C8102E";
   const secondary = data.secondaryColor || "#1A1A1A";
-  const dims = SIZE_DIMS.business_card; // 1050 × 600
+  const dims = SIZE_DIMS.business_card;
 
   const schoolName = escapeHtml(data.schoolName || "Your Dojo");
   const tagline = escapeHtml(data.tagline || "Martial Arts · Self-Defense · Fitness");
@@ -699,268 +405,55 @@ export function buildBusinessCardHtml(data: FlyerData): string {
   const email = data.email ? escapeHtml(data.email) : null;
   const website = data.website ? escapeHtml(data.website) : null;
   const address = data.address ? escapeHtml(data.address) : null;
+  const primaryRgb = (() => {
+    const c = primary.replace('#', '');
+    return `${parseInt(c.substring(0,2),16)}, ${parseInt(c.substring(2,4),16)}, ${parseInt(c.substring(4,6),16)}`;
+  })();
 
-  // Logo or wordmark
-  const logoHtml = data.logoUrl
-    ? `<img class="bc-logo" src="${data.logoUrl}" alt="${schoolName}" />`
-    : `<div class="bc-wordmark">${schoolName}</div>`;
-
-  // QR code (right side)
-  const qrHtml = data.qrCodeDataUrl
-    ? `<div class="bc-qr-block">
-        <img class="bc-qr" src="${data.qrCodeDataUrl}" alt="QR" />
-        <div class="bc-qr-label">Scan to Connect</div>
-       </div>`
-    : "";
-
-  // Contact rows
-  const contactRows = [
-    phone  ? `<div class="bc-contact-row"><span class="bc-icon">📞</span><span>${phone}</span></div>` : "",
-    email  ? `<div class="bc-contact-row"><span class="bc-icon">✉</span><span>${email}</span></div>` : "",
-    website? `<div class="bc-contact-row"><span class="bc-icon">🌐</span><span>${website}</span></div>` : "",
-    address? `<div class="bc-contact-row"><span class="bc-icon">📍</span><span>${address}</span></div>` : "",
-  ].filter(Boolean).join("\n");
+  const logoSection = data.logoUrl
+    ? `<img style="max-height:64px;max-width:200px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(${primaryRgb},0.4))" src="${data.logoUrl}" alt="${schoolName}" />`
+    : `<div style="font-family:'Oswald',sans-serif;font-size:32px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:2px;text-shadow:0 2px 12px rgba(${primaryRgb},0.5)">${schoolName}</div>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8"/>
+<head><meta charset="UTF-8"/>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Open+Sans:wght@400;500;600&display=swap');
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    width: ${dims.width}px;
-    height: ${dims.height}px;
-    overflow: hidden;
-    font-family: 'Montserrat', sans-serif;
-    background: ${secondary};
-  }
-
-  /* ── Card canvas ── */
-  .bc {
-    width: ${dims.width}px;
-    height: ${dims.height}px;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    background: ${secondary};
-  }
-
-  /* ── Left accent stripe ── */
-  .bc-stripe {
-    width: 12px;
-    background: ${primary};
-    flex-shrink: 0;
-  }
-
-  /* ── Left panel: logo + tagline ── */
-  .bc-left {
-    width: 380px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 40px 36px;
-    background: ${secondary};
-    border-right: 1px solid rgba(255,255,255,0.08);
-    position: relative;
-  }
-
-  .bc-logo {
-    max-height: 80px;
-    max-width: 260px;
-    object-fit: contain;
-    margin-bottom: 16px;
-  }
-
-  .bc-wordmark {
-    font-size: 28px;
-    font-weight: 900;
-    color: #ffffff;
-    letter-spacing: -0.5px;
-    line-height: 1.1;
-    margin-bottom: 16px;
-    text-transform: uppercase;
-  }
-
-  .bc-tagline {
-    font-size: 13px;
-    font-weight: 500;
-    color: rgba(255,255,255,0.55);
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    line-height: 1.5;
-  }
-
-  /* ── Accent dot ── */
-  .bc-dot {
-    width: 8px;
-    height: 8px;
-    background: ${primary};
-    border-radius: 50%;
-    margin-bottom: 12px;
-  }
-
-  /* ── Right panel: contact info ── */
-  .bc-right {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 40px 36px;
-    gap: 0;
-  }
-
-  .bc-contact-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 15px;
-    font-weight: 500;
-    color: rgba(255,255,255,0.88);
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    font-family: 'Open Sans', sans-serif;
-  }
-
-  .bc-contact-row:last-child { border-bottom: none; }
-
-  .bc-icon {
-    font-size: 14px;
-    width: 20px;
-    text-align: center;
-    flex-shrink: 0;
-    color: ${primary};
-  }
-
-  /* ── QR code block ── */
-  .bc-qr-block {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px 28px;
-    border-left: 1px solid rgba(255,255,255,0.08);
-    flex-shrink: 0;
-  }
-
-  .bc-qr {
-    width: 100px;
-    height: 100px;
-    border-radius: 6px;
-    background: #fff;
-    padding: 4px;
-  }
-
-  .bc-qr-label {
-    font-size: 10px;
-    font-weight: 600;
-    color: rgba(255,255,255,0.45);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-top: 8px;
-    text-align: center;
-  }
-
-  /* ── Bottom color bar ── */
-  .bc-bottom-bar {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 5px;
-    background: ${primary};
-  }
-
-</style>
-</head>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap');
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  body { width:${dims.width}px; height:${dims.height}px; overflow:hidden; font-family:'Roboto',sans-serif; }
+</style></head>
 <body>
-<div class="bc">
-  <div class="bc-stripe"></div>
-
-  <!-- Left: Logo + tagline -->
-  <div class="bc-left">
-    <div class="bc-dot"></div>
-    ${logoHtml}
-    <div class="bc-tagline">${tagline}</div>
+<div style="width:${dims.width}px;height:${dims.height}px;background:linear-gradient(135deg,#0a0a0a 0%,#1a1a1a 100%);display:flex;overflow:hidden;position:relative">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(${primaryRgb},0.15) 0%,transparent 70%)"></div>
+  <div style="width:${Math.round(dims.width*0.42)}px;background:${primary};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;position:relative;z-index:2">
+    ${logoSection}
+    <div style="margin-top:16px;font-family:'Oswald',sans-serif;font-size:16px;font-weight:500;color:rgba(255,255,255,0.75);text-align:center;letter-spacing:1.5px;text-transform:uppercase;line-height:1.4">${tagline}</div>
   </div>
-
-  <!-- Right: Contact info -->
-  <div class="bc-right">
-    ${contactRows}
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 48px;gap:14px;position:relative;z-index:2">
+    ${phone ? `<div style="display:flex;align-items:center;gap:12px;font-size:22px;color:#fff;font-weight:600">&#128222; ${phone}</div>` : ''}
+    ${email ? `<div style="display:flex;align-items:center;gap:12px;font-size:20px;color:rgba(255,255,255,0.85)">&#9993; ${email}</div>` : ''}
+    ${website ? `<div style="display:flex;align-items:center;gap:12px;font-size:20px;color:rgba(255,255,255,0.85)">&#127760; ${website}</div>` : ''}
+    ${address ? `<div style="display:flex;align-items:center;gap:12px;font-size:18px;color:rgba(255,255,255,0.7);line-height:1.4">&#128205; ${address}</div>` : ''}
   </div>
-
-  <!-- QR code -->
-  ${qrHtml}
-
-  <div class="bc-bottom-bar"></div>
+  <div style="position:absolute;bottom:0;left:0;right:0;height:5px;background:${primary}"></div>
 </div>
-</body>
-</html>`;
+</body></html>`;
 }
 
-// ── Puppeteer renderer (dev/local only — not used in production Cloud Run) ────
-// Uses dynamic import to avoid TypeScript namespace errors.
-let _browser: any = null;
-
-async function getBrowser(): Promise<any> {
-  if (_browser && _browser.connected) return _browser;
-  const puppeteer = (await import('puppeteer-core')).default;
-  // Use @sparticuz/chromium in production (Cloud Run), fall back to local Chromium in dev
-  let executablePath: string;
-  let extraArgs: string[] = [];
+// ── QR code generator ─────────────────────────────────────────────────────────
+export async function generateQrCodeDataUrl(url: string): Promise<string | null> {
   try {
-    const chromium = await import('@sparticuz/chromium');
-    executablePath = await chromium.default.executablePath();
-    extraArgs = chromium.default.args;
-  } catch {
-    // Fallback for local development — try multiple common paths
-    const { existsSync } = await import('fs');
-    executablePath = process.env.CHROMIUM_PATH ||
-      ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome']
-        .find(p => existsSync(p)) ||
-      '/usr/bin/chromium';
-  }
-  _browser = await puppeteer.launch({
-    executablePath,
-    headless: true,
-    args: [
-      ...extraArgs,
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--font-render-hinting=none',
-    ],
-  });
-  return _browser;
-}
-
-export async function renderFlyerToPng(
-  html: string,
-  size: FlyerData["size"] = "flyer"
-): Promise<Buffer> {
-  const dims = SIZE_DIMS[size || "flyer"] || SIZE_DIMS.flyer;
-  const browser = await getBrowser();
-  const page = await browser.newPage();
-  try {
-    await page.setViewport({ width: dims.width, height: dims.height, deviceScaleFactor: 2 });
-    await page.setContent(html, { waitUntil: "networkidle0", timeout: 25000 });
-    await page.evaluate(() => document.fonts.ready);
-    // Extra wait for background images to fully render
-    await new Promise(r => setTimeout(r, 800));
-    const screenshot = await page.screenshot({
-      type: "png",
-      clip: { x: 0, y: 0, width: dims.width, height: dims.height },
-      omitBackground: false,
+    return await QRCode.toDataURL(url, {
+      width: 200,
+      margin: 1,
+      color: { dark: "#000000", light: "#ffffff" },
     });
-    return Buffer.from(screenshot);
-  } finally {
-    await page.close();
+  } catch {
+    return null;
   }
 }
 
-// ── Parse flyer data from brief + brand context ───────────────────────────────
+// ── parseFlyerDataFromBrief ───────────────────────────────────────────────────
 export async function parseFlyerDataFromBrief(
   prompt: string,
   briefAnswers: Record<string, string>,
@@ -974,147 +467,106 @@ export async function parseFlyerDataFromBrief(
     logoUrl?: string | null;
     address?: string | null;
   },
-  size: FlyerData["size"] = "flyer"
+  size: "flyer" | "instagram_post" | "instagram_story" | "facebook_ad" | "website_banner" = "flyer"
 ): Promise<FlyerData> {
-  const programName = briefAnswers.program || extractProgram(prompt) || "Martial Arts Program";
-  const audience = briefAnswers.audience || extractAudience(prompt) || null;
-  const cta = briefAnswers.content || extractCta(prompt) || "Start Your FREE 7-Day Trial!";
+  // Extract program name from prompt
+  const promptLower = prompt.toLowerCase();
+  let programName = briefAnswers.program || "";
 
-  const headlineMap: Record<string, string> = {
-    "little ninjas": "Unleash Your Child's Inner Ninja!",
-    ninja: "Unleash Your Child's Inner Ninja!",
-    kickboxing: "Get Fit. Get Strong. Get Confident.",
-    karate: "Discipline, Focus & Confidence Starts Here.",
-    "adult karate": "Discipline, Focus & Confidence Starts Here.",
-    bjj: "Learn the Art of Brazilian Jiu-Jitsu.",
-    "jiu-jitsu": "Learn the Art of Brazilian Jiu-Jitsu.",
-    "self defense": "Real Skills. Real Confidence. Real Safety.",
-    "self-defense": "Real Skills. Real Confidence. Real Safety.",
-    taekwondo: "Kick Higher. Reach Further. Achieve More.",
-    boxing: "Train Like a Champion.",
-    fitness: "Transform Your Body. Transform Your Life.",
-  };
-  const lowerProgram = programName.toLowerCase();
-  const headline =
-    Object.entries(headlineMap).find(([k]) => lowerProgram.includes(k))?.[1] ||
-    `Join Our ${programName} Program!`;
-
-  const benefitsMap: Record<string, string[]> = {
-    "little ninjas": [
-      "Build confidence, focus & discipline",
-      "Develop motor skills & coordination",
-      "Fun, safe environment for ages 3–5",
-      "FREE 7-Day Trial — no commitment required",
-    ],
-    ninja: [
-      "Build confidence, focus & discipline",
-      "Develop motor skills & coordination",
-      "Fun, safe environment for ages 3–5",
-      "FREE 7-Day Trial — no commitment required",
-    ],
-    kickboxing: [
-      "Full-body workout — burn up to 800 cal/hr",
-      "Learn real striking techniques",
-      "Stress relief & mental clarity",
-      "All fitness levels welcome",
-    ],
-    karate: [
-      "Traditional values, modern training",
-      "Improve focus, discipline & respect",
-      "Belt progression system",
-      "Classes for all ages & skill levels",
-    ],
-    bjj: [
-      "Learn real self-defense techniques",
-      "Build strength, flexibility & focus",
-      "Beginner-friendly, all body types",
-      "Compete or train recreationally",
-    ],
-    taekwondo: [
-      "Olympic-style kicking techniques",
-      "Build speed, agility & coordination",
-      "Belt progression with clear goals",
-      "Fun for kids and adults alike",
-    ],
-    boxing: [
-      "Full-body cardio & strength training",
-      "Learn proper technique from day one",
-      "Build mental toughness & discipline",
-      "All skill levels welcome",
-    ],
-  };
-  const benefits =
-    Object.entries(benefitsMap).find(([k]) => lowerProgram.includes(k))?.[1] || [
-      "Expert instruction from certified coaches",
-      "Safe, welcoming environment for all levels",
-      "Build strength, confidence & discipline",
-      "Flexible class schedules",
+  if (!programName) {
+    // Try to detect from prompt
+    const programKeywords = [
+      "little ninjas", "ninja", "kickboxing", "karate", "taekwondo", "bjj",
+      "jiu-jitsu", "jiu jitsu", "boxing", "muay thai", "mma", "wrestling",
+      "judo", "self defense", "self-defense", "fitness", "yoga", "dance",
+      "adult karate", "kids karate", "kids martial arts",
     ];
+    for (const kw of programKeywords) {
+      if (promptLower.includes(kw)) {
+        programName = kw.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        break;
+      }
+    }
+    if (!programName) programName = "Martial Arts";
+  }
 
-  // Fetch a real stock photo from Pexels for the hero image
-  const orientation = size === "website_banner" ? "landscape" : "portrait";
-  const heroPhoto = await fetchHeroPhotoAsBase64(programName, orientation);
+  // Audience
+  const audience = briefAnswers.audience || (
+    promptLower.includes("kid") || promptLower.includes("child") || promptLower.includes("little") || promptLower.includes("ninja")
+      ? "Kids Ages 4-12"
+      : promptLower.includes("adult") ? "Adults" : "All Ages"
+  );
 
-  // Generate QR code for the school website (or a fallback URL)
-  const qrUrl = brand.website || `https://www.google.com/search?q=${encodeURIComponent(brand.schoolName || 'martial arts school near me')}`;
+  // Offer / CTA
+  const isFreeTrialPrompt = promptLower.includes("free trial") || promptLower.includes("free class");
+  const callToAction = briefAnswers.cta || (isFreeTrialPrompt ? "START YOUR FREE 7-DAY TRIAL" : "ENROLL TODAY — LIMITED SPOTS");
+
+  // Benefits tailored to program
+  const isKids = audience.toLowerCase().includes("kid") || audience.toLowerCase().includes("child") || programName.toLowerCase().includes("ninja") || programName.toLowerCase().includes("little");
+  const benefits = isKids ? [
+    "Build confidence, focus & discipline",
+    "Develop motor skills & coordination",
+    "Fun, safe environment for ages 4-12",
+    isFreeTrialPrompt ? "FREE 7-Day Trial — no commitment required" : "Expert instructors, small class sizes",
+  ] : [
+    "Build strength, confidence & discipline",
+    "Learn real self-defense techniques",
+    "Expert instructors, all skill levels welcome",
+    isFreeTrialPrompt ? "FREE 7-Day Trial — no commitment required" : "Flexible class schedules",
+  ];
+
+  // Headline
+  const headline = isKids
+    ? `Unleash Your Child's Inner Warrior`
+    : `Transform Your Mind, Body & Spirit`;
+
+  // Fetch hero photo
+  const heroPhoto = await fetchHeroPhotoAsBase64(programName, "portrait");
+
+  // Generate QR code
+  const qrUrl = brand.website || "https://example.com";
   const qrCodeDataUrl = await generateQrCodeDataUrl(qrUrl);
 
   return {
-    schoolName: brand.schoolName || "Your Dojo",
+    schoolName: brand.schoolName || "Your Martial Arts School",
     phone: brand.phone || null,
     email: brand.email || null,
     website: brand.website || null,
     address: brand.address || null,
     logoUrl: brand.logoUrl || null,
     primaryColor: brand.primaryColor || "#C8102E",
-    secondaryColor: brand.secondaryColor || "#1A1A1A",
+    secondaryColor: brand.secondaryColor || null,
     programName,
     audience,
     headline,
-    subheadline: audience ? `${programName} · ${audience}` : programName,
     benefits,
-    callToAction: cta,
+    callToAction,
     heroImageUrl: heroPhoto?.dataUrl || null,
     qrCodeDataUrl,
     size,
   };
 }
 
-// ── QR code generator ───────────────────────────────────────────────────────
-export async function generateQrCodeDataUrl(url: string): Promise<string | null> {
+// ── Puppeteer PNG renderer (server-side, used only when available) ─────────────
+export async function renderFlyerToPng(html: string, size?: string): Promise<Buffer> {
+  const dims = SIZE_DIMS[size || "flyer"] || SIZE_DIMS.flyer;
+  let browser: any = null;
   try {
-    const dataUrl = await QRCode.toDataURL(url, {
-      errorCorrectionLevel: 'M',
-      margin: 1,
-      width: 200,
-      color: { dark: '#000000', light: '#ffffff' },
+    const chromium = await import("@sparticuz/chromium");
+    const puppeteer = await import("puppeteer-core");
+    browser = await (puppeteer as any).default.launch({
+      args: (chromium as any).default.args,
+      defaultViewport: { width: dims.width, height: dims.height },
+      executablePath: await (chromium as any).default.executablePath(),
+      headless: true,
     });
-    return dataUrl;
-  } catch (err: any) {
-    console.warn('[FlyerRenderer] QR code generation failed:', err?.message);
-    return null;
+    const page = await browser.newPage();
+    await page.setViewport({ width: dims.width, height: dims.height });
+    await page.setContent(html, { waitUntil: "networkidle0", timeout: 30000 });
+    await new Promise(r => setTimeout(r, 1500));
+    const screenshot = await page.screenshot({ type: "png", fullPage: false });
+    return Buffer.from(screenshot as Uint8Array);
+  } finally {
+    if (browser) await browser.close().catch(() => {});
   }
-}
-
-function extractProgram(prompt: string): string | null {
-  const lower = prompt.toLowerCase();
-  const programs = [
-    "little ninjas", "kickboxing", "karate", "taekwondo", "bjj", "jiu-jitsu",
-    "muay thai", "boxing", "wrestling", "judo", "mma", "self defense", "self-defense",
-    "fitness", "yoga", "gymnastics", "dance",
-  ];
-  return programs.find(p => lower.includes(p)) || null;
-}
-
-function extractAudience(prompt: string): string | null {
-  const match = prompt.match(/ages?\s+[\d–\-]+(?:\s*[–\-]\s*[\d]+)?/i);
-  return match ? match[0] : null;
-}
-
-function extractCta(prompt: string): string | null {
-  const lower = prompt.toLowerCase();
-  if (lower.includes("free trial") || lower.includes("7 day") || lower.includes("7-day")) return "Start Your FREE 7-Day Trial!";
-  if (lower.includes("enroll")) return "Enroll Today — 7-Day Trial Available!";
-  if (lower.includes("limited spots")) return "Limited Spots Available — Register Now!";
-  return null;
 }
