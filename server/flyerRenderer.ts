@@ -120,24 +120,30 @@ export function buildFlyerHtml(data: FlyerData): string {
     ? `background-image:url('${data.heroImageUrl}');background-size:cover;background-position:center top;`
     : `background:radial-gradient(ellipse at 65% 35%,${darken(primary,0.3)} 0%,${darken(primary,0.6)} 35%,#050505 75%);`;
 
-  // ── LOGO at TOP CENTER — large and prominent ──────────────────────────────────
-  // Logo sits over the hero image at the top, centered
-  const logoH = Math.round(72 * scale);
+  // ── LOGO at TOP LEFT — large and prominent, with school name next to it ────────
+  // Logo + school name row at top-left, matching reference design
+  const logoH = Math.round(100 * scale);  // Much larger — reference shows logo ~100px
+  const logoNameFontPx = Math.round(38 * scale);  // Large school name text
   const logoHtml = data.logoUrl
-    ? `<img src="${data.logoUrl}" alt="${escapeHtml(data.schoolName)}"
-         style="max-height:${logoH}px;max-width:${Math.round(W * 0.55)}px;object-fit:contain;
-                filter:drop-shadow(0 2px 20px rgba(0,0,0,0.95)) drop-shadow(0 0 12px rgba(0,0,0,0.8)) brightness(1.1)" />`
-    : `<div style="display:inline-flex;align-items:center;gap:${Math.round(10*scale)}px">
-        <div style="width:${Math.round(44*scale)}px;height:${Math.round(44*scale)}px;border-radius:50%;
+    ? `<div style="display:flex;align-items:center;gap:${Math.round(14*scale)}px">
+        <img src="${data.logoUrl}" alt="${escapeHtml(data.schoolName)}"
+             style="height:${logoH}px;max-width:${Math.round(logoH*1.6)}px;object-fit:contain;
+                    filter:drop-shadow(0 2px 20px rgba(0,0,0,0.95)) drop-shadow(0 0 16px rgba(0,0,0,0.9)) brightness(1.15)" />
+        <span style="font-family:'Oswald',sans-serif;font-size:${logoNameFontPx}px;font-weight:700;
+                     color:#fff;letter-spacing:2px;text-transform:uppercase;line-height:1.1;
+                     text-shadow:0 2px 16px rgba(0,0,0,0.95),0 0 12px rgba(0,0,0,0.9)">${escapeHtml(data.schoolName)}</span>
+      </div>`
+    : `<div style="display:inline-flex;align-items:center;gap:${Math.round(14*scale)}px">
+        <div style="width:${Math.round(logoH*0.85)}px;height:${Math.round(logoH*0.85)}px;border-radius:50%;
                     background:${primary};display:flex;align-items:center;justify-content:center;
-                    box-shadow:0 0 20px rgba(${primaryRgb},0.8),0 2px 12px rgba(0,0,0,0.9);flex-shrink:0">
-          <svg width="${Math.round(26*scale)}" height="${Math.round(26*scale)}" viewBox="0 0 24 24" fill="none">
+                    box-shadow:0 0 30px rgba(${primaryRgb},0.9),0 2px 16px rgba(0,0,0,0.95);flex-shrink:0">
+          <svg width="${Math.round(logoH*0.5)}" height="${Math.round(logoH*0.5)}" viewBox="0 0 24 24" fill="none">
             <path d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4z" fill="white" opacity="0.95"/>
           </svg>
         </div>
-        <span style="font-family:'Oswald',sans-serif;font-size:${Math.round(22*scale)}px;font-weight:700;
-                     color:#fff;letter-spacing:2.5px;text-transform:uppercase;
-                     text-shadow:0 2px 16px rgba(0,0,0,0.95),0 0 8px rgba(0,0,0,0.8)">${escapeHtml(data.schoolName)}</span>
+        <span style="font-family:'Oswald',sans-serif;font-size:${logoNameFontPx}px;font-weight:700;
+                     color:#fff;letter-spacing:2px;text-transform:uppercase;line-height:1.1;
+                     text-shadow:0 2px 16px rgba(0,0,0,0.95),0 0 12px rgba(0,0,0,0.9)">${escapeHtml(data.schoolName)}</span>
       </div>`;
 
   // ── PROGRAM NAME — massive 3D metallic letters ────────────────────────────────
@@ -187,16 +193,23 @@ export function buildFlyerHtml(data: FlyerData): string {
   const ctaLine1 = ctaParts.slice(0, midpoint).join(' ');
   const ctaLine2 = ctaParts.slice(midpoint).join(' ');
   const ctaShadow = `2px 2px 0 rgba(0,0,0,0.8),4px 4px 0 rgba(0,0,0,0.6),0 0 30px rgba(0,0,0,0.9)`;
+  // Scale down CTA font if the text is long (offer text can be verbose)
+  const ctaCharCount = Math.max(ctaLine1.length, ctaLine2.length);
+  const ctaFontPx = ctaCharCount > 18
+    ? Math.round(ctaTextPx * 0.62)  // Very long offer text
+    : ctaCharCount > 12
+    ? Math.round(ctaTextPx * 0.78)  // Medium offer text
+    : ctaTextPx;                     // Short CTA like 'FREE TRIAL CLASS'
   const ctaHtml = ctaLine2
-    ? `<div style="font-family:'Oswald',sans-serif;font-size:${ctaTextPx}px;font-weight:700;
+    ? `<div style="font-family:'Oswald',sans-serif;font-size:${ctaFontPx}px;font-weight:700;
                    color:#ffffff;text-transform:uppercase;letter-spacing:3px;line-height:0.95;
                    text-shadow:${ctaShadow};-webkit-text-stroke:1px rgba(255,255,255,0.15);
                    display:block">${escapeHtml(ctaLine1)}</div>
-       <div style="font-family:'Oswald',sans-serif;font-size:${ctaTextPx}px;font-weight:700;
+       <div style="font-family:'Oswald',sans-serif;font-size:${ctaFontPx}px;font-weight:700;
                    color:#ffffff;text-transform:uppercase;letter-spacing:3px;line-height:0.95;
                    text-shadow:${ctaShadow};-webkit-text-stroke:1px rgba(255,255,255,0.15);
                    display:block">${escapeHtml(ctaLine2)}</div>`
-    : `<div style="font-family:'Oswald',sans-serif;font-size:${ctaTextPx}px;font-weight:700;
+    : `<div style="font-family:'Oswald',sans-serif;font-size:${ctaFontPx}px;font-weight:700;
                    color:#ffffff;text-transform:uppercase;letter-spacing:3px;line-height:0.95;
                    text-shadow:${ctaShadow};display:block">${escapeHtml(ctaLine1)}</div>`;
 
@@ -309,39 +322,45 @@ export function buildFlyerHtml(data: FlyerData): string {
                                 background:linear-gradient(180deg,transparent 0%,${primary} 10%,${primary} 90%,transparent 100%);
                                 box-shadow:0 0 20px 5px rgba(${primaryRgb},0.7);z-index:20"></div>`;
 
-  // ── LOGO HEADER (top center) ──────────────────────────────────────────────────
-  const headerH = Math.round(90 * scale);
+  // ── LOGO HEADER (top left) ───────────────────────────────────────────────────
+  const headerH = Math.round(120 * scale);  // Taller header to accommodate larger logo
   const headerHtml = `
     <div style="position:absolute;top:0;left:0;right:0;height:${headerH}px;
-                display:flex;align-items:center;justify-content:center;
-                padding:${Math.round(12*scale)}px ${pad}px;z-index:30">
+                display:flex;align-items:center;justify-content:flex-start;
+                padding:${Math.round(16*scale)}px ${pad}px;z-index:30">
       ${logoHtml}
     </div>`;
 
   // ── MAIN CONTENT AREA (left side, below logo) ─────────────────────────────────
-  const contentW = Math.round(W * (isStory ? 0.92 : isSquare ? 0.7 : 0.62));
+  const contentW = Math.round(W * (isStory ? 0.92 : isSquare ? 0.7 : 0.65));
+  // Reserve space: header + content + qr bottom. Calculate available height.
+  const qrAreaH = Math.round(200 * scale);  // Fixed reserved height for QR at bottom
+  const contentAreaH = H - headerH - qrAreaH;
   const mainContent = `
-    <div style="position:absolute;top:${headerH}px;left:0;width:${contentW}px;bottom:0;
-                z-index:20;padding:${Math.round(14*scale)}px ${pad}px ${Math.round(32*scale)}px;
-                display:flex;flex-direction:column;justify-content:space-between">
-      <div>
-        <!-- PROGRAM NAME — massive 3D metallic -->
-        <div style="margin-bottom:${Math.round(10*scale)}px">${programNameHtml}</div>
-        <!-- CTA TEXT — large bold below program name -->
-        <div style="margin-bottom:${Math.round(20*scale)}px">${ctaHtml}</div>
-        <!-- THIN RED ACCENT LINE -->
-        <div style="display:flex;align-items:center;gap:${Math.round(8*scale)}px;margin-bottom:${Math.round(20*scale)}px">
-          <div style="width:${Math.round(55*scale)}px;height:${Math.round(2.5*scale)}px;
-                      background:linear-gradient(90deg,${primary},transparent);
-                      box-shadow:0 0 14px rgba(${primaryRgb},0.9)"></div>
-          <div style="width:${Math.round(7*scale)}px;height:${Math.round(7*scale)}px;border-radius:50%;
-                      background:${primary};box-shadow:0 0 12px rgba(${primaryRgb},1.0)"></div>
-        </div>
-        <!-- BENEFITS -->
-        <div>${benefitItems}</div>
+    <div style="position:absolute;top:${headerH}px;left:0;width:${contentW}px;
+                height:${contentAreaH}px;
+                z-index:20;padding:${Math.round(10*scale)}px ${pad}px 0;
+                display:flex;flex-direction:column;justify-content:flex-start;overflow:hidden">
+      <!-- PROGRAM NAME — massive 3D metallic -->
+      <div style="margin-bottom:${Math.round(8*scale)}px">${programNameHtml}</div>
+      <!-- CTA TEXT — large bold below program name -->
+      <div style="margin-bottom:${Math.round(14*scale)}px">${ctaHtml}</div>
+      <!-- THIN RED ACCENT LINE -->
+      <div style="display:flex;align-items:center;gap:${Math.round(8*scale)}px;margin-bottom:${Math.round(14*scale)}px">
+        <div style="width:${Math.round(55*scale)}px;height:${Math.round(2.5*scale)}px;
+                    background:linear-gradient(90deg,${primary},transparent);
+                    box-shadow:0 0 14px rgba(${primaryRgb},0.9)"></div>
+        <div style="width:${Math.round(7*scale)}px;height:${Math.round(7*scale)}px;border-radius:50%;
+                    background:${primary};box-shadow:0 0 12px rgba(${primaryRgb},1.0)"></div>
       </div>
-      <!-- QR CODE at bottom -->
-      <div>${qrSection}</div>
+      <!-- BENEFITS -->
+      <div>${benefitItems}</div>
+    </div>
+    <!-- QR CODE — fixed at bottom, always visible -->
+    <div style="position:absolute;bottom:0;left:0;width:${contentW}px;
+                height:${qrAreaH}px;
+                z-index:20;padding:${Math.round(16*scale)}px ${pad}px ${Math.round(20*scale)}px;">
+      ${qrSection}
     </div>`;
 
   return `<!DOCTYPE html>
@@ -748,7 +767,7 @@ export async function parseFlyerDataFromBrief(
     headline: offer ? `${offer} — Limited Spots` : `Unleash Your Inner Warrior`,
     subheadline: null,
     benefits,
-    callToAction: offer ? `Enroll Today — Limited Spots` : `FREE TRIAL CLASS`,
+    callToAction: offer ? `${offer} — Enroll Today` : `FREE TRIAL CLASS`,
     offer,
     size,
     heroImageUrl,
