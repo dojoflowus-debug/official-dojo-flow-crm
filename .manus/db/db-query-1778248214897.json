@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total, MIN(id) as min_id, MAX(id) as max_id FROM students WHERE lastName LIKE '%Odunela%' AND organizationId = 210001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT COUNT(*) as total, MIN(id) as min_id, MAX(id) as max_id FROM students WHERE lastName LIKE '%Odunela%' AND organizationId = 210001;",
+  "rows": [
+    {
+      "total": "67",
+      "min_id": "360003",
+      "max_id": "1170003"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tmin_id\tmax_id\n67\t360003\t1170003\n",
+  "stderr": "",
+  "execution_time_ms": 269
+}

@@ -1,0 +1,37 @@
+{
+  "query": "SELECT * FROM students LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT * FROM students LIMIT 1;",
+  "rows": [
+    {
+      "id": "1",
+      "firstName": "Test",
+      "lastName": "Student",
+      "email": "test.student@example.com",
+      "phone": "555-1234",
+      "dateOfBirth": "1999-12-31 19:00:00",
+      "age": "NULL",
+      "beltRank": "White Belt",
+      "status": "Active",
+      "membershipStatus": "NULL",
+      "createdAt": "2026-03-23 16:42:12",
+      "updatedAt": "2026-03-23 20:42:12",
+      "photoUrl": "NULL",
+      "program": "Karate",
+      "streetAddress": "NULL",
+      "city": "NULL",
+      "state": "NULL",
+      "zipCode": "NULL",
+      "latitude": "NULL",
+      "longitude": "NULL",
+      "guardianName": "NULL",
+      "guardianRelationship": "NULL",
+      "guardianPhone": "NULL",
+      "guardianEmail": "NULL",
+      "organizationId": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\temail\tphone\tdateOfBirth\tage\tbeltRank\tstatus\tmembershipStatus\tcreatedAt\tupdatedAt\tphotoUrl\tprogram\tstreetAddress\tcity\tstate\tzipCode\tlatitude\tlongitude\tguardianName\tguardianRelationship\tguardianPhone\tguardianEmail\torganizationId\n1\tTest\tStudent\ttest.student@example.com\t555-1234\t1999-12-31 19:00:00\tNULL\tWhite Belt\tActive\tNULL\t2026-03-23 16:42:12\t2026-03-23 20:42:12\tNULL\tKarate\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 261
+}

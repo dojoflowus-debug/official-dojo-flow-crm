@@ -1,0 +1,50 @@
+{
+  "query": "SELECT id, firstName, lastName, phone, organizationId, createdAt FROM students WHERE firstName LIKE '%Seunfunmi%' OR lastName LIKE '%Odunela%' ORDER BY id ASC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT id, firstName, lastName, phone, organizationId, createdAt FROM students WHERE firstName LIKE '%Seunfunmi%' OR lastName LIKE '%Odunela%' ORDER BY id ASC LIMIT 5;",
+  "rows": [
+    {
+      "id": "360003",
+      "firstName": "Seunfunmi",
+      "lastName": "Odunela",
+      "phone": "6785319122",
+      "organizationId": "210001",
+      "createdAt": "2026-05-01 01:01:40"
+    },
+    {
+      "id": "360009",
+      "firstName": "Seunfunmi",
+      "lastName": "Odunela",
+      "phone": "6785319122",
+      "organizationId": "210001",
+      "createdAt": "2026-04-30 21:11:02"
+    },
+    {
+      "id": "360011",
+      "firstName": "Seorefunmi",
+      "lastName": "Odunela",
+      "phone": "6785319122",
+      "organizationId": "210001",
+      "createdAt": "2026-04-30 21:11:02"
+    },
+    {
+      "id": "360019",
+      "firstName": "Seunfunmi",
+      "lastName": "Odunela",
+      "phone": "6785319122",
+      "organizationId": "210001",
+      "createdAt": "2026-04-30 21:11:02"
+    },
+    {
+      "id": "360021",
+      "firstName": "Seorefunmi",
+      "lastName": "Odunela",
+      "phone": "6785319122",
+      "organizationId": "210001",
+      "createdAt": "2026-04-30 21:11:02"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\tphone\torganizationId\tcreatedAt\n360003\tSeunfunmi\tOdunela\t6785319122\t210001\t2026-05-01 01:01:40\n360009\tSeunfunmi\tOdunela\t6785319122\t210001\t2026-04-30 21:11:02\n360011\tSeorefunmi\tOdunela\t6785319122\t210001\t2026-04-30 21:11:02\n360019\tSeunfunmi\tOdunela\t6785319122\t210001\t2026-04-30 21:11:02\n360021\tSeorefunmi\tOdunela\t6785319122\t210001\t2026-04-30 21:11:02\n",
+  "stderr": "",
+  "execution_time_ms": 264
+}

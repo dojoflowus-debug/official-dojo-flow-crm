@@ -211,7 +211,7 @@ export const myDojoSyncRouter = router({
             const studentStatus: "Active" | "Inactive" | "On Hold" =
               s.status === "active" ? "Active" : s.status === "frozen" ? "On Hold" : "Inactive";
 
-            // Dedup by email within this org
+            // Dedup by email within this org; fall back to phone+name when email is missing
             let existingStudentId: number | null = null;
             if (email) {
               const [found] = await db
@@ -219,6 +219,21 @@ export const myDojoSyncRouter = router({
                 .from(students)
                 .where(
                   and(eq(students.organizationId, orgId), eq(students.email, email))
+                );
+              if (found) existingStudentId = found.id;
+            }
+            // Secondary dedup: match by phone + firstName + lastName when no email
+            if (existingStudentId === null && phone && firstName && lastName) {
+              const [found] = await db
+                .select({ id: students.id })
+                .from(students)
+                .where(
+                  and(
+                    eq(students.organizationId, orgId),
+                    eq(students.phone, phone),
+                    eq(students.firstName, firstName),
+                    eq(students.lastName, lastName)
+                  )
                 );
               if (found) existingStudentId = found.id;
             }
