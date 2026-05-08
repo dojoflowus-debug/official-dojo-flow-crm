@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, email, name, role, \"openId\", LENGTH(password) as pw_len FROM users WHERE email = 'vincent.holmes00@gmail.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT id, email, name, role, \"openId\", LENGTH(password) as pw_len FROM users WHERE email = 'vincent.holmes00@gmail.com';",
+  "rows": [
+    {
+      "id": "660050",
+      "email": "vincent.holmes00@gmail.com",
+      "name": "Vincent Holmes",
+      "role": "owner",
+      "openId": "openId",
+      "pw_len": "60"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tname\trole\topenId\tpw_len\n660050\tvincent.holmes00@gmail.com\tVincent Holmes\towner\topenId\t60\n",
+  "stderr": "",
+  "execution_time_ms": 256
+}

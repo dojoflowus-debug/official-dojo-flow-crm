@@ -1,0 +1,19 @@
+{
+  "query": "SELECT COUNT(*) as count FROM users WHERE \"openId\" = 'openId'; SELECT COUNT(*) as total FROM users;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT COUNT(*) as count FROM users WHERE \"openId\" = 'openId'; SELECT COUNT(*) as total FROM users;",
+  "rows": [
+    {
+      "count": "30298"
+    },
+    {
+      "count": "total"
+    },
+    {
+      "count": "30298"
+    }
+  ],
+  "messages": [],
+  "stdout": "count\n30298\ntotal\n30298\n",
+  "stderr": "",
+  "execution_time_ms": 17767
+}

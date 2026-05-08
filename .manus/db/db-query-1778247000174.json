@@ -1,0 +1,190 @@
+{
+  "query": "SELECT id, email, name, role, \"googleId\", LENGTH(\"passwordHash\") as pw_len, \"createdAt\" FROM users WHERE role IN ('owner', 'admin') ORDER BY \"createdAt\" ASC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT id, email, name, role, \"googleId\", LENGTH(\"passwordHash\") as pw_len, \"createdAt\" FROM users WHERE role IN ('owner', 'admin') ORDER BY \"createdAt\" ASC LIMIT 20;",
+  "rows": [
+    {
+      "id": "1",
+      "email": "demo@dojoflow.com",
+      "name": "Demo Sensei",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "2",
+      "email": "sensei30002003@gmail.com",
+      "name": "Sensei Demo",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "30390",
+      "email": "testuser123@test.com",
+      "name": "testuser123",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "60152",
+      "email": "test-profile-1774384211099@example.com",
+      "name": "Same Email Update",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "60155",
+      "email": "test-profile-1774384264521@example.com",
+      "name": "Same Email Update",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "60158",
+      "email": "test-profile-1774384290826@example.com",
+      "name": "Same Email Update",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "120052",
+      "email": "tim.monacella@pcbancard.com",
+      "name": "Tim Monacella",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "120053",
+      "email": "drteam@pcbancard.com",
+      "name": "DR Team",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "210027",
+      "email": "jason.mervin2006@gmail.com",
+      "name": "Jason Mark-Igbani",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "210028",
+      "email": "bennygebere@gmail.com",
+      "name": "Master Black Panther ",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "210041",
+      "email": "godslovealex666@outlook.com",
+      "name": "Hello kai, nice to meet you Dojo-Flow",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "210054",
+      "email": "ezeejoey.ej@gmail.com",
+      "name": "Master From Now On",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "210169",
+      "email": "mervez2006@gmail.com",
+      "name": "Jason New User",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "360308",
+      "email": "test-profile-1775159574706@example.com",
+      "name": "Same Email Update",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "450079",
+      "email": "test-profile-1775315484082@example.com",
+      "name": "Same Email Update",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "660050",
+      "email": "vincent.holmes00@gmail.com",
+      "name": "Vincent Holmes",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "1200054",
+      "email": "godslovealex66@outlook.com",
+      "name": "Godslove Alex",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "1230520",
+      "email": "georgebethel23@gmail.com",
+      "name": "Black Mantis Dojo",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "1230724",
+      "email": "gbxthxl@gmail.com",
+      "name": "Conquest",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "1230792",
+      "email": "godslovealex@outlook.com",
+      "name": "Godslove Alex",
+      "role": "owner",
+      "googleId": "googleId",
+      "pw_len": "12",
+      "createdAt": "createdAt"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tname\trole\tgoogleId\tpw_len\tcreatedAt\n1\tdemo@dojoflow.com\tDemo Sensei\towner\tgoogleId\t12\tcreatedAt\n2\tsensei30002003@gmail.com\tSensei Demo\towner\tgoogleId\t12\tcreatedAt\n30390\ttestuser123@test.com\ttestuser123\towner\tgoogleId\t12\tcreatedAt\n60152\ttest-profile-1774384211099@example.com\tSame Email Update\towner\tgoogleId\t12\tcreatedAt\n60155\ttest-profile-1774384264521@example.com\tSame Email Update\towner\tgoogleId\t12\tcreatedAt\n60158\ttest-profile-1774384290826@example.com\tSame Email Update\towner\tgoogleId\t12\tcreatedAt\n120052\ttim.monacella@pcbancard.com\tTim Monacella\towner\tgoogleId\t12\tcreatedAt\n120053\tdrteam@pcbancard.com\tDR Team\towner\tgoogleId\t12\tcreatedAt\n210027\tjason.mervin2006@gmail.com\tJason Mark-Igbani\towner\tgoogleId\t12\tcreatedAt\n210028\tbennygebere@gmail.com\tMaster Black Panther \towner\tgoogleId\t12\tcreatedAt\n210041\tgodslovealex666@outlook.com\tHello kai, nice to meet you Dojo-Flow\towner\tgoogleId\t12\tcreatedAt\n210054\tezeejoey.ej@gmail.com\tMaster From Now On\towner\tgoogleId\t12\tcreatedAt\n210169\tmervez2006@gmail.com\tJason New User\towner\tgoogleId\t12\tcreatedAt\n360308\ttest-profile-1775159574706@example.com\tSame Email Update\towner\tgoogleId\t12\tcreatedAt\n450079\ttest-profile-1775315484082@example.com\tSame Email Update\towner\tgoogleId\t12\tcreatedAt\n660050\tvincent.holmes00@gmail.com\tVincent Holmes\towner\tgoogleId\t12\tcreatedAt\n1200054\tgodslovealex66@outlook.com\tGodslove Alex\towner\tgoogleId\t12\tcreatedAt\n1230520\tgeorgebethel23@gmail.com\tBlack Mantis Dojo\towner\tgoogleId\t12\tcreatedAt\n1230724\tgbxthxl@gmail.com\tConquest\towner\tgoogleId\t12\tcreatedAt\n1230792\tgodslovealex@outlook.com\tGodslove Alex\towner\tgoogleId\t12\tcreatedAt\n",
+  "stderr": "",
+  "execution_time_ms": 2614
+}

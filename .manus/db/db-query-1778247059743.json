@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, email, name, role, \"openId\", \"provider\", LENGTH(password) as pw_len, \"googleId\" FROM users WHERE email = 'vincent.holmes00@gmail.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT id, email, name, role, \"openId\", \"provider\", LENGTH(password) as pw_len, \"googleId\" FROM users WHERE email = 'vincent.holmes00@gmail.com';",
+  "rows": [
+    {
+      "id": "660050",
+      "email": "vincent.holmes00@gmail.com",
+      "name": "Vincent Holmes",
+      "role": "owner",
+      "openId": "openId",
+      "provider": "provider",
+      "pw_len": "60",
+      "googleId": "googleId"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tname\trole\topenId\tprovider\tpw_len\tgoogleId\n660050\tvincent.holmes00@gmail.com\tVincent Holmes\towner\topenId\tprovider\t60\tgoogleId\n",
+  "stderr": "",
+  "execution_time_ms": 1770
+}

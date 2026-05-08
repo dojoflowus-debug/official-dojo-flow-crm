@@ -17,11 +17,14 @@ const router = Router();
 async function setSessionCookie(user: any, req: any, res: any) {
   const db = await getDb();
   
-  // Generate a unique openId if user doesn't have one (for local auth users)
+  // Generate a unique openId if user doesn't have one OR if it's a placeholder value
+  // Placeholder values come from seed data where column names were used as values
+  const PLACEHOLDER_VALUES = ['openId', 'provider', 'local', null, undefined, ''];
   let openId = user.openId;
-  if (!openId) {
+  if (!openId || PLACEHOLDER_VALUES.includes(openId) || openId === 'openId') {
     openId = `local_${user.id}_${crypto.randomBytes(8).toString("hex")}`;
-    // Update user with openId
+    console.log(`[LocalAuth] Generating new openId for user ${user.id} (${user.email}): ${openId}`);
+    // Update user with real openId
     if (db) {
       await db
         .update(users)

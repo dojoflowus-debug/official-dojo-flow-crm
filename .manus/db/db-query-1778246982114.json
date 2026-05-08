@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, email, name, role, \"googleId\", \"passwordHash\", \"createdAt\", \"updatedAt\" FROM users WHERE email = 'vincent.holmes00@gmail.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT id, email, name, role, \"googleId\", \"passwordHash\", \"createdAt\", \"updatedAt\" FROM users WHERE email = 'vincent.holmes00@gmail.com';",
+  "rows": [
+    {
+      "id": "660050",
+      "email": "vincent.holmes00@gmail.com",
+      "name": "Vincent Holmes",
+      "role": "owner",
+      "googleId": "googleId",
+      "passwordHash": "passwordHash",
+      "createdAt": "createdAt",
+      "updatedAt": "updatedAt"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tname\trole\tgoogleId\tpasswordHash\tcreatedAt\tupdatedAt\n660050\tvincent.holmes00@gmail.com\tVincent Holmes\towner\tgoogleId\tpasswordHash\tcreatedAt\tupdatedAt\n",
+  "stderr": "",
+  "execution_time_ms": 2076
+}

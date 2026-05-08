@@ -68,10 +68,19 @@ export const googleAuthRouter = router({
         let isNewUser = false;
 
         if (existingUser) {
+          // Fix placeholder openId if present (seed data corruption)
+          const PLACEHOLDER_OPENIDS = ['openId', 'provider', 'local', null, undefined, ''];
+          let resolvedOpenId = existingUser.openId;
+          if (!resolvedOpenId || PLACEHOLDER_OPENIDS.includes(resolvedOpenId)) {
+            resolvedOpenId = `google_${googleUser.sub}`;
+            console.log(`[GoogleAuth] Fixing placeholder openId for user ${existingUser.id} (${existingUser.email}) -> ${resolvedOpenId}`);
+          }
+
           // Link Google account to existing user
           await db
             .update(users)
             .set({
+              openId: resolvedOpenId,
               googleSub: googleUser.sub,
               authProvider: "google",
               emailVerified: googleUser.email_verified ? 1 : 0,
@@ -84,6 +93,7 @@ export const googleAuthRouter = router({
 
           user = {
             ...existingUser,
+            openId: resolvedOpenId,
             googleSub: googleUser.sub,
             authProvider: "google",
             emailVerified: googleUser.email_verified ? 1 : 0,
