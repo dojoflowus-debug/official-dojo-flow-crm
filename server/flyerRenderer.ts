@@ -114,6 +114,7 @@ export function buildFlyerHtml(data: FlyerData): string {
   const pad            = Math.round(44  * scale);
   const qrSize         = Math.round(155 * scale);
   const iconSize       = Math.round(48  * scale);
+  const benefitIconSize = Math.round(iconSize * 1.1);  // 10% larger than before
 
   // ── HERO IMAGE (full-bleed background) ──────────────────────────────────────
   const heroBg = data.heroImageUrl
@@ -146,72 +147,77 @@ export function buildFlyerHtml(data: FlyerData): string {
                      text-shadow:0 2px 16px rgba(0,0,0,0.95),0 0 12px rgba(0,0,0,0.9)">${escapeHtml(data.schoolName)}</span>
       </div>`;
 
-  // ── PROGRAM NAME — massive 3D metallic letters ────────────────────────────────
-  // Each word on its own line, same size, metallic silver/white with red glow border
+  // ── PROGRAM NAME — massive 3D RED beveled letters (matching reference exactly) ──
+  // Reference: thick chunky red letters with silver/grey extrusion shadow below
   const words = data.programName.toUpperCase().split(' ');
   const wordCount = words.length;
-  // Scale down for 3+ word programs
   const nameFontPx = wordCount >= 3
     ? Math.round(programNamePx * 0.72)
     : wordCount === 2
     ? programNamePx
     : Math.round(programNamePx * 1.1);
 
-  // 3D metallic text-shadow: thick extrusion + red glow (matching reference's chunky beveled letters)
+  // Reference has RED letters with thick grey/dark extrusion (3D bevel effect)
+  // The letter face is bright red, the extrusion goes down-right in dark red/black
   const metalShadow = [
-    // Thick downward extrusion for 3D depth
-    `1px 2px 0 ${darkPrimary}`,
-    `2px 4px 0 ${darkPrimary}`,
-    `3px 6px 0 ${deepPrimary}`,
-    `4px 8px 0 ${deepPrimary}`,
-    `5px 10px 0 rgba(0,0,0,0.85)`,
-    `6px 12px 0 rgba(0,0,0,0.7)`,
-    `7px 14px 0 rgba(0,0,0,0.55)`,
-    `8px 16px 0 rgba(0,0,0,0.4)`,
-    `9px 18px 0 rgba(0,0,0,0.25)`,
-    // Outer glow
-    `0 0 30px rgba(${primaryRgb},1.0)`,
-    `0 0 60px rgba(${primaryRgb},0.7)`,
-    `0 0 100px rgba(${primaryRgb},0.4)`,
-    `0 0 160px rgba(${primaryRgb},0.2)`,
+    // Thick downward-right extrusion (creates 3D bevel depth)
+    `2px 2px 0 ${darken(primary, 0.15)}`,
+    `4px 4px 0 ${darken(primary, 0.25)}`,
+    `6px 6px 0 ${darken(primary, 0.4)}`,
+    `8px 8px 0 ${darken(primary, 0.55)}`,
+    `10px 10px 0 rgba(0,0,0,0.8)`,
+    `12px 12px 0 rgba(0,0,0,0.65)`,
+    `14px 14px 0 rgba(0,0,0,0.5)`,
+    `16px 16px 0 rgba(0,0,0,0.35)`,
+    // Outer red glow
+    `0 0 40px rgba(${primaryRgb},0.9)`,
+    `0 0 80px rgba(${primaryRgb},0.5)`,
+    `0 0 120px rgba(${primaryRgb},0.25)`,
   ].join(',');
 
   const programNameHtml = words.map(word =>
     `<div style="font-family:'Oswald',sans-serif;font-size:${nameFontPx}px;font-weight:700;
-                 color:#f8f8f8;text-transform:uppercase;letter-spacing:3px;line-height:0.88;
+                 color:${primary};text-transform:uppercase;letter-spacing:2px;line-height:0.88;
                  text-shadow:${metalShadow};
-                 -webkit-text-stroke:3px rgba(${primaryRgb},0.85);
-                 display:block;white-space:nowrap;padding-bottom:${Math.round(4*scale)}px">${escapeHtml(word)}</div>`
+                 -webkit-text-stroke:${Math.round(2*scale)}px rgba(255,255,255,0.12);
+                 display:block;white-space:nowrap;padding-bottom:${Math.round(6*scale)}px">${escapeHtml(word)}</div>`
   ).join('');
 
-  // ── CTA TEXT — large, bold, below program name ────────────────────────────────
+  // ── CTA TEXT — thick white 3D beveled letters (matching reference's "FREE TRIAL CLASS") ──
+  // Reference: white letters with grey/dark extrusion shadow, thick and bold
   const ctaText = data.callToAction || 'FREE TRIAL CLASS';
-  // Split into two lines if it contains spaces
   const ctaParts = ctaText.toUpperCase().split(/\s+/);
-  // Group into 2 lines: first half and second half
   const midpoint = Math.ceil(ctaParts.length / 2);
   const ctaLine1 = ctaParts.slice(0, midpoint).join(' ');
   const ctaLine2 = ctaParts.slice(midpoint).join(' ');
-  const ctaShadow = `2px 2px 0 rgba(0,0,0,0.8),4px 4px 0 rgba(0,0,0,0.6),0 0 30px rgba(0,0,0,0.9)`;
-  // Scale down CTA font if the text is long (offer text can be verbose)
+  // White 3D bevel: white face, dark grey extrusion going down-right
+  const ctaBevelShadow = [
+    `2px 2px 0 rgba(80,80,80,0.9)`,
+    `4px 4px 0 rgba(60,60,60,0.8)`,
+    `6px 6px 0 rgba(40,40,40,0.7)`,
+    `8px 8px 0 rgba(20,20,20,0.6)`,
+    `10px 10px 0 rgba(0,0,0,0.5)`,
+    `12px 12px 0 rgba(0,0,0,0.35)`,
+    `0 0 20px rgba(0,0,0,0.8)`,
+  ].join(',');
   const ctaCharCount = Math.max(ctaLine1.length, ctaLine2.length);
   const ctaFontPx = ctaCharCount > 18
-    ? Math.round(ctaTextPx * 0.62)  // Very long offer text
+    ? Math.round(ctaTextPx * 0.62)
     : ctaCharCount > 12
-    ? Math.round(ctaTextPx * 0.78)  // Medium offer text
-    : ctaTextPx;                     // Short CTA like 'FREE TRIAL CLASS'
+    ? Math.round(ctaTextPx * 0.78)
+    : ctaTextPx;
   const ctaHtml = ctaLine2
     ? `<div style="font-family:'Oswald',sans-serif;font-size:${ctaFontPx}px;font-weight:700;
-                   color:#ffffff;text-transform:uppercase;letter-spacing:3px;line-height:0.95;
-                   text-shadow:${ctaShadow};-webkit-text-stroke:1px rgba(255,255,255,0.15);
+                   color:#ffffff;text-transform:uppercase;letter-spacing:2px;line-height:0.92;
+                   text-shadow:${ctaBevelShadow};
                    display:block">${escapeHtml(ctaLine1)}</div>
        <div style="font-family:'Oswald',sans-serif;font-size:${ctaFontPx}px;font-weight:700;
-                   color:#ffffff;text-transform:uppercase;letter-spacing:3px;line-height:0.95;
-                   text-shadow:${ctaShadow};-webkit-text-stroke:1px rgba(255,255,255,0.15);
+                   color:#ffffff;text-transform:uppercase;letter-spacing:2px;line-height:0.92;
+                   text-shadow:${ctaBevelShadow};
                    display:block">${escapeHtml(ctaLine2)}</div>`
     : `<div style="font-family:'Oswald',sans-serif;font-size:${ctaFontPx}px;font-weight:700;
-                   color:#ffffff;text-transform:uppercase;letter-spacing:3px;line-height:0.95;
-                   text-shadow:${ctaShadow};display:block">${escapeHtml(ctaLine1)}</div>`;
+                   color:#ffffff;text-transform:uppercase;letter-spacing:2px;line-height:0.92;
+                   text-shadow:${ctaBevelShadow};display:block">${escapeHtml(ctaLine1)}</div>`;
 
   // ── BENEFITS with circular dark-red icons ────────────────────────────────────
   const rawBenefits = data.benefits || [
@@ -238,12 +244,12 @@ export function buildFlyerHtml(data: FlyerData): string {
   ];
 
   const benefitItems = parsedBenefits.map((b, i) => `
-    <div style="display:flex;align-items:center;gap:${Math.round(14*scale)}px;margin-bottom:${Math.round(16*scale)}px">
-      <div style="flex-shrink:0;width:${iconSize}px;height:${iconSize}px;border-radius:50%;
-                  background:rgba(${primaryRgb},0.85);border:2px solid rgba(${primaryRgb},0.4);
+    <div style="display:flex;align-items:center;gap:${Math.round(16*scale)}px;margin-bottom:${Math.round(14*scale)}px">
+      <div style="flex-shrink:0;width:${benefitIconSize}px;height:${benefitIconSize}px;border-radius:50%;
+                  background:rgba(${primaryRgb},0.9);border:${Math.round(2*scale)}px solid rgba(${primaryRgb},0.5);
                   display:flex;align-items:center;justify-content:center;
-                  box-shadow:0 2px 12px rgba(0,0,0,0.7),0 0 16px rgba(${primaryRgb},0.4)">
-        <svg width="${Math.round(iconSize*0.7)}" height="${Math.round(iconSize*0.7)}"
+                  box-shadow:0 3px 14px rgba(0,0,0,0.8),0 0 20px rgba(${primaryRgb},0.5),inset 0 1px 0 rgba(255,255,255,0.1)">
+        <svg width="${Math.round(benefitIconSize*0.65)}" height="${Math.round(benefitIconSize*0.65)}"
              viewBox="0 0 ${iconSize} ${iconSize}" fill="none" xmlns="http://www.w3.org/2000/svg">
           ${iconPaths[i % iconPaths.length]}
         </svg>
@@ -259,49 +265,101 @@ export function buildFlyerHtml(data: FlyerData): string {
       </div>
     </div>`).join('');
 
-  // ── QR CODE — large, bottom left, matching reference ─────────────────────────
+  // ── QR CODE — large, bottom left, with logo watermark inside QR box ────────────
+  // Reference: QR code has the school logo overlaid in the center (standard QR logo embed)
+  const qrLogoOverlay = data.logoUrl
+    ? `<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+                  width:${Math.round(qrSize*0.22)}px;height:${Math.round(qrSize*0.22)}px;
+                  background:#fff;border-radius:${Math.round(4*scale)}px;
+                  display:flex;align-items:center;justify-content:center;
+                  box-shadow:0 0 4px rgba(0,0,0,0.3);overflow:hidden">
+        <img src="${data.logoUrl}" style="width:${Math.round(qrSize*0.18)}px;height:${Math.round(qrSize*0.18)}px;object-fit:contain" />
+      </div>`
+    : `<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+                  width:${Math.round(qrSize*0.22)}px;height:${Math.round(qrSize*0.22)}px;
+                  background:#fff;border-radius:${Math.round(4*scale)}px;
+                  display:flex;align-items:center;justify-content:center;
+                  box-shadow:0 0 4px rgba(0,0,0,0.3)">
+        <svg width="${Math.round(qrSize*0.16)}" height="${Math.round(qrSize*0.16)}" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4z" fill="${primary}"/>
+        </svg>
+      </div>`;
+
+  // QR label: "SCAN TO" small, "START" very large red, "YOUR JOURNEY" medium white
+  const qrStartShadow = [
+    `2px 2px 0 ${darken(primary,0.3)}`,
+    `4px 4px 0 ${darken(primary,0.5)}`,
+    `6px 6px 0 rgba(0,0,0,0.7)`,
+    `0 0 20px rgba(${primaryRgb},0.8)`,
+  ].join(',');
+
   const qrSection = data.qrCodeDataUrl ? `
-    <div style="display:flex;align-items:flex-end;gap:${Math.round(20*scale)}px">
+    <div style="display:flex;align-items:flex-end;gap:${Math.round(18*scale)}px">
       <div style="background:#fff;padding:${Math.round(8*scale)}px;border-radius:${Math.round(8*scale)}px;
                   box-shadow:0 0 30px rgba(0,0,0,0.8),0 4px 20px rgba(0,0,0,0.9);flex-shrink:0;
-                  position:relative">
+                  position:relative;width:${qrSize + Math.round(16*scale)}px;height:${qrSize + Math.round(16*scale)}px">
         <img src="${data.qrCodeDataUrl}" alt="QR" style="width:${qrSize}px;height:${qrSize}px;display:block" />
+        ${qrLogoOverlay}
       </div>
-      <div style="display:flex;flex-direction:column;gap:${Math.round(0*scale)}px;padding-bottom:${Math.round(6*scale)}px">
+      <div style="display:flex;flex-direction:column;padding-bottom:${Math.round(4*scale)}px">
         <div style="font-family:'Oswald',sans-serif;font-size:${qrLabelSmPx}px;font-weight:600;
-                    color:#fff;text-transform:uppercase;letter-spacing:3px;line-height:1.2;
+                    color:#fff;text-transform:uppercase;letter-spacing:4px;line-height:1.1;
                     text-shadow:0 2px 10px rgba(0,0,0,0.95)">SCAN TO</div>
-        <div style="font-family:'Oswald',sans-serif;font-size:${qrLabelLgPx}px;font-weight:700;
-                    color:${primary};text-transform:uppercase;letter-spacing:1px;line-height:0.95;
-                    text-shadow:0 0 30px rgba(${primaryRgb},0.9),0 2px 10px rgba(0,0,0,0.95)">START</div>
-        <div style="font-family:'Oswald',sans-serif;font-size:${Math.round(qrLabelLgPx*0.82)}px;font-weight:700;
-                    color:#fff;text-transform:uppercase;letter-spacing:1px;line-height:1.0;
-                    text-shadow:0 2px 10px rgba(0,0,0,0.95)">YOUR JOURNEY</div>
+        <div style="font-family:'Oswald',sans-serif;font-size:${Math.round(qrLabelLgPx*1.15)}px;font-weight:700;
+                    color:${primary};text-transform:uppercase;letter-spacing:1px;line-height:0.88;
+                    text-shadow:${qrStartShadow}">START</div>
+        <div style="font-family:'Oswald',sans-serif;font-size:${Math.round(qrLabelLgPx*0.88)}px;font-weight:700;
+                    color:#fff;text-transform:uppercase;letter-spacing:1.5px;line-height:1.0;
+                    text-shadow:0 2px 10px rgba(0,0,0,0.95)">YOUR</div>
+        <div style="font-family:'Oswald',sans-serif;font-size:${Math.round(qrLabelLgPx*0.88)}px;font-weight:700;
+                    color:#fff;text-transform:uppercase;letter-spacing:1.5px;line-height:1.0;
+                    text-shadow:0 2px 10px rgba(0,0,0,0.95)">JOURNEY</div>
       </div>
     </div>` : '';
 
+  // ── BACKGROUND LOGO WATERMARK — large faded logo behind hero (top-right area) ──
+  // Reference has a large semi-transparent red logo symbol in the background
+  const bgLogoWatermark = data.logoUrl
+    ? `<div style="position:absolute;top:${Math.round(H*0.04)}px;right:${Math.round(W*0.02)}px;
+                  width:${Math.round(W*0.55)}px;height:${Math.round(H*0.55)}px;
+                  z-index:3;opacity:0.12;pointer-events:none">
+        <img src="${data.logoUrl}" style="width:100%;height:100%;object-fit:contain;
+               filter:brightness(0) saturate(100%) invert(15%) sepia(90%) saturate(700%) hue-rotate(340deg) brightness(0.8)" />
+      </div>`
+    : `<div style="position:absolute;top:${Math.round(H*0.04)}px;right:${Math.round(W*0.02)}px;
+                  width:${Math.round(W*0.55)}px;height:${Math.round(H*0.55)}px;
+                  z-index:3;opacity:0.08;pointer-events:none">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+          <!-- Stylized martial arts symbol -->
+          <circle cx="50" cy="50" r="45" stroke="${primary}" stroke-width="3" fill="none"/>
+          <path d="M50 10 L85 30 L85 70 L50 90 L15 70 L15 30 Z" stroke="${primary}" stroke-width="2.5" fill="none"/>
+          <circle cx="50" cy="50" r="12" fill="${primary}" opacity="0.6"/>
+          <line x1="50" y1="10" x2="50" y2="90" stroke="${primary}" stroke-width="1.5" opacity="0.4"/>
+          <line x1="15" y1="30" x2="85" y2="70" stroke="${primary}" stroke-width="1.5" opacity="0.4"/>
+          <line x1="85" y1="30" x2="15" y2="70" stroke="${primary}" stroke-width="1.5" opacity="0.4"/>
+        </svg>
+      </div>`;
+
   // ── DARK GRADIENT OVERLAY — creates readable text area on left/bottom ─────────
-  // This is the key: the hero image shows through on the right/top
-  // but the left and bottom are darkened for text readability
   const darkOverlay = `
     <!-- Left-side dark gradient for text readability -->
     <div style="position:absolute;inset:0;
                 background:linear-gradient(105deg,
-                  rgba(0,0,0,0.88) 0%,
-                  rgba(0,0,0,0.82) 18%,
-                  rgba(0,0,0,0.65) 32%,
-                  rgba(0,0,0,0.25) 52%,
-                  rgba(0,0,0,0.0) 70%);
+                  rgba(0,0,0,0.92) 0%,
+                  rgba(0,0,0,0.85) 20%,
+                  rgba(0,0,0,0.65) 38%,
+                  rgba(0,0,0,0.2) 58%,
+                  rgba(0,0,0,0.0) 72%);
                 z-index:2"></div>
     <!-- Bottom dark gradient for QR area -->
     <div style="position:absolute;bottom:0;left:0;right:0;
-                height:${Math.round(H*0.35)}px;
-                background:linear-gradient(180deg,transparent 0%,rgba(0,0,0,0.75) 60%,rgba(0,0,0,0.88) 100%);
+                height:${Math.round(H*0.38)}px;
+                background:linear-gradient(180deg,transparent 0%,rgba(0,0,0,0.8) 55%,rgba(0,0,0,0.92) 100%);
                 z-index:2"></div>
     <!-- Top dark gradient for logo area -->
     <div style="position:absolute;top:0;left:0;right:0;
-                height:${Math.round(H*0.18)}px;
-                background:linear-gradient(180deg,rgba(0,0,0,0.82) 0%,rgba(0,0,0,0.4) 60%,transparent 100%);
+                height:${Math.round(H*0.2)}px;
+                background:linear-gradient(180deg,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.45) 65%,transparent 100%);
                 z-index:2"></div>`;
 
   // ── EMBER PARTICLES (subtle, on top of everything) ────────────────────────────
@@ -382,13 +440,16 @@ export function buildFlyerHtml(data: FlyerData): string {
   <!-- DARK OVERLAY GRADIENTS for text readability -->
   ${darkOverlay}
 
+  <!-- BACKGROUND LOGO WATERMARK — large faded symbol top-right -->
+  ${bgLogoWatermark}
+
   <!-- EMBER PARTICLES -->
   ${emberSvg}
 
   <!-- LEFT EDGE GLOW LINE -->
   ${glowLine}
 
-  <!-- LOGO HEADER — top center, large and prominent -->
+  <!-- LOGO HEADER — top left, large and prominent -->
   ${headerHtml}
 
   <!-- MAIN CONTENT — program name, CTA, benefits, QR -->
@@ -619,10 +680,32 @@ export async function parseFlyerDataFromBrief(
   ].sort((a, b) => b.length - a.length);
 
   let programName = overrides?.programName || null;
+  const lowerBriefForProgram = brief.toLowerCase();
+
+  // Check for known events FIRST before martial arts programs
+  const knownEvents = [
+    'nerf wars', 'nerf war', 'nerf battle', 'nerf event',
+    'birthday party', 'birthday bash', 'birthday celebration',
+    'summer camp', 'summer intensive',
+    'belt ceremony', 'belt test', 'belt graduation', 'graduation ceremony',
+    'open house', 'grand opening',
+    'tournament', 'championship', 'competition',
+    'fundraiser', 'charity event',
+    'demo day', 'demonstration', 'showcase',
+  ].sort((a, b) => b.length - a.length);
+
   if (!programName) {
-    const lowerBrief = brief.toLowerCase();
+    for (const ke of knownEvents) {
+      if (lowerBriefForProgram.includes(ke)) {
+        programName = ke.replace(/\b\w/g, c => c.toUpperCase());
+        break;
+      }
+    }
+  }
+
+  if (!programName) {
     for (const kp of knownPrograms) {
-      if (lowerBrief.includes(kp)) {
+      if (lowerBriefForProgram.includes(kp)) {
         programName = kp.replace(/\b\w/g, c => c.toUpperCase());
         break;
       }
@@ -630,8 +713,8 @@ export async function parseFlyerDataFromBrief(
   }
   if (!programName) {
     // Capture words after "for" or "a/an" before program-related words
-    const forMatch = brief.match(/\bfor\s+(?:a\s+|an\s+)?([A-Z][A-Za-z\s&-]{2,35}?)(?:\s+(?:program|class|flyer|ad|poster)|$|\.|,)/i);
-    const aMatch = brief.match(/\bcreate\s+(?:a\s+|an\s+)?([A-Z][A-Za-z\s&-]{2,35}?)(?:\s+(?:flyer|poster|ad|program|class)|$|\.|,)/i);
+    const forMatch = brief.match(/\bfor\s+(?:a\s+|an\s+)?([A-Z][A-Za-z\s&-]{2,35}?)(?:\s+(?:program|class|flyer|ad|poster|event)|$|\.|,)/i);
+    const aMatch = brief.match(/\bcreate\s+(?:a\s+|an\s+)?([A-Z][A-Za-z\s&-]{2,35}?)(?:\s+(?:flyer|poster|ad|program|class|event)|$|\.|,)/i);
     programName = forMatch?.[1]?.trim() || aMatch?.[1]?.trim() || "Martial Arts";
   }
 
@@ -653,11 +736,63 @@ export async function parseFlyerDataFromBrief(
   const ageMatch = brief.match(/age[sd]?\s*([\d-]+(?:\s*(?:to|-)\s*[\d]+)?)/i);
   const audience = ageMatch?.[1] ? `Ages ${ageMatch[1]}` : null;
 
-  // ── BENEFITS based on program ────────────────────────────────────────────────
+   // ── EVENT DETECTION (check brief first) ──────────────────────────────────────
+  const lowerBriefFull = brief.toLowerCase();
+  const isNerfEvent = lowerBriefFull.includes('nerf');
+  const isBirthdayEvent = lowerBriefFull.includes('birthday') || lowerBriefFull.includes('party');
+  const isTournamentEvent = lowerBriefFull.includes('tournament') || lowerBriefFull.includes('competition') || lowerBriefFull.includes('championship');
+  const isSummerCampEvent = lowerBriefFull.includes('summer camp') || lowerBriefFull.includes('camp');
+  const isGraduationEvent = lowerBriefFull.includes('graduation') || lowerBriefFull.includes('belt ceremony') || lowerBriefFull.includes('belt test');
+  const isOpenHouseEvent = lowerBriefFull.includes('open house') || lowerBriefFull.includes('grand opening');
+  const isDemoEvent = lowerBriefFull.includes('demo') || lowerBriefFull.includes('demonstration') || lowerBriefFull.includes('showcase');
+
+  // ── BENEFITS based on program ────────────────────────────────────────────
   const lowerProgram = programName.toLowerCase();
   let benefits: string[];
 
-  if (lowerProgram.includes('little ninja') || (lowerProgram.includes('ninja') && !lowerProgram.includes('teen') && !lowerProgram.includes('adult'))) {
+  if (isNerfEvent) {
+    benefits = [
+      "Epic Foam Battles|Team vs team Nerf warfare!",
+      "Safe & Supervised|Trained staff. Safety gear provided.",
+      "All Welcome|Ages 6 and up. No experience needed.",
+      "Fun Guaranteed|The ultimate action-packed event.",
+    ];
+  } else if (isBirthdayEvent) {
+    benefits = [
+      "Unforgettable Party|Your child will love it!",
+      "Martial Arts Fun|Games, drills & mini-sparring.",
+      "Stress-Free|We handle setup, cleanup & activities.",
+      "All Ages Welcome|Kids of all skill levels.",
+    ];
+  } else if (isTournamentEvent) {
+    benefits = [
+      "Compete & Win|Medals & trophies for all divisions.",
+      "All Belt Levels|Beginner to advanced divisions.",
+      "Safe Competition|Certified referees & safety rules.",
+      "Family Event|Spectators welcome. Come support!",
+    ];
+  } else if (isSummerCampEvent) {
+    benefits = [
+      "Full Day Activities|Martial arts, games & more.",
+      "Build Confidence|Character development every day.",
+      "Safe Environment|Certified instructors on-site.",
+      "Ages 6–14|All skill levels welcome.",
+    ];
+  } else if (isGraduationEvent) {
+    benefits = [
+      "Belt Promotion|Earn your next rank!",
+      "Celebrate Achievement|Family & friends welcome.",
+      "Skill Demonstration|Show what you've learned.",
+      "Milestone Moment|A day to remember.",
+    ];
+  } else if (isOpenHouseEvent || isDemoEvent) {
+    benefits = [
+      "Free to Attend|No experience necessary.",
+      "See It Live|Watch our students in action.",
+      "Meet the Team|Talk to instructors & staff.",
+      "Try a Free Class|Sign up on the spot!",
+    ];
+  } else if (lowerProgram.includes('little ninja') || (lowerProgram.includes('ninja') && !lowerProgram.includes('teen') && !lowerProgram.includes('adult'))) {
     benefits = [
       "Builds Character|Confidence. Respect. Discipline.",
       "Better Listeners|Focus. Attention. Following Directions.",
@@ -716,7 +851,7 @@ export async function parseFlyerDataFromBrief(
     const forgeApiUrl = process.env.BUILT_IN_FORGE_API_URL;
 
     if (forgeApiKey && forgeApiUrl) {
-      const heroPrompt = buildHeroImagePrompt(programName, lowerProgram, brandData.primaryColor || "#C8102E");
+      const heroPrompt = buildHeroImagePrompt(programName, lowerProgram, brandData.primaryColor || "#C8102E", brief);
       const imageResult = await generateImage({
         prompt: heroPrompt,
         width: size === 'instagram_story' ? 1080 : 816,
@@ -764,10 +899,29 @@ export async function parseFlyerDataFromBrief(
     tagline: brandData.tagline || null,
     programName,
     audience,
-    headline: offer ? `${offer} — Limited Spots` : `Unleash Your Inner Warrior`,
+    // Event-specific headlines and CTAs
+    headline: (() => {
+      const lp = programName.toLowerCase();
+      if (lp.includes('nerf')) return offer ? `${offer} — Limited Spots!` : `NERF WARS EVENT`;
+      if (lp.includes('birthday')) return offer ? `${offer} — Book Now!` : `BIRTHDAY BASH`;
+      if (lp.includes('tournament') || lp.includes('championship') || lp.includes('competition')) return `REGISTER NOW — Limited Spots`;
+      if (lp.includes('summer camp')) return offer ? `${offer} — Enroll Now` : `SUMMER CAMP`;
+      if (lp.includes('graduation') || lp.includes('belt')) return `BELT GRADUATION CEREMONY`;
+      if (lp.includes('open house') || lp.includes('grand opening')) return `FREE OPEN HOUSE EVENT`;
+      return offer ? `${offer} — Limited Spots` : `Unleash Your Inner Warrior`;
+    })(),
     subheadline: null,
     benefits,
-    callToAction: offer ? `${offer} — Enroll Today` : `FREE TRIAL CLASS`,
+    callToAction: (() => {
+      const lp = programName.toLowerCase();
+      if (lp.includes('nerf')) return offer ? `${offer} — Register Today` : `REGISTER NOW`;
+      if (lp.includes('birthday')) return offer ? `${offer} — Book Your Party` : `BOOK YOUR PARTY`;
+      if (lp.includes('tournament') || lp.includes('championship')) return offer ? `${offer} — Register` : `REGISTER TODAY`;
+      if (lp.includes('summer camp')) return offer ? `${offer} — Enroll Today` : `ENROLL TODAY`;
+      if (lp.includes('graduation') || lp.includes('belt')) return `JOIN US TO CELEBRATE`;
+      if (lp.includes('open house') || lp.includes('grand opening')) return `COME SEE US — FREE ENTRY`;
+      return offer ? `${offer} — Enroll Today` : `FREE TRIAL CLASS`;
+    })(),
     offer,
     size,
     heroImageUrl,
@@ -777,18 +931,50 @@ export async function parseFlyerDataFromBrief(
 }
 
 // ── Hero image prompt builder ─────────────────────────────────────────────────
-function buildHeroImagePrompt(programName: string, lowerProgram: string, primaryColor: string): string {
-  const isToddler = lowerProgram.includes('little ninja');
+// Accepts the full brief text so event-specific context can be used
+function buildHeroImagePrompt(programName: string, lowerProgram: string, primaryColor: string, fullBrief?: string): string {
+  const lowerBrief = (fullBrief || programName).toLowerCase();
+
+  // ── EVENT / NON-MARTIAL-ARTS DETECTION ──────────────────────────────────────
+  const isNerfWar = lowerBrief.includes('nerf') || lowerBrief.includes('nerf war');
+  const isBirthdayParty = lowerBrief.includes('birthday') || lowerBrief.includes('party') || lowerBrief.includes('celebration');
+  const isTournament = lowerBrief.includes('tournament') || lowerBrief.includes('competition') || lowerBrief.includes('championship');
+  const isSummerCamp = lowerBrief.includes('summer camp') || lowerBrief.includes('camp');
+  const isGraduation = lowerBrief.includes('graduation') || lowerBrief.includes('belt ceremony') || lowerBrief.includes('belt test');
+  const isFundraiser = lowerBrief.includes('fundraiser') || lowerBrief.includes('fundraising') || lowerBrief.includes('charity');
+  const isOpenHouse = lowerBrief.includes('open house') || lowerBrief.includes('grand opening') || lowerBrief.includes('free event');
+  const isDemo = lowerBrief.includes('demo') || lowerBrief.includes('demonstration') || lowerBrief.includes('showcase');
+
+  // ── MARTIAL ARTS PROGRAM DETECTION ──────────────────────────────────────────
+  const isToddler = lowerProgram.includes('little ninja') || (lowerBrief.includes('little ninja') && !lowerBrief.includes('teen'));
   const isKids = !isToddler && (lowerProgram.includes('warrior kid') || lowerProgram.includes('kids') || lowerProgram.includes('junior') || lowerProgram.includes('mini') || (lowerProgram.includes('ninja') && !lowerProgram.includes('teen') && !lowerProgram.includes('adult')));
   const isTeen = lowerProgram.includes('teen') || lowerProgram.includes('warrior teen') || lowerProgram.includes('youth') || lowerProgram.includes('junior warrior');
   const isKickboxing = lowerProgram.includes('kickbox');
   const isBJJ = lowerProgram.includes('bjj') || lowerProgram.includes('jiu');
   const isSelfDefense = lowerProgram.includes('self defense') || lowerProgram.includes('self-defense');
 
-  // CRITICAL: All prompts specify the subject is on the RIGHT side of frame
-  // so the LEFT side is naturally darker for text overlay
+  // Base style for martial arts posters
   const baseStyle = `Style: UFC promotional poster meets Cobra Kai marketing meets Call of Duty key art. Unreal Engine quality lighting. Sharp subject isolation. High contrast, deep blacks, glowing red accents. Commercial print quality. No text in image. Vertical portrait orientation. IMPORTANT: Subject positioned on the RIGHT side of the frame, leaving the LEFT side naturally darker for text overlay.`;
 
+  // Base style for events/parties — more vibrant and fun
+  const eventStyle = `Style: High-energy event promotional poster. Vibrant action photography. Dynamic lighting with dramatic shadows. Commercial print quality. No text in image. Vertical portrait orientation. IMPORTANT: Main subject/action positioned on the RIGHT side of the frame, leaving the LEFT side naturally darker for text overlay.`;
+
+  // ── EVENT-SPECIFIC PROMPTS ───────────────────────────────────────────────────
+  if (isNerfWar) {
+    return `Hyper-realistic cinematic action photograph. Subject: ONE excited child or group of children aged 8-14 years old, wearing tactical vests and eye protection, holding Nerf blasters/foam dart guns, in a dynamic action pose as if mid-battle. Colorful foam darts flying through the air. Background: dark dramatic indoor arena with colored lighting, smoke effects, and neon accents. High energy, fun, competitive atmosphere. Bright orange and yellow Nerf gun colors contrast against dark background. ${eventStyle}`;
+  } else if (isBirthdayParty) {
+    return `Hyper-realistic cinematic photograph. Subject: Excited children in a martial arts dojo celebrating, wearing karate gis, with birthday decorations and a festive atmosphere. Colorful balloons, confetti, dramatic dojo lighting. Fun and celebratory energy. Dark background with colorful accent lighting. ${eventStyle}`;
+  } else if (isTournament) {
+    return `Hyper-realistic cinematic photograph. Subject: ONE young martial artist (age appropriate to the program) in a crisp white gi, in a powerful competition stance or executing a technique, with dramatic arena lighting suggesting a tournament setting. Spotlights, dramatic shadows, competitive energy. Trophy or medal visible in background. ${baseStyle}`;
+  } else if (isSummerCamp) {
+    return `Hyper-realistic cinematic photograph. Subject: Group of excited children aged 6-12 in karate gis, energetically training outdoors or in a bright dojo, smiling and doing martial arts moves together. Vibrant summer energy, bright lighting, fun and active atmosphere. ${eventStyle}`;
+  } else if (isGraduation) {
+    return `Hyper-realistic cinematic photograph. Subject: ONE proud martial artist holding up a new colored belt, triumphant expression, in a crisp white gi. Dramatic spotlight from above, dark background, celebratory atmosphere. Achievement and pride energy. ${baseStyle}`;
+  } else if (isDemo || isOpenHouse) {
+    return `Hyper-realistic cinematic photograph. Subject: ONE skilled martial artist (adult or teen) performing an impressive flying kick or acrobatic technique in a dojo, dramatic lighting, audience silhouettes in background. Showcase and demonstration energy. ${baseStyle}`;
+  }
+
+  // ── MARTIAL ARTS PROGRAM PROMPTS ─────────────────────────────────────────────
   if (isToddler) {
     return `Hyper-realistic cinematic photograph. Subject: ONE small child, clearly aged 3-5 years old (toddler/preschool age), in a pristine white karate gi uniform with a white belt. The child is performing an energetic forward punch toward the camera with a fierce excited expression, mouth open in a battle cry. Dark cinematic background with deep red glowing energy, floating ember particles, volumetric smoke, dramatic red rim lighting from behind creating a halo effect. Floor reflections visible. IMPORTANT: The subject must look like a toddler/preschool child (3-5 years old), NOT a teenager or adult. ${baseStyle}`;
   } else if (isKids) {
