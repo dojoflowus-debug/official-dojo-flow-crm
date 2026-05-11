@@ -263,7 +263,7 @@ export default function Payments() {
   const tableHeader = isDark ? 'text-zinc-500 bg-zinc-900/50' : 'text-gray-500 bg-gray-50';
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-zinc-950' : 'bg-gray-50'} p-4 md:p-6`}>
+    <div className="min-h-screen bg-background p-4 md:p-6">
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>

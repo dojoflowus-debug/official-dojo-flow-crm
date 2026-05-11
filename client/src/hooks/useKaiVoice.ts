@@ -314,10 +314,19 @@ export function useKaiVoice({
   useEffect(() => {
     if (enabled) {
       setError(null);
+      // Ensure any stale recorder state is cleared before re-enabling
+      // so startListening() doesn't bail out on the mediaRecorderRef.current check
+      if (mediaRecorderRef.current) {
+        try { mediaRecorderRef.current.stop(); } catch (_) {}
+        mediaRecorderRef.current = null;
+      }
+      audioChunksRef.current = [];
       setStateSync('listening');
       // startListening triggered by the state effect above
     } else {
       stopRecording();
+      // Explicitly null out the recorder ref so re-enable works cleanly
+      mediaRecorderRef.current = null;
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.src = '';

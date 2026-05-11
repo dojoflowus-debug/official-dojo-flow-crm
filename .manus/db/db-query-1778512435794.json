@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, name, dayOfWeek, isActive, organizationId FROM classes WHERE organizationId = 210001 LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT id, name, dayOfWeek, isActive, organizationId FROM classes WHERE organizationId = 210001 LIMIT 10;",
+  "rows": [
+    {
+      "id": "60001",
+      "name": "Dragon Kids & Teens",
+      "dayOfWeek": "Monday",
+      "isActive": "1",
+      "organizationId": "210001"
+    },
+    {
+      "id": "60003",
+      "name": "Kickboxing",
+      "dayOfWeek": "Monday",
+      "isActive": "1",
+      "organizationId": "210001"
+    },
+    {
+      "id": "60005",
+      "name": "After School",
+      "dayOfWeek": "Monday",
+      "isActive": "1",
+      "organizationId": "210001"
+    },
+    {
+      "id": "60007",
+      "name": "Dragon Kids",
+      "dayOfWeek": "Monday",
+      "isActive": "1",
+      "organizationId": "210001"
+    },
+    {
+      "id": "60009",
+      "name": "Little Ninjas & Me",
+      "dayOfWeek": "Monday",
+      "isActive": "1",
+      "organizationId": "210001"
+    },
+    {
+      "id": "60011",
+      "name": "Dragon Kids",
+      "dayOfWeek": "Monday",
+      "isActive": "1",
+      "organizationId": "210001"
+    },
+    {
+      "id": "60013",
+      "name": "Teens & Adults",
+      "dayOfWeek": "Monday",
+      "isActive": "1",
+      "organizationId": "210001"
+    },
+    {
+      "id": "60015",
+      "name": "Summer Camp",
+      "dayOfWeek": "Monday",
+      "isActive": "1",
+      "organizationId": "210001"
+    },
+    {
+      "id": "60017",
+      "name": "After School",
+      "dayOfWeek": "Tuesday",
+      "isActive": "1",
+      "organizationId": "210001"
+    },
+    {
+      "id": "60019",
+      "name": "Teens",
+      "dayOfWeek": "Tuesday",
+      "isActive": "1",
+      "organizationId": "210001"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdayOfWeek\tisActive\torganizationId\n60001\tDragon Kids & Teens\tMonday\t1\t210001\n60003\tKickboxing\tMonday\t1\t210001\n60005\tAfter School\tMonday\t1\t210001\n60007\tDragon Kids\tMonday\t1\t210001\n60009\tLittle Ninjas & Me\tMonday\t1\t210001\n60011\tDragon Kids\tMonday\t1\t210001\n60013\tTeens & Adults\tMonday\t1\t210001\n60015\tSummer Camp\tMonday\t1\t210001\n60017\tAfter School\tTuesday\t1\t210001\n60019\tTeens\tTuesday\t1\t210001\n",
+  "stderr": "",
+  "execution_time_ms": 331
+}

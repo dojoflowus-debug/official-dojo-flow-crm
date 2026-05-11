@@ -100,7 +100,19 @@ export const kaiTools = [
     type: "function",
     function: {
       name: "list_classes",
-      description: "Get all classes with enrollment and capacity info",
+      description: "Get all classes with enrollment and capacity info. Use this when user asks about their schedule, what classes they teach, what's on today, instructor schedule, or any question about classes.",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "clear_all_classes",
+      description: "Delete ALL classes from the schedule. Use ONLY when user explicitly asks to clear, wipe, or reset their entire schedule. Requires confirmation.",
       parameters: {
         type: "object",
         properties: {},
@@ -716,13 +728,42 @@ export async function executeKaiTool(
         const result = await (kaiDataRouter.listClasses as any).createCaller(ctx)({
           limit: 50
         });
+        const classList = result?.classes || result || [];
+        const count = Array.isArray(classList) ? classList.length : 0;
+        // Format classes as readable text so Kai doesn't output raw JSON/code
+        const classLines = Array.isArray(classList) ? classList.map((c: any) => {
+          const time = c.startTime ? `${c.startTime}${c.endTime ? '–' + c.endTime : ''}` : (c.time || 'time TBD');
+          const days = c.dayOfWeek || c.schedule || 'days TBD';
+          const instructor = c.instructor ? ` | Instructor: ${c.instructor}` : '';
+          const enrolled = (c.enrolled ?? c.enrolledCount ?? 0);
+          const capacity = c.capacity ?? 20;
+          return `• ${c.name} — ${days} @ ${time}${instructor} (${enrolled}/${capacity} enrolled)`;
+        }) : [];
+        const message = count === 0
+          ? 'No classes are currently scheduled.'
+          : `Here are your ${count} class(es):\n${classLines.join('\n')}`;
         return JSON.stringify({
           success: true,
-          data: result,
-          message: `Found ${result?.length || 0} classes`
+          data: { count, classes: classLines },
+          message
         });
       }
       
+      case "clear_all_classes": {
+        // Delete all classes for this organization
+        const { classes: classesTable } = await import("../../drizzle/schema");
+        const { eq: eqOp } = await import("drizzle-orm");
+        const db = await (await import("./db")).getDb();
+        if (!db) return JSON.stringify({ success: false, message: 'Database not available' });
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) return JSON.stringify({ success: false, message: 'Organization context required' });
+        await db.delete(classesTable).where(eqOp(classesTable.organizationId, orgId));
+        return JSON.stringify({
+          success: true,
+          message: 'All classes have been cleared from your schedule. You can now import a new schedule or add classes manually.'
+        });
+      }
+
       case "get_class_roster": {
         const result = await (kaiDataRouter.getClassRoster as any).createCaller(ctx)({
           classId: toolArgs.classId

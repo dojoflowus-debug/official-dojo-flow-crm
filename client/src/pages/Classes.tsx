@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import ManagementLayout from '@/components/ManagementLayout';
 import { useTheme } from '@/contexts/ThemeContext';
 import Breadcrumb from '@/components/Breadcrumb';
@@ -21,6 +22,11 @@ import { PrintableSchedule } from '@/components/PrintableSchedule';
 import { trpc } from '@/lib/trpc';
 
 const API_URL = '/api';  // Use relative path to work from any device
+
+// Helper to get org ID from localStorage or session cookie fallback
+function getOrgId(fallbackId?: string | number | null): string {
+  return localStorage.getItem('dojo_active_org_id') || String(fallbackId || '') || '';
+}
 
 // Dark mode hook wrapper
 const useDarkMode = () => {
@@ -930,7 +936,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
     const displayName = formData.name || `${formData.program}${formData.level ? ' ' + formData.level : ''} – ${schedule}`;
     
     try {
-      const orgId = localStorage.getItem('dojo_active_org_id') || '';
+      const orgId = getOrgId(activeOrgId);
       const response = await fetch(`${API_URL}/classes`, {
         method: 'POST',
         credentials: 'include',
@@ -1094,7 +1100,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
     const displayName = formData.name || `${formData.program}${formData.level ? ' ' + formData.level : ''} – ${schedule}`;
     
     try {
-      const orgId = localStorage.getItem('dojo_active_org_id') || '';
+      const orgId = getOrgId(activeOrgId);
       const response = await fetch(`${API_URL}/classes/${editingClass.id}`, {
         method: 'PUT',
         credentials: 'include',
@@ -1185,7 +1191,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
     setIsDeleteDialogOpen(false);
     setDeleteConfirmId(null);
     try {
-      const orgId = localStorage.getItem('dojo_active_org_id') || '';
+      const orgId = getOrgId(activeOrgId);
       const response = await fetch(`${API_URL}/classes/${classId}`, {
         method: 'DELETE',
         credentials: 'include',
@@ -1224,7 +1230,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   const handleIconUpload = async (programName: string, file: File) => {
     setIconUploading(true);
     try {
-      const orgId = localStorage.getItem('dojo_active_org_id');
+      const orgId = getOrgId(activeOrgId);
       const formData = new FormData();
       formData.append('file', file);
       const res = await fetch('/api/upload', { method: 'POST', headers: { 'x-organization-id': orgId || '' }, body: formData });

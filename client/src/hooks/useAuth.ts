@@ -70,10 +70,24 @@ export function useAuth() {
       const storedOrgId = localStorage.getItem('dojo_active_org_id');
       const isDemoUser = currentUser.id === 1; // demo@dojoflow.com is always ID 1
       
+      // Also try to read org ID from session cookie as fallback
+      const getOrgIdFromCookie = () => {
+        try {
+          const cookieStr = document.cookie.split('; ').find(r => r.startsWith('session='));
+          if (cookieStr) {
+            const val = decodeURIComponent(cookieStr.split('=').slice(1).join('='));
+            const parsed = JSON.parse(val);
+            return parsed.currentOrganizationId || null;
+          }
+        } catch {}
+        return null;
+      };
+
       if (!isDemoUser || !storedUserId) {
         // Safe to update: either this is a real user, or nothing is stored yet
-        if (currentUser.activeOrgId) {
-          localStorage.setItem('dojo_active_org_id', String(currentUser.activeOrgId));
+        const orgId = currentUser.activeOrgId || getOrgIdFromCookie();
+        if (orgId) {
+          localStorage.setItem('dojo_active_org_id', String(orgId));
         }
         if (currentUser.id) {
           localStorage.setItem('dojo_user_id', String(currentUser.id));
@@ -130,10 +144,16 @@ export function useAuth() {
     utils.auth.getCurrentUser.invalidate();
   };
 
+  // Derive activeOrgId from user or localStorage or session cookie
+  const activeOrgId = user?.activeOrgId
+    ?? (localStorage.getItem('dojo_active_org_id') ? Number(localStorage.getItem('dojo_active_org_id')) : null)
+    ?? null;
+
   return {
     user,
     isLoading,
     isAuthenticated: !!user,
+    activeOrgId,
     logout,
     refresh,
   };

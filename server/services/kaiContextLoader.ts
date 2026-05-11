@@ -231,13 +231,18 @@ export function buildContextBlock(ctx: KaiContext): string {
     lines.push('');
   }
 
+  const todayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()];
   if (ctx.todayClasses.length > 0) {
-    lines.push("### Today's Schedule");
+    lines.push(`### Today's Schedule (${todayName})`);
     for (const c of ctx.todayClasses) {
-      const time = c.startTime ? `${c.startTime}${c.endTime ? '–' + c.endTime : ''}` : 'time TBD';
+      const time = c.startTime ? `${c.startTime}${c.endTime ? '\u2013' + c.endTime : ''}` : 'time TBD';
       const instr = c.instructor ? ` | ${c.instructor}` : '';
       lines.push(`- ${c.name} @ ${time}${instr} (${c.enrolled}/${c.capacity} enrolled)`);
     }
+  } else {
+    lines.push(`### Today's Schedule (${todayName})`);
+    lines.push(`- No classes are scheduled for ${todayName}. Use the list_classes tool to show the full weekly schedule if the user asks about other days or the overall schedule.`);
+    lines.push('');
     lines.push('');
   }
 

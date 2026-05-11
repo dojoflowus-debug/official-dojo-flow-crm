@@ -9620,3 +9620,15 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Add quick-reply refinement chips after every generated image in chat
 - [ ] Add generate_variations tool to Kai LLM tool definitions
 - [ ] Add variations result rendering in UIBlockRenderer (2x2 grid)
+
+## Bug Fixes - May 11 2026
+
+- [ ] Kai replies with code strings when asked about instructor classes (not "class schedule")
+- [ ] Kai schedule intent too narrow — only triggers on exact phrase "class schedule"
+- [ ] Clear schedules command doesn't work
+- [ ] Voice mode requires toggle off/on before giving a response
+- [ ] Kai always says "no classes scheduled for today" even when classes exist
+- [ ] Can't create classes manually
+- [ ] Kiosk page styling looks different (inconsistent)
+- [ ] Students page has white background instead of dark theme
+- [ ] Payments page has white background instead of dark theme

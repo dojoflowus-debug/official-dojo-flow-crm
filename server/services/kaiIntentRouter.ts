@@ -68,8 +68,24 @@ const INTENT_PATTERNS: IntentPattern[] = [
     patterns: [
       /what classes.*today/i, /today.*classes/i, /show.*schedule/i,
       /what'?s on today/i, /class schedule/i, /today'?s schedule/i,
+      /my schedule/i, /what.*schedule/i, /schedule.*today/i,
+      /what.*teaching/i, /what.*classes.*teaching/i, /instructor.*schedule/i,
+      /what.*class.*do.*have/i, /what.*class.*am.*teach/i,
+      /what.*on.*today/i, /what.*happening.*today/i,
     ],
-    suggestedTool: 'get_classes',
+    suggestedTool: 'list_classes',
+    buildArgs: () => ({}),
+  },
+  {
+    intent: 'clear_schedule',
+    category: 'DESTROY',
+    requiresConfirmation: true,
+    patterns: [
+      /clear.*schedule/i, /delete.*all.*class/i, /remove.*all.*class/i,
+      /wipe.*schedule/i, /reset.*schedule/i, /clear.*all.*class/i,
+      /start.*over.*schedule/i,
+    ],
+    suggestedTool: 'clear_all_classes',
     buildArgs: () => ({}),
   },
   {
