@@ -13,6 +13,7 @@
 import https from "https";
 import http from "http";
 import QRCode from "qrcode";
+import sharp from "sharp";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface FlyerData {
@@ -1185,5 +1186,88 @@ export async function generateQrCodeDataUrl(url: string): Promise<string | null>
     });
   } catch {
     return null;
+  }
+}
+
+// ── compositeLogoOntoFlyer ────────────────────────────────────────────────────
+// Downloads the school logo from a URL (or decodes a data URI), resizes it to
+// fit the top-center of the flyer, and composites it onto the generated image.
+// Returns the composited image as a base64 string (same mime type as input).
+export async function compositeLogoOntoFlyer(
+  flyerBase64: string,
+  mimeType: string,
+  logoUrl: string | null | undefined
+): Promise<{ base64: string; mimeType: string }> {
+  if (!logoUrl) return { base64: flyerBase64, mimeType };
+
+  try {
+    // 1. Decode the flyer image
+    const flyerBuffer = Buffer.from(flyerBase64, 'base64');
+    const flyerSharp = sharp(flyerBuffer);
+    const flyerMeta = await flyerSharp.metadata();
+    const flyerWidth = flyerMeta.width ?? 1080;
+    const flyerHeight = flyerMeta.height ?? 1440;
+
+    // 2. Fetch the logo (supports http/https URLs and data URIs)
+    let logoBuffer: Buffer;
+    if (logoUrl.startsWith('data:')) {
+      // data URI: extract base64 part
+      const base64Part = logoUrl.split(',')[1];
+      if (!base64Part) return { base64: flyerBase64, mimeType };
+      logoBuffer = Buffer.from(base64Part, 'base64');
+    } else {
+      // HTTP/HTTPS URL
+      logoBuffer = await new Promise<Buffer>((resolve, reject) => {
+        const protocol = logoUrl.startsWith('https') ? https : http;
+        const chunks: Buffer[] = [];
+        const req = protocol.get(logoUrl, { timeout: 8000 }, (res) => {
+          if (res.statusCode && res.statusCode >= 400) {
+            reject(new Error(`Logo fetch failed: HTTP ${res.statusCode}`));
+            return;
+          }
+          res.on('data', (chunk: Buffer) => chunks.push(chunk));
+          res.on('end', () => resolve(Buffer.concat(chunks)));
+          res.on('error', reject);
+        });
+        req.on('error', reject);
+        req.on('timeout', () => { req.destroy(); reject(new Error('Logo fetch timeout')); });
+      });
+    }
+
+    // 3. Resize logo to fit top strip (max 20% of flyer width, maintain aspect ratio)
+    const maxLogoWidth = Math.round(flyerWidth * 0.28);
+    const maxLogoHeight = Math.round(flyerHeight * 0.08);
+
+    const resizedLogo = await sharp(logoBuffer)
+      .resize(maxLogoWidth, maxLogoHeight, { fit: 'inside', withoutEnlargement: false })
+      .png()
+      .toBuffer();
+
+    const logoMeta = await sharp(resizedLogo).metadata();
+    const logoW = logoMeta.width ?? maxLogoWidth;
+    const logoH = logoMeta.height ?? maxLogoHeight;
+
+    // 4. Position: horizontally centered, 2% from top
+    const logoLeft = Math.round((flyerWidth - logoW) / 2);
+    const logoTop = Math.round(flyerHeight * 0.02);
+
+    // 5. Composite logo onto flyer
+    const composited = await sharp(flyerBuffer)
+      .composite([{
+        input: resizedLogo,
+        left: logoLeft,
+        top: logoTop,
+        blend: 'over',
+      }])
+      .png()
+      .toBuffer();
+
+    return {
+      base64: composited.toString('base64'),
+      mimeType: 'image/png',
+    };
+  } catch (err) {
+    console.warn('[compositeLogoOntoFlyer] Logo overlay failed, returning original:', err);
+    return { base64: flyerBase64, mimeType };
   }
 }

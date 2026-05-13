@@ -44,6 +44,7 @@ import {
   parseFlyerDataFromBrief,
   generateQrCodeDataUrl,
   buildFullFlyerPrompt,
+  compositeLogoOntoFlyer,
 } from "./flyerRenderer";
 
 // ── Zod schemas ───────────────────────────────────────────────────────────────
@@ -1049,11 +1050,25 @@ export async function generateFlyerFromKai(
   const genResult = await generateImage(fullFlyerPrompt, validSize, brand, 'energetic');
   console.log(`[KaiCreative] Full AI flyer generated: ${genResult.imageBase64.length} base64 chars`);
 
+  // ── Composite school logo onto the generated flyer ─────────────────────────
+  // The AI cannot reliably render a specific logo, so we overlay it post-generation
+  // using sharp. This ensures the real school logo always appears on every flyer.
+  const logoUrl = brand.logoUrl ?? null;
+  let finalBase64 = genResult.imageBase64;
+  let finalMimeType = genResult.mimeType;
+  if (logoUrl) {
+    console.log(`[KaiCreative] Compositing logo onto flyer: ${logoUrl.slice(0, 80)}...`);
+    const composited = await compositeLogoOntoFlyer(genResult.imageBase64, genResult.mimeType, logoUrl);
+    finalBase64 = composited.base64;
+    finalMimeType = composited.mimeType;
+    console.log(`[KaiCreative] Logo composited successfully`);
+  }
+
   // Upload to S3
-  const { url: s3Url, key: s3Key } = await saveImageToS3(genResult.imageBase64, genResult.mimeType, orgId, 'kai-flyer');
-  const imageUrl = s3Url ?? `data:${genResult.mimeType};base64,${genResult.imageBase64}`;
-  const imageBase64 = genResult.imageBase64;
-  const mimeType = genResult.mimeType;
+  const { url: s3Url, key: s3Key } = await saveImageToS3(finalBase64, finalMimeType, orgId, 'kai-flyer');
+  const imageUrl = s3Url ?? `data:${finalMimeType};base64,${finalBase64}`;
+  const imageBase64 = finalBase64;
+  const mimeType = finalMimeType;
 
   // Save to creative library
   let assetId: number | null = null;
