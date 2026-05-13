@@ -1256,11 +1256,8 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
   }
    // Handle creative_image result (generate_flyer tool)
   if (result.type === 'creative_image') {
-    const hasFlyerHtml = !!result.flyerHtml;
     return {
-      text: hasFlyerHtml
-        ? `Here's your flyer! I'll render it now — you can download or save it to your Creative Library.`
-        : `Here's your flyer! It's been saved to your Creative Library.`,
+      text: `Here's your flyer! It's been saved to your Creative Library. You can download it, open it in the Creative Studio to make edits, or ask me to adjust anything.`,
       ui_blocks: [{
         type: 'creative_image',
         imageUrl: result.imageUrl,
@@ -1270,7 +1267,7 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
         size: result.size,
         assetId: result.assetId,
         savedToLibrary: result.savedToLibrary,
-        flyerHtml: result.flyerHtml || null,
+        flyerHtml: null,
         label: 'Generated Flyer',
       }],
     };

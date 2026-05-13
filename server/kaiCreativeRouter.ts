@@ -43,6 +43,7 @@ import {
   buildFlyerHtml,
   parseFlyerDataFromBrief,
   generateQrCodeDataUrl,
+  buildFullFlyerPrompt,
 } from "./flyerRenderer";
 
 // ── Zod schemas ───────────────────────────────────────────────────────────────
@@ -716,16 +717,17 @@ export const kaiCreativeRouter = router({
 
       let result: { imageBase64: string; mimeType: string; flyerHtml?: string };
 
-      // ── FLYER/POSTER ROUTE: use HTML renderer for clean typography ──────────
-      // ALL flyer/poster/social sizes use the HTML template approach.
-      // The server returns the HTML string; the client renders it via srcdoc iframe
-      // + html2canvas and uploads the PNG. This avoids Puppeteer/Chromium which
-      // times out in Cloud Run cold-start scenarios.
+      // ── FLYER/POSTER ROUTE: use full AI image generation ───────────────────
+      // ALL flyer/poster/social sizes use the full AI image approach.
+      // parseFlyerDataFromBrief extracts program/event data from the brief,
+      // buildFullFlyerPrompt creates a comprehensive Imagen prompt with ALL
+      // flyer text/layout baked in, and generateImage produces the final image.
+      // This replaces the HTML template + html2canvas approach.
       const isFlyerSize = input.size === "flyer" || input.size === "instagram_post" ||
         input.size === "instagram_story" || input.size === "facebook_ad";
 
       if (!input.sourceImageBase64 && isFlyerSize) {
-        // Build HTML flyer and return it to the client for rendering
+        // Parse flyer data from the brief (extracts program, benefits, CTA, etc.)
         const flyerData = await parseFlyerDataFromBrief(
           input.prompt,
           input.briefAnswers ?? {},
@@ -741,15 +743,17 @@ export const kaiCreativeRouter = router({
           },
           input.size as "flyer" | "instagram_post" | "instagram_story" | "facebook_ad" | "website_banner"
         );
-        const html = buildFlyerHtml(flyerData);
-        console.log(`[KaiCreative] HTML flyer built for chat: ${html.length} chars, size=${flyerData.size}`);
-        // Return HTML to client — no Puppeteer, no S3 upload at this stage.
-        // Client will render via iframe + html2canvas and call /api/upload-flyer.
-        result = {
-          imageBase64: "",
-          mimeType: "image/png",
-          flyerHtml: html,
-        };
+        // Build a comprehensive Imagen prompt that includes ALL flyer text/layout
+        const fullFlyerPrompt = buildFullFlyerPrompt(flyerData);
+        console.log(`[KaiCreative] Full AI flyer prompt built: ${fullFlyerPrompt.length} chars, program="${flyerData.programName}", size=${flyerData.size}`);
+        // Generate the complete flyer as a single AI image
+        result = await generateImage(
+          fullFlyerPrompt,
+          input.size as ImageSize,
+          brand,
+          resolvedStyle
+        );
+        console.log(`[KaiCreative] Full AI flyer generated: ${result.imageBase64.length} base64 chars`);
       } else if (input.sourceImageBase64) {
         // Edit mode — source image was uploaded in chat
         result = await editImage(
@@ -1012,13 +1016,13 @@ export async function generateFlyerFromKai(
 
   const brand = await getBrandDataForOrg(orgId);
 
-  // ── Pipeline: HTML/CSS template → Puppeteer PNG ──────────────────────────────
-  // 1. parseFlyerDataFromBrief: extracts program, benefits, fetches Pexels hero photo, generates QR code
-  // 2. buildFlyerHtml: renders a bold 3D reference-quality HTML template
-  // 3. renderFlyerToPng: Puppeteer screenshots the HTML at full resolution
-  // This approach gives 100% design control — no text garbling, no AI hallucinations.
+  // ── Full AI image generation pipeline ──────────────────────────────────────────
+  // 1. parseFlyerDataFromBrief: extracts program, benefits, CTA, etc. from natural language
+  // 2. buildFullFlyerPrompt: creates a comprehensive Imagen prompt with ALL flyer text/layout
+  // 3. generateImage: Imagen 4.0 generates the complete flyer as a single image
+  // This produces a cinematic single-image flyer matching the Manus reference quality.
 
-  console.log(`[KaiCreative] Starting HTML/CSS flyer pipeline for: "${prompt}" (${validSize})`);
+  console.log(`[KaiCreative] Starting full AI flyer pipeline for: "${prompt}" (${validSize})`);
 
   const flyerData = await parseFlyerDataFromBrief(prompt, {}, {
     schoolName: brand.schoolName,
@@ -1031,21 +1035,21 @@ export async function generateFlyerFromKai(
     logoUrl: brand.logoUrl,
   }, validSize);
 
-  console.log(`[KaiCreative] FlyerData: program="${flyerData.programName}", headline="${flyerData.headline}", heroPhoto=${!!flyerData.heroImageUrl}`);
+  console.log(`[KaiCreative] FlyerData: program="${flyerData.programName}", cta="${flyerData.callToAction}"`);
 
-  // ── HTML-only pipeline (no Puppeteer) ────────────────────────────────────────
-  // Rendering is done client-side via html2canvas to avoid Puppeteer/Chromium
-  // memory/timeout issues in Cloud Run. The server just returns the HTML string.
-  const flyerHtml = buildFlyerHtml(flyerData);
+  const fullFlyerPrompt = buildFullFlyerPrompt(flyerData);
+  console.log(`[KaiCreative] Full AI flyer prompt: ${fullFlyerPrompt.length} chars`);
 
-  console.log(`[KaiCreative] HTML flyer built: ${flyerHtml.length} chars`);
+  const genResult = await generateImage(fullFlyerPrompt, validSize, brand, 'energetic');
+  console.log(`[KaiCreative] Full AI flyer generated: ${genResult.imageBase64.length} base64 chars`);
 
-  // Placeholder imageUrl — client will replace this after html2canvas render + S3 upload
-  const imageUrl = `data:text/html;charset=utf-8,flyer-pending`;
-  const imageBase64 = '';
-  const mimeType = 'image/png';
+  // Upload to S3
+  const { url: s3Url, key: s3Key } = await saveImageToS3(genResult.imageBase64, genResult.mimeType, orgId, 'kai-flyer');
+  const imageUrl = s3Url ?? `data:${genResult.mimeType};base64,${genResult.imageBase64}`;
+  const imageBase64 = genResult.imageBase64;
+  const mimeType = genResult.mimeType;
 
-  // Pre-create a creative library placeholder so the client can update it after rendering
+  // Save to creative library
   let assetId: number | null = null;
   let savedToLibrary = false;
   const db = await getDb();
@@ -1056,14 +1060,14 @@ export async function generateFlyerFromKai(
         assetType: 'generated',
         name: `Kai — ${prompt.slice(0, 60)}`,
         url: imageUrl,
-        storageKey: null,
+        storageKey: s3Key ?? null,
         prompt,
         outputSize: validSize,
         mimeType,
         createdBy: null,
       }).$returningId();
       assetId = (inserted as any)?.[0]?.id ?? null;
-      savedToLibrary = false; // Will be marked saved after client uploads PNG
+      savedToLibrary = !!s3Url;
     } catch { /* non-blocking */ }
   }
 
@@ -1075,6 +1079,5 @@ export async function generateFlyerFromKai(
     size: validSize,
     assetId,
     savedToLibrary,
-    flyerHtml,
   };
 }

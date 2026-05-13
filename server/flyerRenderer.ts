@@ -993,3 +993,151 @@ function buildHeroImagePrompt(programName: string, lowerProgram: string, primary
 }
 
 // renderFlyerToPng removed — flyer PNG capture is now handled client-side via html2canvas
+
+// ── buildFullFlyerPrompt ──────────────────────────────────────────────────────
+// Builds a comprehensive Imagen prompt that instructs the AI to render the
+// ENTIRE flyer as a single image — text, layout, QR code, logo area, and
+// cinematic background all baked into one image.
+export function buildFullFlyerPrompt(flyerData: FlyerData): string {
+  const {
+    programName,
+    schoolName,
+    phone,
+    website,
+    primaryColor,
+    benefits = [],
+    callToAction,
+    offer,
+    audience,
+    size = "flyer",
+  } = flyerData;
+
+  const primary = primaryColor || "#C8102E";
+  const lp = programName.toLowerCase();
+  const isNerfEvent = lp.includes("nerf");
+  const isBirthdayEvent = lp.includes("birthday");
+  const isTournamentEvent = lp.includes("tournament") || lp.includes("championship");
+  const isSummerCamp = lp.includes("summer camp") || lp.includes("camp");
+  const isGraduation = lp.includes("graduation") || lp.includes("belt ceremony");
+  const isOpenHouse = lp.includes("open house") || lp.includes("grand opening");
+  const isToddler = lp.includes("little ninja") || lp.includes("tiny ninja") || lp.includes("lil ninja");
+  const isKids = lp.includes("warrior kid") || lp.includes("junior") || lp.includes("kids");
+  const isTeen = lp.includes("teen") || lp.includes("warrior teen");
+  const isKickboxing = lp.includes("kickbox") || lp.includes("kick box");
+  const isBJJ = lp.includes("bjj") || lp.includes("jiu jitsu") || lp.includes("grappling");
+
+  let sceneDescription: string;
+  if (isNerfEvent) {
+    sceneDescription = "BACKGROUND SCENE: A group of excited children aged 6-12 in tactical vests and eye protection, laughing and running with foam Nerf blasters in a dynamic action scene. Dramatic orange and electric blue cinematic lighting with motion blur, smoke effects. High-energy action photography. The scene fills the entire background behind the text overlay.";
+  } else if (isBirthdayEvent) {
+    sceneDescription = "BACKGROUND SCENE: A festive martial arts birthday party with colorful balloons, confetti, and excited children in karate gis celebrating. Warm golden party lighting with bokeh effects. Fun and celebratory atmosphere fills the entire background.";
+  } else if (isTournamentEvent) {
+    sceneDescription = "BACKGROUND SCENE: A dramatic martial arts tournament arena with spotlights, a competition mat, and audience silhouettes. Intense dramatic lighting with deep shadows and bright spotlights. Championship energy fills the entire background.";
+  } else if (isSummerCamp) {
+    sceneDescription = "BACKGROUND SCENE: Energetic group of children aged 6-14 in karate gis training outdoors in bright summer sunlight, smiling and performing martial arts moves together. Vibrant summer energy fills the entire background.";
+  } else if (isGraduation) {
+    sceneDescription = "BACKGROUND SCENE: A proud martial artist holding up a new colored belt in triumph under a dramatic spotlight, dark background with celebratory atmosphere. Achievement and pride energy fills the entire background.";
+  } else if (isOpenHouse) {
+    sceneDescription = "BACKGROUND SCENE: A professional martial arts dojo with students training, instructors demonstrating techniques, and a welcoming open atmosphere. Clean professional lighting fills the entire background.";
+  } else if (isToddler) {
+    sceneDescription = "BACKGROUND SCENE: ONE adorable toddler child aged 3-5 years old in a pristine white karate gi with white belt, performing an energetic forward punch with a fierce excited expression. Dark cinematic background with deep red glowing energy, floating ember particles, volumetric smoke, dramatic red rim lighting from behind. The child is positioned on the right side of the image.";
+  } else if (isKids) {
+    sceneDescription = "BACKGROUND SCENE: ONE child aged 8-10 years old in a white karate gi with a colored belt, performing a powerful side kick with an intense focused expression. Dark cinematic background with deep red and orange glowing energy, ember particles, dramatic rim lighting. The child is positioned on the right side of the image.";
+  } else if (isTeen) {
+    sceneDescription = "BACKGROUND SCENE: ONE teenager aged 15-16 years old in a black or white karate gi, performing a powerful high kick with intense determined expression. Dark cinematic background with deep red glowing energy, ember particles, dramatic rim lighting. The teen is positioned on the right side of the image.";
+  } else if (isKickboxing) {
+    sceneDescription = "BACKGROUND SCENE: ONE powerful athletic adult in kickboxing gear executing a devastating high roundhouse kick. Dark cinematic background with red energy glow, ember particles, dramatic rim lighting. The athlete is positioned on the right side of the image.";
+  } else if (isBJJ) {
+    sceneDescription = "BACKGROUND SCENE: ONE BJJ practitioner in a white gi performing a dominant ground control position, intense focused expression. Dark cinematic dojo background with subtle blue-red energy lighting. The practitioner is positioned on the right side of the image.";
+  } else {
+    sceneDescription = "BACKGROUND SCENE: ONE martial artist in a clean white karate gi performing a powerful dynamic kick or punch with intense determined expression. Dark cinematic background with deep red glowing energy, floating ember particles, volumetric smoke, dramatic red rim lighting. The martial artist is positioned on the right side of the image.";
+  }
+
+  const benefitLines = benefits.slice(0, 4).map((b: string) => {
+    const parts = b.split("|");
+    return parts[0].trim();
+  });
+
+  const ctaText = callToAction || offer || "FREE TRIAL CLASS";
+  const contactLine = [phone, website].filter(Boolean).join("  |  ");
+
+  const formatLabel = size === "instagram_story" ? "vertical 9:16 Instagram story"
+    : size === "instagram_post" ? "square 1:1 Instagram post"
+    : size === "facebook_ad" ? "vertical Facebook ad"
+    : "vertical 8.5x11 flyer poster";
+
+  const benefitBullets = benefitLines.map((b: string) => `     * ${b}`).join("\n");
+  const schoolUpper = (schoolName || "MARTIAL ARTS").toUpperCase();
+  const programUpper = programName.toUpperCase();
+  const ctaUpper = ctaText.toUpperCase();
+  const audienceLine = audience ? `   - ALSO: "${audience}" in smaller accent-colored text` : "";
+
+  return `Create a COMPLETE, PRINT-READY martial arts promotional flyer poster as a single fully-rendered image. Format: ${formatLabel}.
+
+CRITICAL: This is NOT just a background image. This is the COMPLETE FINISHED FLYER with ALL text, layout elements, and graphics rendered directly into the image as if professionally typeset. Every text element listed below MUST appear in the final image exactly as specified.
+
+${sceneDescription}
+
+TYPOGRAPHY AND TEXT LAYOUT — render these text elements exactly:
+
+1. TOP HEADER AREA (top 10% of image):
+   - Text: "${schoolUpper}"
+   - Style: Bold white sans-serif, centered horizontally, with a semi-transparent dark banner behind it
+   - Size: Medium — clearly readable but not dominant
+
+2. PROGRAM NAME (most dominant element, 15% to 45% of image height):
+   - Text: "${programUpper}"
+   - Style: MASSIVE 3D EXTRUDED METALLIC LETTERS — the letters appear physically raised off the surface with a thick beveled edge. The letter face is bright ${primary} red/color. The extrusion/shadow goes down-right in progressively darker shades. Chrome/steel metallic finish with specular highlights. Deep drop shadow. Glowing halo of ${primary} color behind the letters.
+   - Font: Ultra-bold condensed sans-serif (like Oswald or Impact), maximum visual impact
+   - This text should be the single most visually dominant element on the entire flyer
+
+3. BENEFITS LIST (left side, vertically centered, 35% to 70% of image height):
+   - Render on a semi-transparent dark panel covering the left 50% of the image
+   - Each benefit on its own line with a colored circle icon bullet:
+${benefitBullets}
+   - Style: White bold text, clean readable sans-serif
+
+4. CALL TO ACTION (65% to 80% of image height):
+   - Text: "${ctaUpper}"
+   - Style: LARGE 3D BEVELED WHITE LETTERS — same extrusion technique as program name but white with dark grey extrusion. Second most dominant text element.
+   - Background: Semi-transparent dark panel behind the text
+${audienceLine}
+
+5. BOTTOM CONTACT STRIP (bottom 12% of image):
+   - Full-width dark semi-transparent horizontal bar
+   - LEFT SIDE: A QR code graphic (standard black-and-white square QR pattern, approximately 80x80 pixels)
+   - NEXT TO QR: Small text "SCAN TO REGISTER" in white
+   - RIGHT SIDE: Contact info "${contactLine}" in white bold text
+
+PHOTOREALISM AND QUALITY STANDARDS:
+- ALL human figures must be photorealistic cinematic photography — NO cartoons, NO illustrations, NO anime, NO 3D renders
+- Color palette: Dark backgrounds (near-black), ${primary} as accent color, white for text
+- Professional agency quality — this should look like a $500+ design
+- High contrast throughout — every text element must be clearly legible against the background
+- Dramatic cinematic lighting: deep shadows, rim lighting, volumetric smoke/ember effects
+- The martial arts subject fills the right side behind the text layers
+- Print-ready sharpness: no blur, no artifacts, clean edges on all text
+
+ABSOLUTE REQUIREMENTS — these elements MUST appear:
+- School name "${schoolUpper}" at the top
+- Program name "${programUpper}" as massive 3D metallic letters (most dominant element)
+- All benefit bullet points listed above
+- CTA text "${ctaUpper}" prominently displayed
+- A QR code graphic at the bottom
+- Contact info "${contactLine}" at the bottom
+- NO placeholder text, NO lorem ipsum, NO template artifacts
+- NO cartoons or illustrations — photorealistic only`;
+}
+
+// ── generateQrCodeDataUrl (exported for use in kaiCreativeRouter) ─────────────
+export async function generateQrCodeDataUrl(url: string): Promise<string | null> {
+  try {
+    return await QRCode.toDataURL(url, {
+      width: 200,
+      margin: 1,
+      color: { dark: "#000000", light: "#ffffff" },
+    });
+  } catch {
+    return null;
+  }
+}

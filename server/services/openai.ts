@@ -788,8 +788,11 @@ When the user asks to create, generate, make, or design ANY flyer, poster, banne
 - Confidence level is ALWAYS HIGH for flyer requests — execute immediately
 
 STEPS:
-1. Call generate_flyer tool with program, prompt, and size from context
-2. After tool returns, say: "Here's your [program] flyer! It's been saved to your Creative Library."
+1. FIRST, write a brief enthusiastic acknowledgment in your message content (1-2 sentences), such as:
+   "I'll design a high-impact cinematic flyer for your [program/event]! Generating now..."
+   This message is shown to the user WHILE the image is being generated.
+2. THEN call generate_flyer tool with program, prompt, and size from context.
+   The system will automatically display the completed flyer image when done.
 
 EXAMPLES:
 - "Create a flyer for little ninjas" → call generate_flyer immediately with program="little ninjas"

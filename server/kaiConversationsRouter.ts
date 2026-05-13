@@ -694,6 +694,25 @@ Always place the UI block on its own line after your text response.`;
             }
             // ── END CONFIRMATION GATE ──────────────────────────────────────────
             
+            // ── Pre-tool acknowledgment: capture assistant's message content ────
+            // When Kai writes a message AND calls a tool (e.g. generate_flyer),
+            // the assistant content is the acknowledgment shown while generation runs.
+            const preToolContent = response.choices?.[0]?.message?.content?.trim();
+            const hasFlyerToolCall = toolCalls.some(tc => tc.function.name === 'generate_flyer');
+            if (preToolContent && hasFlyerToolCall) {
+              // Save the acknowledgment as an assistant message immediately
+              // so the user sees it while the flyer is being generated
+              await db.insert(kaiMessages).values({
+                conversationId: input.conversationId,
+                organizationId: ctx.currentOrganizationId,
+                role: "assistant",
+                content: preToolContent,
+                metadata: JSON.stringify({ type: "chat", generating: true }),
+                createdAt: new Date().toISOString(),
+              });
+            }
+            // ── END pre-tool acknowledgment ───────────────────────────────────
+
             // Execute tool calls and build tool results
             const toolResults = [];
             for (const toolCall of toolCalls) {
