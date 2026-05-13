@@ -806,11 +806,20 @@ export async function parseFlyerDataFromBrief(
   const lowerProgram = programName.toLowerCase();
   let benefits: string[];
 
-  if (isNerfEvent) {
+  const isParentsNightOut = lowerBriefFull.includes('parents night out') || lowerBriefFull.includes('parent night out') || lowerBriefFull.includes('pno');
+
+  if (isNerfEvent && isParentsNightOut) {
     benefits = [
-      "Epic Foam Battles|Team vs team Nerf warfare!",
+      "4 Hours of Fun|Drop off the kids and enjoy your night!",
+      "Pizza & Drinks Included|Dinner is on us.",
+      "Epic Nerf Battles|Team vs team foam warfare!",
+      "Safe & Supervised|Certified instructors on-site all night.",
+    ];
+  } else if (isNerfEvent) {
+    benefits = [
+      "Epic Nerf Battles|Team vs team foam warfare!",
       "Safe & Supervised|Trained staff. Safety gear provided.",
-      "All Welcome|Ages 6 and up. No experience needed.",
+      "All Ages Welcome|Ages 6 and up. No experience needed.",
       "Fun Guaranteed|The ultimate action-packed event.",
     ];
   } else if (isBirthdayEvent) {
@@ -973,7 +982,8 @@ export async function parseFlyerDataFromBrief(
     benefits,
     callToAction: (() => {
       const lp = programName.toLowerCase();
-      if (lp.includes('nerf')) return offer ? `${offer} — Register Today` : `REGISTER NOW`;
+      if (lp.includes('nerf') && isParentsNightOut) return offer ? `${offer} — Register Today` : `REGISTER TODAY`;
+      if (lp.includes('nerf')) return offer ? `${offer} — Register Today` : `REGISTER TODAY`;
       if (lp.includes('birthday')) return offer ? `${offer} — Book Your Party` : `BOOK YOUR PARTY`;
       if (lp.includes('tournament') || lp.includes('championship')) return offer ? `${offer} — Register` : `REGISTER TODAY`;
       if (lp.includes('summer camp')) return offer ? `${offer} — Enroll Today` : `ENROLL TODAY`;
@@ -1153,13 +1163,16 @@ export function buildFullFlyerPrompt(flyerData: FlyerData): string {
     headlineSentence = `The most dominant visual element is the text "${headlineLayer1}" in massive 3D extruded metallic letters with an orange-gold glow, chrome highlights, deep drop shadow, and beveled extrusion — these letters fill the full width of the flyer.`;
   }
 
+  const offerLine = offer ? ` Below the benefits, in large bold orange-gold text, is the price "${offer}".` : '';
+  const noExtraText = `Do NOT add any price, dollar amount, age range, time, or extra text that is not explicitly listed above. Only render the text elements described.`;
+
   return `A complete, print-ready ${formatLabel} for a martial arts school event. This is the fully finished flyer with all text and graphics rendered as a single image — not a background photo.
 
 ${sceneDescription}
 
-The flyer layout from top to bottom: At the very top of the flyer, in small bold white text centered on a semi-transparent dark strip, is the school name "${schoolUpper}". ${headlineSentence} In the lower half of the flyer, over a semi-transparent dark overlay panel, there is a bullet-point list of event highlights in white bold text: ${benefitTextList}. Below the benefits, in large bold text, is the call-to-action "${ctaUpper}". At the very bottom of the flyer is a full-width dark strip containing a black-and-white QR code square on the left side with the small text "SCAN TO REGISTER" next to it. ${contactText}
+The flyer layout from top to bottom: At the very top of the flyer, in small bold white text centered on a semi-transparent dark strip, is the school name "${schoolUpper}". ${headlineSentence} In the lower half of the flyer, over a semi-transparent dark overlay panel, there is a bullet-point list of event highlights in white bold text: ${benefitTextList}.${offerLine} Below the benefits, in large bold white text, is the call-to-action "${ctaUpper}". At the very bottom of the flyer is a full-width dark strip. On the right side of this bottom strip is a black-and-white QR code square (a real scannable QR code pattern — not a placeholder). To the left of the QR code, in small white bold text, is "SCAN TO REGISTER". ${contactText}
 
-The overall style is cinematic and high-energy: dark near-black background, orange-gold and white text, dramatic rim lighting, volumetric smoke effects, photorealistic photography (no cartoons or illustrations). Professional agency-quality design worth $500+. All text must be sharp, legible, and correctly spelled exactly as written above.`;
+The overall style is cinematic and high-energy: dark near-black background, orange-gold and white text, dramatic rim lighting, volumetric smoke effects, photorealistic photography (no cartoons or illustrations). Professional agency-quality design worth $500+. All text must be sharp, legible, and correctly spelled exactly as written above. ${noExtraText}`;
 }
 
 // ── generateQrCodeDataUrl (exported for use in kaiCreativeRouter) ─────────────
