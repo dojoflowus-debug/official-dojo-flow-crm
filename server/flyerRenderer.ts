@@ -29,6 +29,9 @@ export interface FlyerData {
 
   // Program / content
   programName: string;
+  eventSubtitle?: string | null;  // e.g. "PARENTS NIGHT OUT"
+  eventDate?: string | null;      // e.g. "JUNE 10TH"
+  eventTime?: string | null;      // e.g. "6PM - 10PM"
   audience?: string | null;
   headline?: string | null;
   subheadline?: string | null;
@@ -736,6 +739,59 @@ export async function parseFlyerDataFromBrief(
   const ageMatch = brief.match(/age[sd]?\s*([\d-]+(?:\s*(?:to|-)\s*[\d]+)?)/i);
   const audience = ageMatch?.[1] ? `Ages ${ageMatch[1]}` : null;
 
+  // ── EVENT SUBTITLE EXTRACTION ────────────────────────────────────────────────
+  // e.g. "Nerf Wars Parents Night Out June 10th" → subtitle: "PARENTS NIGHT OUT", date: "JUNE 10TH"
+  let eventSubtitle: string | null = null;
+  let eventDate: string | null = null;
+  let eventTime: string | null = null;
+
+  // Extract subtitle keywords ("parents night out", "family night", "open mat", etc.)
+  const subtitlePatterns = [
+    { pattern: /parents?\s+night\s+out/i, label: 'PARENTS NIGHT OUT' },
+    { pattern: /family\s+night/i, label: 'FAMILY NIGHT' },
+    { pattern: /kids?\s+night/i, label: 'KIDS NIGHT' },
+    { pattern: /open\s+mat/i, label: 'OPEN MAT' },
+    { pattern: /free\s+trial/i, label: 'FREE TRIAL' },
+    { pattern: /grand\s+opening/i, label: 'GRAND OPENING' },
+    { pattern: /open\s+house/i, label: 'OPEN HOUSE' },
+    { pattern: /belt\s+ceremony/i, label: 'BELT CEREMONY' },
+    { pattern: /graduation\s+ceremony/i, label: 'GRADUATION CEREMONY' },
+    { pattern: /demo\s+day/i, label: 'DEMO DAY' },
+  ];
+  for (const sp of subtitlePatterns) {
+    if (sp.pattern.test(brief)) {
+      eventSubtitle = sp.label;
+      break;
+    }
+  }
+
+  // Extract date: "June 10th", "June 10", "6/10", "June 10th, 2025"
+  const dateMatch = brief.match(
+    /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})(?:st|nd|rd|th)?(?:[,\s]+(\d{4}))?/i
+  ) || brief.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/);
+  if (dateMatch) {
+    const monthNames: Record<string, string> = {
+      january: 'JANUARY', february: 'FEBRUARY', march: 'MARCH', april: 'APRIL',
+      may: 'MAY', june: 'JUNE', july: 'JULY', august: 'AUGUST',
+      september: 'SEPTEMBER', october: 'OCTOBER', november: 'NOVEMBER', december: 'DECEMBER'
+    };
+    const isMonthName = isNaN(Number(dateMatch[1]));
+    if (isMonthName) {
+      const month = monthNames[dateMatch[1].toLowerCase()] || dateMatch[1].toUpperCase();
+      const day = dateMatch[2];
+      const suffix = Number(day) === 1 ? 'ST' : Number(day) === 2 ? 'ND' : Number(day) === 3 ? 'RD' : 'TH';
+      eventDate = `${month} ${day}${suffix}`;
+    } else {
+      eventDate = `${dateMatch[1]}/${dateMatch[2]}`;
+    }
+  }
+
+  // Extract time: "6pm", "6:00 PM", "6-10pm", "6pm to 10pm"
+  const timeMatch = brief.match(/(\d{1,2}(?::\d{2})?\s*(?:am|pm)\s*(?:[-–to]+\s*\d{1,2}(?::\d{2})?\s*(?:am|pm))?)/i);
+  if (timeMatch) {
+    eventTime = timeMatch[1].trim().toUpperCase();
+  }
+
    // ── EVENT DETECTION (check brief first) ──────────────────────────────────────
   const lowerBriefFull = brief.toLowerCase();
   const isNerfEvent = lowerBriefFull.includes('nerf');
@@ -898,6 +954,9 @@ export async function parseFlyerDataFromBrief(
     address: brandData.address || null,
     tagline: brandData.tagline || null,
     programName,
+    eventSubtitle,
+    eventDate,
+    eventTime,
     audience,
     // Event-specific headlines and CTAs
     headline: (() => {
@@ -1001,6 +1060,9 @@ function buildHeroImagePrompt(programName: string, lowerProgram: string, primary
 export function buildFullFlyerPrompt(flyerData: FlyerData): string {
   const {
     programName,
+    eventSubtitle,
+    eventDate,
+    eventTime,
     schoolName,
     phone,
     website,
@@ -1026,107 +1088,159 @@ export function buildFullFlyerPrompt(flyerData: FlyerData): string {
   const isKickboxing = lp.includes("kickbox") || lp.includes("kick box");
   const isBJJ = lp.includes("bjj") || lp.includes("jiu jitsu") || lp.includes("grappling");
 
+  // ── Scene description based on event type ──────────────────────────────────
   let sceneDescription: string;
   if (isNerfEvent) {
-    sceneDescription = "BACKGROUND SCENE: A group of excited children aged 6-12 in tactical vests and eye protection, laughing and running with foam Nerf blasters in a dynamic action scene. Dramatic orange and electric blue cinematic lighting with motion blur, smoke effects. High-energy action photography. The scene fills the entire background behind the text overlay.";
+    sceneDescription = `PHOTOREALISTIC BACKGROUND SCENE (fills entire image behind text layers):
+A group of 4-6 joyful children aged 6-12 wearing BLACK MARTIAL ARTS UNIFORMS (karate gis) and colorful safety goggles, holding Nerf blasters and laughing mid-battle inside a professional martial arts dojo. The dojo has black padded floor mats with orange trim, wall-mounted mirrors, Japanese calligraphy scrolls on the walls, and proper dojo lighting. Foam darts are flying through the air. The children are diverse and full of energy. The scene is photographed with a wide-angle lens showing the full dojo interior. Cinematic orange and electric blue rim lighting with dramatic depth of field. The background fills the entire image from edge to edge with the children spread across the frame.`;
   } else if (isBirthdayEvent) {
-    sceneDescription = "BACKGROUND SCENE: A festive martial arts birthday party with colorful balloons, confetti, and excited children in karate gis celebrating. Warm golden party lighting with bokeh effects. Fun and celebratory atmosphere fills the entire background.";
+    sceneDescription = `PHOTOREALISTIC BACKGROUND SCENE: A festive martial arts birthday party inside a professional dojo. Children in karate gis with party hats, colorful balloons, confetti, and a birthday cake. Warm golden party lighting with bokeh effects. The dojo has padded mats and the scene is full of joy and celebration. Wide-angle shot showing the full dojo space.`;
   } else if (isTournamentEvent) {
-    sceneDescription = "BACKGROUND SCENE: A dramatic martial arts tournament arena with spotlights, a competition mat, and audience silhouettes. Intense dramatic lighting with deep shadows and bright spotlights. Championship energy fills the entire background.";
+    sceneDescription = `PHOTOREALISTIC BACKGROUND SCENE: A dramatic martial arts tournament arena with professional competition mats, bright arena spotlights, and audience silhouettes in the background. Two competitors in white gis facing off in the center. Intense dramatic lighting with deep shadows and bright spotlights. Championship energy throughout the frame.`;
   } else if (isSummerCamp) {
-    sceneDescription = "BACKGROUND SCENE: Energetic group of children aged 6-14 in karate gis training outdoors in bright summer sunlight, smiling and performing martial arts moves together. Vibrant summer energy fills the entire background.";
+    sceneDescription = `PHOTOREALISTIC BACKGROUND SCENE: A large group of energetic children aged 6-14 in white and black karate gis training together in a bright, professional martial arts dojo. Summer sunlight streaming through windows. The children are smiling and performing synchronized martial arts moves. Vibrant, energetic atmosphere.`;
   } else if (isGraduation) {
-    sceneDescription = "BACKGROUND SCENE: A proud martial artist holding up a new colored belt in triumph under a dramatic spotlight, dark background with celebratory atmosphere. Achievement and pride energy fills the entire background.";
+    sceneDescription = `PHOTOREALISTIC BACKGROUND SCENE: A proud young martial artist in a crisp white gi holding up a new colored belt in triumph under a dramatic spotlight. Dark ceremonial background with warm golden light. Other students and parents watching in the background. Achievement and pride energy throughout.`;
   } else if (isOpenHouse) {
-    sceneDescription = "BACKGROUND SCENE: A professional martial arts dojo with students training, instructors demonstrating techniques, and a welcoming open atmosphere. Clean professional lighting fills the entire background.";
+    sceneDescription = `PHOTOREALISTIC BACKGROUND SCENE: A beautiful, professional martial arts dojo with students training, instructors demonstrating techniques, and a welcoming open atmosphere. Clean professional lighting, padded mats, mirrors, and a modern dojo interior. Families watching from the sides.`;
   } else if (isToddler) {
-    sceneDescription = "BACKGROUND SCENE: ONE adorable toddler child aged 3-5 years old in a pristine white karate gi with white belt, performing an energetic forward punch with a fierce excited expression. Dark cinematic background with deep red glowing energy, floating ember particles, volumetric smoke, dramatic red rim lighting from behind. The child is positioned on the right side of the image.";
+    sceneDescription = `PHOTOREALISTIC BACKGROUND SCENE: ONE adorable toddler child aged 3-5 years old in a pristine white karate gi with white belt, performing an energetic forward punch with a fierce excited expression. Dark cinematic background with deep red glowing energy, floating ember particles, volumetric smoke, dramatic red rim lighting from behind. The child is positioned on the right side of the image, facing slightly left.`;
   } else if (isKids) {
-    sceneDescription = "BACKGROUND SCENE: ONE child aged 8-10 years old in a white karate gi with a colored belt, performing a powerful side kick with an intense focused expression. Dark cinematic background with deep red and orange glowing energy, ember particles, dramatic rim lighting. The child is positioned on the right side of the image.";
+    sceneDescription = `PHOTOREALISTIC BACKGROUND SCENE: ONE child aged 8-10 years old in a white karate gi with a colored belt, performing a powerful side kick with an intense focused expression. Dark cinematic background with deep red and orange glowing energy, ember particles, dramatic rim lighting. The child is positioned on the right side of the image.`;
   } else if (isTeen) {
-    sceneDescription = "BACKGROUND SCENE: ONE teenager aged 15-16 years old in a black or white karate gi, performing a powerful high kick with intense determined expression. Dark cinematic background with deep red glowing energy, ember particles, dramatic rim lighting. The teen is positioned on the right side of the image.";
+    sceneDescription = `PHOTOREALISTIC BACKGROUND SCENE: ONE teenager aged 15-16 years old in a black or white karate gi, performing a powerful high kick with intense determined expression. Dark cinematic background with deep red glowing energy, ember particles, dramatic rim lighting. The teen is positioned on the right side of the image.`;
   } else if (isKickboxing) {
-    sceneDescription = "BACKGROUND SCENE: ONE powerful athletic adult in kickboxing gear executing a devastating high roundhouse kick. Dark cinematic background with red energy glow, ember particles, dramatic rim lighting. The athlete is positioned on the right side of the image.";
+    sceneDescription = `PHOTOREALISTIC BACKGROUND SCENE: ONE powerful athletic adult in kickboxing gear executing a devastating high roundhouse kick. Dark cinematic background with red energy glow, ember particles, dramatic rim lighting. The athlete is positioned on the right side of the image.`;
   } else if (isBJJ) {
-    sceneDescription = "BACKGROUND SCENE: ONE BJJ practitioner in a white gi performing a dominant ground control position, intense focused expression. Dark cinematic dojo background with subtle blue-red energy lighting. The practitioner is positioned on the right side of the image.";
+    sceneDescription = `PHOTOREALISTIC BACKGROUND SCENE: ONE BJJ practitioner in a white gi performing a dominant ground control position, intense focused expression. Dark cinematic dojo background with subtle blue-red energy lighting. The practitioner is positioned on the right side of the image.`;
   } else {
-    sceneDescription = "BACKGROUND SCENE: ONE martial artist in a clean white karate gi performing a powerful dynamic kick or punch with intense determined expression. Dark cinematic background with deep red glowing energy, floating ember particles, volumetric smoke, dramatic red rim lighting. The martial artist is positioned on the right side of the image.";
+    sceneDescription = `PHOTOREALISTIC BACKGROUND SCENE: ONE martial artist in a clean white karate gi performing a powerful dynamic kick or punch with intense determined expression. Dark cinematic background with deep red glowing energy, floating ember particles, volumetric smoke, dramatic red rim lighting. The martial artist is positioned on the right side of the image.`;
   }
 
+  // ── Text content assembly ──────────────────────────────────────────────────
   const benefitLines = benefits.slice(0, 4).map((b: string) => {
     const parts = b.split("|");
     return parts[0].trim();
   });
 
   const ctaText = callToAction || offer || "FREE TRIAL CLASS";
-  const contactLine = [phone, website].filter(Boolean).join("  |  ");
+  const contactLine = [phone, website].filter(Boolean).join("  •  ");
 
   const formatLabel = size === "instagram_story" ? "vertical 9:16 Instagram story"
     : size === "instagram_post" ? "square 1:1 Instagram post"
     : size === "facebook_ad" ? "vertical Facebook ad"
     : "vertical 8.5x11 flyer poster";
 
-  const benefitBullets = benefitLines.map((b: string) => `     * ${b}`).join("\n");
-  const schoolUpper = (schoolName || "MARTIAL ARTS").toUpperCase();
+  const schoolUpper = (schoolName || "MY DOJO").toUpperCase();
   const programUpper = programName.toUpperCase();
   const ctaUpper = ctaText.toUpperCase();
-  const audienceLine = audience ? `   - ALSO: "${audience}" in smaller accent-colored text` : "";
 
-  return `Create a COMPLETE, PRINT-READY martial arts promotional flyer poster as a single fully-rendered image. Format: ${formatLabel}.
+  // Build the headline block — up to 3 layers: program name, subtitle, date
+  const headlineLayer1 = programUpper;  // e.g. "NERF WARS"
+  const headlineLayer2 = eventSubtitle || null;  // e.g. "PARENTS NIGHT OUT"
+  const headlineLayer3 = eventDate || null;  // e.g. "JUNE 10TH"
 
-CRITICAL: This is NOT just a background image. This is the COMPLETE FINISHED FLYER with ALL text, layout elements, and graphics rendered directly into the image as if professionally typeset. Every text element listed below MUST appear in the final image exactly as specified.
+  const benefitBullets = benefitLines.map((b: string) => `   • ${b}`).join("\n");
+  const dateTimeLine = [eventDate, eventTime].filter(Boolean).join(" · ");
+  const audienceLine = audience ? `\n   • ${audience}` : "";
 
+  // Build the multi-layer headline description
+  let headlineBlock: string;
+  if (headlineLayer2 && headlineLayer3) {
+    headlineBlock = `HEADLINE — THREE STACKED LAYERS (most dominant visual element, top 40% of image):
+   LAYER 1 (largest): "${headlineLayer1}"
+   - MASSIVE 3D EXTRUDED METALLIC LETTERS in glowing orange-gold (#FF6B00) with chrome highlights
+   - Ultra-bold condensed font (Impact/Oswald style), fills the full width of the flyer
+   - Deep drop shadow, glowing halo behind letters, beveled 3D extrusion going down-right
+   
+   LAYER 2 (second largest): "${headlineLayer2}"
+   - LARGE bold silver/white metallic letters, slightly smaller than Layer 1
+   - Same 3D extrusion style but silver/steel color with dark grey shadow
+   - Centered below Layer 1
+   
+   LAYER 3 (date banner): "${headlineLayer3}"
+   - Bold text inside a dark rectangular banner/badge with glowing orange border
+   - Orange-gold color with metallic finish, centered below Layer 2
+   - Clearly readable, prominent but smaller than Layers 1 and 2`;
+  } else if (headlineLayer2) {
+    headlineBlock = `HEADLINE — TWO STACKED LAYERS (most dominant visual element, top 40% of image):
+   LAYER 1 (largest): "${headlineLayer1}"
+   - MASSIVE 3D EXTRUDED METALLIC LETTERS in glowing orange-gold with chrome highlights
+   - Ultra-bold condensed font, fills the full width of the flyer
+   - Deep drop shadow, glowing halo, beveled 3D extrusion
+   
+   LAYER 2: "${headlineLayer2}"
+   - LARGE bold silver/white metallic letters, centered below Layer 1
+   - Same 3D extrusion style but silver/steel color`;
+  } else {
+    headlineBlock = `HEADLINE (most dominant visual element, top 40% of image):
+   Text: "${headlineLayer1}"
+   - MASSIVE 3D EXTRUDED METALLIC LETTERS in glowing orange-gold (#FF6B00) with chrome highlights
+   - Ultra-bold condensed font (Impact/Oswald style), fills the full width of the flyer
+   - Deep drop shadow, glowing halo behind letters, beveled 3D extrusion going down-right`;
+  }
+
+  return `Create a COMPLETE, PRINT-READY promotional event flyer as a single fully-rendered image. Format: ${formatLabel}.
+
+CRITICAL REQUIREMENT: This is the COMPLETE FINISHED FLYER — not a background image. ALL text, layout elements, and graphics must be rendered directly into the image as if professionally typeset and printed. Every text element listed below MUST appear in the final image exactly as specified.
+
+═══════════════════════════════════════════
+BACKGROUND / SCENE
+═══════════════════════════════════════════
 ${sceneDescription}
 
-TYPOGRAPHY AND TEXT LAYOUT — render these text elements exactly:
+═══════════════════════════════════════════
+FLYER LAYOUT — TOP TO BOTTOM
+═══════════════════════════════════════════
 
-1. TOP HEADER AREA (top 10% of image):
-   - Text: "${schoolUpper}"
-   - Style: Bold white sans-serif, centered horizontally, with a semi-transparent dark banner behind it
-   - Size: Medium — clearly readable but not dominant
+[ZONE 1 — TOP HEADER, top 8% of image]
+- School/brand name: "${schoolUpper}"
+- Style: Bold white sans-serif text, centered, on a semi-transparent dark strip
+- Size: Small-medium, clearly readable
 
-2. PROGRAM NAME (most dominant element, 15% to 45% of image height):
-   - Text: "${programUpper}"
-   - Style: MASSIVE 3D EXTRUDED METALLIC LETTERS — the letters appear physically raised off the surface with a thick beveled edge. The letter face is bright ${primary} red/color. The extrusion/shadow goes down-right in progressively darker shades. Chrome/steel metallic finish with specular highlights. Deep drop shadow. Glowing halo of ${primary} color behind the letters.
-   - Font: Ultra-bold condensed sans-serif (like Oswald or Impact), maximum visual impact
-   - This text should be the single most visually dominant element on the entire flyer
+[ZONE 2 — MAIN HEADLINE, 8% to 50% of image height]
+${headlineBlock}
 
-3. BENEFITS LIST (left side, vertically centered, 35% to 70% of image height):
-   - Render on a semi-transparent dark panel covering the left 50% of the image
-   - Each benefit on its own line with a colored circle icon bullet:
-${benefitBullets}
-   - Style: White bold text, clean readable sans-serif
+[ZONE 3 — BENEFITS SECTION, 50% to 75% of image height]
+- Semi-transparent dark overlay panel covering the lower portion of the image
+- Benefits list with bullet points, white bold text:
+${benefitBullets}${audienceLine}
+- Each bullet point on its own line, left-aligned
+- Font: Clean bold sans-serif, clearly legible
 
-4. CALL TO ACTION (65% to 80% of image height):
-   - Text: "${ctaUpper}"
-   - Style: LARGE 3D BEVELED WHITE LETTERS — same extrusion technique as program name but white with dark grey extrusion. Second most dominant text element.
-   - Background: Semi-transparent dark panel behind the text
-${audienceLine}
+[ZONE 4 — CALL TO ACTION, 72% to 82% of image height]
+- Text: "${ctaUpper}"
+- Style: Large bold white or gold text, centered, on a dark panel
+- This should be the second most prominent text after the headline
 
-5. BOTTOM CONTACT STRIP (bottom 12% of image):
-   - Full-width dark semi-transparent horizontal bar
-   - LEFT SIDE: A QR code graphic (standard black-and-white square QR pattern, approximately 80x80 pixels)
-   - NEXT TO QR: Small text "SCAN TO REGISTER" in white
-   - RIGHT SIDE: Contact info "${contactLine}" in white bold text
+[ZONE 5 — BOTTOM CONTACT STRIP, bottom 15% of image]
+- Full-width dark semi-transparent horizontal bar
+- LEFT SIDE: A black-and-white QR code square (approximately 80x80 pixels)
+- NEXT TO QR CODE: Small white text "SCAN TO REGISTER"
+- RIGHT SIDE: "${contactLine}" in white bold text
+- The QR code must look like a real functional QR code with the characteristic square pattern
 
-PHOTOREALISM AND QUALITY STANDARDS:
-- ALL human figures must be photorealistic cinematic photography — NO cartoons, NO illustrations, NO anime, NO 3D renders
-- Color palette: Dark backgrounds (near-black), ${primary} as accent color, white for text
-- Professional agency quality — this should look like a $500+ design
-- High contrast throughout — every text element must be clearly legible against the background
-- Dramatic cinematic lighting: deep shadows, rim lighting, volumetric smoke/ember effects
-- The martial arts subject fills the right side behind the text layers
-- Print-ready sharpness: no blur, no artifacts, clean edges on all text
+═══════════════════════════════════════════
+QUALITY & STYLE REQUIREMENTS
+═══════════════════════════════════════════
+- ALL human figures: photorealistic cinematic photography — NO cartoons, NO illustrations, NO anime
+- Color palette: Dark near-black background, orange-gold (#FF6B00) and white as primary text colors
+- Professional print-quality — this should look like a $500+ agency design
+- High contrast: every text element must be clearly legible against the background
+- Cinematic lighting: deep shadows, rim lighting, volumetric effects
+- Print-ready sharpness: no blur, no artifacts, clean crisp edges on all text
 
-ABSOLUTE REQUIREMENTS — these elements MUST appear:
-- School name "${schoolUpper}" at the top
-- Program name "${programUpper}" as massive 3D metallic letters (most dominant element)
-- All benefit bullet points listed above
-- CTA text "${ctaUpper}" prominently displayed
-- A QR code graphic at the bottom
-- Contact info "${contactLine}" at the bottom
-- NO placeholder text, NO lorem ipsum, NO template artifacts
-- NO cartoons or illustrations — photorealistic only`;
+═══════════════════════════════════════════
+NON-NEGOTIABLE ELEMENTS (ALL must appear)
+═══════════════════════════════════════════
+✓ "${schoolUpper}" at the very top
+✓ "${headlineLayer1}" as massive 3D metallic letters${headlineLayer2 ? `\n✓ "${headlineLayer2}" as large metallic subtitle` : ""}${headlineLayer3 ? `\n✓ "${headlineLayer3}" as date banner` : ""}
+✓ All ${benefitLines.length} benefit bullet points
+✓ "${ctaUpper}" as call to action
+✓ A QR code square in the bottom-left area
+✓ "${contactLine}" contact info at the bottom
+✗ NO placeholder text, NO lorem ipsum, NO template artifacts
+✗ NO cartoons or illustrations — photorealistic photography only`;
 }
 
 // ── generateQrCodeDataUrl (exported for use in kaiCreativeRouter) ─────────────

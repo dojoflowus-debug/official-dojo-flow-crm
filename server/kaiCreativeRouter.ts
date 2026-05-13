@@ -727,22 +727,26 @@ export const kaiCreativeRouter = router({
         input.size === "instagram_story" || input.size === "facebook_ad";
 
       if (!input.sourceImageBase64 && isFlyerSize) {
-        // Parse flyer data from the brief (extracts program, benefits, CTA, etc.)
+        // Parse flyer data from the brief (extracts program, event subtitle, date, benefits, CTA, etc.)
+        // Merge briefAnswers into the brief string for richer context extraction
+        const combinedBrief = input.briefAnswers && Object.keys(input.briefAnswers).length > 0
+          ? `${input.prompt}. ${Object.entries(input.briefAnswers).map(([k, v]) => `${k}: ${v}`).join('. ')}`
+          : input.prompt;
         const flyerData = await parseFlyerDataFromBrief(
-          input.prompt,
-          input.briefAnswers ?? {},
+          combinedBrief,
           {
-            schoolName: brand.schoolName ?? null,
-            phone: brand.phone ?? null,
-            email: (brand as any).email ?? null,
-            website: brand.website ?? null,
-            primaryColor: brand.primaryColor ?? null,
-            secondaryColor: brand.secondaryColor ?? null,
-            logoUrl: brand.logoUrl ?? null,
-            address: brand.address ?? null,
+            schoolName: brand.schoolName ?? undefined,
+            phone: brand.phone ?? undefined,
+            email: (brand as any).email ?? undefined,
+            website: brand.website ?? undefined,
+            primaryColor: brand.primaryColor ?? undefined,
+            secondaryColor: brand.secondaryColor ?? undefined,
+            logoUrl: brand.logoUrl ?? undefined,
+            address: brand.address ?? undefined,
           },
-          input.size as "flyer" | "instagram_post" | "instagram_story" | "facebook_ad" | "website_banner"
+          { size: input.size as "flyer" | "instagram_post" | "instagram_story" | "facebook_ad" | "website_banner" }
         );
+        console.log(`[KaiCreative] FlyerData extracted: program="${flyerData.programName}", subtitle="${flyerData.eventSubtitle}", date="${flyerData.eventDate}", time="${flyerData.eventTime}"`);
         // Build a comprehensive Imagen prompt that includes ALL flyer text/layout
         const fullFlyerPrompt = buildFullFlyerPrompt(flyerData);
         console.log(`[KaiCreative] Full AI flyer prompt built: ${fullFlyerPrompt.length} chars, program="${flyerData.programName}", size=${flyerData.size}`);
@@ -1024,20 +1028,22 @@ export async function generateFlyerFromKai(
 
   console.log(`[KaiCreative] Starting full AI flyer pipeline for: "${prompt}" (${validSize})`);
 
-  const flyerData = await parseFlyerDataFromBrief(prompt, {}, {
-    schoolName: brand.schoolName,
-    phone: brand.phone,
-    email: brand.email,
-    website: brand.website,
-    address: brand.address,
-    primaryColor: brand.primaryColor,
-    secondaryColor: brand.secondaryColor,
-    logoUrl: brand.logoUrl,
-  }, validSize);
-
-  console.log(`[KaiCreative] FlyerData: program="${flyerData.programName}", cta="${flyerData.callToAction}"`);
-
-  const fullFlyerPrompt = buildFullFlyerPrompt(flyerData);
+   const flyerData = await parseFlyerDataFromBrief(
+    prompt,
+    {
+      schoolName: brand.schoolName ?? undefined,
+      phone: brand.phone ?? undefined,
+      email: brand.email ?? undefined,
+      website: brand.website ?? undefined,
+      address: brand.address ?? undefined,
+      primaryColor: brand.primaryColor ?? undefined,
+      secondaryColor: brand.secondaryColor ?? undefined,
+      logoUrl: brand.logoUrl ?? undefined,
+    },
+    { size: validSize as "flyer" | "instagram_post" | "instagram_story" | "facebook_ad" | "website_banner" }
+  );
+  console.log(`[KaiCreative] FlyerData: program="${flyerData.programName}", subtitle="${flyerData.eventSubtitle}", date="${flyerData.eventDate}", cta="${flyerData.callToAction}"`);
+  const fullFlyerPrompt = buildFullFlyerPrompt(flyerData);;
   console.log(`[KaiCreative] Full AI flyer prompt: ${fullFlyerPrompt.length} chars`);
 
   const genResult = await generateImage(fullFlyerPrompt, validSize, brand, 'energetic');
