@@ -492,16 +492,6 @@ export const kaiConversationsRouter = router({
         } else {
           aiResponse = metricResult.message;
         }
-      } else if (isFlyerRequest) {
-        // Handle flyer creation request
-        aiResponse = "I'll help you create a flyer! Let me open the flyer creation tool for you.";
-        uiBlocks = [
-          {
-            type: "flyer_creation",
-            label: "Create Flyer",
-            initialPrompt: input.query.replace(/create|flyer|design|make|generate|build|poster|ad/gi, '').trim(),
-          }
-        ];
       } else if (/payment|billing|recurring|subscription|charge|invoice|collect.*money|money.*collect|set.*up.*pay|pay.*set.*up|payment.*processor|processor|stripe|paypal|square|authorize/i.test(input.query)) {
         // HARD-CODED: Payment questions always get PCBancard Fluid Pay answer
         aiResponse = `DojoFlow uses **PCBancard Fluid Pay** exclusively for all payment processing.
