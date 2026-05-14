@@ -1271,3 +1271,97 @@ export async function compositeLogoOntoFlyer(
     return { base64: flyerBase64, mimeType };
   }
 }
+
+// ── compositeQrAndContactBar ──────────────────────────────────────────────────
+// Generates a QR code and contact bar, then composites them onto the flyer image.
+// This guarantees the QR code, phone, website, and CTA always appear on every flyer
+// regardless of what the AI image generator renders.
+export async function compositeQrAndContactBar(
+  flyerBase64: string,
+  mimeType: string,
+  flyerData: {
+    qrUrl?: string | null;
+    phone?: string | null;
+    website?: string | null;
+    callToAction?: string | null;
+    schoolName?: string | null;
+  }
+): Promise<{ base64: string; mimeType: string }> {
+  const { qrUrl, phone, website, callToAction, schoolName } = flyerData;
+
+  // Only proceed if we have at least a QR URL or contact info
+  if (!qrUrl && !phone && !website) return { base64: flyerBase64, mimeType };
+
+  try {
+    const QRCode = (await import('qrcode')).default;
+
+    // 1. Get flyer dimensions
+    const flyerBuffer = Buffer.from(flyerBase64, 'base64');
+    const flyerMeta = await sharp(flyerBuffer).metadata();
+    const W = flyerMeta.width ?? 1080;
+    const H = flyerMeta.height ?? 1440;
+
+    const compositeInputs: sharp.OverlayOptions[] = [];
+
+    // 2. Generate QR code if we have a URL
+    if (qrUrl) {
+      const qrSize = Math.round(W * 0.22); // 22% of flyer width
+      const qrBuffer = await QRCode.toBuffer(qrUrl, {
+        type: 'png',
+        width: qrSize,
+        margin: 1,
+        color: { dark: '#000000', light: '#FFFFFF' },
+      });
+
+      // Add white padding around QR code
+      const padding = Math.round(qrSize * 0.06);
+      const qrWithPadding = await sharp(qrBuffer)
+        .extend({ top: padding, bottom: padding, left: padding, right: padding, background: { r: 255, g: 255, b: 255, alpha: 1 } })
+        .toBuffer();
+
+      const qrMeta = await sharp(qrWithPadding).metadata();
+      const qrW = qrMeta.width ?? qrSize;
+      const qrH = qrMeta.height ?? qrSize;
+
+      // Position: bottom-right, 3% margin from right and bottom
+      const qrLeft = W - qrW - Math.round(W * 0.03);
+      const qrTop = H - qrH - Math.round(H * 0.06);
+
+      compositeInputs.push({ input: qrWithPadding, left: qrLeft, top: qrTop, blend: 'over' });
+    }
+
+    // 3. Create contact bar SVG at the very bottom
+    const barH = Math.round(H * 0.055); // 5.5% of flyer height
+    const fontSize = Math.round(barH * 0.38);
+    const ctaText = callToAction ?? 'REGISTER TODAY';
+    const contactParts: string[] = [];
+    if (phone) contactParts.push(phone);
+    if (website) contactParts.push(website);
+    const contactText = contactParts.join('  •  ');
+
+    const contactBarSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${barH}">
+      <rect width="${W}" height="${barH}" fill="rgba(0,0,0,0.82)" />
+      <text x="${W / 2}" y="${Math.round(barH * 0.48)}" font-family="Arial, sans-serif" font-size="${fontSize}" font-weight="bold" fill="#FF6B00" text-anchor="middle" dominant-baseline="middle">${ctaText}</text>
+      <text x="${W / 2}" y="${Math.round(barH * 0.78)}" font-family="Arial, sans-serif" font-size="${Math.round(fontSize * 0.78)}" fill="#FFFFFF" text-anchor="middle" dominant-baseline="middle">${contactText}</text>
+    </svg>`;
+
+    const contactBarBuffer = Buffer.from(contactBarSvg);
+    compositeInputs.push({
+      input: contactBarBuffer,
+      left: 0,
+      top: H - barH,
+      blend: 'over',
+    });
+
+    // 4. Composite everything onto the flyer
+    const result = await sharp(flyerBuffer)
+      .composite(compositeInputs)
+      .png()
+      .toBuffer();
+
+    return { base64: result.toString('base64'), mimeType: 'image/png' };
+  } catch (err) {
+    console.warn('[compositeQrAndContactBar] Failed, returning original:', err);
+    return { base64: flyerBase64, mimeType };
+  }
+}

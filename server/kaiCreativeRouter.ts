@@ -45,6 +45,7 @@ import {
   generateQrCodeDataUrl,
   buildFullFlyerPrompt,
   compositeLogoOntoFlyer,
+  compositeQrAndContactBar,
 } from "./flyerRenderer";
 
 // ── Zod schemas ───────────────────────────────────────────────────────────────
@@ -1063,6 +1064,20 @@ export async function generateFlyerFromKai(
     finalMimeType = composited.mimeType;
     console.log(`[KaiCreative] Logo composited successfully`);
   }
+
+  // ── Composite QR code and contact bar onto the flyer ─────────────────────────
+  // This guarantees QR code, phone, website, and CTA always appear on every flyer
+  // regardless of what the AI image generator renders.
+  const qrContactResult = await compositeQrAndContactBar(finalBase64, finalMimeType, {
+    qrUrl: flyerData.website ?? brand.website ?? 'https://mydojoma.com',
+    phone: flyerData.phone ?? brand.phone ?? null,
+    website: flyerData.website ?? brand.website ?? null,
+    callToAction: flyerData.callToAction ?? 'REGISTER TODAY',
+    schoolName: flyerData.schoolName ?? brand.schoolName ?? null,
+  });
+  finalBase64 = qrContactResult.base64;
+  finalMimeType = qrContactResult.mimeType;
+  console.log(`[KaiCreative] QR code and contact bar composited onto flyer`);
 
   // Upload to S3
   const { url: s3Url, key: s3Key } = await saveImageToS3(finalBase64, finalMimeType, orgId, 'kai-flyer');
