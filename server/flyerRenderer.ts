@@ -1401,8 +1401,8 @@ export async function compositeFullFlyerOverlay(
     const topStripH = Math.round(H * 0.07);
     const schoolText = (schoolName || 'MY DOJO').toUpperCase();
     const topStripSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${topStripH}">
-      <rect width="${W}" height="${topStripH}" fill="rgba(0,0,0,0.65)" />
-      <text x="${W / 2}" y="${topStripH / 2}" font-family="Arial Black, Arial, sans-serif" font-size="${schoolNameSize}" font-weight="900" fill="#FFFFFF" text-anchor="middle" dominant-baseline="middle" letter-spacing="4">${escSvg(schoolText)}</text>
+      <rect width="${W}" height="${topStripH}" fill="#000000" fill-opacity="0.75" />
+      <text x="${W / 2}" y="${Math.round(topStripH * 0.68)}" font-family="Arial Black, Arial, sans-serif" font-size="${schoolNameSize}" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="4">${escSvg(schoolText)}</text>
     </svg>`;
     compositeInputs.push({ input: Buffer.from(topStripSvg), left: 0, top: 0, blend: 'over' });
 
@@ -1419,7 +1419,7 @@ export async function compositeFullFlyerOverlay(
           <stop offset="100%" stop-color="rgba(0,0,0,0)" />
         </linearGradient>
       </defs>
-      <rect width="${W}" height="${headlineBlockH}" fill="url(#hg)" />
+      <rect width="${W}" height="${Math.round(headlineBlockH * 0.6)}" fill="#000000" fill-opacity="0.6" />
     </svg>`;
     compositeInputs.push({ input: Buffer.from(headlineBgSvg), left: 0, top: headlineY, blend: 'over' });
 
@@ -1427,7 +1427,7 @@ export async function compositeFullFlyerOverlay(
     const programUpper = programName.toUpperCase();
     const programY = headlineY + Math.round(headlineBlockH * 0.28);
     const programSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${Math.round(headlineSize * 1.3)}">
-      <text x="${W / 2}" y="${Math.round(headlineSize * 1.05)}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${headlineSize}" font-weight="900" fill="#FF6B00" stroke="#000000" stroke-width="${Math.round(headlineSize * 0.04)}" text-anchor="middle" letter-spacing="-2">${escSvg(programUpper)}</text>
+      <text x="${W / 2}" y="${Math.round(headlineSize * 1.05)}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${headlineSize}" font-weight="900" fill="#FF6B00" stroke="#1A0A00" stroke-width="${Math.round(headlineSize * 0.05)}" paint-order="stroke" text-anchor="middle" letter-spacing="-2">${escSvg(programUpper)}</text>
     </svg>`;
     compositeInputs.push({ input: Buffer.from(programSvg), left: 0, top: programY, blend: 'over' });
 
@@ -1437,7 +1437,7 @@ export async function compositeFullFlyerOverlay(
     if (eventSubtitle) {
       const subtitleUpper = eventSubtitle.toUpperCase();
       const subtitleSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${Math.round(subtitleSize * 1.4)}">
-        <text x="${W / 2}" y="${Math.round(subtitleSize * 1.1)}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${subtitleSize}" font-weight="900" fill="#FFFFFF" stroke="#000000" stroke-width="${Math.round(subtitleSize * 0.04)}" text-anchor="middle" letter-spacing="2">${escSvg(subtitleUpper)}</text>
+        <text x="${W / 2}" y="${Math.round(subtitleSize * 1.1)}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${subtitleSize}" font-weight="900" fill="#FFFFFF" stroke="#000000" stroke-width="${Math.round(subtitleSize * 0.05)}" paint-order="stroke" text-anchor="middle" letter-spacing="2">${escSvg(subtitleUpper)}</text>
       </svg>`;
       compositeInputs.push({ input: Buffer.from(subtitleSvg), left: 0, top: currentY, blend: 'over' });
       currentY += Math.round(subtitleSize * 1.3);
@@ -1452,8 +1452,8 @@ export async function compositeFullFlyerOverlay(
       const badgeH = Math.round(dateBadgeSize * 1.7);
       const badgeLeft = Math.round((W - badgeW) / 2);
       const badgeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${badgeW}" height="${badgeH}">
-        <rect x="3" y="3" width="${badgeW - 6}" height="${badgeH - 6}" rx="${Math.round(badgeH * 0.12)}" fill="#1A1A1A" stroke="#FF6B00" stroke-width="4" />
-        <text x="${badgeW / 2}" y="${badgeH / 2}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${dateBadgeSize}" font-weight="900" fill="#FF6B00" text-anchor="middle" dominant-baseline="middle" letter-spacing="3">${escSvg(dateUpper)}</text>
+        <rect x="3" y="3" width="${badgeW - 6}" height="${badgeH - 6}" rx="${Math.round(badgeH * 0.12)}" fill="#1A1A1A" stroke="#FF6B00" stroke-width="5" />
+        <text x="${badgeW / 2}" y="${Math.round(badgeH * 0.68)}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${dateBadgeSize}" font-weight="900" fill="#FF6B00" text-anchor="middle" letter-spacing="3">${escSvg(dateUpper)}</text>
       </svg>`;
       compositeInputs.push({ input: Buffer.from(badgeSvg), left: badgeLeft, top: currentY, blend: 'over' });
       currentY += Math.round(badgeH + H * 0.01);
@@ -1467,15 +1467,13 @@ export async function compositeFullFlyerOverlay(
       const benefitPanelH = Math.round(benefitLines.length * lineHeight + benefitSize * 1.2);
 
       const benefitBgSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${benefitPanelH}">
-        <rect width="${W}" height="${benefitPanelH}" fill="rgba(0,0,0,0.72)" />
+        <rect width="${W}" height="${benefitPanelH}" fill="#000000" fill-opacity="0.78" />
       </svg>`;
       compositeInputs.push({ input: Buffer.from(benefitBgSvg), left: 0, top: benefitPanelTop, blend: 'over' });
 
       const benefitTextSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${benefitPanelH}">
         ${benefitLines.map((b, i) => `
-          <text x="${Math.round(W * 0.08)}" y="${Math.round(benefitSize * 0.9 + i * lineHeight)}" font-family="Arial, sans-serif" font-size="${benefitSize}" font-weight="bold" fill="#FFFFFF">
-            <tspan fill="#FF6B00" font-size="${Math.round(benefitSize * 1.1)}">• </tspan>${escSvg(b)}
-          </text>`).join('')}
+          <text x="${Math.round(W * 0.07)}" y="${Math.round(benefitSize * 1.1 + i * lineHeight)}" font-family="Arial Black, Arial, sans-serif" font-size="${benefitSize}" font-weight="bold" fill="#FFFFFF">&#x2022; ${escSvg(b)}</text>`).join('')}
       </svg>`;
       compositeInputs.push({ input: Buffer.from(benefitTextSvg), left: 0, top: benefitPanelTop, blend: 'over' });
     }
@@ -1500,7 +1498,7 @@ export async function compositeFullFlyerOverlay(
 
     // Bottom bar background
     const bottomBgSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${bottomBarH}">
-      <rect width="${W}" height="${bottomBarH}" fill="rgba(0,0,0,0.88)" />
+      <rect width="${W}" height="${bottomBarH}" fill="#000000" fill-opacity="0.92" />
     </svg>`;
     compositeInputs.push({ input: Buffer.from(bottomBgSvg), left: 0, top: bottomBarTop, blend: 'over' });
 
@@ -1513,8 +1511,8 @@ export async function compositeFullFlyerOverlay(
 
     const textAreaW = qrBuffer ? W - qrSize - qrPad * 3 : W;
     const ctaSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${textAreaW}" height="${bottomBarH}">
-      <text x="${Math.round(textAreaW * 0.05)}" y="${Math.round(bottomBarH * 0.42)}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${ctaSize}" font-weight="900" fill="#FF6B00" letter-spacing="2">${escSvg(ctaText)}</text>
-      ${contactLine ? `<text x="${Math.round(textAreaW * 0.05)}" y="${Math.round(bottomBarH * 0.78)}" font-family="Arial, sans-serif" font-size="${contactSize}" fill="#FFFFFF">${escSvg(contactLine)}</text>` : ''}
+      <text x="${Math.round(textAreaW * 0.05)}" y="${Math.round(bottomBarH * 0.45)}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${ctaSize}" font-weight="900" fill="#FF6B00" letter-spacing="2">${escSvg(ctaText)}</text>
+      ${contactLine ? `<text x="${Math.round(textAreaW * 0.05)}" y="${Math.round(bottomBarH * 0.80)}" font-family="Arial, sans-serif" font-size="${contactSize}" fill="#DDDDDD">${escSvg(contactLine)}</text>` : ''}
     </svg>`;
     compositeInputs.push({ input: Buffer.from(ctaSvg), left: 0, top: bottomBarTop, blend: 'over' });
 
