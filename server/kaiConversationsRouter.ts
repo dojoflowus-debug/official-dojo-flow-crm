@@ -739,6 +739,35 @@ Always place the UI block on its own line after your text response.`;
                 if (parsed?.action === 'refresh_user') {
                   refreshUser = true;
                 }
+                // Extract creative_image (flyer) result
+                if (parsed?.type === 'creative_image') {
+                  if (!uiBlocks) uiBlocks = [];
+                  (uiBlocks as any[]).push({
+                    type: 'creative_image',
+                    imageUrl: parsed.imageUrl,
+                    imageBase64: parsed.imageBase64,
+                    mimeType: parsed.mimeType,
+                    prompt: parsed.prompt,
+                    size: parsed.size,
+                    assetId: parsed.assetId,
+                    savedToLibrary: parsed.savedToLibrary,
+                    flyerHtml: null,
+                    label: 'Generated Flyer',
+                  });
+                  // Override the AI response with a friendly message
+                  aiResponse = `Here's your flyer! It's been saved to your Creative Library. You can download it, open it in the Creative Studio to make edits, or ask me to adjust anything.`;
+                }
+                // Extract creative_variations result
+                if (parsed?.type === 'creative_variations') {
+                  if (!uiBlocks) uiBlocks = [];
+                  (uiBlocks as any[]).push({
+                    type: 'creative_variations',
+                    variations: parsed.variations,
+                    prompt: parsed.prompt,
+                    size: parsed.size,
+                    label: '4 Style Variations',
+                  });
+                }
               } catch (_) {}
             }
 

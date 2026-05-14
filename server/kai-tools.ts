@@ -1041,6 +1041,32 @@ export async function executeKaiTool(
         });
       }
 
+      case 'generate_flyer': {
+        const orgIdFlyer = ctx?.currentOrganizationId;
+        if (!orgIdFlyer) return JSON.stringify({ success: false, message: 'No organization context — cannot generate flyer.' });
+        const { generateFlyerFromKai } = await import('./kaiCreativeRouter');
+        const flyerPrompt = [
+          toolArgs.prompt || '',
+          toolArgs.program ? `Program: ${toolArgs.program}` : '',
+          toolArgs.audience ? `Audience: ${toolArgs.audience}` : '',
+          toolArgs.changes ? `REQUESTED CHANGES: ${toolArgs.changes}` : '',
+        ].filter(Boolean).join('. ');
+        const flyerResult = await generateFlyerFromKai(orgIdFlyer, flyerPrompt, toolArgs.size || 'flyer');
+        return JSON.stringify({
+          success: true,
+          type: 'creative_image',
+          imageUrl: flyerResult.imageUrl,
+          imageBase64: flyerResult.imageBase64,
+          mimeType: flyerResult.mimeType,
+          prompt: flyerResult.prompt,
+          size: flyerResult.size,
+          assetId: flyerResult.assetId,
+          savedToLibrary: flyerResult.savedToLibrary,
+          flyerHtml: flyerResult.flyerHtml ?? null,
+          message: 'Flyer generated successfully.',
+        });
+      }
+
       default:
         return JSON.stringify({
           success: false,
