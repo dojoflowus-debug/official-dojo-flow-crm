@@ -1127,53 +1127,21 @@ export function buildFullFlyerPrompt(flyerData: FlyerData): string {
     sceneDescription = `ONE martial artist in a clean white karate gi performing a powerful dynamic kick or punch with intense determined expression. Dark cinematic background with deep red glowing energy, floating ember particles, volumetric smoke, dramatic red rim lighting. The martial artist is positioned on the right side of the image.`;
   }
 
-  // ── Text content assembly ──────────────────────────────────────────────────
-  const benefitLines = benefits.slice(0, 4).map((b: string) => {
-    const parts = b.split("|");
-    return parts[0].trim();
-  });
-
-  const ctaText = callToAction || offer || "FREE TRIAL CLASS";
-  const contactLine = [phone, website].filter(Boolean).join("  •  ");
-
   const formatLabel = size === "instagram_story" ? "vertical 9:16 Instagram story"
     : size === "instagram_post" ? "square 1:1 Instagram post"
     : size === "facebook_ad" ? "vertical Facebook ad"
     : "vertical 8.5x11 flyer poster";
 
-  const schoolUpper = (schoolName || "MY DOJO").toUpperCase();
-  const programUpper = programName.toUpperCase();
-  const ctaUpper = ctaText.toUpperCase();
-
-  // Build the headline block — up to 3 layers: program name, subtitle, date
-  const headlineLayer1 = programUpper;  // e.g. "NERF WARS"
-  const headlineLayer2 = eventSubtitle || null;  // e.g. "PARENTS NIGHT OUT"
-  const headlineLayer3 = eventDate || null;  // e.g. "JUNE 10TH"
-
-  // Build benefit text as a clean list
-  const benefitTextList = benefitLines.map((b: string) => `"${b}"`).join(', ');
-  const contactText = contactLine ? `The bottom of the flyer shows the contact information "${contactLine}" in white bold text.` : '';
-
-  // Build the headline sentence
-  let headlineSentence: string;
-  if (headlineLayer2 && headlineLayer3) {
-    headlineSentence = `The most dominant visual element is a three-part stacked headline. The top and largest text reads "${headlineLayer1}" in massive 3D extruded metallic letters with an orange-gold glow, chrome highlights, deep drop shadow, and beveled extrusion — these letters fill the full width of the flyer. Directly below in slightly smaller but still very large silver-white metallic 3D letters reads "${headlineLayer2}". Below that, inside a dark rectangular badge with a glowing orange border, reads "${headlineLayer3}" in bold orange-gold metallic text.`;
-  } else if (headlineLayer2) {
-    headlineSentence = `The most dominant visual element is a two-part stacked headline. The top and largest text reads "${headlineLayer1}" in massive 3D extruded metallic letters with an orange-gold glow, chrome highlights, and deep drop shadow. Directly below in slightly smaller silver-white metallic 3D letters reads "${headlineLayer2}".`;
-  } else {
-    headlineSentence = `The most dominant visual element is the text "${headlineLayer1}" in massive 3D extruded metallic letters with an orange-gold glow, chrome highlights, deep drop shadow, and beveled extrusion — these letters fill the full width of the flyer.`;
-  }
-
-  const offerLine = offer ? ` Below the benefits, in large bold orange-gold text, is the price "${offer}".` : '';
-  const noExtraText = `Do NOT add any price, dollar amount, age range, time, or extra text that is not explicitly listed above. Only render the text elements described.`;
-
-  return `A complete, print-ready ${formatLabel} for a martial arts school event. This is the fully finished flyer with all text and graphics rendered as a single image — not a background photo.
+  // ── BACKGROUND SCENE ONLY ─────────────────────────────────────────────────
+  // We ask the AI ONLY for a photorealistic background scene with NO text.
+  // All text (headline, benefits, CTA, QR code, contact) is composited
+  // programmatically by compositeFullFlyerOverlay() using sharp+SVG.
+  // This eliminates AI text hallucination entirely.
+  return `A photorealistic ${formatLabel} background scene for a martial arts school event. This is a BACKGROUND IMAGE ONLY — it must contain absolutely NO text, NO words, NO letters, NO numbers, NO logos, NO QR codes, NO banners, NO overlays. Pure cinematic photography scene only.
 
 ${sceneDescription}
 
-The flyer layout from top to bottom: At the very top of the flyer, in small bold white text centered on a semi-transparent dark strip, is the school name "${schoolUpper}". ${headlineSentence} In the lower half of the flyer, over a semi-transparent dark overlay panel, there is a bullet-point list of event highlights in white bold text: ${benefitTextList}.${offerLine} Below the benefits, in large bold white text, is the call-to-action "${ctaUpper}". At the very bottom of the flyer is a full-width dark strip. On the right side of this bottom strip is a black-and-white QR code square (a real scannable QR code pattern — not a placeholder). To the left of the QR code, in small white bold text, is "SCAN TO REGISTER". ${contactText}
-
-The overall style is cinematic and high-energy: dark near-black background, orange-gold and white text, dramatic rim lighting, volumetric smoke effects, photorealistic photography (no cartoons or illustrations). Professional agency-quality design worth $500+. All text must be sharp, legible, and correctly spelled exactly as written above. ${noExtraText}`;
+The image must be full-bleed with the scene filling every pixel from edge to edge. Leave the upper 15% of the image slightly darker (for a text overlay area). Leave the lower 30% of the image with a dark semi-transparent gradient fade to black (for text and contact info overlay). The overall style is cinematic and high-energy: dark near-black background, dramatic orange and electric blue rim lighting, volumetric smoke effects, photorealistic photography (no cartoons, no illustrations, no text whatsoever). Professional commercial photography quality.`;
 }
 
 // ── generateQrCodeDataUrl (exported for use in kaiCreativeRouter) ─────────────
@@ -1364,4 +1332,245 @@ export async function compositeQrAndContactBar(
     console.warn('[compositeQrAndContactBar] Failed, returning original:', err);
     return { base64: flyerBase64, mimeType };
   }
+}
+
+// ── compositeFullFlyerOverlay ─────────────────────────────────────────────────
+// Composites ALL text layers onto the AI-generated background image using sharp+SVG.
+// This is the hybrid approach: AI generates the background scene, we render all text
+// programmatically — eliminating AI text hallucination entirely.
+//
+// Layout (top to bottom):
+//   [TOP STRIP]   School name (small, centered, semi-transparent dark bar)
+//   [HEADLINE]    Program name (massive 3D-style), subtitle, date badge
+//   [MIDDLE]      Background scene fills this area
+//   [BENEFITS]    Dark overlay panel with bullet points
+//   [BOTTOM BAR]  CTA text | QR code | Phone • Website
+export async function compositeFullFlyerOverlay(
+  backgroundBase64: string,
+  mimeType: string,
+  flyerData: {
+    programName: string;
+    eventSubtitle?: string | null;
+    eventDate?: string | null;
+    schoolName?: string | null;
+    phone?: string | null;
+    website?: string | null;
+    benefits?: string[];
+    callToAction?: string | null;
+    offer?: string | null;
+    logoBase64?: string | null;  // base64 PNG of school logo
+    qrUrl?: string | null;
+  }
+): Promise<{ base64: string; mimeType: string }> {
+  const {
+    programName,
+    eventSubtitle,
+    eventDate,
+    schoolName,
+    phone,
+    website,
+    benefits = [],
+    callToAction,
+    offer,
+    logoBase64,
+    qrUrl,
+  } = flyerData;
+
+  try {
+    const QRCode = (await import('qrcode')).default;
+
+    // 1. Get background dimensions
+    const bgBuffer = Buffer.from(backgroundBase64, 'base64');
+    const bgMeta = await sharp(bgBuffer).metadata();
+    const W = bgMeta.width ?? 1080;
+    const H = bgMeta.height ?? 1440;
+
+    // Typography scale based on flyer width
+    const scale = W / 1080;
+    const headlineSize = Math.round(120 * scale);
+    const subtitleSize = Math.round(72 * scale);
+    const dateBadgeSize = Math.round(58 * scale);
+    const benefitSize = Math.round(36 * scale);
+    const ctaSize = Math.round(44 * scale);
+    const schoolNameSize = Math.round(28 * scale);
+    const contactSize = Math.round(28 * scale);
+
+    const compositeInputs: sharp.OverlayOptions[] = [];
+
+    // ── 2. TOP STRIP: School name ─────────────────────────────────────────────
+    const topStripH = Math.round(H * 0.07);
+    const schoolText = (schoolName || 'MY DOJO').toUpperCase();
+    const topStripSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${topStripH}">
+      <rect width="${W}" height="${topStripH}" fill="rgba(0,0,0,0.65)" />
+      <text x="${W / 2}" y="${topStripH / 2}" font-family="Arial Black, Arial, sans-serif" font-size="${schoolNameSize}" font-weight="900" fill="#FFFFFF" text-anchor="middle" dominant-baseline="middle" letter-spacing="4">${escSvg(schoolText)}</text>
+    </svg>`;
+    compositeInputs.push({ input: Buffer.from(topStripSvg), left: 0, top: 0, blend: 'over' });
+
+    // ── 3. HEADLINE BLOCK: Program name + subtitle + date badge ──────────────
+    // Positioned just below the top strip, centered
+    const headlineY = topStripH + Math.round(H * 0.02);
+    const headlineBlockH = Math.round(H * 0.32);
+
+    // Dark gradient overlay behind headline for legibility
+    const headlineBgSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${headlineBlockH}">
+      <defs>
+        <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(0,0,0,0.75)" />
+          <stop offset="100%" stop-color="rgba(0,0,0,0)" />
+        </linearGradient>
+      </defs>
+      <rect width="${W}" height="${headlineBlockH}" fill="url(#hg)" />
+    </svg>`;
+    compositeInputs.push({ input: Buffer.from(headlineBgSvg), left: 0, top: headlineY, blend: 'over' });
+
+    // Program name (e.g. "NERF WARS") — massive orange-gold text with stroke
+    const programUpper = programName.toUpperCase();
+    const programY = headlineY + Math.round(headlineBlockH * 0.28);
+    const programSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${Math.round(headlineSize * 1.3)}">
+      <text x="${W / 2}" y="${Math.round(headlineSize * 1.05)}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${headlineSize}" font-weight="900" fill="#FF6B00" stroke="#000000" stroke-width="${Math.round(headlineSize * 0.04)}" text-anchor="middle" letter-spacing="-2">${escSvg(programUpper)}</text>
+    </svg>`;
+    compositeInputs.push({ input: Buffer.from(programSvg), left: 0, top: programY, blend: 'over' });
+
+    let currentY = programY + Math.round(headlineSize * 1.2);
+
+    // Subtitle (e.g. "PARENTS NIGHT OUT") — silver-white text
+    if (eventSubtitle) {
+      const subtitleUpper = eventSubtitle.toUpperCase();
+      const subtitleSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${Math.round(subtitleSize * 1.4)}">
+        <text x="${W / 2}" y="${Math.round(subtitleSize * 1.1)}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${subtitleSize}" font-weight="900" fill="#FFFFFF" stroke="#000000" stroke-width="${Math.round(subtitleSize * 0.04)}" text-anchor="middle" letter-spacing="2">${escSvg(subtitleUpper)}</text>
+      </svg>`;
+      compositeInputs.push({ input: Buffer.from(subtitleSvg), left: 0, top: currentY, blend: 'over' });
+      currentY += Math.round(subtitleSize * 1.3);
+    }
+
+    // Date badge (e.g. "JUNE 10TH") — orange badge with dark border
+    if (eventDate) {
+      const dateUpper = eventDate.toUpperCase();
+      const badgePadX = Math.round(W * 0.06);
+      const badgePadY = Math.round(dateBadgeSize * 0.3);
+      const badgeW = Math.round(W * 0.55);
+      const badgeH = Math.round(dateBadgeSize * 1.7);
+      const badgeLeft = Math.round((W - badgeW) / 2);
+      const badgeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${badgeW}" height="${badgeH}">
+        <rect x="3" y="3" width="${badgeW - 6}" height="${badgeH - 6}" rx="${Math.round(badgeH * 0.12)}" fill="#1A1A1A" stroke="#FF6B00" stroke-width="4" />
+        <text x="${badgeW / 2}" y="${badgeH / 2}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${dateBadgeSize}" font-weight="900" fill="#FF6B00" text-anchor="middle" dominant-baseline="middle" letter-spacing="3">${escSvg(dateUpper)}</text>
+      </svg>`;
+      compositeInputs.push({ input: Buffer.from(badgeSvg), left: badgeLeft, top: currentY, blend: 'over' });
+      currentY += Math.round(badgeH + H * 0.01);
+    }
+
+    // ── 4. BENEFITS PANEL: Dark overlay in lower-middle area ─────────────────
+    const benefitLines = benefits.slice(0, 4).map((b: string) => b.split('|')[0].trim());
+    if (benefitLines.length > 0) {
+      const benefitPanelTop = Math.round(H * 0.58);
+      const lineHeight = Math.round(benefitSize * 1.6);
+      const benefitPanelH = Math.round(benefitLines.length * lineHeight + benefitSize * 1.2);
+
+      const benefitBgSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${benefitPanelH}">
+        <rect width="${W}" height="${benefitPanelH}" fill="rgba(0,0,0,0.72)" />
+      </svg>`;
+      compositeInputs.push({ input: Buffer.from(benefitBgSvg), left: 0, top: benefitPanelTop, blend: 'over' });
+
+      const benefitTextSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${benefitPanelH}">
+        ${benefitLines.map((b, i) => `
+          <text x="${Math.round(W * 0.08)}" y="${Math.round(benefitSize * 0.9 + i * lineHeight)}" font-family="Arial, sans-serif" font-size="${benefitSize}" font-weight="bold" fill="#FFFFFF">
+            <tspan fill="#FF6B00" font-size="${Math.round(benefitSize * 1.1)}">• </tspan>${escSvg(b)}
+          </text>`).join('')}
+      </svg>`;
+      compositeInputs.push({ input: Buffer.from(benefitTextSvg), left: 0, top: benefitPanelTop, blend: 'over' });
+    }
+
+    // ── 5. BOTTOM BAR: CTA + QR code + Contact info ──────────────────────────
+    const bottomBarH = Math.round(H * 0.14);
+    const bottomBarTop = H - bottomBarH;
+    const qrSize = Math.round(bottomBarH * 0.82);
+    const qrPad = Math.round(bottomBarH * 0.09);
+
+    // Generate QR code
+    let qrBuffer: Buffer | null = null;
+    const qrTarget = qrUrl || website || 'https://mydojoma.com';
+    try {
+      qrBuffer = await QRCode.toBuffer(qrTarget, {
+        type: 'png',
+        width: qrSize,
+        margin: 1,
+        color: { dark: '#000000', light: '#FFFFFF' },
+      });
+    } catch { /* skip QR if fails */ }
+
+    // Bottom bar background
+    const bottomBgSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${bottomBarH}">
+      <rect width="${W}" height="${bottomBarH}" fill="rgba(0,0,0,0.88)" />
+    </svg>`;
+    compositeInputs.push({ input: Buffer.from(bottomBgSvg), left: 0, top: bottomBarTop, blend: 'over' });
+
+    // CTA text (left side of bottom bar)
+    const ctaText = (callToAction || 'REGISTER TODAY').toUpperCase();
+    const contactParts: string[] = [];
+    if (phone) contactParts.push(phone);
+    if (website) contactParts.push(website);
+    const contactLine = contactParts.join('  •  ');
+
+    const textAreaW = qrBuffer ? W - qrSize - qrPad * 3 : W;
+    const ctaSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${textAreaW}" height="${bottomBarH}">
+      <text x="${Math.round(textAreaW * 0.05)}" y="${Math.round(bottomBarH * 0.42)}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${ctaSize}" font-weight="900" fill="#FF6B00" letter-spacing="2">${escSvg(ctaText)}</text>
+      ${contactLine ? `<text x="${Math.round(textAreaW * 0.05)}" y="${Math.round(bottomBarH * 0.78)}" font-family="Arial, sans-serif" font-size="${contactSize}" fill="#FFFFFF">${escSvg(contactLine)}</text>` : ''}
+    </svg>`;
+    compositeInputs.push({ input: Buffer.from(ctaSvg), left: 0, top: bottomBarTop, blend: 'over' });
+
+    // QR code (right side of bottom bar)
+    if (qrBuffer) {
+      const qrLeft = W - qrSize - qrPad;
+      const qrTop = bottomBarTop + Math.round((bottomBarH - qrSize) / 2);
+      compositeInputs.push({ input: qrBuffer, left: qrLeft, top: qrTop, blend: 'over' });
+
+      // "SCAN TO REGISTER" label above QR
+      const scanLabelSize = Math.round(contactSize * 0.75);
+      const scanLabelSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${qrSize}" height="${Math.round(scanLabelSize * 1.4)}">
+        <text x="${qrSize / 2}" y="${Math.round(scanLabelSize * 1.1)}" font-family="Arial, sans-serif" font-size="${scanLabelSize}" font-weight="bold" fill="#FFFFFF" text-anchor="middle">SCAN TO REGISTER</text>
+      </svg>`;
+      const scanLabelTop = qrTop - Math.round(scanLabelSize * 1.6);
+      if (scanLabelTop > bottomBarTop) {
+        compositeInputs.push({ input: Buffer.from(scanLabelSvg), left: qrLeft, top: scanLabelTop, blend: 'over' });
+      }
+    }
+
+    // ── 6. LOGO overlay (top strip, right-aligned or centered) ───────────────
+    if (logoBase64) {
+      try {
+        const logoBuffer = Buffer.from(logoBase64, 'base64');
+        const logoH = Math.round(topStripH * 0.72);
+        const logoResized = await sharp(logoBuffer)
+          .resize({ height: logoH, withoutEnlargement: true })
+          .png()
+          .toBuffer();
+        const logoMeta = await sharp(logoResized).metadata();
+        const logoW = logoMeta.width ?? logoH;
+        const logoLeft = Math.round((W - logoW) / 2);
+        const logoTop = Math.round((topStripH - logoH) / 2);
+        compositeInputs.push({ input: logoResized, left: logoLeft, top: logoTop, blend: 'over' });
+      } catch { /* skip logo if fails */ }
+    }
+
+    // ── 7. Composite everything onto the background ───────────────────────────
+    const result = await sharp(bgBuffer)
+      .composite(compositeInputs)
+      .png()
+      .toBuffer();
+
+    return { base64: result.toString('base64'), mimeType: 'image/png' };
+  } catch (err) {
+    console.warn('[compositeFullFlyerOverlay] Failed, returning original:', err);
+    return { base64: backgroundBase64, mimeType };
+  }
+}
+
+// Helper: escape special XML/SVG characters
+function escSvg(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 }

@@ -46,6 +46,7 @@ import {
   buildFullFlyerPrompt,
   compositeLogoOntoFlyer,
   compositeQrAndContactBar,
+  compositeFullFlyerOverlay,
 } from "./flyerRenderer";
 
 // ── Zod schemas ───────────────────────────────────────────────────────────────
@@ -1051,33 +1052,41 @@ export async function generateFlyerFromKai(
   const genResult = await generateImage(fullFlyerPrompt, validSize, brand, 'energetic');
   console.log(`[KaiCreative] Full AI flyer generated: ${genResult.imageBase64.length} base64 chars`);
 
-  // ── Composite school logo onto the generated flyer ─────────────────────────
-  // The AI cannot reliably render a specific logo, so we overlay it post-generation
-  // using sharp. This ensures the real school logo always appears on every flyer.
+  // ── Hybrid post-processing: composite ALL text layers onto the AI background ──
+  // The AI generates ONLY the background scene (no text).
+  // compositeFullFlyerOverlay() renders school name, headline (3 layers), benefits,
+  // CTA, QR code, contact bar, and logo using sharp+SVG — guaranteed correct text.
+  console.log(`[KaiCreative] Compositing full flyer overlay (hybrid approach)...`);
+
+  // Fetch logo as base64 if available
+  let logoBase64: string | null = null;
   const logoUrl = brand.logoUrl ?? null;
-  let finalBase64 = genResult.imageBase64;
-  let finalMimeType = genResult.mimeType;
   if (logoUrl) {
-    console.log(`[KaiCreative] Compositing logo onto flyer: ${logoUrl.slice(0, 80)}...`);
-    const composited = await compositeLogoOntoFlyer(genResult.imageBase64, genResult.mimeType, logoUrl);
-    finalBase64 = composited.base64;
-    finalMimeType = composited.mimeType;
-    console.log(`[KaiCreative] Logo composited successfully`);
+    try {
+      const logoResp = await fetch(logoUrl);
+      if (logoResp.ok) {
+        const logoArrayBuffer = await logoResp.arrayBuffer();
+        logoBase64 = Buffer.from(logoArrayBuffer).toString('base64');
+      }
+    } catch { /* skip logo if fetch fails */ }
   }
 
-  // ── Composite QR code and contact bar onto the flyer ─────────────────────────
-  // This guarantees QR code, phone, website, and CTA always appear on every flyer
-  // regardless of what the AI image generator renders.
-  const qrContactResult = await compositeQrAndContactBar(finalBase64, finalMimeType, {
-    qrUrl: flyerData.website ?? brand.website ?? 'https://mydojoma.com',
+  const overlayResult = await compositeFullFlyerOverlay(genResult.imageBase64, genResult.mimeType, {
+    programName: flyerData.programName,
+    eventSubtitle: flyerData.eventSubtitle ?? null,
+    eventDate: flyerData.eventDate ?? null,
+    schoolName: flyerData.schoolName ?? brand.schoolName ?? null,
     phone: flyerData.phone ?? brand.phone ?? null,
     website: flyerData.website ?? brand.website ?? null,
+    benefits: flyerData.benefits ?? [],
     callToAction: flyerData.callToAction ?? 'REGISTER TODAY',
-    schoolName: flyerData.schoolName ?? brand.schoolName ?? null,
+    offer: flyerData.offer ?? null,
+    logoBase64,
+    qrUrl: flyerData.website ?? brand.website ?? 'https://mydojoma.com',
   });
-  finalBase64 = qrContactResult.base64;
-  finalMimeType = qrContactResult.mimeType;
-  console.log(`[KaiCreative] QR code and contact bar composited onto flyer`);
+  let finalBase64 = overlayResult.base64;
+  let finalMimeType = overlayResult.mimeType;
+  console.log(`[KaiCreative] Full flyer overlay composited successfully`);
 
   // Upload to S3
   const { url: s3Url, key: s3Key } = await saveImageToS3(finalBase64, finalMimeType, orgId, 'kai-flyer');
