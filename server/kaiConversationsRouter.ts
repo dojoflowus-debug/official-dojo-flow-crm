@@ -8,6 +8,7 @@ import { processMetricQuery } from "./kai-metric-handler";
 import { classifyIntent } from "./kai-nlp-router";
 import { detectIntent } from "./kaiIntelligenceLayer";
 import { kaiTools, executeKaiTool } from "./kai-tools";
+import { deductCredits, CREDIT_COSTS } from "./services/creditConsumptionService";
 
 /**
  * Kai Conversations Router
@@ -880,7 +881,27 @@ Always place the UI block on its own line after your text response.`;
         createdAt: new Date().toISOString(),
       });
 
-      // Step 6: Update conversation timestamp
+      // Step 6: Deduct credits for Kai AI usage (fire-and-forget, non-blocking)
+      try {
+        // Determine credit cost: image generation costs more than regular chat
+        const hasImageGeneration = uiBlocks?.some((b: any) => b.type === 'creative_image');
+        const creditAmount = hasImageGeneration ? 10 : CREDIT_COSTS.KAI_CHAT;
+        const taskDescription = hasImageGeneration
+          ? 'Kai AI: flyer/image generation'
+          : 'Kai AI: chat message';
+        await deductCredits({
+          organizationId: ctx.currentOrganizationId,
+          amount: creditAmount,
+          taskType: hasImageGeneration ? 'other' : 'kai_chat',
+          description: taskDescription,
+          metadata: { conversationId: input.conversationId },
+        });
+      } catch (creditErr) {
+        // Never block the response due to credit errors
+        console.error('[Kai] Credit deduction error (non-blocking):', creditErr);
+      }
+
+      // Step 7: Update conversation timestamp
       await db
         .update(kaiConversations)
         .set({
