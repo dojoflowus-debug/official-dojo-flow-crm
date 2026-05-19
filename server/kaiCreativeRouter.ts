@@ -23,6 +23,7 @@ import { creativeAssets } from "../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
 import {
   generateImage,
+  generateRawImage,
   editImage,
   generateWithLogo,
   generateImageVariations,
@@ -750,17 +751,40 @@ export const kaiCreativeRouter = router({
           { size: input.size as "flyer" | "instagram_post" | "instagram_story" | "facebook_ad" | "website_banner" }
         );
         console.log(`[KaiCreative] FlyerData extracted: program="${flyerData.programName}", subtitle="${flyerData.eventSubtitle}", date="${flyerData.eventDate}", time="${flyerData.eventTime}"`);
-        // Build a comprehensive Imagen prompt that includes ALL flyer text/layout
+        // Build a BACKGROUND-ONLY scene prompt (no text, no layout instructions)
         const fullFlyerPrompt = buildFullFlyerPrompt(flyerData);
         console.log(`[KaiCreative] Full AI flyer prompt built: ${fullFlyerPrompt.length} chars, program="${flyerData.programName}", size=${flyerData.size}`);
-        // Generate the complete flyer as a single AI image
-        result = await generateImage(
-          fullFlyerPrompt,
-          input.size as ImageSize,
-          brand,
-          resolvedStyle
-        );
-        console.log(`[KaiCreative] Full AI flyer generated: ${result.imageBase64.length} base64 chars`);
+        // Use generateRawImage (bypasses kaiPromptEngine enhancer) so our carefully crafted
+        // background-only prompt is sent to Imagen as-is without marketing copy injection.
+        const bgResult = await generateRawImage(fullFlyerPrompt, input.size as ImageSize);
+        console.log(`[KaiCreative] Background image generated: ${bgResult.imageBase64.length} base64 chars`);
+        // Fetch logo as base64 if available
+        let chatLogoBase64: string | null = null;
+        if (brand.logoUrl) {
+          try {
+            const logoResp = await fetch(brand.logoUrl);
+            if (logoResp.ok) {
+              const logoArrayBuffer = await logoResp.arrayBuffer();
+              chatLogoBase64 = Buffer.from(logoArrayBuffer).toString('base64');
+            }
+          } catch { /* skip logo if fetch fails */ }
+        }
+        // Composite all text layers onto the background
+        const chatOverlayResult = await compositeFullFlyerOverlay(bgResult.imageBase64, bgResult.mimeType, {
+          programName: flyerData.programName,
+          eventSubtitle: flyerData.eventSubtitle ?? null,
+          eventDate: flyerData.eventDate ?? null,
+          schoolName: flyerData.schoolName ?? brand.schoolName ?? null,
+          phone: flyerData.phone ?? brand.phone ?? null,
+          website: flyerData.website ?? brand.website ?? null,
+          benefits: flyerData.benefits ?? [],
+          callToAction: flyerData.callToAction ?? 'REGISTER TODAY',
+          offer: flyerData.offer ?? null,
+          logoBase64: chatLogoBase64,
+          qrUrl: flyerData.website ?? brand.website ?? null,
+        });
+        result = { imageBase64: chatOverlayResult.base64, mimeType: chatOverlayResult.mimeType };
+        console.log(`[KaiCreative] Full AI flyer composited: ${result.imageBase64.length} base64 chars`);
       } else if (input.sourceImageBase64) {
         // Edit mode — source image was uploaded in chat
         result = await editImage(
@@ -1046,10 +1070,12 @@ export async function generateFlyerFromKai(
     { size: validSize as "flyer" | "instagram_post" | "instagram_story" | "facebook_ad" | "website_banner" }
   );
   console.log(`[KaiCreative] FlyerData: program="${flyerData.programName}", subtitle="${flyerData.eventSubtitle}", date="${flyerData.eventDate}", cta="${flyerData.callToAction}"`);
-  const fullFlyerPrompt = buildFullFlyerPrompt(flyerData);;
+  const fullFlyerPrompt = buildFullFlyerPrompt(flyerData);
   console.log(`[KaiCreative] Full AI flyer prompt: ${fullFlyerPrompt.length} chars`);
 
-  const genResult = await generateImage(fullFlyerPrompt, validSize, brand, 'energetic');
+  // Use generateRawImage (bypasses kaiPromptEngine enhancer) so our carefully crafted
+  // background-only prompt is sent to Imagen as-is without marketing copy injection.
+  const genResult = await generateRawImage(fullFlyerPrompt, validSize);
   console.log(`[KaiCreative] Full AI flyer generated: ${genResult.imageBase64.length} base64 chars`);
 
   // ── Hybrid post-processing: composite ALL text layers onto the AI background ──

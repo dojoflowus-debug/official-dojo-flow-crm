@@ -95,6 +95,20 @@ export interface GenerateImageResult {
   mimeType: string;
 }
 
+
+// ── Generate raw image (bypasses prompt enhancer — for background-only scenes) ──
+// Use this when the prompt is already fully crafted and should NOT be modified.
+// This is used by the flyer generator to send background-only scene prompts
+// directly to Imagen without the marketing copy injection from kaiPromptEngine.
+export async function generateRawImage(
+  prompt: string,
+  size: ImageSize = 'flyer'
+): Promise<GenerateImageResult> {
+  const aspectRatio = SIZE_TO_ASPECT[size] ?? '3:4';
+  const results = await callGenerateImages(prompt, aspectRatio, 1);
+  return results[0];
+}
+
 export async function generateImage(
   prompt: string,
   size: ImageSize = "instagram_post",

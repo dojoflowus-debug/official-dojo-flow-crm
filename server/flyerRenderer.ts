@@ -1065,27 +1065,18 @@ function buildHeroImagePrompt(programName: string, lowerProgram: string, primary
 // renderFlyerToPng removed — flyer PNG capture is now handled client-side via html2canvas
 
 // ── buildFullFlyerPrompt ──────────────────────────────────────────────────────
-// Builds a comprehensive Imagen prompt that instructs the AI to render the
-// ENTIRE flyer as a single image — text, layout, QR code, logo area, and
-// cinematic background all baked into one image.
+// Builds a BACKGROUND-ONLY scene prompt for Imagen.
+// The AI generates ONLY the photographic background — NO text, NO overlays.
+// All text is composited programmatically by compositeFullFlyerOverlay().
+//
+// CRITICAL: This prompt is sent via generateRawImage() which bypasses
+// kaiPromptEngine.enhancePrompt(). The prompt must be self-contained.
 export function buildFullFlyerPrompt(flyerData: FlyerData): string {
   const {
     programName,
-    eventSubtitle,
-    eventDate,
-    eventTime,
-    schoolName,
-    phone,
-    website,
-    primaryColor,
-    benefits = [],
-    callToAction,
-    offer,
-    audience,
     size = "flyer",
   } = flyerData;
 
-  const primary = primaryColor || "#C8102E";
   const lp = programName.toLowerCase();
   const isNerfEvent = lp.includes("nerf");
   const isBirthdayEvent = lp.includes("birthday");
@@ -1099,49 +1090,41 @@ export function buildFullFlyerPrompt(flyerData: FlyerData): string {
   const isKickboxing = lp.includes("kickbox") || lp.includes("kick box");
   const isBJJ = lp.includes("bjj") || lp.includes("jiu jitsu") || lp.includes("grappling");
 
-  // ── Scene description based on event type ──────────────────────────────────
   let sceneDescription: string;
   if (isNerfEvent) {
-    sceneDescription = `A group of 4-6 joyful children aged 6-12 wearing BLACK MARTIAL ARTS UNIFORMS (karate gis) and colorful safety goggles, holding Nerf blasters and laughing mid-battle inside a professional martial arts dojo. The dojo has black padded floor mats with orange trim, wall-mounted mirrors, Japanese calligraphy scrolls on the walls, and proper dojo lighting. Foam darts are flying through the air. The children are diverse and full of energy. The scene is photographed with a wide-angle lens showing the full dojo interior. Cinematic orange and electric blue rim lighting with dramatic depth of field. The background fills the entire image from edge to edge with the children spread across the frame.`;
+    sceneDescription = "Cinematic action photograph of excited children aged 6-12 wearing black martial arts uniforms and colorful safety goggles, holding Nerf foam blasters, laughing and playing inside a professional martial arts dojo. Foam darts flying through the air. The dojo has black padded floor mats, wall mirrors, and proper dojo equipment. Dramatic orange and electric blue rim lighting, volumetric smoke effects, deep shadows. Wide-angle shot with subjects filling the frame. Dark near-black background with glowing orange and blue light accents. Photorealistic commercial photography. No text anywhere in the image.";
   } else if (isBirthdayEvent) {
-    sceneDescription = `A festive martial arts birthday party inside a professional dojo. Children in karate gis with party hats, colorful balloons, confetti, and a birthday cake. Warm golden party lighting with bokeh effects. The dojo has padded mats and the scene is full of joy and celebration. Wide-angle shot showing the full dojo space.`;
+    sceneDescription = "Cinematic photograph of a festive martial arts birthday party inside a professional dojo. Children in karate gis with colorful balloons and confetti. Warm golden party lighting with bokeh effects. Dark background with warm light accents. Photorealistic commercial photography. No text anywhere in the image.";
   } else if (isTournamentEvent) {
-    sceneDescription = `A dramatic martial arts tournament arena with professional competition mats, bright arena spotlights, and audience silhouettes in the background. Two competitors in white gis facing off in the center. Intense dramatic lighting with deep shadows and bright spotlights. Championship energy throughout the frame.`;
+    sceneDescription = "Cinematic photograph of a dramatic martial arts tournament arena. Two young competitors in white gis facing off on competition mats. Bright arena spotlights, audience silhouettes in background. Intense dramatic lighting with deep shadows. Dark background with bright spotlight accents. Photorealistic commercial photography. No text anywhere in the image.";
   } else if (isSummerCamp) {
-    sceneDescription = `A large group of energetic children aged 6-14 in white and black karate gis training together in a bright, professional martial arts dojo. Summer sunlight streaming through windows. The children are smiling and performing synchronized martial arts moves. Vibrant, energetic atmosphere.`;
+    sceneDescription = "Cinematic photograph of energetic children aged 6-14 in white and black karate gis training together in a bright professional martial arts dojo. Summer sunlight streaming through windows. Children smiling and performing synchronized martial arts moves. Vibrant energetic atmosphere. Photorealistic commercial photography. No text anywhere in the image.";
   } else if (isGraduation) {
-    sceneDescription = `A proud young martial artist in a crisp white gi holding up a new colored belt in triumph under a dramatic spotlight. Dark ceremonial background with warm golden light. Other students and parents watching in the background. Achievement and pride energy throughout.`;
+    sceneDescription = "Cinematic photograph of a proud young martial artist in a crisp white gi holding up a new colored belt in triumph under a dramatic spotlight. Dark ceremonial background with warm golden light. Achievement and pride energy. Photorealistic commercial photography. No text anywhere in the image.";
   } else if (isOpenHouse) {
-    sceneDescription = `A beautiful, professional martial arts dojo with students training, instructors demonstrating techniques, and a welcoming open atmosphere. Clean professional lighting, padded mats, mirrors, and a modern dojo interior. Families watching from the sides.`;
+    sceneDescription = "Cinematic photograph of a beautiful professional martial arts dojo with students training and instructors demonstrating techniques. Clean professional lighting, padded mats, mirrors, modern dojo interior. Photorealistic commercial photography. No text anywhere in the image.";
   } else if (isToddler) {
-    sceneDescription = `ONE adorable toddler child aged 3-5 years old in a pristine white karate gi with white belt, performing an energetic forward punch with a fierce excited expression. Dark cinematic background with deep red glowing energy, floating ember particles, volumetric smoke, dramatic red rim lighting from behind. The child is positioned on the right side of the image, facing slightly left.`;
+    sceneDescription = "Cinematic photograph of one adorable toddler child aged 3-5 in a pristine white karate gi with white belt, performing an energetic forward punch with a fierce excited expression. Dark cinematic background with deep red glowing energy, floating ember particles, volumetric smoke, dramatic red rim lighting from behind. Subject positioned on the right side of the frame. Photorealistic commercial photography. No text anywhere in the image.";
   } else if (isKids) {
-    sceneDescription = `ONE child aged 8-10 years old in a white karate gi with a colored belt, performing a powerful side kick with an intense focused expression. Dark cinematic background with deep red and orange glowing energy, ember particles, dramatic rim lighting. The child is positioned on the right side of the image.`;
+    sceneDescription = "Cinematic photograph of one child aged 8-10 in a white karate gi with a colored belt, performing a powerful side kick with an intense focused expression. Dark cinematic background with deep red and orange glowing energy, ember particles, dramatic rim lighting. Subject positioned on the right side of the frame. Photorealistic commercial photography. No text anywhere in the image.";
   } else if (isTeen) {
-    sceneDescription = `ONE teenager aged 15-16 years old in a black or white karate gi, performing a powerful high kick with intense determined expression. Dark cinematic background with deep red glowing energy, ember particles, dramatic rim lighting. The teen is positioned on the right side of the image.`;
+    sceneDescription = "Cinematic photograph of one teenager aged 15-16 in a black or white karate gi, performing a powerful high kick with intense determined expression. Dark cinematic background with deep red glowing energy, ember particles, dramatic rim lighting. Subject positioned on the right side of the frame. Photorealistic commercial photography. No text anywhere in the image.";
   } else if (isKickboxing) {
-    sceneDescription = `ONE powerful athletic adult in kickboxing gear executing a devastating high roundhouse kick. Dark cinematic background with red energy glow, ember particles, dramatic rim lighting. The athlete is positioned on the right side of the image.`;
+    sceneDescription = "Cinematic photograph of one powerful athletic adult in kickboxing gear executing a devastating high roundhouse kick. Dark cinematic background with red energy glow, ember particles, dramatic rim lighting. Subject positioned on the right side of the frame. Photorealistic commercial photography. No text anywhere in the image.";
   } else if (isBJJ) {
-    sceneDescription = `ONE BJJ practitioner in a white gi performing a dominant ground control position, intense focused expression. Dark cinematic dojo background with subtle blue-red energy lighting. The practitioner is positioned on the right side of the image.`;
+    sceneDescription = "Cinematic photograph of one BJJ practitioner in a white gi performing a dominant ground control position with intense focused expression. Dark cinematic dojo background with subtle blue-red energy lighting. Subject positioned on the right side of the frame. Photorealistic commercial photography. No text anywhere in the image.";
   } else {
-    sceneDescription = `ONE martial artist in a clean white karate gi performing a powerful dynamic kick or punch with intense determined expression. Dark cinematic background with deep red glowing energy, floating ember particles, volumetric smoke, dramatic red rim lighting. The martial artist is positioned on the right side of the image.`;
+    sceneDescription = "Cinematic photograph of one martial artist in a clean white karate gi performing a powerful dynamic kick or punch with intense determined expression. Dark cinematic background with deep red glowing energy, floating ember particles, volumetric smoke, dramatic red rim lighting. Subject positioned on the right side of the frame. Photorealistic commercial photography. No text anywhere in the image.";
   }
 
-  const formatLabel = size === "instagram_story" ? "vertical 9:16 Instagram story"
-    : size === "instagram_post" ? "square 1:1 Instagram post"
-    : size === "facebook_ad" ? "vertical Facebook ad"
-    : "vertical 8.5x11 flyer poster";
+  const aspectNote = size === "instagram_story" ? "vertical 9:16 portrait"
+    : size === "instagram_post" ? "square 1:1"
+    : size === "facebook_ad" ? "vertical 4:5 portrait"
+    : "vertical 3:4 portrait";
 
-  // ── BACKGROUND SCENE ONLY ─────────────────────────────────────────────────
-  // We ask the AI ONLY for a photorealistic background scene with NO text.
-  // All text (headline, benefits, CTA, QR code, contact) is composited
-  // programmatically by compositeFullFlyerOverlay() using sharp+SVG.
-  // This eliminates AI text hallucination entirely.
-  return `A photorealistic ${formatLabel} background scene for a martial arts school event. This is a BACKGROUND IMAGE ONLY — it must contain absolutely NO text, NO words, NO letters, NO numbers, NO logos, NO QR codes, NO banners, NO overlays. Pure cinematic photography scene only.
-
-${sceneDescription}
-
-The image must be full-bleed with the scene filling every pixel from edge to edge. Leave the upper 15% of the image slightly darker (for a text overlay area). Leave the lower 30% of the image with a dark semi-transparent gradient fade to black (for text and contact info overlay). The overall style is cinematic and high-energy: dark near-black background, dramatic orange and electric blue rim lighting, volumetric smoke effects, photorealistic photography (no cartoons, no illustrations, no text whatsoever). Professional commercial photography quality.`;
+  // This prompt is sent DIRECTLY to Imagen without any prompt enhancement.
+  // It must be a pure photographic scene description with absolutely no text.
+  return `${aspectNote} photorealistic background scene. ${sceneDescription} The image fills the entire canvas edge to edge with no borders or padding. The upper 20% of the image is naturally darker to allow text overlay. The lower 35% fades to near-black for contact information overlay. Overall aesthetic: cinematic, high-contrast, dark background with dramatic colored lighting. Professional commercial photography quality. Absolutely no text, letters, numbers, words, logos, watermarks, overlays, or graphic design elements anywhere in the image.`;
 }
 
 // ── generateQrCodeDataUrl (exported for use in kaiCreativeRouter) ─────────────
@@ -1340,11 +1323,14 @@ export async function compositeQrAndContactBar(
 // programmatically — eliminating AI text hallucination entirely.
 //
 // Layout (top to bottom):
-//   [TOP STRIP]   School name (small, centered, semi-transparent dark bar)
-//   [HEADLINE]    Program name (massive 3D-style), subtitle, date badge
-//   [MIDDLE]      Background scene fills this area
-//   [BENEFITS]    Dark overlay panel with bullet points
-//   [BOTTOM BAR]  CTA text | QR code | Phone • Website
+//   [TOP STRIP]   Logo + School name (semi-transparent dark bar, 10% height)
+//   [HEADLINE]    Program name (massive orange), subtitle (white), date badge (orange)
+//   [MIDDLE]      Background scene visible (no overlay)
+//   [BENEFITS]    Dark overlay panel with 4 bullet points (lower-middle area)
+//   [BOTTOM BAR]  CTA text (orange) | QR code (right) | Phone • Website (white)
+//
+// Font sizes are calibrated for a 1080px-wide image (3:4 portrait = 1080x1440).
+// All sizes scale proportionally for other dimensions.
 export async function compositeFullFlyerOverlay(
   backgroundBase64: string,
   mimeType: string,
@@ -1358,7 +1344,7 @@ export async function compositeFullFlyerOverlay(
     benefits?: string[];
     callToAction?: string | null;
     offer?: string | null;
-    logoBase64?: string | null;  // base64 PNG of school logo
+    logoBase64?: string | null;
     qrUrl?: string | null;
   }
 ): Promise<{ base64: string; mimeType: string }> {
@@ -1385,104 +1371,145 @@ export async function compositeFullFlyerOverlay(
     const W = bgMeta.width ?? 1080;
     const H = bgMeta.height ?? 1440;
 
-    // Typography scale based on flyer width
+    // Scale factor: all sizes are designed for 1080px wide
     const scale = W / 1080;
-    const headlineSize = Math.round(120 * scale);
-    const subtitleSize = Math.round(72 * scale);
-    const dateBadgeSize = Math.round(58 * scale);
-    const benefitSize = Math.round(36 * scale);
-    const ctaSize = Math.round(44 * scale);
-    const schoolNameSize = Math.round(28 * scale);
-    const contactSize = Math.round(28 * scale);
+
+    // ── Typography scale ──────────────────────────────────────────────────────
+    // These are the ACTUAL rendered sizes — calibrated for professional quality
+    const headlineSize  = Math.round(148 * scale);  // "NERF WARS" — massive
+    const subtitleSize  = Math.round(82 * scale);   // "PARENTS NIGHT OUT"
+    const dateBadgeSize = Math.round(64 * scale);   // "JUNE 10TH"
+    const benefitSize   = Math.round(40 * scale);   // benefit bullets
+    const ctaSize       = Math.round(52 * scale);   // "REGISTER TODAY"
+    const schoolNameSize = Math.round(32 * scale);  // school name in top strip
+    const contactSize   = Math.round(30 * scale);   // phone/website
 
     const compositeInputs: sharp.OverlayOptions[] = [];
 
-    // ── 2. TOP STRIP: School name ─────────────────────────────────────────────
-    const topStripH = Math.round(H * 0.07);
+    // ── 2. TOP STRIP: Dark bar with school name ───────────────────────────────
+    const topStripH = Math.round(H * 0.09);  // 9% of height
     const schoolText = (schoolName || 'MY DOJO').toUpperCase();
+
     const topStripSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${topStripH}">
-      <rect width="${W}" height="${topStripH}" fill="#000000" fill-opacity="0.75" />
-      <text x="${W / 2}" y="${Math.round(topStripH * 0.68)}" font-family="Arial Black, Arial, sans-serif" font-size="${schoolNameSize}" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="4">${escSvg(schoolText)}</text>
+      <rect width="${W}" height="${topStripH}" fill="#000000" fill-opacity="0.82" />
+      <text x="${W / 2}" y="${Math.round(topStripH * 0.65)}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${schoolNameSize}" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="6">${escSvg(schoolText)}</text>
     </svg>`;
     compositeInputs.push({ input: Buffer.from(topStripSvg), left: 0, top: 0, blend: 'over' });
 
-    // ── 3. HEADLINE BLOCK: Program name + subtitle + date badge ──────────────
-    // Positioned just below the top strip, centered
-    const headlineY = topStripH + Math.round(H * 0.02);
-    const headlineBlockH = Math.round(H * 0.32);
+    // ── 3. HEADLINE BLOCK ─────────────────────────────────────────────────────
+    // Dark gradient behind headline for legibility
+    const headlineBlockTop = topStripH;
+    const headlineBlockH = Math.round(H * 0.38);
 
-    // Dark gradient overlay behind headline for legibility
     const headlineBgSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${headlineBlockH}">
       <defs>
         <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="rgba(0,0,0,0.75)" />
-          <stop offset="100%" stop-color="rgba(0,0,0,0)" />
+          <stop offset="0%" stop-color="#000000" stop-opacity="0.72" />
+          <stop offset="60%" stop-color="#000000" stop-opacity="0.45" />
+          <stop offset="100%" stop-color="#000000" stop-opacity="0" />
         </linearGradient>
       </defs>
-      <rect width="${W}" height="${Math.round(headlineBlockH * 0.6)}" fill="#000000" fill-opacity="0.6" />
+      <rect width="${W}" height="${headlineBlockH}" fill="url(#hg)" />
     </svg>`;
-    compositeInputs.push({ input: Buffer.from(headlineBgSvg), left: 0, top: headlineY, blend: 'over' });
+    compositeInputs.push({ input: Buffer.from(headlineBgSvg), left: 0, top: headlineBlockTop, blend: 'over' });
 
-    // Program name (e.g. "NERF WARS") — massive orange-gold text with stroke
+    // Program name (e.g. "NERF WARS") — massive orange text with dark stroke
     const programUpper = programName.toUpperCase();
-    const programY = headlineY + Math.round(headlineBlockH * 0.28);
-    const programSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${Math.round(headlineSize * 1.3)}">
-      <text x="${W / 2}" y="${Math.round(headlineSize * 1.05)}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${headlineSize}" font-weight="900" fill="#FF6B00" stroke="#1A0A00" stroke-width="${Math.round(headlineSize * 0.05)}" paint-order="stroke" text-anchor="middle" letter-spacing="-2">${escSvg(programUpper)}</text>
+    const programY = headlineBlockTop + Math.round(H * 0.04);
+    const programSvgH = Math.round(headlineSize * 1.25);
+    const programSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${programSvgH}">
+      <text x="${W / 2}" y="${Math.round(headlineSize * 1.05)}"
+        font-family="Arial Black, Impact, Arial, sans-serif"
+        font-size="${headlineSize}"
+        font-weight="900"
+        fill="#FF6B00"
+        stroke="#1A0500"
+        stroke-width="${Math.round(headlineSize * 0.06)}"
+        paint-order="stroke"
+        text-anchor="middle"
+        letter-spacing="-1">${escSvg(programUpper)}</text>
     </svg>`;
     compositeInputs.push({ input: Buffer.from(programSvg), left: 0, top: programY, blend: 'over' });
 
-    let currentY = programY + Math.round(headlineSize * 1.2);
+    let currentY = programY + Math.round(headlineSize * 1.1);
 
-    // Subtitle (e.g. "PARENTS NIGHT OUT") — silver-white text
+    // Subtitle (e.g. "PARENTS NIGHT OUT") — white text with dark stroke
     if (eventSubtitle) {
       const subtitleUpper = eventSubtitle.toUpperCase();
-      const subtitleSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${Math.round(subtitleSize * 1.4)}">
-        <text x="${W / 2}" y="${Math.round(subtitleSize * 1.1)}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${subtitleSize}" font-weight="900" fill="#FFFFFF" stroke="#000000" stroke-width="${Math.round(subtitleSize * 0.05)}" paint-order="stroke" text-anchor="middle" letter-spacing="2">${escSvg(subtitleUpper)}</text>
+      const subtitleSvgH = Math.round(subtitleSize * 1.35);
+      const subtitleSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${subtitleSvgH}">
+        <text x="${W / 2}" y="${Math.round(subtitleSize * 1.05)}"
+          font-family="Arial Black, Impact, Arial, sans-serif"
+          font-size="${subtitleSize}"
+          font-weight="900"
+          fill="#FFFFFF"
+          stroke="#000000"
+          stroke-width="${Math.round(subtitleSize * 0.06)}"
+          paint-order="stroke"
+          text-anchor="middle"
+          letter-spacing="3">${escSvg(subtitleUpper)}</text>
       </svg>`;
       compositeInputs.push({ input: Buffer.from(subtitleSvg), left: 0, top: currentY, blend: 'over' });
-      currentY += Math.round(subtitleSize * 1.3);
+      currentY += Math.round(subtitleSize * 1.2);
     }
 
-    // Date badge (e.g. "JUNE 10TH") — orange badge with dark border
+    // Date badge (e.g. "JUNE 10TH") — orange pill badge
     if (eventDate) {
       const dateUpper = eventDate.toUpperCase();
-      const badgePadX = Math.round(W * 0.06);
-      const badgePadY = Math.round(dateBadgeSize * 0.3);
-      const badgeW = Math.round(W * 0.55);
-      const badgeH = Math.round(dateBadgeSize * 1.7);
+      const badgeH = Math.round(dateBadgeSize * 1.8);
+      const badgeW = Math.round(W * 0.62);
       const badgeLeft = Math.round((W - badgeW) / 2);
       const badgeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${badgeW}" height="${badgeH}">
-        <rect x="3" y="3" width="${badgeW - 6}" height="${badgeH - 6}" rx="${Math.round(badgeH * 0.12)}" fill="#1A1A1A" stroke="#FF6B00" stroke-width="5" />
-        <text x="${badgeW / 2}" y="${Math.round(badgeH * 0.68)}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${dateBadgeSize}" font-weight="900" fill="#FF6B00" text-anchor="middle" letter-spacing="3">${escSvg(dateUpper)}</text>
+        <rect x="4" y="4" width="${badgeW - 8}" height="${badgeH - 8}" rx="${Math.round(badgeH * 0.14)}"
+          fill="#1A0800" stroke="#FF6B00" stroke-width="6" />
+        <text x="${badgeW / 2}" y="${Math.round(badgeH * 0.67)}"
+          font-family="Arial Black, Impact, Arial, sans-serif"
+          font-size="${dateBadgeSize}"
+          font-weight="900"
+          fill="#FF6B00"
+          text-anchor="middle"
+          letter-spacing="4">${escSvg(dateUpper)}</text>
       </svg>`;
       compositeInputs.push({ input: Buffer.from(badgeSvg), left: badgeLeft, top: currentY, blend: 'over' });
       currentY += Math.round(badgeH + H * 0.01);
     }
 
-    // ── 4. BENEFITS PANEL: Dark overlay in lower-middle area ─────────────────
+    // ── 4. BENEFITS PANEL ─────────────────────────────────────────────────────
     const benefitLines = benefits.slice(0, 4).map((b: string) => b.split('|')[0].trim());
     if (benefitLines.length > 0) {
-      const benefitPanelTop = Math.round(H * 0.58);
-      const lineHeight = Math.round(benefitSize * 1.6);
-      const benefitPanelH = Math.round(benefitLines.length * lineHeight + benefitSize * 1.2);
+      const lineHeight = Math.round(benefitSize * 1.75);
+      const panelPadTop = Math.round(benefitSize * 0.7);
+      const panelPadBottom = Math.round(benefitSize * 0.5);
+      const benefitPanelH = panelPadTop + benefitLines.length * lineHeight + panelPadBottom;
+
+      // Position benefits panel in the lower-middle area
+      const benefitPanelTop = Math.round(H * 0.56);
 
       const benefitBgSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${benefitPanelH}">
-        <rect width="${W}" height="${benefitPanelH}" fill="#000000" fill-opacity="0.78" />
+        <rect width="${W}" height="${benefitPanelH}" fill="#000000" fill-opacity="0.80" />
       </svg>`;
       compositeInputs.push({ input: Buffer.from(benefitBgSvg), left: 0, top: benefitPanelTop, blend: 'over' });
 
+      // Benefit text lines
+      const textX = Math.round(W * 0.06);
       const benefitTextSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${benefitPanelH}">
-        ${benefitLines.map((b, i) => `
-          <text x="${Math.round(W * 0.07)}" y="${Math.round(benefitSize * 1.1 + i * lineHeight)}" font-family="Arial Black, Arial, sans-serif" font-size="${benefitSize}" font-weight="bold" fill="#FFFFFF">&#x2022; ${escSvg(b)}</text>`).join('')}
+        ${benefitLines.map((b, i) => {
+          const y = panelPadTop + Math.round(benefitSize * 0.85) + i * lineHeight;
+          return `<text x="${textX}" y="${y}"
+            font-family="Arial Black, Arial, sans-serif"
+            font-size="${benefitSize}"
+            font-weight="bold"
+            fill="#FFFFFF">&#x2713; ${escSvg(b)}</text>`;
+        }).join('\n        ')}
       </svg>`;
       compositeInputs.push({ input: Buffer.from(benefitTextSvg), left: 0, top: benefitPanelTop, blend: 'over' });
     }
 
-    // ── 5. BOTTOM BAR: CTA + QR code + Contact info ──────────────────────────
-    const bottomBarH = Math.round(H * 0.14);
+    // ── 5. BOTTOM BAR: CTA + QR code + Contact info ───────────────────────────
+    const bottomBarH = Math.round(H * 0.155);
     const bottomBarTop = H - bottomBarH;
-    const qrSize = Math.round(bottomBarH * 0.82);
-    const qrPad = Math.round(bottomBarH * 0.09);
+    const qrSize = Math.round(bottomBarH * 0.78);
+    const qrPad = Math.round(bottomBarH * 0.11);
 
     // Generate QR code
     let qrBuffer: Buffer | null = null;
@@ -1498,11 +1525,11 @@ export async function compositeFullFlyerOverlay(
 
     // Bottom bar background
     const bottomBgSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${bottomBarH}">
-      <rect width="${W}" height="${bottomBarH}" fill="#000000" fill-opacity="0.92" />
+      <rect width="${W}" height="${bottomBarH}" fill="#000000" fill-opacity="0.93" />
     </svg>`;
     compositeInputs.push({ input: Buffer.from(bottomBgSvg), left: 0, top: bottomBarTop, blend: 'over' });
 
-    // CTA text (left side of bottom bar)
+    // CTA text and contact info (left/center of bottom bar)
     const ctaText = (callToAction || 'REGISTER TODAY').toUpperCase();
     const contactParts: string[] = [];
     if (phone) contactParts.push(phone);
@@ -1510,9 +1537,20 @@ export async function compositeFullFlyerOverlay(
     const contactLine = contactParts.join('  •  ');
 
     const textAreaW = qrBuffer ? W - qrSize - qrPad * 3 : W;
+    const ctaY = Math.round(bottomBarH * 0.44);
+    const contactY = Math.round(bottomBarH * 0.80);
+
     const ctaSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${textAreaW}" height="${bottomBarH}">
-      <text x="${Math.round(textAreaW * 0.05)}" y="${Math.round(bottomBarH * 0.45)}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${ctaSize}" font-weight="900" fill="#FF6B00" letter-spacing="2">${escSvg(ctaText)}</text>
-      ${contactLine ? `<text x="${Math.round(textAreaW * 0.05)}" y="${Math.round(bottomBarH * 0.80)}" font-family="Arial, sans-serif" font-size="${contactSize}" fill="#DDDDDD">${escSvg(contactLine)}</text>` : ''}
+      <text x="${Math.round(textAreaW * 0.05)}" y="${ctaY}"
+        font-family="Arial Black, Impact, Arial, sans-serif"
+        font-size="${ctaSize}"
+        font-weight="900"
+        fill="#FF6B00"
+        letter-spacing="2">${escSvg(ctaText)}</text>
+      ${contactLine ? `<text x="${Math.round(textAreaW * 0.05)}" y="${contactY}"
+        font-family="Arial, sans-serif"
+        font-size="${contactSize}"
+        fill="#DDDDDD">${escSvg(contactLine)}</text>` : ''}
     </svg>`;
     compositeInputs.push({ input: Buffer.from(ctaSvg), left: 0, top: bottomBarTop, blend: 'over' });
 
@@ -1523,28 +1561,37 @@ export async function compositeFullFlyerOverlay(
       compositeInputs.push({ input: qrBuffer, left: qrLeft, top: qrTop, blend: 'over' });
 
       // "SCAN TO REGISTER" label above QR
-      const scanLabelSize = Math.round(contactSize * 0.75);
-      const scanLabelSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${qrSize}" height="${Math.round(scanLabelSize * 1.4)}">
-        <text x="${qrSize / 2}" y="${Math.round(scanLabelSize * 1.1)}" font-family="Arial, sans-serif" font-size="${scanLabelSize}" font-weight="bold" fill="#FFFFFF" text-anchor="middle">SCAN TO REGISTER</text>
+      const scanLabelSize = Math.round(contactSize * 0.72);
+      const scanLabelH = Math.round(scanLabelSize * 1.5);
+      const scanLabelSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${qrSize}" height="${scanLabelH}">
+        <text x="${qrSize / 2}" y="${Math.round(scanLabelSize * 1.1)}"
+          font-family="Arial, sans-serif"
+          font-size="${scanLabelSize}"
+          font-weight="bold"
+          fill="#FFFFFF"
+          text-anchor="middle">SCAN TO REGISTER</text>
       </svg>`;
-      const scanLabelTop = qrTop - Math.round(scanLabelSize * 1.6);
-      if (scanLabelTop > bottomBarTop) {
+      const scanLabelTop = qrTop - scanLabelH - Math.round(H * 0.005);
+      if (scanLabelTop >= bottomBarTop) {
         compositeInputs.push({ input: Buffer.from(scanLabelSvg), left: qrLeft, top: scanLabelTop, blend: 'over' });
       }
     }
 
-    // ── 6. LOGO overlay (top strip, right-aligned or centered) ───────────────
+    // ── 6. LOGO overlay (centered in top strip) ───────────────────────────────
     if (logoBase64) {
       try {
         const logoBuffer = Buffer.from(logoBase64, 'base64');
-        const logoH = Math.round(topStripH * 0.72);
+        const maxLogoH = Math.round(topStripH * 0.68);
+        const maxLogoW = Math.round(W * 0.22);
         const logoResized = await sharp(logoBuffer)
-          .resize({ height: logoH, withoutEnlargement: true })
+          .resize(maxLogoW, maxLogoH, { fit: 'inside', withoutEnlargement: true })
           .png()
           .toBuffer();
         const logoMeta = await sharp(logoResized).metadata();
-        const logoW = logoMeta.width ?? logoH;
-        const logoLeft = Math.round((W - logoW) / 2);
+        const logoW = logoMeta.width ?? maxLogoW;
+        const logoH = logoMeta.height ?? maxLogoH;
+        // Position: left-aligned with padding, vertically centered in top strip
+        const logoLeft = Math.round(W * 0.04);
         const logoTop = Math.round((topStripH - logoH) / 2);
         compositeInputs.push({ input: logoResized, left: logoLeft, top: logoTop, blend: 'over' });
       } catch { /* skip logo if fails */ }
