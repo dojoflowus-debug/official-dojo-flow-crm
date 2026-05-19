@@ -1318,19 +1318,18 @@ export async function compositeQrAndContactBar(
 }
 
 // ── compositeFullFlyerOverlay ─────────────────────────────────────────────────
-// Composites ALL text layers onto the AI-generated background image using sharp+SVG.
-// This is the hybrid approach: AI generates the background scene, we render all text
-// programmatically — eliminating AI text hallucination entirely.
+// Composites ALL text layers onto the AI-generated background using @napi-rs/canvas.
+// This uses REAL system fonts (Liberation Sans Bold) — no SVG text, no font fallback boxes.
+//
+// Canvas size: 816x1056 (US Letter 3:4, matching FLYER_DIMS in CreativePreviewCard.tsx)
+// The AI background is resized/cropped to fill this canvas exactly (no black bars).
 //
 // Layout (top to bottom):
-//   [TOP STRIP]   Logo + School name (semi-transparent dark bar, 10% height)
-//   [HEADLINE]    Program name (massive orange), subtitle (white), date badge (orange)
-//   [MIDDLE]      Background scene visible (no overlay)
-//   [BENEFITS]    Dark overlay panel with 4 bullet points (lower-middle area)
-//   [BOTTOM BAR]  CTA text (orange) | QR code (right) | Phone • Website (white)
-//
-// Font sizes are calibrated for a 1080px-wide image (3:4 portrait = 1080x1440).
-// All sizes scale proportionally for other dimensions.
+//   [TOP BAR]    School name — dark semi-transparent strip, 8% height
+//   [HEADLINE]   Program name (orange, massive) + subtitle (white) + date badge
+//   [MIDDLE]     Background scene visible (no overlay)
+//   [BENEFITS]   Dark panel with checkmark bullets
+//   [BOTTOM BAR] CTA (orange) + phone/website + QR code
 export async function compositeFullFlyerOverlay(
   backgroundBase64: string,
   mimeType: string,
@@ -1349,263 +1348,311 @@ export async function compositeFullFlyerOverlay(
   }
 ): Promise<{ base64: string; mimeType: string }> {
   const {
-    programName,
-    eventSubtitle,
-    eventDate,
-    schoolName,
-    phone,
-    website,
-    benefits = [],
-    callToAction,
-    offer,
-    logoBase64,
-    qrUrl,
+    programName, eventSubtitle, eventDate, schoolName,
+    phone, website, benefits = [], callToAction, offer, logoBase64, qrUrl,
   } = flyerData;
 
   try {
+    // ── Dynamic imports ───────────────────────────────────────────────────────
+    const { createCanvas, GlobalFonts, loadImage } = await import(
+      '/home/ubuntu/official-dojo-flow-crm/node_modules/.pnpm/@napi-rs+canvas@0.1.97/node_modules/@napi-rs/canvas/index.js'
+    ) as typeof import('@napi-rs/canvas');
     const QRCode = (await import('qrcode')).default;
 
-    // 1. Get background dimensions
-    const bgBuffer = Buffer.from(backgroundBase64, 'base64');
-    const bgMeta = await sharp(bgBuffer).metadata();
-    const W = bgMeta.width ?? 1080;
-    const H = bgMeta.height ?? 1440;
+    // Load system fonts (Liberation Sans has Bold weight — looks like Arial Bold)
+    GlobalFonts.loadFontsFromDir('/usr/share/fonts/truetype/liberation');
 
-    // Scale factor: all sizes are designed for 1080px wide
-    const scale = W / 1080;
+    // ── Canvas dimensions (must match FLYER_DIMS.flyer in the UI) ────────────
+    const W = 816;
+    const H = 1056;
 
-    // ── Typography scale ──────────────────────────────────────────────────────
-    // These are the ACTUAL rendered sizes — calibrated for professional quality
-    const headlineSize  = Math.round(148 * scale);  // "NERF WARS" — massive
-    const subtitleSize  = Math.round(82 * scale);   // "PARENTS NIGHT OUT"
-    const dateBadgeSize = Math.round(64 * scale);   // "JUNE 10TH"
-    const benefitSize   = Math.round(40 * scale);   // benefit bullets
-    const ctaSize       = Math.round(52 * scale);   // "REGISTER TODAY"
-    const schoolNameSize = Math.round(32 * scale);  // school name in top strip
-    const contactSize   = Math.round(30 * scale);   // phone/website
+    const canvas = createCanvas(W, H);
+    const ctx = canvas.getContext('2d');
 
-    const compositeInputs: sharp.OverlayOptions[] = [];
+    // ── 1. Draw background (resize AI image to fill canvas exactly) ───────────
+    const bgBuffer = await sharp(Buffer.from(backgroundBase64, 'base64'))
+      .resize(W, H, { fit: 'cover', position: 'centre' })
+      .png()
+      .toBuffer();
 
-    // ── 2. TOP STRIP: Dark bar with school name ───────────────────────────────
-    const topStripH = Math.round(H * 0.09);  // 9% of height
+    const bgImg = await loadImage(bgBuffer);
+    ctx.drawImage(bgImg, 0, 0, W, H);
+
+    // ── Helper: draw semi-transparent rect ───────────────────────────────────
+    function fillRectAlpha(x: number, y: number, w: number, h: number, color: string, alpha: number) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, w, h);
+      ctx.restore();
+    }
+
+    // ── Helper: measure text width ────────────────────────────────────────────
+    function textW(text: string): number {
+      return ctx.measureText(text).width;
+    }
+
+    // ── Helper: draw text with optional stroke ────────────────────────────────
+    function drawText(
+      text: string, x: number, y: number,
+      opts: { fill: string; stroke?: string; strokeWidth?: number; align?: CanvasTextAlign }
+    ) {
+      ctx.save();
+      if (opts.align) ctx.textAlign = opts.align;
+      if (opts.stroke && opts.strokeWidth) {
+        ctx.strokeStyle = opts.stroke;
+        ctx.lineWidth = opts.strokeWidth;
+        ctx.lineJoin = 'round';
+        ctx.strokeText(text, x, y);
+      }
+      ctx.fillStyle = opts.fill;
+      ctx.fillText(text, x, y);
+      ctx.restore();
+    }
+
+    // ── Scale factor (all sizes designed for 816px wide) ─────────────────────
+    const scale = W / 816;
+
+    // ── 2. TOP BAR: School name ───────────────────────────────────────────────
+    const topBarH = Math.round(H * 0.08);
+    fillRectAlpha(0, 0, W, topBarH, '#000000', 0.82);
+
     const schoolText = (schoolName || 'MY DOJO').toUpperCase();
+    const schoolFontSize = Math.round(26 * scale);
+    ctx.font = `bold ${schoolFontSize}px Liberation Sans`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    drawText(schoolText, W / 2, topBarH / 2, { fill: '#FFFFFF' });
 
-    const topStripSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${topStripH}">
-      <rect width="${W}" height="${topStripH}" fill="#000000" fill-opacity="0.82" />
-      <text x="${W / 2}" y="${Math.round(topStripH * 0.65)}" font-family="Arial Black, Impact, Arial, sans-serif" font-size="${schoolNameSize}" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="6">${escSvg(schoolText)}</text>
-    </svg>`;
-    compositeInputs.push({ input: Buffer.from(topStripSvg), left: 0, top: 0, blend: 'over' });
+    // ── 3. HEADLINE GRADIENT ──────────────────────────────────────────────────
+    const headlineBlockTop = topBarH;
+    const headlineBlockH = Math.round(H * 0.42);
+    const grad = ctx.createLinearGradient(0, headlineBlockTop, 0, headlineBlockTop + headlineBlockH);
+    grad.addColorStop(0, 'rgba(0,0,0,0.78)');
+    grad.addColorStop(0.55, 'rgba(0,0,0,0.42)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, headlineBlockTop, W, headlineBlockH);
 
-    // ── 3. HEADLINE BLOCK ─────────────────────────────────────────────────────
-    // Dark gradient behind headline for legibility
-    const headlineBlockTop = topStripH;
-    const headlineBlockH = Math.round(H * 0.38);
-
-    const headlineBgSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${headlineBlockH}">
-      <defs>
-        <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#000000" stop-opacity="0.72" />
-          <stop offset="60%" stop-color="#000000" stop-opacity="0.45" />
-          <stop offset="100%" stop-color="#000000" stop-opacity="0" />
-        </linearGradient>
-      </defs>
-      <rect width="${W}" height="${headlineBlockH}" fill="url(#hg)" />
-    </svg>`;
-    compositeInputs.push({ input: Buffer.from(headlineBgSvg), left: 0, top: headlineBlockTop, blend: 'over' });
-
-    // Program name (e.g. "NERF WARS") — massive orange text with dark stroke
+    // ── 4. PROGRAM NAME (massive orange) ─────────────────────────────────────
     const programUpper = programName.toUpperCase();
-    const programY = headlineBlockTop + Math.round(H * 0.04);
-    const programSvgH = Math.round(headlineSize * 1.25);
-    const programSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${programSvgH}">
-      <text x="${W / 2}" y="${Math.round(headlineSize * 1.05)}"
-        font-family="Arial Black, Impact, Arial, sans-serif"
-        font-size="${headlineSize}"
-        font-weight="900"
-        fill="#FF6B00"
-        stroke="#1A0500"
-        stroke-width="${Math.round(headlineSize * 0.06)}"
-        paint-order="stroke"
-        text-anchor="middle"
-        letter-spacing="-1">${escSvg(programUpper)}</text>
-    </svg>`;
-    compositeInputs.push({ input: Buffer.from(programSvg), left: 0, top: programY, blend: 'over' });
+    const headlineSize = Math.round(118 * scale);
+    ctx.font = `bold ${headlineSize}px Liberation Sans`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
 
-    let currentY = programY + Math.round(headlineSize * 1.1);
+    // Auto-shrink if text is too wide
+    let adjustedHeadlineSize = headlineSize;
+    while (adjustedHeadlineSize > 40 && textW(programUpper) > W * 0.94) {
+      adjustedHeadlineSize -= 4;
+      ctx.font = `bold ${adjustedHeadlineSize}px Liberation Sans`;
+    }
 
-    // Subtitle (e.g. "PARENTS NIGHT OUT") — white text with dark stroke
+    const programY = headlineBlockTop + Math.round(H * 0.04) + adjustedHeadlineSize;
+    drawText(programUpper, W / 2, programY, {
+      fill: '#FF6B00',
+      stroke: '#1A0500',
+      strokeWidth: Math.round(adjustedHeadlineSize * 0.055),
+    });
+
+    let currentY = programY + Math.round(adjustedHeadlineSize * 0.22);
+
+    // ── 5. SUBTITLE (white) ───────────────────────────────────────────────────
     if (eventSubtitle) {
       const subtitleUpper = eventSubtitle.toUpperCase();
-      const subtitleSvgH = Math.round(subtitleSize * 1.35);
-      const subtitleSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${subtitleSvgH}">
-        <text x="${W / 2}" y="${Math.round(subtitleSize * 1.05)}"
-          font-family="Arial Black, Impact, Arial, sans-serif"
-          font-size="${subtitleSize}"
-          font-weight="900"
-          fill="#FFFFFF"
-          stroke="#000000"
-          stroke-width="${Math.round(subtitleSize * 0.06)}"
-          paint-order="stroke"
-          text-anchor="middle"
-          letter-spacing="3">${escSvg(subtitleUpper)}</text>
-      </svg>`;
-      compositeInputs.push({ input: Buffer.from(subtitleSvg), left: 0, top: currentY, blend: 'over' });
-      currentY += Math.round(subtitleSize * 1.2);
+      const subtitleSize = Math.round(62 * scale);
+      ctx.font = `bold ${subtitleSize}px Liberation Sans`;
+      ctx.textAlign = 'center';
+
+      // Auto-shrink
+      let adjSubtitleSize = subtitleSize;
+      while (adjSubtitleSize > 24 && textW(subtitleUpper) > W * 0.94) {
+        adjSubtitleSize -= 3;
+        ctx.font = `bold ${adjSubtitleSize}px Liberation Sans`;
+      }
+
+      currentY += Math.round(adjSubtitleSize * 1.05);
+      drawText(subtitleUpper, W / 2, currentY, {
+        fill: '#FFFFFF',
+        stroke: '#000000',
+        strokeWidth: Math.round(adjSubtitleSize * 0.05),
+      });
+      currentY += Math.round(adjSubtitleSize * 0.28);
     }
 
-    // Date badge (e.g. "JUNE 10TH") — orange pill badge
+    // ── 6. DATE BADGE ─────────────────────────────────────────────────────────
     if (eventDate) {
       const dateUpper = eventDate.toUpperCase();
-      const badgeH = Math.round(dateBadgeSize * 1.8);
-      const badgeW = Math.round(W * 0.62);
-      const badgeLeft = Math.round((W - badgeW) / 2);
-      const badgeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${badgeW}" height="${badgeH}">
-        <rect x="4" y="4" width="${badgeW - 8}" height="${badgeH - 8}" rx="${Math.round(badgeH * 0.14)}"
-          fill="#1A0800" stroke="#FF6B00" stroke-width="6" />
-        <text x="${badgeW / 2}" y="${Math.round(badgeH * 0.67)}"
-          font-family="Arial Black, Impact, Arial, sans-serif"
-          font-size="${dateBadgeSize}"
-          font-weight="900"
-          fill="#FF6B00"
-          text-anchor="middle"
-          letter-spacing="4">${escSvg(dateUpper)}</text>
-      </svg>`;
-      compositeInputs.push({ input: Buffer.from(badgeSvg), left: badgeLeft, top: currentY, blend: 'over' });
-      currentY += Math.round(badgeH + H * 0.01);
+      const dateFontSize = Math.round(50 * scale);
+      ctx.font = `bold ${dateFontSize}px Liberation Sans`;
+      ctx.textAlign = 'center';
+
+      const badgePadX = Math.round(36 * scale);
+      const badgePadY = Math.round(14 * scale);
+      const badgeTextW = textW(dateUpper);
+      const badgeW = badgeTextW + badgePadX * 2;
+      const badgeH = dateFontSize + badgePadY * 2;
+      const badgeX = (W - badgeW) / 2;
+      const badgeY = currentY + Math.round(dateFontSize * 0.18);
+
+      // Badge background
+      ctx.save();
+      ctx.fillStyle = '#1A0800';
+      ctx.strokeStyle = '#FF6B00';
+      ctx.lineWidth = Math.round(5 * scale);
+      const r = Math.round(10 * scale);
+      ctx.beginPath();
+      ctx.moveTo(badgeX + r, badgeY);
+      ctx.lineTo(badgeX + badgeW - r, badgeY);
+      ctx.quadraticCurveTo(badgeX + badgeW, badgeY, badgeX + badgeW, badgeY + r);
+      ctx.lineTo(badgeX + badgeW, badgeY + badgeH - r);
+      ctx.quadraticCurveTo(badgeX + badgeW, badgeY + badgeH, badgeX + badgeW - r, badgeY + badgeH);
+      ctx.lineTo(badgeX + r, badgeY + badgeH);
+      ctx.quadraticCurveTo(badgeX, badgeY + badgeH, badgeX, badgeY + badgeH - r);
+      ctx.lineTo(badgeX, badgeY + r);
+      ctx.quadraticCurveTo(badgeX, badgeY, badgeX + r, badgeY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      // Date text
+      drawText(dateUpper, W / 2, badgeY + badgePadY + dateFontSize * 0.88, {
+        fill: '#FF6B00',
+      });
+      currentY = badgeY + badgeH + Math.round(H * 0.01);
     }
 
-    // ── 4. BENEFITS PANEL ─────────────────────────────────────────────────────
+    // ── 7. OFFER BADGE (if present) ───────────────────────────────────────────
+    if (offer) {
+      const offerUpper = offer.toUpperCase();
+      const offerFontSize = Math.round(32 * scale);
+      ctx.font = `bold ${offerFontSize}px Liberation Sans`;
+      ctx.textAlign = 'center';
+      const offerBadgeW = Math.min(textW(offerUpper) + 40, W * 0.8);
+      const offerBadgeH = offerFontSize + 20;
+      const offerBadgeX = (W - offerBadgeW) / 2;
+      const offerBadgeY = currentY + 8;
+
+      ctx.save();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(offerBadgeX, offerBadgeY, offerBadgeW, offerBadgeH);
+      ctx.restore();
+
+      drawText(offerUpper, W / 2, offerBadgeY + offerFontSize * 0.88 + 10, { fill: '#FF6B00' });
+      currentY = offerBadgeY + offerBadgeH + 8;
+    }
+
+    // ── 8. BENEFITS PANEL ─────────────────────────────────────────────────────
     const benefitLines = benefits.slice(0, 4).map((b: string) => b.split('|')[0].trim());
     if (benefitLines.length > 0) {
-      const lineHeight = Math.round(benefitSize * 1.75);
-      const panelPadTop = Math.round(benefitSize * 0.7);
-      const panelPadBottom = Math.round(benefitSize * 0.5);
-      const benefitPanelH = panelPadTop + benefitLines.length * lineHeight + panelPadBottom;
+      const benefitFontSize = Math.round(32 * scale);
+      const lineH = Math.round(benefitFontSize * 1.72);
+      const panelPadTop = Math.round(benefitFontSize * 0.65);
+      const panelPadBottom = Math.round(benefitFontSize * 0.45);
+      const panelH = panelPadTop + benefitLines.length * lineH + panelPadBottom;
+      const panelTop = Math.round(H * 0.56);
 
-      // Position benefits panel in the lower-middle area
-      const benefitPanelTop = Math.round(H * 0.56);
+      fillRectAlpha(0, panelTop, W, panelH, '#000000', 0.82);
 
-      const benefitBgSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${benefitPanelH}">
-        <rect width="${W}" height="${benefitPanelH}" fill="#000000" fill-opacity="0.80" />
-      </svg>`;
-      compositeInputs.push({ input: Buffer.from(benefitBgSvg), left: 0, top: benefitPanelTop, blend: 'over' });
+      ctx.font = `bold ${benefitFontSize}px Liberation Sans`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
 
-      // Benefit text lines
-      const textX = Math.round(W * 0.06);
-      const benefitTextSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${benefitPanelH}">
-        ${benefitLines.map((b, i) => {
-          const y = panelPadTop + Math.round(benefitSize * 0.85) + i * lineHeight;
-          return `<text x="${textX}" y="${y}"
-            font-family="Arial Black, Arial, sans-serif"
-            font-size="${benefitSize}"
-            font-weight="bold"
-            fill="#FFFFFF">&#x2713; ${escSvg(b)}</text>`;
-        }).join('\n        ')}
-      </svg>`;
-      compositeInputs.push({ input: Buffer.from(benefitTextSvg), left: 0, top: benefitPanelTop, blend: 'over' });
+      benefitLines.forEach((b: string, i: number) => {
+        const y = panelTop + panelPadTop + benefitFontSize * 0.88 + i * lineH;
+        drawText(`>>  ${b}`, Math.round(W * 0.055), y, { fill: '#FFFFFF' });
+      });
     }
 
-    // ── 5. BOTTOM BAR: CTA + QR code + Contact info ───────────────────────────
+    // ── 9. BOTTOM BAR ─────────────────────────────────────────────────────────
     const bottomBarH = Math.round(H * 0.155);
     const bottomBarTop = H - bottomBarH;
-    const qrSize = Math.round(bottomBarH * 0.78);
-    const qrPad = Math.round(bottomBarH * 0.11);
+    fillRectAlpha(0, bottomBarTop, W, bottomBarH, '#000000', 0.93);
 
     // Generate QR code
     let qrBuffer: Buffer | null = null;
     const qrTarget = qrUrl || website || 'https://mydojoma.com';
+    const qrSize = Math.round(bottomBarH * 0.76);
+    const qrPad = Math.round(bottomBarH * 0.12);
     try {
       qrBuffer = await QRCode.toBuffer(qrTarget, {
-        type: 'png',
-        width: qrSize,
-        margin: 1,
+        type: 'png', width: qrSize, margin: 1,
         color: { dark: '#000000', light: '#FFFFFF' },
       });
     } catch { /* skip QR if fails */ }
 
-    // Bottom bar background
-    const bottomBgSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${bottomBarH}">
-      <rect width="${W}" height="${bottomBarH}" fill="#000000" fill-opacity="0.93" />
-    </svg>`;
-    compositeInputs.push({ input: Buffer.from(bottomBgSvg), left: 0, top: bottomBarTop, blend: 'over' });
-
-    // CTA text and contact info (left/center of bottom bar)
+    // CTA text
     const ctaText = (callToAction || 'REGISTER TODAY').toUpperCase();
+    const ctaFontSize = Math.round(42 * scale);
+    ctx.font = `bold ${ctaFontSize}px Liberation Sans`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+
+    // Auto-shrink CTA if needed
+    const maxCtaW = qrBuffer ? W - qrSize - qrPad * 3 - W * 0.05 : W * 0.9;
+    let adjCtaSize = ctaFontSize;
+    while (adjCtaSize > 20 && textW(ctaText) > maxCtaW) {
+      adjCtaSize -= 2;
+      ctx.font = `bold ${adjCtaSize}px Liberation Sans`;
+    }
+
+    const ctaX = Math.round(W * 0.05);
+    const ctaY = bottomBarTop + Math.round(bottomBarH * 0.44);
+    drawText(ctaText, ctaX, ctaY, { fill: '#FF6B00' });
+
+    // Contact line
     const contactParts: string[] = [];
     if (phone) contactParts.push(phone);
     if (website) contactParts.push(website);
     const contactLine = contactParts.join('  •  ');
-
-    const textAreaW = qrBuffer ? W - qrSize - qrPad * 3 : W;
-    const ctaY = Math.round(bottomBarH * 0.44);
-    const contactY = Math.round(bottomBarH * 0.80);
-
-    const ctaSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${textAreaW}" height="${bottomBarH}">
-      <text x="${Math.round(textAreaW * 0.05)}" y="${ctaY}"
-        font-family="Arial Black, Impact, Arial, sans-serif"
-        font-size="${ctaSize}"
-        font-weight="900"
-        fill="#FF6B00"
-        letter-spacing="2">${escSvg(ctaText)}</text>
-      ${contactLine ? `<text x="${Math.round(textAreaW * 0.05)}" y="${contactY}"
-        font-family="Arial, sans-serif"
-        font-size="${contactSize}"
-        fill="#DDDDDD">${escSvg(contactLine)}</text>` : ''}
-    </svg>`;
-    compositeInputs.push({ input: Buffer.from(ctaSvg), left: 0, top: bottomBarTop, blend: 'over' });
-
-    // QR code (right side of bottom bar)
-    if (qrBuffer) {
-      const qrLeft = W - qrSize - qrPad;
-      const qrTop = bottomBarTop + Math.round((bottomBarH - qrSize) / 2);
-      compositeInputs.push({ input: qrBuffer, left: qrLeft, top: qrTop, blend: 'over' });
-
-      // "SCAN TO REGISTER" label above QR
-      const scanLabelSize = Math.round(contactSize * 0.72);
-      const scanLabelH = Math.round(scanLabelSize * 1.5);
-      const scanLabelSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${qrSize}" height="${scanLabelH}">
-        <text x="${qrSize / 2}" y="${Math.round(scanLabelSize * 1.1)}"
-          font-family="Arial, sans-serif"
-          font-size="${scanLabelSize}"
-          font-weight="bold"
-          fill="#FFFFFF"
-          text-anchor="middle">SCAN TO REGISTER</text>
-      </svg>`;
-      const scanLabelTop = qrTop - scanLabelH - Math.round(H * 0.005);
-      if (scanLabelTop >= bottomBarTop) {
-        compositeInputs.push({ input: Buffer.from(scanLabelSvg), left: qrLeft, top: scanLabelTop, blend: 'over' });
-      }
+    if (contactLine) {
+      const contactFontSize = Math.round(22 * scale);
+      ctx.font = `${contactFontSize}px Liberation Sans`;
+      ctx.textAlign = 'left';
+      const contactY = bottomBarTop + Math.round(bottomBarH * 0.80);
+      drawText(contactLine, ctaX, contactY, { fill: '#CCCCCC' });
     }
 
-    // ── 6. LOGO overlay (centered in top strip) ───────────────────────────────
+    // QR code image
+    if (qrBuffer) {
+      const qrImg = await loadImage(qrBuffer);
+      const qrLeft = W - qrSize - qrPad;
+      const qrTop = bottomBarTop + Math.round((bottomBarH - qrSize) / 2);
+      ctx.drawImage(qrImg, qrLeft, qrTop, qrSize, qrSize);
+
+      // "SCAN TO REGISTER" label
+      const scanFontSize = Math.round(14 * scale);
+      ctx.font = `bold ${scanFontSize}px Liberation Sans`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      drawText('SCAN TO REGISTER', qrLeft + qrSize / 2, qrTop - Math.round(6 * scale), { fill: '#FFFFFF' });
+    }
+
+    // ── 10. LOGO (left side of top bar) ──────────────────────────────────────
     if (logoBase64) {
       try {
-        const logoBuffer = Buffer.from(logoBase64, 'base64');
-        const maxLogoH = Math.round(topStripH * 0.68);
-        const maxLogoW = Math.round(W * 0.22);
-        const logoResized = await sharp(logoBuffer)
+        const maxLogoH = Math.round(topBarH * 0.68);
+        const maxLogoW = Math.round(W * 0.20);
+        const logoResized = await sharp(Buffer.from(logoBase64, 'base64'))
           .resize(maxLogoW, maxLogoH, { fit: 'inside', withoutEnlargement: true })
-          .png()
-          .toBuffer();
+          .png().toBuffer();
         const logoMeta = await sharp(logoResized).metadata();
         const logoW = logoMeta.width ?? maxLogoW;
         const logoH = logoMeta.height ?? maxLogoH;
-        // Position: left-aligned with padding, vertically centered in top strip
+        const logoImg = await loadImage(logoResized);
         const logoLeft = Math.round(W * 0.04);
-        const logoTop = Math.round((topStripH - logoH) / 2);
-        compositeInputs.push({ input: logoResized, left: logoLeft, top: logoTop, blend: 'over' });
+        const logoTop = Math.round((topBarH - logoH) / 2);
+        ctx.drawImage(logoImg, logoLeft, logoTop, logoW, logoH);
       } catch { /* skip logo if fails */ }
     }
 
-    // ── 7. Composite everything onto the background ───────────────────────────
-    const result = await sharp(bgBuffer)
-      .composite(compositeInputs)
-      .png()
-      .toBuffer();
+    // ── 11. Export to PNG ─────────────────────────────────────────────────────
+    const outBuffer = canvas.toBuffer('image/png');
+    return { base64: outBuffer.toString('base64'), mimeType: 'image/png' };
 
-    return { base64: result.toString('base64'), mimeType: 'image/png' };
   } catch (err) {
-    console.warn('[compositeFullFlyerOverlay] Failed, returning original:', err);
+    console.warn('[compositeFullFlyerOverlay] Canvas render failed, returning original:', err);
     return { base64: backgroundBase64, mimeType };
   }
 }
