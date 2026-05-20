@@ -1,0 +1,9 @@
+{
+  "query": "SELECT id, name, email, role, createdAt FROM users WHERE LOWER(name) LIKE '%debbie%' OR LOWER(name) LIKE '%gregory%' OR LOWER(email) LIKE '%gregory%' LIMIT 10;\nSHOW TABLES LIKE '%invit%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT id, name, email, role, createdAt FROM users WHERE LOWER(name) LIKE '%debbie%' OR LOWER(name) LIKE '%gregory%' OR LOWER(email) LIKE '%gregory%' LIMIT 10;\nSHOW TABLES LIKE '%invit%';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 291
+}

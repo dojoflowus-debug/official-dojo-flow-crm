@@ -1,0 +1,20 @@
+{
+  "query": "SELECT u.id, u.name, u.email, u.role, u.emailVerified, u.password IS NOT NULL as hasPassword, ou.organizationId, ou.role as orgRole\nFROM users u\nLEFT JOIN organization_users ou ON u.id = ou.userId\nWHERE u.id = 8100011;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT u.id, u.name, u.email, u.role, u.emailVerified, u.password IS NOT NULL as hasPassword, ou.organizationId, ou.role as orgRole\nFROM users u\nLEFT JOIN organization_users ou ON u.id = ou.userId\nWHERE u.id = 8100011;",
+  "rows": [
+    {
+      "id": "8100011",
+      "name": "Debbie Gregory",
+      "email": "debbie.gregory0153@gmail.com",
+      "role": "staff",
+      "emailVerified": "1",
+      "hasPassword": "1",
+      "organizationId": "210001",
+      "orgRole": "instructor"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\temailVerified\thasPassword\torganizationId\torgRole\n8100011\tDebbie Gregory\tdebbie.gregory0153@gmail.com\tstaff\t1\t1\t210001\tinstructor\n",
+  "stderr": "",
+  "execution_time_ms": 264
+}

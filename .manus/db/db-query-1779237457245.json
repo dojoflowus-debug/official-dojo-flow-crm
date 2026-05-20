@@ -1,0 +1,25 @@
+{
+  "query": "SHOW TABLES LIKE '%user%';\nSHOW TABLES LIKE '%sms%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SHOW TABLES LIKE '%user%';\nSHOW TABLES LIKE '%sms%';",
+  "rows": [
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB (%user%)": "organization_users"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB (%user%)": "users"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB (%user%)": "Tables_in_CaitGcU2dUvj49bXGJVNcB (%sms%)"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB (%user%)": "sms_log"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB (%user%)": "sms_preferences"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_CaitGcU2dUvj49bXGJVNcB (%user%)\norganization_users\nusers\nTables_in_CaitGcU2dUvj49bXGJVNcB (%sms%)\nsms_log\nsms_preferences\n",
+  "stderr": "",
+  "execution_time_ms": 271
+}

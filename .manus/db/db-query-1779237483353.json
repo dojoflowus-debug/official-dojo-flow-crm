@@ -1,0 +1,16 @@
+{
+  "query": "SHOW TABLES LIKE '%invit%';\nSHOW TABLES LIKE '%staff%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SHOW TABLES LIKE '%invit%';\nSHOW TABLES LIKE '%staff%';",
+  "rows": [
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB (%staff%)": "staff_messages"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB (%staff%)": "staff_pins"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_CaitGcU2dUvj49bXGJVNcB (%staff%)\nstaff_messages\nstaff_pins\n",
+  "stderr": "",
+  "execution_time_ms": 262
+}

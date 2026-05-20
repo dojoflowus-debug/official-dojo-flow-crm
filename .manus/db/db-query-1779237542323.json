@@ -1,0 +1,9 @@
+{
+  "query": "SELECT u.id, u.name, u.email, u.role, u.createdAt, ou.organizationId, ou.role as orgRole\nFROM users u\nJOIN organization_users ou ON u.id = ou.userId\nWHERE LOWER(u.email) LIKE '%debbie%' OR LOWER(u.email) LIKE '%gregory%' OR LOWER(u.name) LIKE '%debbie%' OR LOWER(u.name) LIKE '%gregory%'\nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT u.id, u.name, u.email, u.role, u.createdAt, ou.organizationId, ou.role as orgRole\nFROM users u\nJOIN organization_users ou ON u.id = ou.userId\nWHERE LOWER(u.email) LIKE '%debbie%' OR LOWER(u.email) LIKE '%gregory%' OR LOWER(u.name) LIKE '%debbie%' OR LOWER(u.name) LIKE '%gregory%'\nLIMIT 10;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 271
+}

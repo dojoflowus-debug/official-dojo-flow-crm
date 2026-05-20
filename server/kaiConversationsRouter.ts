@@ -9,6 +9,7 @@ import { classifyIntent } from "./kai-nlp-router";
 import { detectIntent } from "./kaiIntelligenceLayer";
 import { kaiTools, executeKaiTool } from "./kai-tools";
 import { deductCredits, CREDIT_COSTS } from "./services/creditConsumptionService";
+import { runKaiAgentLoop } from "./kaiAgentLoop";
 
 /**
  * Kai Conversations Router
@@ -508,8 +509,105 @@ To set up recurring payments with PCBancard Fluid Pay:
 
 Need help with a specific step in PCBancard Fluid Pay? Let me know.`;
       } else {
-        // Fall back to LLM for general conversation with tool calling
+        // ── NEW AGENT LOOP (replaces old single-pass invokeLLM) ──────────────
         try {
+          // Fetch the user's preferred name to personalise the system prompt
+          let ownerPreferredName: string | null = null;
+          try {
+            const { users } = await import("../drizzle/schema");
+            const { eq: eqUser } = await import("drizzle-orm");
+            const [ownerRow] = await db
+              .select({ preferredName: users.preferredName, name: users.name })
+              .from(users)
+              .where(eqUser(users.id, ctx.user.id))
+              .limit(1);
+            ownerPreferredName = ownerRow?.preferredName || ownerRow?.name || null;
+          } catch (_) {}
+
+          // Build base system prompt (same as before, but now passed to agent loop)
+          const ownerGreeting = ownerPreferredName
+            ? `\n\nUSER IDENTITY:\nThe owner's preferred name is "${ownerPreferredName}". Always address them by this name in your responses.`
+            : '';
+          const baseSystemPrompt = `You are Kai, an AI operations assistant for martial arts schools. You operate as a technical operator — not a chatbot. Your communication style is clear, direct, and specific.${ownerGreeting}
+CAPABILITIES — you CAN perform ALL of the following directly. NEVER refuse or redirect to HR/IT:
+- Students: search students, get counts, view at-risk students, remove students
+- Leads: add leads, search leads, update lead pipeline status
+- Staff: invite new staff members (use invite_staff tool), list current staff (use list_staff tool)
+- Classes: list classes (use list_classes tool for ANY question about schedule), get rosters, mark attendance, clear schedule
+- Payments: view FluidPay revenue and transactions
+- Communications: send SMS blasts; send individual SMS (use send_contact_message tool)
+- Contact Lookup: find any lead or student by name (use resolve_contact tool)
+- Programs & Pricing: retrieve active programs with pricing (use get_programs_pricing tool)
+DATA GROUNDING RULES:
+1. NEVER invent or guess metrics. Use tools to query the database.
+2. When a tool returns a JSON object with a "message" field, relay that message text directly — do NOT echo raw JSON.
+3. Never output raw JSON, TypeScript code, or schema definitions to the user.
+PAYMENT PROCESSING:
+- DojoFlow uses ONLY PCBancard Fluid Pay for all payment processing.
+- Do NOT mention Stripe, Square, PayPal, or any other payment processor.
+UI BLOCK FORMAT:
+When a tool returns a list of students, embed: [STUDENT_LIST:id1,id2,id3:N students]
+When a tool returns a list of leads, embed: [LEAD_LIST:id1,id2,id3:N leads]`;
+
+          // Load kernel state from conversation record
+          const kernelStateJson = (conversation as any).kernelState ?? null;
+          const isNewConversation = conversationHistory.length === 0;
+
+          // Run the new agent loop
+          const agentResult = await runKaiAgentLoop({
+            userMessage: input.query,
+            conversationHistory,
+            organizationId: ctx.currentOrganizationId,
+            userId: ctx.user.id,
+            kernelStateJson,
+            tools: kaiTools as any,
+            executeTool: (toolName: string, toolArgs: Record<string, any>) =>
+              executeKaiTool(toolName, toolArgs, ctx),
+            baseSystemPrompt,
+            ownerName: ownerPreferredName ?? undefined,
+            isNewConversation,
+          });
+
+          aiResponse = agentResult.response;
+
+          // Persist updated kernel state back to the conversation
+          try {
+            await db
+              .update(kaiConversations)
+              .set({ kernelState: agentResult.kernelStateJson })
+              .where(eq(kaiConversations.id, input.conversationId));
+          } catch (_) {}
+
+          // Post-process: strip raw JSON if model accidentally returned it
+          if (aiResponse.trim().startsWith('{') || aiResponse.trim().startsWith('"{\'')) {
+            try {
+              let jsonStr = aiResponse.trim();
+              if (jsonStr.startsWith('"') && jsonStr.endsWith('"')) {
+                jsonStr = JSON.parse(jsonStr);
+              }
+              const parsed = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
+              if (parsed && typeof parsed === 'object' && parsed.message) {
+                aiResponse = parsed.message;
+              }
+            } catch (_) {}
+          }
+
+          // HARD FILTER: Replace any payment processor mentions
+          aiResponse = aiResponse
+            .replace(/\bStripe\b/gi, 'PCBancard Fluid Pay')
+            .replace(/\bPayPal\b/gi, 'PCBancard Fluid Pay')
+            .replace(/\bSquare\b/gi, 'PCBancard Fluid Pay')
+            .replace(/\bAuthorize\.Net\b/gi, 'PCBancard Fluid Pay')
+            .replace(/payment processors?/gi, 'PCBancard Fluid Pay')
+            .replace(/payment processing/gi, 'PCBancard Fluid Pay');
+
+          console.log('[Kai Agent] Response generated', {
+            intent: agentResult.intent.intent,
+            model: agentResult.modelUsed,
+            tokens: agentResult.tokensUsed,
+            toolCalls: agentResult.toolCallsMade.length,
+            goalAchieved: agentResult.goalAchieved,
+          });
           // Fetch the user's preferred name to personalise the system prompt
           let ownerPreferredName: string | null = null;
           try {
@@ -851,13 +949,8 @@ Always place the UI block on its own line after your text response.`;
             hadToolCalls: toolCalls && toolCalls.length > 0
           });
         } catch (error) {
-          console.error("[Kai] LLM error:", error);
+          console.error("[Kai Agent] Error:", error instanceof Error ? error.message : String(error));
           aiResponse = "Something went wrong — please try again.";
-          // Log full error for debugging
-          console.error('[Kai] Full error details:', {
-            error: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined
-          });
         }
       }
 

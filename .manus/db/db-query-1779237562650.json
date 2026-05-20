@@ -1,0 +1,16 @@
+{
+  "query": "SELECT u.id, u.name, u.email, ou.role FROM users u JOIN organization_users ou ON u.id = ou.userId WHERE ou.organizationId = 210001 AND ou.role IN ('owner', 'admin') LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT u.id, u.name, u.email, ou.role FROM users u JOIN organization_users ou ON u.id = ou.userId WHERE ou.organizationId = 210001 AND ou.role IN ('owner', 'admin') LIMIT 3;",
+  "rows": [
+    {
+      "id": "660050",
+      "name": "Vincent Holmes",
+      "email": "vincent.holmes00@gmail.com",
+      "role": "owner"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\n660050\tVincent Holmes\tvincent.holmes00@gmail.com\towner\n",
+  "stderr": "",
+  "execution_time_ms": 263
+}

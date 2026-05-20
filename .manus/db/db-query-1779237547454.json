@@ -1,0 +1,9 @@
+{
+  "query": "SELECT id, name, email, role, createdAt FROM users WHERE email = 'debbie.gregory0153@gmail.com' LIMIT 5;\nSELECT id, name, email, role, createdAt FROM users WHERE LOWER(email) LIKE '%gregory0153%' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT id, name, email, role, createdAt FROM users WHERE email = 'debbie.gregory0153@gmail.com' LIMIT 5;\nSELECT id, name, email, role, createdAt FROM users WHERE LOWER(email) LIKE '%gregory0153%' LIMIT 5;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 281
+}

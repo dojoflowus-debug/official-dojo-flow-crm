@@ -626,6 +626,7 @@ export const kaiConversations = mysqlTable("kai_conversations", {
 	deletedAt: timestamp({ mode: 'string' }),
 	archivedAt: timestamp({ mode: 'string' }),
 	participantIds: text(),
+	kernelState: text(),
 });
 
 export const kaiMessages = mysqlTable("kai_messages", {

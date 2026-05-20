@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM students\nWHERE LOWER(lastName) LIKE '%odunela%'\nAND id NOT IN (360003, 1200003);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute DELETE FROM students\nWHERE LOWER(lastName) LIKE '%odunela%'\nAND id NOT IN (360003, 1200003);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 275
+}

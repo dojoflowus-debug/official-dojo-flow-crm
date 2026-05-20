@@ -344,11 +344,11 @@ export const kaiTools = [
     type: "function",
     function: {
       name: "get_fluidpay_transactions",
-      description: "Get recent payment transactions from FluidPay. Use when the user asks to see recent payments, transactions, or payment history.",
+      description: "Get payment transactions from FluidPay. Use when the user asks to see transactions, payments, payment history, or says 'show me all X transactions' or 'show me the transactions'. When the user mentions a specific number (e.g. 'show me the 58 transactions'), pass that number as the limit. Default limit is 20, max is 200.",
       parameters: {
         type: "object",
         properties: {
-          limit: { type: "number", description: "Number of transactions to return (default 10, max 50)" }
+          limit: { type: "number", description: "Number of transactions to return. If the user mentions a specific count (e.g. 'show me the 58 transactions'), use that number. Default 20, max 200." }
         },
         required: []
       }

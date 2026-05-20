@@ -1,0 +1,32 @@
+{
+  "query": "SELECT id, firstName, lastName, email, phone, beltRank, membershipStatus, status, createdAt\nFROM students\nWHERE LOWER(lastName) LIKE '%odunela%'\nORDER BY id ASC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT id, firstName, lastName, email, phone, beltRank, membershipStatus, status, createdAt\nFROM students\nWHERE LOWER(lastName) LIKE '%odunela%'\nORDER BY id ASC;",
+  "rows": [
+    {
+      "id": "360003",
+      "firstName": "Seunfunmi",
+      "lastName": "Odunela",
+      "email": "bussyodunela@gmail.com",
+      "phone": "6785319122",
+      "beltRank": "No Belt",
+      "membershipStatus": "Foundation",
+      "status": "Active",
+      "createdAt": "2026-05-01 01:01:40"
+    },
+    {
+      "id": "1200003",
+      "firstName": "Seorefunmi",
+      "lastName": "Odunela",
+      "email": "NULL",
+      "phone": "6785319122",
+      "beltRank": "No Belt",
+      "membershipStatus": "Foundation",
+      "status": "Active",
+      "createdAt": "2026-04-30 21:11:02"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\temail\tphone\tbeltRank\tmembershipStatus\tstatus\tcreatedAt\n360003\tSeunfunmi\tOdunela\tbussyodunela@gmail.com\t6785319122\tNo Belt\tFoundation\tActive\t2026-05-01 01:01:40\n1200003\tSeorefunmi\tOdunela\tNULL\t6785319122\tNo Belt\tFoundation\tActive\t2026-04-30 21:11:02\n",
+  "stderr": "",
+  "execution_time_ms": 265
+}

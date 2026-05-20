@@ -1,0 +1,328 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "account_flags"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "add_ons"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "ai_credit_balance"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "ai_credit_transactions"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "alert_settings"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "automation_enrollments"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "automation_sequences"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "automation_steps"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "belt_progress"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "belt_test_registrations"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "belt_tests"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "billing_settings"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "brand_dna"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "class_enrollments"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "class_entitlements"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "class_reminders"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "class_sessions"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "classes"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "conversations"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "creative_assets"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "creative_memory"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "credit_top_ups"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "custom_cinematic_backgrounds"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "direct_messages"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "directed_messages"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "discounts"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "documents"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "dojo_settings"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "enrollments"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "feature_flags"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "floor_plan_spots"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "floor_plans"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "kai_conversations"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "kai_messages"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "kai_reviews"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "kai_support_tickets"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "kai_task_feedback"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "kiosk_design_templates"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "kiosk_locations"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "kiosk_settings"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "kiosk_theme_presets"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "kiosks"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "lead_activities"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "lead_appointments"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "lead_scoring_rules"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "leads"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "locations"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "member_journey_config"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "membership_plans"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "merchandise_items"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "message_threads"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "messages"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "onboarding_progress"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "one_time_fees"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "organization_subscriptions"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "organization_users"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "organizations"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "owner_profiles"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "payment_provider_connections"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "payment_reminders"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "payment_webhook_events"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "plan_entitlements"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "platform_onboarding_progress"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "platform_subscriptions"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "preset_backgrounds"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "program_enrollments"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "program_plans"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "programs"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "school_profiles"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "session_spot_assignments"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "signed_waivers"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "sms_log"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "sms_preferences"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "staff_messages"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "staff_pins"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "stock_alerts"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "stock_usage_history"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "student_accounts"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "student_attendance"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "student_billing_enrollments"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "student_contacts"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "student_delete_codes"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "student_documents"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "student_enrollments"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "student_merchandise"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "student_message_attachments"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "student_messages"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "student_notes"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "student_password_reset_tokens"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "student_passwords"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "student_tuition"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "student_tuition_payments"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "students"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "subscription_plans"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "team_members"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "thread_participants"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "tuition_plans"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "unread_message_counts"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "usage_events"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "users"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "verification_codes"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "waiver_templates"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "webhook_logs"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "webhooks"
+    },
+    {
+      "Tables_in_CaitGcU2dUvj49bXGJVNcB": "welcome_messages"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_CaitGcU2dUvj49bXGJVNcB\n__drizzle_migrations\naccount_flags\nadd_ons\nai_credit_balance\nai_credit_transactions\nalert_settings\nautomation_enrollments\nautomation_sequences\nautomation_steps\nbelt_progress\nbelt_test_registrations\nbelt_tests\nbilling_settings\nbrand_dna\nclass_enrollments\nclass_entitlements\nclass_reminders\nclass_sessions\nclasses\nconversations\ncreative_assets\ncreative_memory\ncredit_top_ups\ncustom_cinematic_backgrounds\ndirect_messages\ndirected_messages\ndiscounts\ndocuments\ndojo_settings\nenrollments\nfeature_flags\nfloor_plan_spots\nfloor_plans\nkai_conversations\nkai_messages\nkai_reviews\nkai_support_tickets\nkai_task_feedback\nkiosk_design_templates\nkiosk_locations\nkiosk_settings\nkiosk_theme_presets\nkiosks\nlead_activities\nlead_appointments\nlead_scoring_rules\nleads\nlocations\nmember_journey_config\nmembership_plans\nmerchandise_items\nmessage_threads\nmessages\nonboarding_progress\none_time_fees\norganization_subscriptions\norganization_users\norganizations\nowner_profiles\npayment_provider_connections\npayment_reminders\npayment_webhook_events\nplan_entitlements\nplatform_onboarding_progress\nplatform_subscriptions\npreset_backgrounds\nprogram_enrollments\nprogram_plans\nprograms\nschool_profiles\nsession_spot_assignments\nsigned_waivers\nsms_log\nsms_preferences\nstaff_messages\nstaff_pins\nstock_alerts\nstock_usage_history\nstudent_accounts\nstudent_attendance\nstudent_billing_enrollments\nstudent_contacts\nstudent_delete_codes\nstudent_documents\nstudent_enrollments\nstudent_merchandise\nstudent_message_attachments\nstudent_messages\nstudent_notes\nstudent_password_reset_tokens\nstudent_passwords\nstudent_tuition\nstudent_tuition_payments\nstudents\nsubscription_plans\nteam_members\nthread_participants\ntuition_plans\nunread_message_counts\nusage_events\nusers\nverification_codes\nwaiver_templates\nwebhook_logs\nwebhooks\nwelcome_messages\n",
+  "stderr": "",
+  "execution_time_ms": 263
+}
