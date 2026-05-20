@@ -15,7 +15,117 @@ import {
   User,
   Loader2,
   Sparkles,
+  PhoneCall,
+  PhoneOff,
+  PhoneMissed,
+  X,
 } from "lucide-react";
+
+// ── Call outcome config ───────────────────────────────────────────────────────
+const CALL_OUTCOMES = [
+  { value: "answered", label: "Spoke", Icon: PhoneCall, color: "text-green-600 dark:text-green-400", bg: "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800" },
+  { value: "no_answer", label: "No Answer", Icon: PhoneMissed, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800" },
+  { value: "voicemail", label: "Voicemail", Icon: PhoneOff, color: "text-slate-600 dark:text-slate-400", bg: "bg-slate-50 dark:bg-slate-900/20 border-slate-200 dark:border-slate-700" },
+  { value: "busy", label: "Busy", Icon: PhoneOff, color: "text-red-600 dark:text-red-400", bg: "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800" },
+] as const;
+
+function getCallOutcome(outcome: string) {
+  return CALL_OUTCOMES.find(o => o.value === outcome) ?? null;
+}
+
+function getApptBadge(title: string) {
+  if (title?.includes("showed up")) return { label: "Showed", cls: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" };
+  if (title?.includes("no-show")) return { label: "No Show", cls: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" };
+  if (title?.includes("booked")) return { label: "Booked", cls: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400" };
+  if (title?.includes("confirmed")) return { label: "Confirmed", cls: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" };
+  if (title?.includes("cancelled")) return { label: "Cancelled", cls: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400" };
+  return null;
+}
+
+// ── Log Call Modal ────────────────────────────────────────────────────────────
+function LogCallModal({ leadId, leadName, phone, onClose, onSuccess }: {
+  leadId: number; leadName: string; phone?: string; onClose: () => void; onSuccess: () => void;
+}) {
+  const [outcome, setOutcome] = useState<string | null>(null);
+  const [notes, setNotes] = useState("");
+  const [durationMins, setDurationMins] = useState("");
+
+  const addActivity = trpc.leads.addActivity.useMutation({
+    onSuccess: () => { onSuccess(); onClose(); },
+  });
+
+  const handleLog = () => {
+    if (!outcome) return;
+    const outcomeObj = getCallOutcome(outcome);
+    addActivity.mutate({
+      leadId,
+      type: "call",
+      title: outcome === "answered" ? `Call with ${leadName}` : `Call attempt — ${outcomeObj?.label}`,
+      content: notes || (phone ? `Called ${phone}` : undefined),
+      callOutcome: outcome as any,
+      callDuration: durationMins ? parseInt(durationMins) * 60 : undefined,
+      createdByName: "You",
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-sm p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-foreground">Log Call</h3>
+            <p className="text-xs text-muted-foreground">{leadName}{phone ? ` · ${phone}` : ""}</p>
+          </div>
+          <button onClick={onClose} className="h-7 w-7 rounded-full hover:bg-muted flex items-center justify-center">
+            <X className="h-4 w-4 text-muted-foreground" />
+          </button>
+        </div>
+
+        <div>
+          <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Call Outcome</p>
+          <div className="grid grid-cols-2 gap-2">
+            {CALL_OUTCOMES.map(({ value, label, Icon, color, bg }) => {
+              const sel = outcome === value;
+              return (
+                <button key={value} onClick={() => setOutcome(value)}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                    sel ? `${bg} ${color} border-current ring-1 ring-current` : "border-border text-muted-foreground hover:bg-muted/50"
+                  }`}>
+                  <Icon className={`h-4 w-4 ${sel ? color : ""}`} />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {outcome === "answered" && (
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Duration (minutes)</p>
+            <input type="number" min="0" placeholder="e.g. 5" value={durationMins}
+              onChange={e => setDurationMins(e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          </div>
+        )}
+
+        <div>
+          <p className="text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Notes (optional)</p>
+          <Textarea placeholder="What was discussed..." value={notes} onChange={e => setNotes(e.target.value)}
+            className="min-h-[70px] resize-none bg-background/50 text-sm" />
+        </div>
+
+        <div className="flex gap-2 pt-1">
+          <Button variant="outline" size="sm" onClick={onClose} className="flex-1">Cancel</Button>
+          <Button size="sm" onClick={handleLog} disabled={!outcome || addActivity.isPending} className="flex-1 bg-primary hover:bg-primary/90">
+            {addActivity.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Phone className="h-4 w-4 mr-1" />}
+            Log Call
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface LeadActivityTimelineProps {
   leadId: number;
@@ -108,6 +218,7 @@ function formatDuration(seconds: number): string {
 export function LeadActivityTimeline({ leadId, leadName }: LeadActivityTimelineProps) {
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [noteContent, setNoteContent] = useState("");
+  const [showLogCall, setShowLogCall] = useState(false);
   const [expandedActivities, setExpandedActivities] = useState<Set<number>>(new Set());
 
   const { data: activities, isLoading, refetch } = trpc.leads.getActivities.useQuery({ leadId });
@@ -151,10 +262,33 @@ export function LeadActivityTimeline({ leadId, leadName }: LeadActivityTimelineP
   }
 
   return (
+    <>
+      {showLogCall && (
+        <LogCallModal
+          leadId={leadId}
+          leadName={leadName}
+          onClose={() => setShowLogCall(false)}
+          onSuccess={() => refetch()}
+        />
+      )}
     <div className="space-y-4">
+      {/* Quick Action Bar */}
+      <div className="flex gap-2">
+        <Button size="sm" variant="outline" onClick={() => setShowLogCall(true)}
+          className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/20">
+          <Phone className="h-3.5 w-3.5" />
+          Log Call
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => setIsAddingNote(true)}
+          className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800 hover:bg-amber-50 dark:hover:bg-amber-900/20">
+          <FileText className="h-3.5 w-3.5" />
+          Add Note
+        </Button>
+      </div>
+
       {/* Add Note Section */}
-      <div className="rounded-xl bg-card border border-border/50 p-4">
-        {isAddingNote ? (
+      {isAddingNote && <div className="rounded-xl bg-card border border-border/50 p-4">
+        {true ? (
           <div className="space-y-3">
             <Textarea
               placeholder={`Add a note about ${leadName}...`}
@@ -189,18 +323,8 @@ export function LeadActivityTimeline({ leadId, leadName }: LeadActivityTimelineP
               </Button>
             </div>
           </div>
-        ) : (
-          <button
-            onClick={() => setIsAddingNote(true)}
-            className="w-full flex items-center gap-3 text-left text-muted-foreground hover:text-foreground transition-colors duration-150"
-          >
-            <div className="h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-              <Plus className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-            </div>
-            <span className="text-sm">Add a note...</span>
-          </button>
-        )}
-      </div>
+        ) : null}
+      </div>}
 
       {/* Timeline */}
       <div className="relative">
@@ -213,7 +337,9 @@ export function LeadActivityTimeline({ leadId, leadName }: LeadActivityTimelineP
         <div className="space-y-1">
           {activities && activities.length > 0 ? (
             activities.map((activity, index) => {
-              const config = activityConfig[activity.type as keyof typeof activityConfig] || activityConfig.note;
+              const config = activityConfig[activity.type as keyof typeof activityConfig] ?? activityConfig.note;
+              const callOutcomeDisplay = activity.type === "call" && activity.callOutcome ? getCallOutcome(activity.callOutcome) : null;
+              const apptBadge = activity.type === "meeting" ? getApptBadge(activity.title ?? "") : null;
               const Icon = config.icon;
               const isExpanded = expandedActivities.has(activity.id);
               const hasLongContent = activity.content && activity.content.length > 120;
@@ -256,18 +382,22 @@ export function LeadActivityTimeline({ leadId, leadName }: LeadActivityTimelineP
                           </div>
                         )}
 
-                        {/* Call specific */}
-                        {activity.type === "call" && (
-                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                            {activity.callOutcome && (
-                              <span className="capitalize">{activity.callOutcome.replace("_", " ")}</span>
-                            )}
-                            {activity.callDuration && activity.callDuration > 0 && (
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {formatDuration(activity.callDuration)}
-                              </span>
-                            )}
+                        {/* Appointment badge */}
+                        {apptBadge && (
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ml-1 ${apptBadge.cls}`}>
+                            {apptBadge.label}
+                          </span>
+                        )}
+                        {/* Call outcome pill */}
+                        {callOutcomeDisplay && (
+                          <div className="mt-1.5">
+                            <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${callOutcomeDisplay.bg} ${callOutcomeDisplay.color}`}>
+                              <callOutcomeDisplay.Icon className="h-3 w-3" />
+                              {callOutcomeDisplay.label}
+                              {activity.callDuration && activity.callDuration > 0 && (
+                                <span className="ml-1 opacity-70">· {formatDuration(activity.callDuration)}</span>
+                              )}
+                            </div>
                           </div>
                         )}
 
@@ -331,6 +461,8 @@ export function LeadActivityTimeline({ leadId, leadName }: LeadActivityTimelineP
         </div>
       </div>
     </div>
+    </div>
+    </>
   );
 }
 

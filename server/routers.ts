@@ -2546,6 +2546,17 @@ export const appRouter = router({
         await db.update(leads)
           .set({ status: 'Intro Scheduled', updatedAt: new Date().toISOString() })
           .where(eq(leads.id, input.leadId));
+        // Log appointment booking to lead activity timeline
+        const { leadActivities } = await import('../drizzle/schema');
+        await db.insert(leadActivities).values({
+          leadId: input.leadId,
+          type: 'meeting',
+          title: 'Appointment booked',
+          content: input.scheduledDate + (input.scheduledTime ? ' at ' + input.scheduledTime : '') + (input.notes ? ' — ' + input.notes : ''),
+          isAutomated: 0,
+          createdByName: input.bookedByName || 'Staff',
+          metadata: JSON.stringify({ appointmentId: (result as any).insertId, scheduledDate: input.scheduledDate, scheduledTime: input.scheduledTime }),
+        });
         return { success: true, appointmentId: (result as any).insertId };
       }),
 
@@ -2577,6 +2588,35 @@ export const appRouter = router({
           `UPDATE lead_appointments SET status = ?, updated_at = NOW() WHERE id = ? AND organization_id = ?`,
           [input.status, input.appointmentId, ctx.currentOrganizationId]
         );
+        // Fetch the lead_id for this appointment so we can log to lead_activities
+        const [apptRows2] = await pool.query(
+          'SELECT lead_id, scheduled_date, scheduled_time FROM lead_appointments WHERE id = ? AND organization_id = ?',
+          [input.appointmentId, ctx.currentOrganizationId]
+        ) as any;
+        const appt2 = (apptRows2 as any[])[0];
+        if (appt2?.lead_id) {
+          const { getDb: getDb2 } = await import('./db');
+          const { leadActivities: la2 } = await import('../drizzle/schema');
+          const db2 = await getDb2();
+          if (db2) {
+            const outcomeLabels: Record<string, string> = {
+              showed: 'Lead showed up for appointment',
+              no_show: 'Lead did not show — no-show recorded',
+              confirmed: 'Appointment confirmed',
+              cancelled: 'Appointment cancelled',
+              scheduled: 'Appointment rescheduled',
+            };
+            await db2.insert(la2).values({
+              leadId: appt2.lead_id,
+              type: 'meeting',
+              title: outcomeLabels[input.status] || 'Appointment updated',
+              content: appt2.scheduled_date + (appt2.scheduled_time ? ' at ' + appt2.scheduled_time : ''),
+              isAutomated: 0,
+              createdByName: 'Staff',
+              metadata: JSON.stringify({ appointmentId: input.appointmentId, status: input.status }),
+            });
+          }
+        }
         return { success: true };
       }),
 
