@@ -262,7 +262,7 @@ export function LeadActivityTimeline({ leadId, leadName }: LeadActivityTimelineP
   }
 
   return (
-    <>
+    <div className="space-y-4">
       {showLogCall && (
         <LogCallModal
           leadId={leadId}
@@ -271,7 +271,6 @@ export function LeadActivityTimeline({ leadId, leadName }: LeadActivityTimelineP
           onSuccess={() => refetch()}
         />
       )}
-    <div className="space-y-4">
       {/* Quick Action Bar */}
       <div className="flex gap-2">
         <Button size="sm" variant="outline" onClick={() => setShowLogCall(true)}
@@ -461,8 +460,6 @@ export function LeadActivityTimeline({ leadId, leadName }: LeadActivityTimelineP
         </div>
       </div>
     </div>
-    </div>
-    </>
   );
 }
 
