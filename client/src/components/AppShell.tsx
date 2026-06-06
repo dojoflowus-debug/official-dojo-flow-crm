@@ -66,6 +66,7 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
   const isDark = theme === 'dark' || theme === 'cinematic'
   const isCinematic = theme === 'cinematic'
   const isKaiRoute = location.pathname === '/kai'
+  const isKioskRoute = location.pathname.startsWith('/kiosk-studio')
   
   // Fetch badge counts with polling (every 90 seconds)
   const { data: badgeCounts } = trpc.navBadges.getActionableCounts.useQuery(
@@ -150,34 +151,36 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
     <KaiTutorialProvider>
     <KaiBarProvider>
     <SubscriptionGate>
-      <div className={`app-shell flex flex-col`} style={{ height: isKaiRoute ? '100dvh' : undefined, minHeight: '100dvh', overflow: isKaiRoute ? 'hidden' : undefined, backgroundColor: isCinematic ? 'oklch(0.05 0 0)' : isDark ? 'oklch(0.05 0 0)' : '#ffffff' }}>
+      <div className={`app-shell flex flex-col`} style={{ height: (isKaiRoute || isKioskRoute) ? '100dvh' : undefined, minHeight: '100dvh', overflow: (isKaiRoute || isKioskRoute) ? 'hidden' : undefined, backgroundColor: isCinematic ? 'oklch(0.05 0 0)' : isDark ? 'oklch(0.05 0 0)' : undefined }}>
         {/* Universal Top Header */}
         {!hideHeader && <CommandHeader title={getPageTitle()} isDarkMode={isDark} />}
         
         {/* Main Content - with bottom padding for fixed nav and KaiBar (on /kai route only) */}
         <main 
-          className={`flex-1 ${isKaiRoute && !isPhone ? 'min-h-0' : ''} ${isDark ? '' : 'bg-background'}`}
+          className={`flex-1 ${(isKaiRoute || isKioskRoute) && !isPhone ? 'min-h-0' : ''} ${isDark ? '' : 'bg-background'}`}
           style={{
-            // KAI route manages its own height/padding internally; skip AppShell padding-bottom
-            paddingBottom: (showBottomNav && !isKaiRoute) ? 'calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom, 0px) + 16px)' : '0px',
-            // On phone /kai route: KaiCommand uses position:fixed so main is just a passthrough.
-            // On desktop/tablet /kai route: constrain height so composer stays above bottom nav.
-            // iOS Safari clips position:fixed children inside overflow:hidden parents.
-            // On phone /kai route, use overflow:visible so KaiCommand (position:fixed) is visible.
-            overflow: isKaiRoute ? (isPhone ? 'visible' : 'hidden') : undefined,
-            // On /kai desktop: explicitly set height to exclude both topbar AND bottom nav
-            // so the composer is always visible above the bottom nav
+            // KAI/Kiosk route manages its own height/padding internally; skip AppShell padding-bottom
+            paddingBottom: (showBottomNav && !isKaiRoute && !isKioskRoute) ? 'calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom, 0px) + 16px)' : '0px',
+            overflow: isKaiRoute ? (isPhone ? 'visible' : 'hidden') : isKioskRoute ? 'hidden' : undefined,
             height: (isKaiRoute && !isPhone && showBottomNav)
               ? 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px))'
               : (isKaiRoute && !isPhone)
                 ? 'calc(100dvh - var(--topbar-h, 56px))'
-                : undefined,
+                : (isKioskRoute && showBottomNav)
+                  ? 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px))'
+                  : isKioskRoute
+                    ? 'calc(100dvh - var(--topbar-h, 56px))'
+                    : undefined,
             maxHeight: (isKaiRoute && !isPhone && showBottomNav)
               ? 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px))'
               : (isKaiRoute && !isPhone)
                 ? 'calc(100dvh - var(--topbar-h, 56px))'
-                : undefined,
-            flexShrink: (isKaiRoute && !isPhone) ? 0 : undefined
+                : (isKioskRoute && showBottomNav)
+                  ? 'calc(100dvh - var(--topbar-h, 56px) - var(--bottom-nav-height, 72px))'
+                  : isKioskRoute
+                    ? 'calc(100dvh - var(--topbar-h, 56px))'
+                    : undefined,
+            flexShrink: ((isKaiRoute || isKioskRoute) && !isPhone) ? 0 : undefined
           }}
         >
           {children}

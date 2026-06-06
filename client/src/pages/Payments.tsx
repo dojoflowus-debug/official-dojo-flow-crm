@@ -264,17 +264,8 @@ export default function Payments() {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
-              <CreditCard className="w-4 h-4 text-white" />
-            </div>
-            <h1 className={`text-2xl font-bold ${textPrimary}`}>Payments</h1>
-          </div>
-          <p className={`text-sm ${textSecondary}`}>Live FluidPay transaction data for your dojo</p>
-        </div>
+      {/* ── Action Bar ── */}
+      <div className="flex flex-wrap items-center justify-end gap-2 mb-6">
         <div className="flex items-center gap-2">
           <Button
             size="sm"

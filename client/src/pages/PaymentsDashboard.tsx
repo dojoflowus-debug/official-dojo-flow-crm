@@ -98,57 +98,7 @@ export default function PaymentsDashboard() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb', fontFamily: "'Inter', -apple-system, sans-serif" }}>
-
-      {/* ── Top Nav ──────────────────────────────────────────────────────── */}
-      <div style={{
-        background: '#fff',
-        borderBottom: '1px solid #e5e7eb',
-        padding: '0 24px',
-        height: 56,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        position: 'sticky',
-        top: 0,
-        zIndex: 40,
-      }}>
-        {/* Logo + divider + page label */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: '#111827', letterSpacing: '-0.3px' }}>Dojo Flow</span>
-          </button>
-          <span style={{ color: '#d1d5db', fontSize: 18, fontWeight: 200 }}>|</span>
-          <span style={{ fontSize: 14, color: '#6b7280', fontWeight: 500 }}>Dashboard</span>
-        </div>
-
-        {/* Right: Kai badge + user */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            background: overdue.length > 0 ? '#fef3c7' : '#f3f4f6',
-            border: `1px solid ${overdue.length > 0 ? '#fde68a' : '#e5e7eb'}`,
-            borderRadius: 20, padding: '4px 12px', cursor: 'pointer',
-          }}>
-            <span style={{ fontSize: 10, color: overdue.length > 0 ? '#d97706' : '#6b7280' }}>●</span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: overdue.length > 0 ? '#92400e' : '#374151' }}>
-              Kai • {overdue.length} overdue
-            </span>
-          </div>
-          <div style={{
-            width: 32, height: 32, borderRadius: '50%',
-            background: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <span style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>S</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Page Header ──────────────────────────────────────────────────── */}
-      <div style={{ padding: '32px 24px 0' }}>
-        <h1 style={{ fontSize: 32, fontWeight: 700, color: '#111827', letterSpacing: '-0.5px', margin: 0 }}>Payments</h1>
-        <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 2, fontWeight: 500 }}>Revenue Command</p>
-      </div>
+    <div style={{ minHeight: '100vh', fontFamily: "'Inter', -apple-system, sans-serif" }} className="bg-background">
 
       {/* ── KPI Strip ────────────────────────────────────────────────────── */}
       <div style={{ padding: '20px 24px 0', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 1, background: '#e5e7eb', border: '1px solid #e5e7eb', borderRadius: 12, margin: '20px 24px 0', overflow: 'hidden' }}>

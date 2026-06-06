@@ -547,7 +547,7 @@ export default function MerchandiseManagementContent() {
                   <TableHead>Stock</TableHead>
                   <TableHead>Requires Size</TableHead>
                   <TableHead>Description</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -575,17 +575,20 @@ export default function MerchandiseManagementContent() {
                     <TableCell className="text-muted-foreground text-sm">
                       {item.description || "—"}
                     </TableCell>
-                    <TableCell className="text-right">
-                      {item.stockQuantity !== null && item.stockQuantity !== undefined && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openStockDialog(item)}
-                          title="Adjust stock quantity"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                      )}
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-1">
+                        {item.stockQuantity !== null && item.stockQuantity !== undefined && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openStockDialog(item)}
+                            title="Adjust stock quantity"
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

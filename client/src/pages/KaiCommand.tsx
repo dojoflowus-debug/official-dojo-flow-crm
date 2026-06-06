@@ -67,7 +67,6 @@ import {
   MoreVertical,
   FileText,
   Users,
-  Volume2,
   Maximize2,
   ChevronDown,
   ChevronUp,
@@ -3790,9 +3789,9 @@ export default function KaiCommand() {
           {/* Operations Log */}
           <div className="flex-1 overflow-hidden flex flex-col">
             <div className="px-4 pt-4 pb-2">
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-3">
                 <h3 className={`text-[10px] font-bold uppercase tracking-widest ${getTextClass('muted')}`}>CONVERSATIONS</h3>
-                <span className={`text-[10px] font-mono ${getTextClass('muted')}`}>{filteredConversations.length}</span>
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-sm ${isDark || isCinematic ? 'bg-white/10 text-white/50' : 'bg-slate-100 text-slate-500'}`}>{filteredConversations.length}</span>
               </div>
               {activeCollection && (
                 <div className="flex items-center gap-2">
@@ -4234,7 +4233,7 @@ export default function KaiCommand() {
                 {voiceConvEnabled && kaiVoice.isListening && (
                   <span className="absolute inset-0 rounded-md border-2 border-red-400/60 animate-ping" style={{ animationDuration: '1.5s' }} />
                 )}
-                <Volume2 className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'} ${
+                <Mic className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'} ${
                   voiceConvEnabled
                     ? (isCinematic ? 'text-white' : isDark ? 'text-white' : 'text-red-500')
                     : (isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500')

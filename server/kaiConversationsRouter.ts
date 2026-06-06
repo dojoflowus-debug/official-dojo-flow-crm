@@ -357,6 +357,13 @@ export const kaiConversationsRouter = router({
       z.object({
         conversationId: z.number(),
         query: z.string(),
+        attachments: z.array(z.object({
+          url: z.string(),
+          name: z.string(),
+          type: z.string(),
+          size: z.number().optional(),
+          storageKey: z.string().optional(),
+        })).optional(),
         confirmedAction: z.object({
           toolName: z.string(),
           toolArgs: z.record(z.string(), z.any()),
@@ -714,6 +721,33 @@ Do NOT skip this block — it is required for the user to click and view student
 For lead lists, use: [LEAD_LIST:id1,id2,id3:N leads]
 Always place the UI block on its own line after your text response.`;
 
+          // Build user message content — include attachment context if files were uploaded
+          let userMessageContent: any = input.query;
+          if (input.attachments && input.attachments.length > 0) {
+            const imageAttachments = input.attachments.filter(a => a.type.startsWith('image/'));
+            const docAttachments = input.attachments.filter(a => !a.type.startsWith('image/'));
+            if (imageAttachments.length > 0) {
+              // Use vision-capable multipart content for images
+              userMessageContent = [
+                { type: 'text', text: input.query || 'Please analyze this file.' },
+                ...imageAttachments.map(att => ({
+                  type: 'image_url',
+                  image_url: { url: att.url, detail: 'high' },
+                })),
+                ...docAttachments.map(att => ({
+                  type: 'text',
+                  text: `[Attached file: ${att.name} (${att.type}), URL: ${att.url}]`,
+                })),
+              ];
+            } else {
+              // Non-image files: append file info as text context
+              const fileContext = docAttachments.map(att =>
+                `[Attached file: ${att.name} (${att.type}), URL: ${att.url}]`
+              ).join('\n');
+              userMessageContent = `${input.query}\n\n${fileContext}`;
+            }
+          }
+
           // First attempt: Call LLM with tools + full conversation history
           let response = await invokeLLM({
             messages: [
@@ -725,7 +759,7 @@ Always place the UI block on its own line after your text response.`;
               ...conversationHistory,
               {
                 role: "user" as const,
-                content: input.query,
+                content: userMessageContent,
               },
             ],
             tools: kaiTools as any,
@@ -880,7 +914,7 @@ Always place the UI block on its own line after your text response.`;
               ...conversationHistory,
               {
                 role: "user" as const,
-                content: input.query,
+                content: userMessageContent,
               },
               {
                 role: "assistant" as const,
