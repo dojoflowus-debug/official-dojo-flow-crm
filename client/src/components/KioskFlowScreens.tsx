@@ -17,6 +17,7 @@ export function KioskFlowScreens({ logoDataUrl, contentData, kioskConfig }: Kios
   const [currentTime, setCurrentTime] = useState<string>('');
   const [temperature, setTemperature] = useState<number>(72);
   const [activeNav, setActiveNav] = useState<'home' | 'schedule' | 'checkin' | 'programs' | 'help'>('home');
+  const [staffPin, setStaffPin] = useState('');
 
   // Default content
   const defaultContent = {
@@ -55,12 +56,13 @@ export function KioskFlowScreens({ logoDataUrl, contentData, kioskConfig }: Kios
     const accentColor = kioskConfig?.theme?.accentColor || '#ef4444';
     const fontFamily = kioskConfig?.theme?.fontFamily || 'Inter';
     const locationName = contentData?.headline || 'Main Dojo';
-    const nextClass = { name: 'Kids Karate', time: '5:30 PM', minutesUntil: 18 };
-    const todaysClasses = [
-      { name: 'Kids Karate', time: '4:00 PM', instructor: 'Sensei Mike', capacity: '8/12' },
-      { name: 'Adult Kickboxing', time: '5:30 PM', instructor: 'Sensei Sarah', capacity: '6/10' },
-      { name: 'Advanced Forms', time: '7:00 PM', instructor: 'Sensei James', capacity: '5/8' },
-    ];
+    // Use real schedule from kioskConfig if available, otherwise show live-data placeholder
+    const configClasses: Array<{ name: string; time: string; instructor?: string; capacity?: string }> =
+      kioskConfig?.schedule?.classes || kioskConfig?.classes || [];
+    const todaysClasses = configClasses.length > 0
+      ? configClasses
+      : [] as Array<{ name: string; time: string; instructor?: string; capacity?: string }>;
+    const nextClass = todaysClasses.length > 0 ? { name: todaysClasses[0].name, time: todaysClasses[0].time, minutesUntil: 0 } : null;
 
     return (
       <div 
@@ -152,24 +154,25 @@ export function KioskFlowScreens({ logoDataUrl, contentData, kioskConfig }: Kios
               <p style={{ fontSize: '12px', color: '#999', marginBottom: '8px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Next Class
               </p>
-              <div className="flex items-baseline justify-between">
-                <div>
-                  <h2 style={{ fontSize: '48px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>
-                    {nextClass?.name}
-                  </h2>
-                  <p style={{ fontSize: '18px', color: '#ccc' }}>
-                    {nextClass?.time} • in {nextClass?.minutesUntil} minutes
-                  </p>
+              {nextClass ? (
+                <div className="flex items-baseline justify-between">
+                  <div>
+                    <h2 style={{ fontSize: '48px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>
+                      {nextClass.name}
+                    </h2>
+                    <p style={{ fontSize: '18px', color: '#ccc' }}>
+                      {nextClass.time}
+                    </p>
+                  </div>
+                  <div style={{ fontSize: '64px', fontWeight: 700, color: accentColor, opacity: 0.8 }}>
+                    {String(nextClass.minutesUntil).padStart(2, '0')}
+                  </div>
                 </div>
-                <div style={{
-                  fontSize: '64px',
-                  fontWeight: 700,
-                  color: accentColor,
-                  opacity: 0.8,
-                }}>
-                  {String(nextClass?.minutesUntil).padStart(2, '0')}
-                </div>
-              </div>
+              ) : (
+                <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>
+                  Live schedule will appear here
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -336,38 +339,54 @@ export function KioskFlowScreens({ logoDataUrl, contentData, kioskConfig }: Kios
                 Today's Schedule
               </h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {todaysClasses.map((cls, idx) => (
-                  <div
-                    key={idx}
-                    className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>
-                          {cls.name}
-                        </h3>
-                        <p style={{ fontSize: '14px', color: accentColor, fontWeight: 600 }}>
-                          {cls.time}
+              {todaysClasses.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {todaysClasses.map((cls, idx) => (
+                    <div
+                      key={idx}
+                      className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>
+                            {cls.name}
+                          </h3>
+                          <p style={{ fontSize: '14px', color: accentColor, fontWeight: 600 }}>
+                            {cls.time}
+                          </p>
+                        </div>
+                        {cls.capacity && (
+                          <div style={{
+                            background: `${accentColor}20`,
+                            color: accentColor,
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                          }}>
+                            {cls.capacity}
+                          </div>
+                        )}
+                      </div>
+                      {cls.instructor && (
+                        <p style={{ fontSize: '13px', color: '#999' }}>
+                          with {cls.instructor}
                         </p>
-                      </div>
-                      <div style={{
-                        background: `${accentColor}20`,
-                        color: accentColor,
-                        padding: '6px 12px',
-                        borderRadius: '8px',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                      }}>
-                        {cls.capacity}
-                      </div>
+                      )}
                     </div>
-                    <p style={{ fontSize: '13px', color: '#999' }}>
-                      with {cls.instructor}
-                    </p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
+                  <Calendar className="w-10 h-10 mx-auto mb-3" style={{ color: 'rgba(255,255,255,0.3)' }} />
+                  <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>
+                    Live class schedule will appear here
+                  </p>
+                  <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.25)', marginTop: '8px' }}>
+                    Add classes in your DojoFlow dashboard
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -467,13 +486,175 @@ export function KioskFlowScreens({ logoDataUrl, contentData, kioskConfig }: Kios
     );
   }
 
-  // For other screens, render the original backup version
-  // (Check In, Start Training, etc. flows remain unchanged)
+  // Attract / idle screen
+  if (state.currentScreen === 'attract') {
+    const accentColor = kioskConfig?.theme?.accentColor || '#ef4444';
+    const fontFamily = kioskConfig?.theme?.fontFamily || 'Inter';
+    const locationName = contentData?.headline || 'Welcome';
+    return (
+      <div
+        className="min-h-screen w-full flex flex-col items-center justify-center overflow-hidden"
+        style={{ fontFamily, background: 'linear-gradient(135deg, #1a1410 0%, #2a2420 50%, #1f1b16 100%)' }}
+        onClick={handleInteraction}
+      >
+        {/* Pulsing ring */}
+        <div className="relative flex items-center justify-center mb-8">
+          <div
+            className="absolute rounded-full animate-ping"
+            style={{ width: 160, height: 160, background: accentColor, opacity: 0.15 }}
+          />
+          <div
+            className="absolute rounded-full"
+            style={{ width: 120, height: 120, background: accentColor, opacity: 0.1 }}
+          />
+          <div
+            className="relative rounded-full flex items-center justify-center"
+            style={{ width: 80, height: 80, background: accentColor }}
+          >
+            <LogIn className="w-8 h-8 text-white" />
+          </div>
+        </div>
+        <h1 className="text-white text-4xl font-bold mb-3 text-center px-8">{locationName}</h1>
+        <p className="text-white/60 text-xl text-center px-8">Tap anywhere to check in</p>
+        <p className="text-white/30 text-sm mt-6">{currentTime}</p>
+      </div>
+    );
+  }
+
+  // Check-in search screen
+  if (state.currentScreen === 'check-in-search') {
+    const accentColor = kioskConfig?.theme?.accentColor || '#ef4444';
+    const fontFamily = kioskConfig?.theme?.fontFamily || 'Inter';
+    return (
+      <div
+        className="min-h-screen w-full flex flex-col items-center justify-center p-8"
+        style={{ fontFamily, background: 'linear-gradient(135deg, #1a1410 0%, #2a2420 50%, #1f1b16 100%)' }}
+        onClick={handleInteraction}
+      >
+        <button onClick={goHome} className="absolute top-6 left-6 text-white/50 hover:text-white text-sm flex items-center gap-2">
+          <Home className="w-4 h-4" /> Home
+        </button>
+        <h2 className="text-white text-3xl font-bold mb-8 text-center">Check In</h2>
+        <div className="w-full max-w-md">
+          <input
+            type="text"
+            placeholder="Enter your name or phone number"
+            className="w-full px-5 py-4 rounded-xl text-white text-lg bg-white/10 border border-white/20 placeholder-white/40 outline-none focus:border-white/50"
+            autoFocus
+            onChange={(e) => {
+              if (e.target.value.length > 1) {
+                kioskDataProvider.searchStudents(e.target.value).then(results => {
+                  if (results.length > 0) {
+                    updateFlowData({ searchResults: results, searchQuery: e.target.value });
+                    navigateTo('check-in-select');
+                  }
+                });
+              }
+            }}
+          />
+          <p className="text-white/40 text-sm text-center mt-4">Type at least 2 characters to search</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Start training lead capture screen
+  if (state.currentScreen === 'start-training-lead') {
+    const accentColor = kioskConfig?.theme?.accentColor || '#ef4444';
+    const fontFamily = kioskConfig?.theme?.fontFamily || 'Inter';
+    return (
+      <div
+        className="min-h-screen w-full flex flex-col items-center justify-center p-8"
+        style={{ fontFamily, background: 'linear-gradient(135deg, #1a1410 0%, #2a2420 50%, #1f1b16 100%)' }}
+        onClick={handleInteraction}
+      >
+        <button onClick={goHome} className="absolute top-6 left-6 text-white/50 hover:text-white text-sm flex items-center gap-2">
+          <Home className="w-4 h-4" /> Home
+        </button>
+        <h2 className="text-white text-3xl font-bold mb-4 text-center">Start Your Journey</h2>
+        <p className="text-white/60 text-center mb-8">Tell us a bit about yourself to get started</p>
+        <div className="w-full max-w-md space-y-4">
+          <input type="text" placeholder="Your name" className="w-full px-5 py-4 rounded-xl text-white text-lg bg-white/10 border border-white/20 placeholder-white/40 outline-none" />
+          <input type="tel" placeholder="Phone number" className="w-full px-5 py-4 rounded-xl text-white text-lg bg-white/10 border border-white/20 placeholder-white/40 outline-none" />
+          <input type="email" placeholder="Email address" className="w-full px-5 py-4 rounded-xl text-white text-lg bg-white/10 border border-white/20 placeholder-white/40 outline-none" />
+          <button
+            onClick={() => navigateTo('start-training-program')}
+            className="w-full py-4 rounded-xl text-white font-bold text-lg"
+            style={{ background: accentColor }}
+          >
+            Continue
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Staff login PIN screen
+  if (state.currentScreen === 'staff-login-pin') {
+    const accentColor = kioskConfig?.theme?.accentColor || '#ef4444';
+    const fontFamily = kioskConfig?.theme?.fontFamily || 'Inter';
+    const pin = staffPin;
+    const setPin = setStaffPin;
+    const handlePin = (digit: string) => {
+      const newPin = pin + digit;
+      setPin(newPin);
+      if (newPin.length === 4) {
+        kioskDataProvider.verifyStaffPin(newPin).then(valid => {
+          if (valid) { setPin(''); navigateTo('staff-tools'); }
+          else setPin('');
+        });
+      }
+    };
+    return (
+      <div
+        className="min-h-screen w-full flex flex-col items-center justify-center p-8"
+        style={{ fontFamily, background: 'linear-gradient(135deg, #1a1410 0%, #2a2420 50%, #1f1b16 100%)' }}
+      >
+        <button onClick={goHome} className="absolute top-6 left-6 text-white/50 hover:text-white text-sm flex items-center gap-2">
+          <Home className="w-4 h-4" /> Home
+        </button>
+        <h2 className="text-white text-3xl font-bold mb-8">Staff Login</h2>
+        <div className="flex gap-4 mb-8">
+          {[0,1,2,3].map(i => (
+            <div key={i} className="w-4 h-4 rounded-full" style={{ background: i < pin.length ? accentColor : 'rgba(255,255,255,0.2)' }} />
+          ))}
+        </div>
+        <div className="grid grid-cols-3 gap-4 w-64">
+          {['1','2','3','4','5','6','7','8','9','','0','⌫'].map((d, i) => (
+            <button
+              key={i}
+              onClick={() => d === '⌫' ? setPin(p => p.slice(0,-1)) : d ? handlePin(d) : undefined}
+              disabled={!d}
+              className="h-16 rounded-xl text-white text-2xl font-bold transition-all"
+              style={{ background: d ? 'rgba(255,255,255,0.1)' : 'transparent', border: d ? '1px solid rgba(255,255,255,0.1)' : 'none' }}
+            >
+              {d}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Generic fallback for any unimplemented screens — shows home-style screen
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-gradient-to-b from-slate-900 to-slate-800 p-8">
+    <div
+      className="min-h-screen w-full flex flex-col items-center justify-center p-8"
+      style={{ background: 'linear-gradient(135deg, #1a1410 0%, #2a2420 50%, #1f1b16 100%)' }}
+      onClick={handleInteraction}
+    >
       <div className="text-center">
-        <div className="text-white text-3xl font-bold mb-4">{state.currentScreen}</div>
-        <p className="text-slate-400">Screen rendering in progress...</p>
+        <p className="text-white/40 text-sm mb-6 uppercase tracking-widest">Kiosk</p>
+        <h2 className="text-white text-3xl font-bold mb-4 capitalize">{state.currentScreen.replace(/-/g, ' ')}</h2>
+        <p className="text-white/50 mb-8">This screen is coming soon.</p>
+        <button
+          onClick={goHome}
+          className="px-6 py-3 rounded-xl text-white font-medium"
+          style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}
+        >
+          <Home className="w-4 h-4 inline mr-2" />
+          Return Home
+        </button>
       </div>
     </div>
   );

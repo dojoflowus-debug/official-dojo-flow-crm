@@ -131,8 +131,12 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                   border: '1px solid rgba(255,255,255,0.08)',
                 }}
               >
-                <option value="portrait">Portrait</option>
-                <option value="landscape">Landscape</option>
+                {currentPreset?.supportedOrientations.includes('portrait') && (
+                  <option value="portrait">Portrait</option>
+                )}
+                {currentPreset?.supportedOrientations.includes('landscape') && (
+                  <option value="landscape">Landscape</option>
+                )}
               </select>
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{color: 'rgba(255,255,255,0.65)'}} />
             </div>

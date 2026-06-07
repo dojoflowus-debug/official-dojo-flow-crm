@@ -8376,7 +8376,7 @@ Return ONLY valid JSON, no markdown, no explanation.`,
               messages: [
                 {
                   role: 'system',
-                  content: 'You are a data extraction assistant. Extract ALL student records from the provided tabular data — include every single row, do not stop early or truncate the list. Return ONLY a valid JSON array of objects with these fields (use null for missing values): firstName, lastName, email, phone, dateOfBirth (YYYY-MM-DD format or null), beltRank, program, guardianName, guardianPhone. Do not include any explanation, markdown, or code fences — just the raw JSON array.'
+                  content: 'You are a data extraction assistant. Extract ALL student records from the provided tabular data — include every single row, do not stop early or truncate the list. Return ONLY a valid JSON array of objects with these fields (use null for missing values): firstName, lastName, email, phone, dateOfBirth (YYYY-MM-DD format or null), beltRank, program, guardianName, guardianPhone. CRITICAL: Copy email addresses EXACTLY as they appear in the source data — do NOT validate, modify, reject, or replace any email address regardless of its domain (e.g. example.com, test.com, placeholder.com, and any other domain are all valid and must be preserved verbatim). Do not include any explanation, markdown, or code fences — just the raw JSON array.'
                 },
                 {
                   role: 'user',
@@ -8421,7 +8421,7 @@ Return ONLY valid JSON, no markdown, no explanation.`,
                 messages: [
                   {
                     role: 'user',
-                    content: `Extract ALL student/person records from the following roster text — include every single row, do not stop early or skip any. Return ONLY a valid JSON array of objects with these fields (use null for missing values): firstName, lastName, email, phone, dateOfBirth (YYYY-MM-DD format or null), beltRank, program, guardianName, guardianPhone. Do not include any explanation, markdown, or code fences — just the raw JSON array.\n\nROSTER TEXT:\n${pdfText}`
+                    content: `Extract ALL student/person records from the following roster text — include every single row, do not stop early or skip any. Return ONLY a valid JSON array of objects with these fields (use null for missing values): firstName, lastName, email, phone, dateOfBirth (YYYY-MM-DD format or null), beltRank, program, guardianName, guardianPhone. CRITICAL: Copy email addresses EXACTLY as they appear in the source data — do NOT validate, modify, reject, or replace any email address regardless of its domain (e.g. example.com, test.com, placeholder.com are all valid). Do not include any explanation, markdown, or code fences — just the raw JSON array.\n\nROSTER TEXT:\n${pdfText}`
                   }
                 ]
               });
@@ -8450,7 +8450,7 @@ Return ONLY valid JSON, no markdown, no explanation.`,
                       imageBlock,
                       {
                         type: 'text',
-                        text: 'Extract ALL student/person records from this image — include every single row visible in the table, do not stop early or truncate the list. Return ONLY a valid JSON array of objects with these fields (use null for missing values): firstName, lastName, email, phone, dateOfBirth (YYYY-MM-DD format or null), beltRank, program, guardianName, guardianPhone. Do not include any explanation, markdown, or code fences — just the raw JSON array.'
+                        text: 'Extract ALL student/person records from this image — include every single row visible in the table, do not stop early or truncate the list. Return ONLY a valid JSON array of objects with these fields (use null for missing values): firstName, lastName, email, phone, dateOfBirth (YYYY-MM-DD format or null), beltRank, program, guardianName, guardianPhone. CRITICAL: Copy email addresses EXACTLY as they appear in the source data — do NOT validate, modify, reject, or replace any email address regardless of its domain (e.g. example.com, test.com, placeholder.com are all valid). Do not include any explanation, markdown, or code fences — just the raw JSON array.'
                       }
                     ]
                   }
