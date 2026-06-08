@@ -69,6 +69,7 @@ export default function KaiReviewPanel() {
 
   const { theme } = useTheme();
   const isDark = theme === 'dark' || theme === 'cinematic';
+  const isCinematic = theme === 'cinematic';
 
   const { data: stats } = trpc.kaiReview.getStats.useQuery(undefined, {
     refetchInterval: 30000,
@@ -110,15 +111,27 @@ export default function KaiReviewPanel() {
   const total = ticketsData?.total ?? 0;
 
   // ── Theme ────────────────────────────────────────────────────────────────────
-  const bg = isDark ? "bg-gray-900" : "bg-gray-50";
-  const cardBg = isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200";
+  // Night mode (dark): deep charcoal with sunset warmth
+  // Cinema mode (cinematic): near-black with purple/blue cinematic tint
+  const bg = isCinematic
+    ? "bg-[#0a0a12]"
+    : isDark
+    ? "bg-[#111118]"
+    : "bg-gray-50";
+  const cardBg = isCinematic
+    ? "bg-[#13131f] border-[#2a2a3e]"
+    : isDark
+    ? "bg-[#1a1a22] border-[#2a2a30]"
+    : "bg-white border-gray-200";
   const textPrimary = isDark ? "text-gray-100" : "text-gray-900";
-  const textSecondary = isDark ? "text-gray-400" : "text-gray-500";
-  const borderColor = isDark ? "border-gray-700" : "border-gray-200";
-  const inputClass = isDark
-    ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-500"
+  const textSecondary = isCinematic ? "text-purple-300/70" : isDark ? "text-amber-100/60" : "text-gray-500";
+  const borderColor = isCinematic ? "border-[#2a2a3e]" : isDark ? "border-[#2a2a30]" : "border-gray-200";
+  const inputClass = isCinematic
+    ? "bg-[#1e1e30] border-[#3a3a50] text-gray-100 placeholder-gray-600"
+    : isDark
+    ? "bg-[#1e1e26] border-[#3a3a40] text-gray-100 placeholder-gray-600"
     : "bg-white border-gray-300 text-gray-900 placeholder-gray-400";
-  const rowHover = isDark ? "hover:bg-gray-750" : "hover:bg-gray-50";
+  const rowHover = isCinematic ? "hover:bg-[#1e1e30]" : isDark ? "hover:bg-[#1e1e26]" : "hover:bg-gray-50";
 
   return (
     <div className={`min-h-screen ${bg} p-6`}>
@@ -175,11 +188,11 @@ export default function KaiReviewPanel() {
               onClick={() => { setFilter(f); setPage(0); }}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 filter === f
-                  ? isDark
-                    ? "bg-indigo-600 text-white"
-                    : "bg-indigo-600 text-white"
+                  ? "bg-indigo-600 text-white"
+                  : isCinematic
+                  ? "text-purple-300/60 hover:text-purple-100 hover:bg-[#1e1e30]"
                   : isDark
-                  ? "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+                  ? "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e26]"
                   : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
               }`}
             >
@@ -314,7 +327,7 @@ export default function KaiReviewPanel() {
           />
           {/* Panel */}
           <div
-            className={`w-full max-w-lg ${isDark ? "bg-gray-900" : "bg-white"} shadow-2xl flex flex-col`}
+            className={`w-full max-w-lg ${isCinematic ? 'bg-[#13131f]' : isDark ? 'bg-[#1a1a22]' : 'bg-white'} shadow-2xl flex flex-col`}
           >
             {/* Panel Header */}
             <div className={`flex items-start justify-between p-6 border-b ${borderColor}`}>

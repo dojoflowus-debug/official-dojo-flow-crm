@@ -210,7 +210,7 @@ export default function KanbanBoard({
     >
       <div className="w-full px-4 md:px-6 pb-8">
         {/* Horizontal Scroll Container */}
-        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-slate-400 scrollbar-track-slate-100 dark:scrollbar-thumb-slate-600 dark:scrollbar-track-slate-800">
+        <div className="flex gap-3 overflow-x-visible pb-4 min-w-0 w-full">
           {stages.map((stage) => {
             const Icon = stage.icon;
             const stageLeads = getLeadsForStage(stage.id);
@@ -223,7 +223,7 @@ export default function KanbanBoard({
               <div
                 key={stage.id}
                 className={`
-                  flex-shrink-0 w-[300px] md:w-[320px]
+                  flex-1 min-w-0 min-w-[220px] max-w-[320px]
                   transition-all duration-300 ease-out
                   ${isFiltered ? 'opacity-40 scale-95' : 'opacity-100'}
                   ${isHovered && draggedLeadId ? 'scale-105' : ''}
@@ -241,8 +241,8 @@ export default function KanbanBoard({
                     ${isHovered && draggedLeadId ? 'bg-white/10 border-white/20 shadow-lg' : ''}
                   `}
                   style={{
-                    borderTopColor: isSelected ? stage.color : undefined,
-                    borderTopWidth: isSelected ? '2px' : '1px',
+                    borderTopColor: isSelected ? stage.color : 'transparent',
+                    borderTopWidth: '2px',
                   }}
                 >
                   <div className="flex items-center gap-2">
@@ -300,7 +300,7 @@ export default function KanbanBoard({
                         : 'bg-slate-50/50 border border-t-0 border-slate-200'
                       }
                       ${isExpanded ? 'max-h-[calc(100vh-280px)]' : 'max-h-0'}
-                      ${isHovered && draggedLeadId ? 'ring-2 ring-offset-0' : ''}
+                      ${isHovered && draggedLeadId ? 'shadow-lg' : ''}
                     `}
                     style={{
                       ringColor: isHovered && draggedLeadId ? stage.color : undefined,
