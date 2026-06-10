@@ -10,7 +10,7 @@
   --kai-gap: 12px;
   --kai-max: 980px;
   /* Kai Command Layout Variables - normalized to actual component heights */
-  --topbar-h: 56px;  /* CommandHeader h-14 = 56px */
+  --topbar-h: calc(56px + env(safe-area-inset-top, 0px));  /* CommandHeader 56px + iOS/Android status bar */
   --bottomnav-h: 72px;  /* Bottom nav actual height = var(--nav-h) */
   --composer-h: 84px;  /* Composer height */
 }
@@ -204,7 +204,7 @@
   --nav-z: 1900;
   --kai-z: 1950;
   --bottom-nav-height: 72px;
-  --topbar-h: 56px;
+  --topbar-h: calc(56px + env(safe-area-inset-top, 0px));
   --bottomnav-h: 72px;
   --bottom-nav-h: 84px;
   

@@ -85,7 +85,7 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
     return (
       <header
         className={cn(
-          'h-14 border-b flex items-center flex-shrink-0',
+          'border-b flex items-center flex-shrink-0',
           isCinematic
             ? 'bg-black/70 backdrop-blur-xl border-white/8 text-white'
             : isDarkMode
@@ -98,7 +98,12 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
           zIndex: 10000,
           display: 'grid',
           gridTemplateColumns: '1fr auto 1fr',
-          padding: '0 16px',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          paddingLeft: '16px',
+          paddingRight: '16px',
+          paddingBottom: '0px',
+          minHeight: 'calc(56px + env(safe-area-inset-top, 0px))',
+          alignItems: 'end',
           boxShadow: isDarkMode || isCinematic
             ? '0 1px 0 oklch(1 1 1 / 0.04), 0 2px 8px oklch(0 0 0 / 0.3)'
             : '0 1px 0 oklch(0 0 0 / 0.04), 0 2px 8px oklch(0 0 0 / 0.04)',
@@ -175,7 +180,7 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
   return (
     <header
       className={cn(
-        'h-14 border-b flex items-center px-5 flex-shrink-0',
+        'border-b flex items-center px-5 flex-shrink-0',
         isCinematic
           ? 'bg-black/70 backdrop-blur-xl border-white/8 text-white'
           : isDarkMode
@@ -189,6 +194,10 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
         pointerEvents: 'auto',
         display: 'grid',
         gridTemplateColumns: '1fr auto 1fr',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingBottom: '0px',
+        minHeight: 'calc(56px + env(safe-area-inset-top, 0px))',
+        alignItems: 'end',
         boxShadow: isDarkMode || isCinematic
           ? '0 1px 0 oklch(1 1 1 / 0.04), 0 2px 8px oklch(0 0 0 / 0.3)'
           : '0 1px 0 oklch(0 0 0 / 0.04), 0 2px 8px oklch(0 0 0 / 0.04)',
