@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, name, email, role, created_at, is_active FROM users WHERE name ILIKE '%joseph%' OR name ILIKE '%ezed%' OR name ILIKE '%chidi%' OR email ILIKE '%joseph%' OR email ILIKE '%chidi%' ORDER BY created_at DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT id, name, email, role, created_at, is_active FROM users WHERE name ILIKE '%joseph%' OR name ILIKE '%ezed%' OR name ILIKE '%chidi%' OR email ILIKE '%joseph%' OR email ILIKE '%chidi%' ORDER BY created_at DESC LIMIT 10;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'created_at' in 'field list'"
+  ]
+}

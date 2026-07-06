@@ -1,0 +1,31 @@
+{
+  "query": "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND (table_name LIKE '%member%' OR table_name LIKE '%org%' OR table_name LIKE '%user%') ORDER BY table_name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND (table_name LIKE '%member%' OR table_name LIKE '%org%' OR table_name LIKE '%user%') ORDER BY table_name;",
+  "rows": [
+    {
+      "table_name": "member_journey_config"
+    },
+    {
+      "table_name": "membership_plans"
+    },
+    {
+      "table_name": "organization_subscriptions"
+    },
+    {
+      "table_name": "organization_users"
+    },
+    {
+      "table_name": "organizations"
+    },
+    {
+      "table_name": "team_members"
+    },
+    {
+      "table_name": "users"
+    }
+  ],
+  "messages": [],
+  "stdout": "table_name\nmember_journey_config\nmembership_plans\norganization_subscriptions\norganization_users\norganizations\nteam_members\nusers\n",
+  "stderr": "",
+  "execution_time_ms": 265
+}

@@ -20,42 +20,26 @@ function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Helper: Send verification code via email
-async function sendVerificationEmail(email: string, code: string): Promise<void> {
+// Helper: Send verification code via email (uses Gmail SMTP via Nodemailer)
+async function sendVerificationEmail(email: string, code: string, name?: string): Promise<void> {
   try {
-    const { sendEmail } = await import("./_core/sendgrid");
-    
-    const result = await sendEmail({
-      to: { email },
-      subject: "Your DojoFlow Verification Code",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Verify Your Email</h2>
-          <p>Your verification code is:</p>
-          <div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px; text-align: center;">
-            <h1 style="margin: 0; letter-spacing: 5px;">${code}</h1>
-          </div>
-          <p>This code will expire in 24 hours.</p>
-          <p>If you didn't request this code, please ignore this email.</p>
-        </div>
-      `,
-    });
-    
-    if (!result.success) {
-      console.error(`[OwnerAuth] Failed to send verification email to ${email}:`, result.error);
-    } else {
-      console.log(`[OwnerAuth] Verification code sent to ${email}`);
-    }
+    const { sendVerificationCode } = await import("./services/mailer.js");
+    await sendVerificationCode(code, { email, name });
+    console.log(`[OwnerAuth] Verification code sent to ${email}`);
   } catch (error) {
     console.error(`[OwnerAuth] Error sending verification email to ${email}:`, error);
   }
 }
 
-// Helper: Send verification code via SMS (mock for now)
-async function sendVerificationSMS(phone: string, code: string): Promise<void> {
-  // TODO: Integrate with SMS service (Twilio, AWS SNS, etc.)
-  console.log(`📱 Verification code for ${phone}: ${code}`);
-  // In production, send actual SMS here
+// Helper: Send verification code via SMS (Twilio)
+async function sendVerificationSMS(phone: string, code: string, name?: string): Promise<void> {
+  try {
+    const { sendVerificationCode } = await import("./services/mailer.js");
+    await sendVerificationCode(code, { phone, name });
+    console.log(`[OwnerAuth] Verification SMS sent to ${phone}`);
+  } catch (error) {
+    console.error(`[OwnerAuth] Error sending verification SMS to ${phone}:`, error);
+  }
 }
 
 export const ownerAuthRouter = router({
@@ -211,6 +195,12 @@ export const ownerAuthRouter = router({
         .limit(1);
 
       if (user) {
+        // Mark email as verified on the user record
+        await db
+          .update(users)
+          .set({ emailVerified: 1 })
+          .where(eq(users.id, user.id));
+        // Update onboarding progress
         await db
           .update(onboardingProgress)
           .set({
@@ -366,11 +356,11 @@ export const ownerAuthRouter = router({
         });
       }
 
-      // Update last signed in
+      // Update last signed in and mark email as verified (OTP login proves email ownership)
       try {
         await db
           .update(users)
-          .set({ lastSignedIn: new Date().toISOString() })
+          .set({ lastSignedIn: new Date().toISOString(), emailVerified: 1 })
           .where(eq(users.id, user.id));
       } catch (err) {
         console.error('[ownerAuth.login] Error updating lastSignedIn:', err);
@@ -477,6 +467,118 @@ export const ownerAuthRouter = router({
       return {
         success: true,
         message: "Verification code sent to your email",
+      };
+    }),
+
+  /**
+   * Resend email verification code for existing unverified users
+   * Used by the /verify-email gate page
+   */
+  resendVerificationEmail: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+      // Find user by email
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, input.email))
+        .limit(1);
+
+      if (!user) {
+        // Don't reveal if user exists
+        return { success: true, message: "If an account exists, a verification code has been sent" };
+      }
+
+      // Already verified — nothing to do
+      if (user.emailVerified === 1) {
+        return { success: true, message: "Email is already verified" };
+      }
+
+      // Generate and send verification code
+      const code = generateOTP();
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+      await db.insert(verificationCodes).values({
+        identifier: input.email,
+        code,
+        type: "email",
+        expiresAt,
+      });
+
+      await sendVerificationEmail(input.email, code);
+
+      return {
+        success: true,
+        message: "Verification code sent to your email",
+      };
+    }),
+
+  /**
+   * Verify email using OTP code (for existing users who need to verify)
+   * Used by the /verify-email gate page
+   */
+  verifyEmailCode: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        code: z.string().length(6, "Code must be 6 digits"),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+      // Find valid verification code (type email OR login — both prove ownership)
+      const [verification] = await db
+        .select()
+        .from(verificationCodes)
+        .where(
+          and(
+            eq(verificationCodes.identifier, input.email),
+            eq(verificationCodes.code, input.code),
+            eq(verificationCodes.isUsed, 0),
+            gt(verificationCodes.expiresAt, new Date())
+          )
+        )
+        .limit(1);
+
+      if (!verification) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid or expired verification code",
+        });
+      }
+
+      // Mark code as used
+      await db
+        .update(verificationCodes)
+        .set({ isUsed: 1 })
+        .where(eq(verificationCodes.id, verification.id));
+
+      // Mark user as verified
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, input.email))
+        .limit(1);
+
+      if (user) {
+        await db
+          .update(users)
+          .set({ emailVerified: 1 })
+          .where(eq(users.id, user.id));
+      }
+
+      return {
+        success: true,
+        message: "Email verified successfully",
       };
     }),
 });

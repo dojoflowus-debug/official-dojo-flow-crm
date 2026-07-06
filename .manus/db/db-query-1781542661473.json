@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, name, email, role, globalRole, createdAt FROM users WHERE name ILIKE '%joseph%' OR name ILIKE '%ezed%' OR name ILIKE '%chidi%' OR email ILIKE '%joseph%' OR email ILIKE '%chidi%' ORDER BY createdAt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT id, name, email, role, globalRole, createdAt FROM users WHERE name ILIKE '%joseph%' OR name ILIKE '%ezed%' OR name ILIKE '%chidi%' OR email ILIKE '%joseph%' OR email ILIKE '%chidi%' ORDER BY createdAt DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "1233202",
+      "name": "E'zed Chidi",
+      "email": "chidi.ej@gmail.com",
+      "role": "owner",
+      "globalRole": "none",
+      "createdAt": "2026-04-17 15:02:00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\tglobalRole\tcreatedAt\n1233202\tE'zed Chidi\tchidi.ej@gmail.com\towner\tnone\t2026-04-17 15:02:00\n",
+  "stderr": "",
+  "execution_time_ms": 422
+}

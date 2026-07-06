@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total_unverified,\n  SUM(CASE WHEN phone IS NOT NULL AND phone != '' THEN 1 ELSE 0 END) as has_phone,\n  SUM(CASE WHEN phone IS NULL OR phone = '' THEN 1 ELSE 0 END) as email_only\nFROM users\nWHERE emailVerified = 0\n  AND email IS NOT NULL AND email != ''\n  AND email NOT LIKE '%@example.com'\n  AND email NOT LIKE 'test-%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT COUNT(*) as total_unverified,\n  SUM(CASE WHEN phone IS NOT NULL AND phone != '' THEN 1 ELSE 0 END) as has_phone,\n  SUM(CASE WHEN phone IS NULL OR phone = '' THEN 1 ELSE 0 END) as email_only\nFROM users\nWHERE emailVerified = 0\n  AND email IS NOT NULL AND email != ''\n  AND email NOT LIKE '%@example.com'\n  AND email NOT LIKE 'test-%';",
+  "rows": [
+    {
+      "total_unverified": "31",
+      "has_phone": "0",
+      "email_only": "31"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_unverified\thas_phone\temail_only\n31\t0\t31\n",
+  "stderr": "",
+  "execution_time_ms": 265
+}

@@ -156,6 +156,7 @@ const KioskManager = lazy(() => import("../pages/KioskManager"));
 const Onboarding = lazy(() => import("../pages/Onboarding").then(m => ({ default: m.Onboarding })));
 const TestSettingsModal = lazy(() => import("../pages/TestSettingsModal"));
 const NotFound = lazy(() => import("../pages/NotFound"));
+const VerifyEmail = lazy(() => import("../pages/VerifyEmail"));
 
 export interface RouteConfig {
   path: string;
@@ -184,6 +185,7 @@ export const appRoutes: RouteConfig[] = [
   { path: "/student-login", element: <StudentAuthNew />, label: "Student Login" },
   { path: "/select-organization", element: <SelectOrganization />, label: "Select Organization" },
   { path: "/login", element: <Login />, label: "Login" },
+  { path: "/verify-email", element: <VerifyEmail />, label: "Verify Email" },
   { path: "/forgot-password", element: <ForgotPassword />, label: "Forgot Password" },
   { path: "/reset-password", element: <ResetPassword />, label: "Reset Password" },
   { path: "/kai/release-notes/v0-9-0-beta", element: <AppShell><ReleaseNotes /></AppShell>, label: "Release Notes" },

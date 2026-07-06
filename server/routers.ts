@@ -1548,6 +1548,8 @@ export const appRouter = router({
       return {
         ...fullUser,
         activeOrgId,
+        emailVerified: fullUser.emailVerified === 1,
+        authProvider: fullUser.authProvider ?? 'password',
       };
     }),
     logout: publicProcedure.mutation(({ ctx }) => {
