@@ -403,7 +403,7 @@ export default function PublicLanding() {
           }}
         >
           <img
-            src="/api/storage-proxy/manus-storage/dojo-hallway_b6f426fd.jpg"
+            src="/api/storage-proxy/manus-storage/dojo-hallway-ai_a59157ff.jpg"
             alt="Dojo hallway"
             style={{
               width: "100%",
